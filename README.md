@@ -12,13 +12,13 @@ presentazione: ogni numero è accompagnato dalla fonte e dall'incertezza.
 ```
 .
 ├── publish.sh          deploy.sh con destinazione e URL pubblico incorporati
-├── index.html          pagina unica, dodici sezioni con ancore
+├── index.html          pagina unica, tredici sezioni con ancore
 ├── 404.html
 ├── robots.txt
 ├── deploy.sh           pubblicazione su arch_php via rsync/ssh
 └── assets/
     ├── style.css       token di tema chiaro/scuro, layout, stampa
-    ├── charts.js       i sette grafici SVG + i dati di riserva incorporati
+    ├── charts.js       gli otto grafici SVG + i dati di riserva incorporati
     ├── slides.js       navigazione a slide: frecce a schermo, tastiera, tocco
     ├── live.js         lettura in diretta da NOAA, con fallback
     └── favicon.svg
@@ -182,6 +182,30 @@ rivista va sostituita. Contorno (incendi nei paesi in conflitto, Siria,
 pozzi del Kuwait 1991): CEOBS. Attenzione al
 periodo quando si aggiorna: nel grafico la prima barra è un anno, le altre
 sono totali di conflitto, ed è l'errore più facile da introdurre.
+
+## I numeri del paleoclima
+
+La sezione «L'ultima volta che l'aria era così» usa tre fonti distinte, e la
+distinzione è il punto della sezione:
+
+- **Carote di ghiaccio**, misura diretta dell'aria antica: composito degli
+  800 mila anni di Bereiter et al. 2015, scaricato da NOAA Paleoclimatology
+  (`ncei.noaa.gov/pub/data/paleo/icecore/antarctica/antarctica2015co2composite.txt`).
+  La serie è incorporata in `charts.js` come `ICE`, ridotta da 1901 a 718
+  punti conservando massimi e minimi: a 880 unità di larghezza un pixel vale
+  circa mille anni, oltre non serve. Si ferma al 1958, poi il grafico
+  prosegue con le stesse medie annue di Mauna Loa degli altri grafici, quindi
+  la punta si aggiorna da sola con la lettura NOAA in diretta.
+- **IPCC AR6**, riquadro 2.4 del capitolo 2, per i periodi di riferimento:
+  ultimo massimo glaciale, ultimo interglaciale, Pliocene, Miocene, con
+  temperatura rispetto al 1850–1900 e livello del mare. Il Pliocene è
+  +2,5 a +4 °C e +5 a +25 m, non «+5 °C e +35 m»: sono valori di equilibrio
+  raggiunti in millenni e la pagina lo dice esplicitamente, perché senza
+  quella riga il confronto diventa una previsione che nessuno ha fatto.
+- **Hönisch et al., Science 2023** (CenCO2PIP) per la scala oltre il
+  ghiaccio: l'ultima volta a questi livelli è circa 14 milioni di anni fa.
+  Il numero «3 milioni di anni», molto diffuso, viene da ricostruzioni
+  precedenti a questa revisione: non usarlo.
 
 ## Che tipo di numero è: le etichette sulle figure
 

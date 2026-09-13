@@ -119,6 +119,7 @@
       });
     })
     .then(function(d){
+      if(window.Carbonio && window.Carbonio.drawIce) window.Carbonio.drawIce(d.annual);
       if(window.Carbonio && window.Carbonio.drawKeeling){
         window.Carbonio.drawKeeling(d.annual, d.monthly);
       }
