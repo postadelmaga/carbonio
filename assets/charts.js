@@ -193,7 +193,7 @@
     var th=el('text',{x:bx0,y:topY-24,class:'svg-lab-b'}); th.textContent='EMESSO OGNI ANNO';
     th.setAttribute('letter-spacing','.08em'); bf.appendChild(th);
     var tt=el('text',{x:bx0,y:topY-6,class:'svg-val'}); tt.setAttribute('font-size','17');
-    tt.textContent='40,9 GtCO₂  ·  5,3 ppm equivalenti'; bf.appendChild(tt);
+    tt.textContent='40,9 GtCO₂, cioè 5,3 ppm se restassero tutte in aria'; bf.appendChild(tt);
 
     var f1=el('text',{x:bx0+12,y:topY+27,class:'svg-val'}); f1.style.fill=tok('--ink');
     f1.textContent='Fossili e cemento  35,9'; bf.appendChild(f1);
@@ -239,10 +239,12 @@
       var u=UNC[p.k];
       if(u){
         var uw=barW*(u/total), cx=xA+ww/2, uy=botY+botH+9;
-        bf.appendChild(el('line',{x1:cx-uw,x2:cx+uw,y1:uy,y2:uy,
-          stroke:tok('--ink-3'),'stroke-width':1.4}));
-        bf.appendChild(el('line',{x1:cx-uw,x2:cx-uw,y1:uy-4,y2:uy+4,stroke:tok('--ink-3'),'stroke-width':1.4}));
-        bf.appendChild(el('line',{x1:cx+uw,x2:cx+uw,y1:uy-4,y2:uy+4,stroke:tok('--ink-3'),'stroke-width':1.4}));
+        if(uw>=5){
+          bf.appendChild(el('line',{x1:cx-uw,x2:cx+uw,y1:uy,y2:uy,
+            stroke:tok('--ink-3'),'stroke-width':1.4}));
+          bf.appendChild(el('line',{x1:cx-uw,x2:cx-uw,y1:uy-4,y2:uy+4,stroke:tok('--ink-3'),'stroke-width':1.4}));
+          bf.appendChild(el('line',{x1:cx+uw,x2:cx+uw,y1:uy-4,y2:uy+4,stroke:tok('--ink-3'),'stroke-width':1.4}));
+        }
         var ut=el('text',{x:cx,y:uy+18,class:'svg-unit','text-anchor':'middle'});
         ut.textContent='±'+it(u); bf.appendChild(ut);
       }
@@ -264,7 +266,7 @@
 
   /* ════════════════════ due scale a confronto ════════════════════
      Tasso di crescita NOAA: Mauna Loa (una stazione) contro la media
-     globale (oltre cento). Nel 2023 e 2024 le due si invertono. */
+     globale (stazioni marine remote). Nel 2023 e 2024 le due si invertono. */
   var ds=document.getElementById('duescale');
   if(ds){
     var SERIES=[
@@ -309,13 +311,6 @@
     /* i due anni in cui le serie si invertono: e' il punto del grafico.
        La parentesi sta SOTTO la riga degli anni (dy1+22), non sopra, o
        finisce esattamente sulle etichette. */
-    var braceY=dy1+40, noteY=dy1+62;
-    df.appendChild(el('line',{x1:dx0+slot*2-slot*0.42,x2:dx0+slot*4-slot*0.58,y1:braceY,y2:braceY,
-      stroke:tok('--rule-strong'),'stroke-width':1,'stroke-dasharray':'3 3'}));
-    var n1=el('text',{x:dx0+slot*2.5,y:noteY,class:'svg-lab','text-anchor':'middle'});
-    n1.style.fill=tok('--ink-3');
-    n1.textContent='nel 2023 Mauna Loa corre di più, nel 2024 il contrario';
-    df.appendChild(n1);
 
     ds.appendChild(df);
   }
@@ -442,13 +437,13 @@
   var cs=document.getElementById('controfattuale');
   if(cs){
     var CW=880, cx0=56, cx1=CW-124, cy0=28, cy1=286;
-    var cyMin=300, cyMax=590, cxMin=1959, cxMax=2027;
+    var cyMin=300, cyMax=612, cxMin=1959, cxMax=2027;
     function CX(y){ return cx0 + (y-cxMin)/(cxMax-cxMin)*(cx1-cx0); }
     function CY(v){ return cy1 - (v-cyMin)/(cyMax-cyMin)*(cy1-cy0); }
 
     var cf=document.createDocumentFragment();
 
-    for(var gv=300; gv<=580; gv+=70){
+    for(var gv=300; gv<=600; gv+=50){
       cf.appendChild(el('line',{x1:cx0,x2:cx1,y1:CY(gv),y2:CY(gv),class:'grid-l'}));
       var gt=el('text',{x:cx0-10,y:CY(gv)+4,class:'svg-lab','text-anchor':'end'});
       gt.textContent=gv; cf.appendChild(gt);
@@ -501,7 +496,7 @@
     cf.appendChild(el('line',{x1:gx,x2:gx,y1:y1c,y2:y2c,stroke:tok('--land'),'stroke-width':1.6}));
     cf.appendChild(el('line',{x1:gx-5,x2:gx+5,y1:y1c,y2:y1c,stroke:tok('--land'),'stroke-width':1.6}));
     cf.appendChild(el('line',{x1:gx-5,x2:gx+5,y1:y2c,y2:y2c,stroke:tok('--land'),'stroke-width':1.6}));
-    var gl=el('text',{x:gx+11,y:(y1c+y2c)/2+4,class:'svg-lab-b','text-anchor':'start'});
+    var gl=el('text',{x:gx+11,y:y1c+(y2c-y1c)*0.38,class:'svg-lab-b','text-anchor':'start'});
     gl.style.fill=tok('--land'); gl.textContent='tolto da oceani e foreste'; cf.appendChild(gl);
 
     cs.appendChild(cf);
@@ -656,10 +651,12 @@
 
     bars.forEach(function(b){
       var bx=RX(b[0])+7, bw=RX(b[0]+1)-RX(b[0])-14;
-      var strong = b[1] >= gMean+0.5;
+      var strong = b[1] > gMean;
       f.appendChild(el('rect',{x:bx,y:BY(b[1]),width:bw,height:pB1-BY(b[1]),fill:tok('--source'),'fill-opacity':strong?1:.55,rx:2}));
-      var vt=el('text',{x:bx+bw/2,y:BY(b[1])-6,class:'svg-val','text-anchor':'middle'});
-      vt.setAttribute('font-size','12'); vt.textContent='+'+it(b[1],2); f.appendChild(vt);
+      var vt=el('text',{x:bx+bw/2,y:BY(b[1])+15,class:'svg-val','text-anchor':'middle'});
+      vt.setAttribute('font-size','12'); vt.textContent='+'+it(b[1],2);
+      vt.style.fill = strong ? tok('--surface') : tok('--ink'); vt.style.stroke='none';
+      f.appendChild(vt);
     });
 
     f.appendChild(el('line',{x1:rx0,x2:rx1,y1:BY(gMean),y2:BY(gMean),stroke:tok('--ink-3'),'stroke-width':1,'stroke-dasharray':'4 3'}));
@@ -688,7 +685,7 @@
 
       if(1.5>cMin && 1.5<cMax){
         f.appendChild(el('line',{x1:rx0,x2:rx1,y1:CY(1.5),y2:CY(1.5),stroke:tok('--heat'),'stroke-width':1.2,'stroke-dasharray':'5 4','stroke-opacity':.85}));
-        var sl=el('text',{x:rx0+8,y:CY(1.5)-6,class:'svg-unit'}); sl.style.fill=tok('--heat'); sl.textContent='1,5 °C, il limite di Parigi'; f.appendChild(sl);
+        var sl=el('text',{x:rx0+8,y:CY(1.5)-6,class:'svg-unit'}); sl.style.fill=tok('--heat'); sl.textContent='1,5 °C, il limite dell’Accordo di Parigi'; f.appendChild(sl);
       }
       var dT='';
       for(i=0;i<tp.length;i++){ dT += (i?'L':'M') + RX(tp[i][0]+0.5).toFixed(1) + ' ' + CY(tp[i][1]).toFixed(1); }
@@ -754,7 +751,7 @@
     var lv=KY[KY.length-1], lx=KX(kyMax-0.5), ly=KY_(lv);
     kf.appendChild(el('circle',{cx:lx,cy:ly,r:5,fill:tok('--surface'),stroke:tok('--source'),'stroke-width':2.2}));
     var l1=el('text',{x:lx-10,y:ly-12,class:'svg-val','text-anchor':'end'}); l1.textContent=it(lv,1)+' nel 2024'; kf.appendChild(l1);
-    var c20=el('text',{x:KX(2020.5),y:KY_(KY[30])+22,class:'svg-unit','text-anchor':'middle'}); c20.textContent='2020, pandemia'; kf.appendChild(c20);
+    var c20=el('text',{x:KX(2020.5),y:KY_(KY[30])+22,class:'svg-unit','text-anchor':'middle'}); c20.textContent='2020 · pandemia'; kf.appendChild(c20);
     ks.appendChild(kf);
   }
 

@@ -165,8 +165,6 @@
   var BAKED= '12 settembre 2026';
   var TIMEOUT = 7000;
 
-  /* Global Carbon Budget 2025: 170 GtCO2 residui all'1/1/2025 per il 50% di
-     probabilita' di restare sotto 1,5 °C, a un ritmo di 42,2 GtCO2/anno. */
   /* GCB 2025: 170 GtCO2 restanti contati dall'inizio del 2026, 42,2 GtCO2/anno nel 2025 */
   var BUD0 = 170, RATE = 42.2, BUD_FROM = Date.UTC(2026,0,1);
 

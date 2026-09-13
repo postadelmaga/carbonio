@@ -54,7 +54,7 @@ il primo gli passa CO₂ mensile e tassi di crescita, il secondo la temperatura.
 argomento (`null` = "tieni quello che hai"), cosi' l'ordine di arrivo non conta.
 
 Il budget residuo per 1,5 °C non e' una lettura ma una **sottrazione**: 170
-GtCO₂ all'1/1/2025 (Global Carbon Budget 2025) meno il tempo trascorso per 42,2
+GtCO₂ all'1/1/2026 (Global Carbon Budget 2025) meno il tempo trascorso per 42,2
 GtCO₂/anno. Si aggiorna da solo col passare dei giorni; l'incertezza sul valore
 di partenza resta ampia ed e' dichiarata nel testo.
 
@@ -69,7 +69,7 @@ negli anni, concentrazione fuori da una finestra plausibile rispetto al dato
 incorporato), non si tocca niente e la nota dichiara la data del dato di riserva.
 
 Senza JavaScript la pagina resta corretta: i valori di riserva sono nell'HTML e
-le quattro tabelle contengono tutti i numeri. I tre grafici invece sono disegnati
+le quattro tabelle contengono tutti i numeri. I sette grafici invece sono disegnati
 da `charts.js` e non compaiono.
 
 Il bilancio del Global Carbon Budget non e' automatizzato apposta: esce una volta
@@ -118,7 +118,7 @@ docroot: serve `--apply` esplicito per scrivere, e `--delete` arriva solo con
 - **Global Carbon Budget 2025** (Global Carbon Project, COP30, 13 novembre 2025) — fonti e pozzi, medie 2015–2024
 - **NOAA Global Monitoring Laboratory** — Mauna Loa dal 1958 e media globale, letti in diretta
 - **Our World in Data** — emissioni pro capite e cumulative
-- **IPCC AR6** — ripartizione settoriale
+- **IPCC AR6 e IEA** — livelli preindustriali dei gas; ripartizione per uso finale
 
 Conversione usata ovunque: `1 ppm = 2,124 GtC = 7,78 GtCO₂`, `1 GtC = 3,664 GtCO₂`.
 
@@ -129,17 +129,17 @@ precedente di questa pagina:
   sulla curva destagionalizzata; la **differenza fra medie annue** è un'altra
   cosa e dà numeri diversi (2024: 3,33 contro 3,53);
 - **Mauna Loa non è il pianeta.** È un osservatorio; la media globale pesa
-  oltre cento stazioni. Nel 2024 danno 3,33 e 3,76 ppm.
+  stazioni marine remote pesate per latitudine. Nel 2024 danno 3,33 e 3,76 ppm.
 
 Quando `live.js` riesce a leggere NOAA, la curva usa le **medie mensili
 misurate**. Se non ci riesce, ricade sulla stagionalità ricostruita dalle medie
 annue: va bene per la forma della curva, non per leggerci un singolo mese.
 
 Il bilancio non chiude: lo squilibrio residuo è una voce pubblicata dal Global
-Carbon Budget, e nel 2024 ha toccato −1,7 GtC, il valore più grande della serie.
+Carbon Budget, e nel 2024 ha toccato −1,7 GtC (−6 GtCO₂), il valore più negativo della serie.
 La pagina lo mostra invece di nasconderlo, e disegna sotto ogni voce del
 diagramma di flusso il **baffo di incertezza** alla stessa scala dei blocchi:
-il pozzo terrestre vale 9,2 GtCO₂ ma è noto entro ±2,9, l'oceanico entro ±1,5.
+il pozzo terrestre vale 8,7 GtCO₂ ma è noto entro ±2,9, l'oceanico entro ±1,5.
 
 Lo zoom sugli **ultimi dieci anni** mette tre pannelli sullo stesso asse dei
 tempi: concentrazione mensile, crescita annua (barre) e temperatura globale.

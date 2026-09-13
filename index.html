@@ -78,7 +78,7 @@ try{var t=localStorage.getItem("tema");if(t==="dark"||t==="light"){document.docu
       </div>
       <div class="key k-atm">
         <span class="fig">20,4</span><span class="unit">GtCO₂ / anno · 2,6 ppm</span>
-        <span class="lbl">Resta in atmosfera: è quello che la curva misura</span>
+        <span class="lbl">Resta in aria: ciò che la curva misura</span>
       </div>
     </div>
     <p class="units"><b>Le unità di questa pagina.</b> <abbr title="gigatonnellate di anidride carbonica">GtCO₂</abbr> = miliardi di tonnellate di CO₂. <abbr title="parti per milione">ppm</abbr> = molecole di CO₂ ogni milione di molecole d'aria. <b>Pozzo</b> = ciò che toglie CO₂ dall'aria: l'oceano e la vegetazione. Medie 2015–2024 del Global Carbon Budget 2025.</p>
@@ -95,8 +95,8 @@ try{var t=localStorage.getItem("tema");if(t==="dark"||t==="light"){document.docu
 
   <!-- ============ 1. LA CURVA ============ -->
   <section id="curva">
-    <div class="sec-head"><span class="sec-unit">ppm</span><h2>La curva, disegnata correttamente</h2></div>
-    <p class="standfirst">Concentrazione media mensile di CO₂ all'osservatorio di Mauna Loa, dal 1959 a oggi. L'oscillazione annuale è la respirazione della vegetazione dell'emisfero nord: massimo a maggio, minimo a fine settembre.</p>
+    <div class="sec-head"><span class="sec-unit">ppm</span><h2>La curva di Mauna Loa</h2></div>
+    <p class="standfirst">Concentrazione media mensile di CO₂ all'osservatorio di Mauna Loa, sulle Hawaii, dal 1959 a oggi. L'oscillazione annuale è la respirazione della vegetazione dell'emisfero nord: massimo a maggio, minimo a fine settembre.</p>
 
     <figure>
       <div class="fig-head">
@@ -108,7 +108,7 @@ try{var t=localStorage.getItem("tema");if(t==="dark"||t==="light"){document.docu
           <svg id="keeling" viewBox="0 0 880 400" role="img" aria-label="Curva di Keeling dal 1959 al 2025: la concentrazione sale da 316 a 427 ppm con pendenza crescente."></svg>
         </div>
       </div>
-      <figcaption><b>Come leggerla.</b> L'asse verticale parte da 305 ppm, non da zero: così si vede la pendenza, che è l'informazione, ma la curva sembra più ripida di quanto sia in proporzione al totale. I punti di riferimento sono medie annue: 414 nel 2020, 425 nel 2024, 427 nel 2025. Il dente di sega è la stagione, non il rumore.</figcaption>
+      <figcaption><b>Come leggerla.</b> L'asse verticale parte da 305 ppm, non da zero: così si vede la pendenza, che è l'informazione, ma la curva sembra più ripida di quanto sia in proporzione al totale. I punti di riferimento sono medie annue: 370 nel 2000, 414 nel 2020, 427 nel 2025. Il dente di sega è la stagione, non il rumore.</figcaption>
     </figure>
 
     <div class="live" id="live" data-state="baked">
@@ -126,11 +126,27 @@ try{var t=localStorage.getItem("tema");if(t==="dark"||t==="light"){document.docu
         <div class="live-cell">
           <span class="live-k">Sopra il preindustriale</span>
           <span class="live-v"><b id="live-pre">+53</b> %</span>
-          <span class="live-y">rispetto a 280 ppm</span>
+          <span class="live-y">rispetto ai 280 ppm di prima dell'era industriale</span>
         </div>
       </div>
       <p class="live-note" id="live-note">Valori salvati il 12 settembre 2026.</p>
       <p class="live-legend">Il pallino dice da dove vengono i numeri: <span class="lg lg-live">letti ora dalla fonte</span> · <span class="lg lg-partial">in parte</span> · <span class="lg lg-baked">valori salvati nella pagina</span></p>
+    </div>
+
+    <div class="t-wrap">
+      <table>
+        <caption>Velocità di crescita per decennio, e quanto era caldo</caption>
+        <thead><tr><th>Periodo</th><th class="num">ppm / anno</th><th class="num">°C sul 1850–1900</th><th>Nota</th></tr></thead>
+        <tbody>
+          <tr><td>1960–1969</td><td class="num">0,86</td><td class="num">+0,16</td><td>Il decennio di partenza del confronto</td></tr>
+          <tr><td>1970–1979</td><td class="num">1,28</td><td class="num">+0,23</td><td></td></tr>
+          <tr><td>1980–1989</td><td class="num">1,61</td><td class="num">+0,43</td><td></td></tr>
+          <tr><td>1990–1999</td><td class="num">1,51</td><td class="num">+0,56</td><td>Unico decennio in calo: eruzione del Pinatubo (1991), crollo sovietico</td></tr>
+          <tr><td>2000–2009</td><td class="num">1,97</td><td class="num">+0,74</td><td></td></tr>
+          <tr><td>2010–2019</td><td class="num">2,42</td><td class="num">+0,97</td><td></td></tr>
+          <tr class="total"><td>2016–2025</td><td class="num">2,56</td><td class="num">+1,18</td><td>≈ 3 volte gli anni '60</td></tr>
+        </tbody>
+      </table>
     </div>
 
 
@@ -146,31 +162,16 @@ try{var t=localStorage.getItem("tema");if(t==="dark"||t==="light"){document.docu
     <figure>
       <div class="fig-head">
         <p class="fig-title">Gli anni caldi sono gli anni in cui sale di più</p>
-        <p class="fig-sub">Gli ultimi dieci anni, tre pannelli sullo stesso asse dei tempi. Sopra: medie mensili di Mauna Loa (linea sottile), linea spessa: la salita di fondo, tolto il respiro stagionale delle piante e medie annue (punti). Al centro: di quanto è cresciuta la CO₂ in ciascun anno, dal 1° gennaio al 31 dicembre; le barre piene sono gli anni sopra la media. Sotto: la temperatura globale dello stesso anno.</p>
+        <p class="fig-sub">Gli ultimi dieci anni, tre pannelli sullo stesso asse dei tempi. Sopra: medie mensili di Mauna Loa (linea sottile), la salita di fondo tolto il respiro stagionale delle piante (linea spessa) e le medie annue (punti). Al centro: di quanto è cresciuta la CO₂ in ciascun anno, dal 1° gennaio al 31 dicembre; le barre piene sono gli anni sopra la media. Sotto: la temperatura globale dello stesso anno.</p>
       </div>
       <div class="fig-body">
         <div class="scroller">
           <svg id="recente" viewBox="0 0 880 496" role="img" aria-label="Tre pannelli allineati sugli anni dal 2016 al 2026. Sopra: la concentrazione mensile a Mauna Loa sale da 402 a circa 430 ppm con l'oscillazione stagionale ben visibile. Al centro: le barre della crescita annua, intorno a 2 o 3 ppm all'anno, con il 2016, il 2023 e il 2024 sopra i 3 ppm e il 2025 a 2,23; la media del decennio è 2,56. Sotto: l'anomalia della temperatura globale, da 1,17 gradi nel 2016 a 1,42 nel 2024 e 1,29 nel 2025, con i massimi negli stessi anni in cui la CO2 è cresciuta di più."></svg>
         </div>
       </div>
-      <figcaption><b>Gli anni in cui la CO₂ cresce di più sono gli anni caldi: 2016, 2023, 2024.</b> Non è la temperatura a produrre la CO₂ in più: è El Niño, che scalda il pianeta e insieme secca i tropici, così la vegetazione assorbe meno e in atmosfera ne resta di più. Nel 2023–2024 la crescita è stata 3,3 ppm l'anno contro 2,6 di media; nel 2025, finito El Niño, è tornata a 2,2 e la temperatura è scesa a 1,29 °C. La linea spessa del primo pannello toglie il respiro stagionale e lascia la salita di fondo: è su quella che NOAA misura la crescita dell'anno.</figcaption>
+      <figcaption><b>Gli anni in cui la CO₂ cresce di più sono gli anni caldi: 2016, 2023, 2024.</b> Non è la temperatura a produrre la CO₂ in più: è El Niño, il riscaldamento periodico del Pacifico che ogni pochi anni scalda il pianeta e insieme secca i tropici, così la vegetazione assorbe meno e in atmosfera ne resta di più. Nel 2023–2024 la crescita è stata 3,3 ppm l'anno contro 2,6 di media; nel 2025, finito El Niño, è tornata a 2,2 e la temperatura è scesa a 1,29 °C. La linea spessa del primo pannello toglie il respiro stagionale e lascia la salita di fondo: è su quella che NOAA misura la crescita dell'anno.</figcaption>
     </figure>
 
-    <div class="t-wrap">
-      <table>
-        <caption>Velocità di crescita per decennio, e quanto era caldo</caption>
-        <thead><tr><th>Periodo</th><th class="num">ppm / anno</th><th class="num">GtCO₂ / anno</th><th class="num">°C sul 1850–1900</th><th>Nota</th></tr></thead>
-        <tbody>
-          <tr><td>1960–1969</td><td class="num">0,86</td><td class="num">6,7</td><td class="num">+0,16</td><td>Il decennio di partenza del confronto</td></tr>
-          <tr><td>1970–1979</td><td class="num">1,28</td><td class="num">10,0</td><td class="num">+0,23</td><td></td></tr>
-          <tr><td>1980–1989</td><td class="num">1,61</td><td class="num">12,5</td><td class="num">+0,43</td><td></td></tr>
-          <tr><td>1990–1999</td><td class="num">1,51</td><td class="num">11,7</td><td class="num">+0,56</td><td>Unico decennio in calo: Pinatubo, crollo sovietico</td></tr>
-          <tr><td>2000–2009</td><td class="num">1,97</td><td class="num">15,3</td><td class="num">+0,74</td><td></td></tr>
-          <tr><td>2010–2019</td><td class="num">2,42</td><td class="num">18,8</td><td class="num">+0,97</td><td></td></tr>
-          <tr class="total"><td>2016–2025</td><td class="num">2,56</td><td class="num">19,9</td><td class="num">+1,18</td><td>≈ 3 volte gli anni '60</td></tr>
-        </tbody>
-      </table>
-    </div>
 
     <p class="note-metric"><b>Perché due numeri diversi per lo stesso anno.</b> «Cresciuta di 2,23 ppm» è il tasso NOAA: quanto sale la curva di fondo fra il 1° gennaio e il 31 dicembre. La differenza fra la media di un anno e quella del precedente dà un numero un po' diverso (nel 2024: 3,53 contro 3,33), perché una media annua contiene metà dell'anno prima. Questa pagina usa sempre il tasso NOAA.</p>
   </section>
@@ -178,7 +179,7 @@ try{var t=localStorage.getItem("tema");if(t==="dark"||t==="light"){document.docu
   <!-- ============ 2. QUANTO SCALDA ============ -->
   <section id="caldo">
     <div class="sec-head"><span class="sec-unit">°C</span><h2>E allora? Cosa fanno quei ppm</h2></div>
-    <p class="standfirst">Finora abbiamo contato molecole. Questa è la ragione per cui contarle importa: più CO₂ in atmosfera significa meno calore infrarosso che riesce a uscire verso lo spazio, e una superficie che si scalda finché il bilancio non torna in pari. Il grafico qui sotto è la stessa storia di quello sopra, misurata in gradi anziché in parti per milione.</p>
+    <p class="standfirst">Finora abbiamo contato molecole. Questa è la ragione per cui contarle importa: più CO₂ in atmosfera significa meno calore infrarosso che riesce a uscire verso lo spazio, e una superficie che si scalda finché il calore che entra e quello che esce non tornano uguali. Il grafico qui sotto è la stessa storia di quello sopra, misurata in gradi anziché in parti per milione.</p>
 
     <figure>
       <div class="fig-head">
@@ -212,29 +213,30 @@ try{var t=localStorage.getItem("tema");if(t==="dark"||t==="light"){document.docu
         </div>
       </div>
       <p class="live-note" id="lt-note">Valori salvati il 12 settembre 2026.</p>
+      <p class="live-legend">Il pallino dice da dove vengono i numeri: <span class="lg lg-live">letti ora dalla fonte</span> · <span class="lg lg-partial">in parte</span> · <span class="lg lg-baked">valori salvati nella pagina</span></p>
     </div>
 
     <div class="prose">
       <h3>Perché un singolo anno sopra 1,5 °C non è «aver sforato»</h3>
-      <p>L'obiettivo di Parigi riguarda la <em>media su decenni</em>, non un anno. Il 2024 ha toccato circa 1,4 °C in questa serie, ma la media dell'ultimo decennio è 1,2: è quest'ultima la grandezza che l'accordo misura. Un singolo anno caldo può essere spinto da El Niño, come il 2024; un singolo anno più fresco non riporta indietro niente, come il 2025.</p>
+      <p>L'obiettivo di Parigi riguarda la <em>media su decenni</em>, non un anno. Il 2024 ha toccato circa 1,4 °C in questa serie, ma la media dell'ultimo decennio è 1,18: è quest'ultima la grandezza che l'accordo misura. Un singolo anno caldo può essere spinto da El Niño, come il 2024; un singolo anno più fresco non riporta indietro niente, come il 2025.</p>
 
       <h3>Un decimo di grado di disaccordo fra i termometri</h3>
-      <p>Questa pagina usa NOAAGlobalTemp. Altre serie autorevoli — ERA5 di Copernicus, HadCRUT del Met Office, Berkeley Earth — danno per il 2024 valori fra 1,5 e 1,6 °C (ERA5 1,60; la sintesi dell'Organizzazione meteorologica mondiale 1,55). La stessa serie NOAA, nella versione precedente, dava 1,46: la revisione del 2025 ha abbassato le anomalie recenti di qualche centesimo. La differenza nasce da come ciascuna copre le zone senza stazioni, soprattutto l'Artico, e da come stima il periodo preindustriale, per il quale le misure sono poche. Quando si legge «abbiamo superato 1,5 °C», vale la pena chiedersi con quale righello.</p>
+      <p>Questa pagina usa NOAAGlobalTemp. Altre serie autorevoli — ERA5 di Copernicus, HadCRUT del Met Office, Berkeley Earth — danno per il 2024 valori fra 1,5 e 1,6 °C (ERA5 1,60; la sintesi dell'Organizzazione meteorologica mondiale 1,55). La stessa serie NOAA, nella versione precedente, dava 1,46: la revisione del 2025 ha abbassato i valori recenti di qualche centesimo. La differenza nasce da come ciascuna copre le zone senza stazioni, soprattutto l'Artico, e da come stima il periodo preindustriale, per il quale le misure sono poche. Quando si legge «abbiamo superato 1,5 °C», vale la pena chiedersi con quale righello.</p>
 
       <h3>Il budget che si svuota</h3>
-      <p>Il Global Carbon Budget 2025 stima in <b>170 GtCO₂</b> quanto possiamo ancora emettere per avere una probabilità del 50% di restare sotto 1,5 °C, contato dall'inizio del 2026. Al ritmo di 42,2 GtCO₂ all'anno sono circa quattro anni, e dal 1° gennaio 2026 il contatore scende. Il numero nella striscia qui sopra si aggiorna da solo col passare del tempo: è una sottrazione, non una previsione, e l'incertezza sui 170 GtCO₂ di partenza è ampia.</p>
+      <p>Il Global Carbon Budget 2025 stima in <b>170 GtCO₂</b> quanto possiamo ancora emettere per avere una probabilità del 50% di restare sotto 1,5 °C, contato dall'inizio del 2026: circa quattro anni al ritmo di 42,2 GtCO₂ all'anno. Il riquadro qui sopra mostra quanto ne resta oggi, sottraendo i mesi trascorsi: è una sottrazione, non una previsione, e l'incertezza sui 170 GtCO₂ di partenza è ampia.</p>
 
       <details class="more"><summary>E non c'è solo l'anidride carbonica: metano e protossido</summary>
       <div class="gases">
         <div class="gas">
           <span class="gas-n">CO₂</span>
           <span class="gas-v"><b id="g-co2">425,6</b> ppm</span>
-          <span class="gas-d">+52% sul preindustriale (280)</span>
+          <span class="gas-d">media globale NOAA, +52% sul preindustriale; Mauna Loa, più a nord, segna un po' di più</span>
         </div>
         <div class="gas">
           <span class="gas-n">Metano · CH₄</span>
           <span class="gas-v"><b id="g-ch4">1936</b> ppb</span>
-          <span class="gas-d">+168% sul preindustriale (722)</span>
+          <span class="gas-d">ppb = parti per miliardo · +168% sul preindustriale (722)</span>
         </div>
         <div class="gas">
           <span class="gas-n">Protossido · N₂O</span>
@@ -269,7 +271,7 @@ try{var t=localStorage.getItem("tema");if(t==="dark"||t==="light"){document.docu
           <svg id="budget" viewBox="0 0 880 340" role="img" aria-label="Diagramma di flusso: 40,9 GtCO2 emesse ogni anno si dividono in 11,8 assorbite dall'oceano, 8,7 dalla vegetazione e 20,4 che restano in atmosfera."></svg>
         </div>
       </div>
-      <figcaption><b>I baffi sotto i blocchi sono l'incertezza, alla stessa scala dei blocchi.</b> Il pozzo terrestre vale 8,7 GtCO₂ ma è noto entro ±2,9: un terzo. Il pozzo oceanico, più largo, è vincolato il doppio meglio. Disegnare i due con lo stesso bordo netto direbbe una cosa falsa. Sulla media del decennio il bilancio chiude quasi esattamente; in un singolo anno no: nel 2024 mancano all'appello 6 GtCO₂, il disaccordo più grande della serie fra quanto risulta emesso e quanto risulta finito da qualche parte.</figcaption>
+      <figcaption><b>I baffi sotto i blocchi sono l'incertezza, alla stessa scala dei blocchi.</b> Il pozzo terrestre vale 8,7 GtCO₂ ma è noto entro ±2,9: un terzo. Del pozzo oceanico, più largo, conosciamo il valore con metà dell'incertezza. Disegnare i due con lo stesso bordo netto direbbe una cosa falsa. Sulla media del decennio il bilancio chiude quasi esattamente; nel singolo anno no, e il 2024 è il caso più vistoso: se ne parla nella sezione sul 2024.</figcaption>
     </figure>
 
     <p class="note-metric"><b>Quanto fa, a testa?</b> 40,9 GtCO₂ divise per gli 8,2 miliardi di persone vive fanno circa <em>5 tonnellate a testa all'anno</em>, uso del suolo incluso: il peso di tre automobili. È una media che nasconde tutto: più avanti le pro capite dei soli fossili vanno dalle 14,2 tonnellate di uno statunitense alle 2,2 di un indiano, con l'Italia a 5,1.</p>
@@ -331,12 +333,12 @@ try{var t=localStorage.getItem("tema");if(t==="dark"||t==="light"){document.docu
   <!-- ============ 3. I POZZI ============ -->
   <section id="pozzi">
     <div class="sec-head"><span class="sec-unit">ppm / anno</span><h2>Perché il 2024 dipende da dove guardi</h2></div>
-    <p class="standfirst">Nel 2024 le emissioni sono cresciute di circa l'1%. A Mauna Loa la concentrazione è salita esattamente come l'anno prima. Nella media globale ha fatto il salto più grande mai registrato. Non è una contraddizione: sono due strumenti diversi, e un singolo anno non basta per giudicare.</p>
+    <p class="standfirst">Nel 2024 le emissioni sono cresciute di circa l'1%. A Mauna Loa la concentrazione è salita esattamente come l'anno prima. Nella media globale ha fatto il salto più grande dal 1980, da quando la serie esiste. Non è una contraddizione: sono due strumenti diversi, e un singolo anno non basta per giudicare.</p>
 
     <figure>
       <div class="fig-head">
         <p class="fig-title">Lo stesso anno, misurato in due modi</p>
-        <p class="fig-sub">Tasso di crescita annuo della CO₂. Mauna Loa è un singolo osservatorio nel Pacifico; la media globale è calcolata su una rete di siti marini remoti, pesati per latitudine.</p>
+        <p class="fig-sub">Tasso di crescita annuo della CO₂. Mauna Loa è un singolo osservatorio nel Pacifico; la media globale è calcolata su stazioni lontane da città e industrie, combinate in modo che ogni fascia del pianeta pesi quanto la sua superficie.</p>
       </div>
       <div class="fig-body">
         <ul class="legend">
@@ -352,7 +354,7 @@ try{var t=localStorage.getItem("tema");if(t==="dark"||t==="light"){document.docu
 
     <div class="callout">
       <span class="c-lab">Perché non fidarsi di un solo anno</span>
-      <p><b>Il 2023 e il 2024 sono stati eccezionali per un motivo che non riguarda le nostre emissioni:</b> El Niño, il riscaldamento periodico del Pacifico, ha seccato i tropici e alimentato incendi record, e la vegetazione ha assorbito meno. Il pozzo terrestre ha trattenuto 7,4 GtCO₂ nel 2023 e 7,1 nel 2024, contro una media decennale di 8,7. L'oceano, molto più stabile, ha continuato a fare il suo lavoro.</p>
+      <p><b>Il 2023 e il 2024 sono stati eccezionali per un motivo che non riguarda le nostre emissioni:</b> El Niño ha seccato i tropici e alimentato incendi record, e la vegetazione ha assorbito meno. Il pozzo terrestre ha trattenuto 7,4 GtCO₂ nel 2023 e 7,1 nel 2024, contro una media decennale di 8,7. L'oceano, molto più stabile, ha continuato a fare il suo lavoro.</p>
       <p>Per il 2024 il bilancio non torna: sommando quanto è finito in aria, in mare e nella vegetazione si ottiene più di quanto risulti emesso, con uno scarto di 6 GtCO₂, il più negativo della serie. Il Global Carbon Project lo pubblica come voce a sé. Nel 2025 la crescita è scesa a 2,23 ppm a Mauna Loa e 2,06 nella media globale, e la stima preliminare del Global Carbon Budget indica che il pozzo terrestre è tornato alla forza di prima. L'anomalia era un'oscillazione, non una rottura: costruire una tesi sul solo 2024 sarebbe imprudente in entrambe le direzioni.</p>
     </div>
   </section>
@@ -380,7 +382,7 @@ try{var t=localStorage.getItem("tema");if(t==="dark"||t==="light"){document.docu
           <div class="bar-row is-muted"><span class="bar-lab">Resto del mondo<small>circa 190 paesi · 29,9%</small></span><div class="bar-track"><div class="bar-fill" style="--w:94.0%"></div></div><span class="bar-val">11,55</span></div>
         </div>
       </div>
-      <figcaption>Totale mondiale <b>38,6 GtCO₂</b> nel 2024, al lordo della quota che il cemento riassorbe (al netto: 37,8). La Cina da sola vale quasi un terzo; l'Italia meno dell'1%.</figcaption>
+      <figcaption>Totale mondiale <b>38,6 GtCO₂</b> nel 2024, compresa la piccola parte che il cemento riassorbe nel tempo (tolta quella: 37,8). La Cina da sola vale quasi un terzo; l'Italia meno dell'1%. <b>Quale numero citare:</b> 38,6 sono i soli fossili di un anno; i 40,9 dell'apertura sono la media 2015–2024 con l'uso del suolo.</figcaption>
     </figure>
 
     <figure>
@@ -429,7 +431,7 @@ try{var t=localStorage.getItem("tema");if(t==="dark"||t==="light"){document.docu
           <tr><td>Petrolio</td><td class="num">32%</td><td>Trasporti</td><td class="num">23%</td></tr>
           <tr><td>Gas naturale</td><td class="num">21%</td><td>Industria (diretta)</td><td class="num">19%</td></tr>
           <tr><td>Cemento</td><td class="num">4%</td><td>Edifici</td><td class="num">9%</td></tr>
-          <tr><td>Altro e flaring</td><td class="num">2%</td><td>Altro</td><td class="num">9%</td></tr>
+          <tr><td>Altro, incluso il gas bruciato ai pozzi (flaring)</td><td class="num">2%</td><td>Altro</td><td class="num">9%</td></tr>
         </tbody>
       </table>
     </div>
@@ -485,11 +487,11 @@ try{var t=localStorage.getItem("tema");if(t==="dark"||t==="light"){document.docu
           <svg id="kyotochart" viewBox="0 0 880 300" role="img" aria-label="Emissioni fossili mondiali dal 1990 al 2024: salgono da 22,7 a 38,6 miliardi di tonnellate. Segnati la firma del protocollo nel 1997 a 24,4, l'entrata in vigore nel 2005 a 29,6 e la fine del primo periodo di impegno nel 2012 a 35,0."></svg>
         </div>
       </div>
-      <figcaption><b>La vasca si riempie comunque.</b> Kyoto vincolava un sottoinsieme di paesi a tagliare del 5%; nel frattempo il resto del mondo cresceva del 50%. L'unico calo visibile è il 2020, e non è merito di nessun trattato.</figcaption>
+      <figcaption><b>La vasca si riempie comunque.</b> Sono i soli fossili, anno per anno. Kyoto vincolava un sottoinsieme di paesi a tagliare del 5%; fra il 1997 e il 2012 il resto del mondo è cresciuto di oltre il 60%, e i paesi senza vincoli hanno raddoppiato. L'unico calo visibile è il 2020, e non è merito di nessun trattato.</figcaption>
     </figure>
 
     <div class="prose">
-      <p><b>Il motivo fisico è il più importante.</b> La CO₂ atmosferica è uno stock, non un flusso. È una vasca che si riempie: chiudere il rubinetto a metà non abbassa il livello, lo fa salire più lentamente. Per fermare la crescita servono emissioni nette zero, non emissioni ridotte. Kyoto chiedeva meno 5,2% rispetto al 1990, per un sottoinsieme di paesi.</p>
+      <p><b>Il motivo fisico è il più importante.</b> La CO₂ atmosferica è uno stock, non un flusso. È una vasca che si riempie: chiudere il rubinetto a metà non abbassa il livello, lo fa salire più lentamente. Per fermare la crescita servono emissioni nette zero, cioè non immettere più di quanto i pozzi assorbono: non basta emettere meno. Kyoto chiedeva meno 5,2% rispetto al 1990, per un sottoinsieme di paesi.</p>
     </div>
 
     <ul class="tl">
@@ -502,7 +504,7 @@ try{var t=localStorage.getItem("tema");if(t==="dark"||t==="light"){document.docu
 
     <div class="callout">
       <span class="c-lab">Da dire comunque</span>
-      <p>Kyoto non è stato inutile. Ha creato gli inventari nazionali, i sistemi di misura e verifica e i mercati del carbonio, incluso l'ETS europeo. È l'infrastruttura su cui si è poi costruito l'Accordo di Parigi. Ma il suo effetto misurabile sulla curva di Mauna Loa è sostanzialmente nullo: proprio negli anni di Kyoto la concentrazione ha continuato ad accelerare, da 1,5 a 2,0 ppm all'anno fra gli anni '90 e il decennio successivo. Cosa piegherebbe la curva: emissioni nette zero, non emissioni ridotte. È l'obiettivo che l'Accordo di Parigi ha poi fissato per la metà del secolo.</p>
+      <p>Kyoto non è stato inutile. Ha creato gli inventari nazionali, i sistemi di misura e verifica e i mercati del carbonio, incluso quello europeo dei permessi di emissione (ETS). È l'infrastruttura su cui si è poi costruito l'Accordo di Parigi. Ma il suo effetto misurabile sulla curva di Mauna Loa è sostanzialmente nullo: proprio negli anni di Kyoto la concentrazione ha continuato ad accelerare, da 1,5 a 2,0 ppm all'anno fra gli anni '90 e il decennio successivo. Cosa piegherebbe la curva: emissioni nette zero, non emissioni ridotte. È l'obiettivo che l'Accordo di Parigi ha poi fissato per la metà del secolo.</p>
     </div>
   </section>
 
@@ -516,7 +518,7 @@ try{var t=localStorage.getItem("tema");if(t==="dark"||t==="light"){document.docu
       <li><div><b>Ogni anno emettiamo circa 41 miliardi di tonnellate; metà sparisce in oceano e vegetazione.</b> La curva misura solo l'altra metà. Senza i pozzi saremmo a 574 ppm invece di 427.</div></li>
       <li><div><b>Il pianeta si è scaldato di <span data-from="lt-last">+1,29</span> °C nell'ultimo anno, <span data-from="lt-dec">+1,18</span> di media nell'ultimo decennio.</b> Il limite di Parigi, 1,5 °C, si misura sulla media di un decennio: non è ancora superato, ma restano circa <span data-from="lt-bud">140</span> GtCO₂ di margine, meno di quattro anni di emissioni.</div></li>
       <li><div><b>Gli anni caldi sono gli anni in cui la CO₂ sale di più.</b> Nel 2023 e 2024 El Niño ha indebolito la vegetazione e la crescita è arrivata a 3,3 ppm. Un singolo anno non fa tendenza, in nessuna direzione.</div></li>
-      <li><div><b>Chi emette dipende dalla domanda.</b> Oggi la Cina emette un terzo del totale, ma uno statunitense emette il doppio di un cinese a testa, e in centosettant'anni Stati Uniti ed Europa hanno riempito la vasca più di tutti. Ridurre non basta: per fermare la salita servono emissioni nette zero.</div></li>
+      <li><div><b>Chi emette dipende dalla domanda.</b> Oggi la Cina emette un terzo del totale, ma uno statunitense emette una volta e mezza un cinese a testa, e in centosettant'anni Stati Uniti ed Europa hanno riempito la vasca più di tutti. Ridurre non basta: per fermare la salita servono emissioni nette zero.</div></li>
     </ol>
 
     <div class="callout">
@@ -540,7 +542,7 @@ try{var t=localStorage.getItem("tema");if(t==="dark"||t==="light"){document.docu
       <h3>Conversioni usate in questa pagina</h3>
       <p class="mono" style="font-size:.88rem;line-height:1.9">1 ppm = 2,124 GtC = 7,78 GtCO₂<br>1 GtC = 3,664 GtCO₂</p>
       <h3>Due misure che non vanno confuse</h3>
-      <p>Il <b>tasso di crescita</b> NOAA è l'aumento fra il 1° gennaio e il 31 dicembre, calcolato sulla curva destagionalizzata. La <b>differenza fra medie annue</b> è un'altra cosa e dà numeri diversi: nel 2024, 3,33 ppm il primo, 3,53 la seconda. Inoltre <b>Mauna Loa non è il pianeta</b>: è un osservatorio a 3 400 metri nel Pacifico, mentre la media globale NOAA è calcolata su una rete di siti marini remoti, dove l'aria è ben mescolata, pesati per latitudine. Nel 2024 le due misure danno 3,33 e 3,76 ppm.</p>
+      <p>Il <b>tasso di crescita</b> NOAA è l'aumento fra il 1° gennaio e il 31 dicembre, calcolato sulla linea spessa dei grafici, quella senza il respiro stagionale. La <b>differenza fra medie annue</b> è un'altra cosa e dà numeri diversi: nel 2024, 3,33 ppm il primo, 3,53 la seconda. Inoltre <b>Mauna Loa non è il pianeta</b>: è un osservatorio a 3 400 metri nel Pacifico, mentre la media globale NOAA è calcolata su stazioni marine lontane da città e industrie, dove l'aria è ben mescolata, combinate in modo che ogni fascia di latitudine pesi quanto la sua superficie. Nel 2024 le due misure danno 3,33 e 3,76 ppm.</p>
       <p>Le <b>GtC</b> (miliardi di tonnellate di carbonio) che compaiono nelle pubblicazioni scientifiche si convertono in GtCO₂ moltiplicando per 3,664: questa pagina usa sempre le GtCO₂.</p>
       <details class="more revbox"><summary>Cosa è cambiato in questa pagina: il registro delle revisioni</summary>
       <p>La scienza del clima si corregge, e questa pagina fa lo stesso. Le voci più recenti sono in cima.</p>

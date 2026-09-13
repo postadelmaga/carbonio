@@ -257,7 +257,7 @@ figcaption b{font-weight:600;color:var(--ink)}
 /* ---------- diverging ---------- */
 .div-chart{position:relative}
 .div-row{display:grid;grid-template-columns:minmax(88px,150px) 1fr auto;align-items:center;gap:12px;margin-bottom:9px}
-.div-track{position:relative;height:22px;background:linear-gradient(to right,transparent 0,transparent calc(var(--zero) - 1px),var(--rule-strong) calc(var(--zero) - 1px),var(--rule-strong) var(--zero),transparent var(--zero),transparent 100%)}
+.div-track{position:relative;height:22px;background:linear-gradient(to right,transparent 0,transparent calc(var(--zero) - 1px),var(--ink-3) calc(var(--zero) - 1px),var(--ink-3) calc(var(--zero) + 1px),transparent var(--zero),transparent 100%)}
 .div-bar{position:absolute;top:0;height:100%;border-radius:2px}
 .div-bar.pos{left:var(--zero);width:var(--w);background:var(--source)}
 .div-bar.neg{right:calc(100% - var(--zero));width:var(--w);background:var(--atmos)}
@@ -326,7 +326,7 @@ td .dot{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right
 .srcs li{padding:12px 0;border-bottom:1px solid var(--rule);font-size:.88rem;line-height:1.5}
 .srcs b{display:block;font-family:Archivo,sans-serif;font-size:.86rem}
 .srcs span{color:var(--ink-3);font-size:.83rem}
-.foot{font-size:.84rem;color:var(--ink-3);max-width:var(--prose);border-top:2px solid var(--ink);padding-top:16px}
+.foot{font-size:.84rem;color:var(--ink-3);max-width:none;border-top:2px solid var(--ink);padding-top:16px}
 
 /* ---------- svg text ---------- */
 .svg-lab{font-family:"IBM Plex Mono",monospace;font-size:12px;fill:var(--ink-3)}
