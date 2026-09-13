@@ -222,7 +222,7 @@ figcaption b{font-weight:600;color:var(--ink)}
 .bar-lab{font-family:Archivo,sans-serif;font-size:.84rem;font-weight:600;color:var(--ink);line-height:1.25}
 .bar-lab small{display:block;font-weight:400;font-size:.74rem;color:var(--ink-3)}
 .bar-track{background:var(--surface-2);border-radius:3px;height:22px;position:relative;overflow:hidden}
-.bar-fill{height:100%;border-radius:0 3px 3px 0;background:var(--ocean);width:var(--w)}
+.bar-fill{height:100%;border-radius:0 3px 3px 0;background:var(--ocean);width:var(--w);min-width:3px}
 .bar-val{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;font-size:.84rem;font-weight:500;color:var(--ink);min-width:4.6em;text-align:right}
 .bar-row.is-muted .bar-fill{background:var(--ink-3)}
 .bar-row.is-source .bar-fill{background:var(--source)}

@@ -174,7 +174,12 @@ seguito del settembre 2025 aggiunge solo l'effetto della spesa in aumento.
 Ucraina: l'Initiative on GHG Accounting of War pubblica un aggiornamento
 **ogni febbraio** sull'anniversario dell'invasione, l'ultimo è il quarto anno
 (311,4 MtCO₂e). Israele-Gaza: Neimark et al., One Earth, marzo 2026 (1,3
-MtCO₂e di operazioni, 33,2 con barriere e ricostruzione). Attenzione al
+MtCO₂e di operazioni, 33,2 con barriere e ricostruzione). Iran: stima
+preliminare del Climate and Community Institute con QMUL e Lancaster, marzo
+2026, 5,1 MtCO₂e nelle prime due settimane, scomposta in cinque voci — è
+quella che regge il messaggio della sezione, quindi se esce la versione
+rivista va sostituita. Contorno (incendi nei paesi in conflitto, Siria,
+pozzi del Kuwait 1991): CEOBS. Attenzione al
 periodo quando si aggiorna: nel grafico la prima barra è un anno, le altre
 sono totali di conflitto, ed è l'errore più facile da introdurre.
 
