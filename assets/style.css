@@ -538,8 +538,13 @@ img,svg{max-width:100%}
    La pagina resta un documento scorrevole (accessibile, stampabile, con
    ancore), ma ogni sezione occupa almeno una schermata e si aggancia in
    alto: cosi' le frecce, a schermo o su tastiera, la sfogliano come slide. */
-html{scroll-snap-type:y proximity;scroll-padding-top:46px}
-.hero,section{min-height:calc(100svh - 46px);scroll-snap-align:start;scroll-margin-top:46px;box-sizing:border-box}
+html{scroll-padding-top:46px}
+.hero,section{min-height:calc(100svh - 46px);scroll-margin-top:46px;box-sizing:border-box}
+/* i grafici non crescono oltre due terzi dello schermo: su un portatile
+   una figura da sola non deve occupare l'intera schermata */
+.fig-body .scroller svg{max-height:min(64svh,640px)}
+.deck-page{font-family:"IBM Plex Mono",monospace;font-size:.72rem;color:var(--ink-3);padding:0 8px;border-left:1px solid var(--rule)}
+@media (max-width:640px){.deck-page{display:none}}
 section{padding-bottom:40px}
 body{padding-bottom:64px}
 
