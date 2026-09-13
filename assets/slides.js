@@ -53,7 +53,7 @@
   function setHash(id){
     try{ if(history.replaceState) history.replaceState(null, '', id ? '#' + id : location.pathname + location.search); }catch(e){}
   }
-  function scrollToY(y){ window.scrollTo({top:Math.max(0,y), behavior: reduce ? 'auto' : 'smooth'}); }
+  function scrollToY(y){ heading(y); window.scrollTo({top:Math.max(0,y), behavior: reduce ? 'auto' : 'smooth'}); }
 
   /* indicatore "parte 2 di 3" quando la sezione non sta in una schermata */
   function updatePage(){
@@ -72,6 +72,7 @@
     i = Math.max(0, Math.min(slides.length-1, i));
     var s = slides[i];
     var y = s.getBoundingClientRect().top + window.pageYOffset - NAV_H;
+    heading(y);
     window.scrollTo({top:y, behavior: reduce ? 'auto' : 'smooth'});
     setHash(s.id);
     paint(i);
@@ -82,6 +83,7 @@
     ttl.textContent = titleOf(slides[i]);
     bar.style.width = (i/(slides.length-1)*100) + '%';
     slides.forEach(function(s,k){ if(k===i) s.setAttribute('aria-current','true'); else s.removeAttribute('aria-current'); });
+    markLink(i);
     updatePage();
   }
 
@@ -137,9 +139,56 @@
   prev.addEventListener('click', function(){ step(-1); });
   next.addEventListener('click', function(){ step(1); });
 
+  /* ── barra in alto sul telefono ──
+     Il menu a tendina con le voci; la barra sparisce scorrendo in giu' e
+     torna scorrendo in su o quando la navigazione e' programmatica (frecce,
+     voci del menu), cosi' la sezione atterra sempre sotto una barra visibile. */
+  var mobileMq = window.matchMedia ? window.matchMedia('(max-width:640px)') : null;
+  var menuBtn = document.getElementById('menu-toggle');
+  var links = navEl ? navEl.querySelectorAll('.nav-links a') : [];
+  var lastY = window.pageYOffset;
+  /* dichiara la destinazione di uno scorrimento programmatico: l'arrivo non
+     conta come "scorrere in giu'" e la barra resta visibile */
+  function heading(y){ lastY = Math.max(0, y); showNav(); }
+  function isMobile(){ return !!(mobileMq && mobileMq.matches); }
+  function showNav(){ if(navEl) navEl.classList.remove('nav-hidden'); }
+  function setMenu(open){
+    if(!navEl || !menuBtn) return;
+    navEl.classList.toggle('is-open', open);
+    menuBtn.setAttribute('aria-expanded', String(open));
+    menuBtn.setAttribute('aria-label', open ? 'Chiudi il menu' : 'Apri il menu');
+  }
+  if(menuBtn){
+    menuBtn.addEventListener('click', function(){ setMenu(!navEl.classList.contains('is-open')); });
+    Array.prototype.forEach.call(links, function(a){
+      a.addEventListener('click', function(){
+        setMenu(false);
+        var t = a.hash && document.getElementById(a.hash.slice(1));
+        heading(t ? t.getBoundingClientRect().top + window.pageYOffset - NAV_H : 0);
+      });
+    });
+    document.addEventListener('click', function(e){ if(navEl.classList.contains('is-open') && !navEl.contains(e.target)) setMenu(false); });
+    document.addEventListener('keydown', function(e){ if(e.key==='Escape' && navEl.classList.contains('is-open')){ setMenu(false); menuBtn.focus(); } });
+  }
+  function navOnScroll(){
+    if(!navEl || !isMobile()){ showNav(); lastY = window.pageYOffset; return; }
+    var y = window.pageYOffset, dy = y - lastY;
+    if(y < 16 || dy < -6){ showNav(); }
+    else if(dy > 6 && y > 80){ navEl.classList.add('nav-hidden'); setMenu(false); }
+    lastY = y;
+  }
+  /* la voce del menu della sezione corrente resta evidenziata */
+  function markLink(i){
+    var id = slides[i] && slides[i].id;
+    Array.prototype.forEach.call(links, function(a){
+      if(a.hash === '#' + id) a.setAttribute('aria-current','true'); else a.removeAttribute('aria-current');
+    });
+  }
+
   /* sul telefono la pillola sparisce mentre si scorre e torna da fermi */
   var hideT = null;
   window.addEventListener('scroll', function(){
+    navOnScroll();
     if(!ticking){ ticking = true; requestAnimationFrame(function(){ detect(); ticking = false; }); }
     box.classList.add('is-scrolling');
     clearTimeout(hideT); hideT = setTimeout(function(){ box.classList.remove('is-scrolling'); }, 500);

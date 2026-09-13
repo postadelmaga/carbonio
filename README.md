@@ -196,6 +196,10 @@ class="fs-more">`) si apre con un pulsante «Come leggerlo» aggiunto da
 sul desktop (il limite di Parigi è callout sul telefono e didascalia sul
 desktop); la pillola delle frecce sta in basso a destra e sparisce mentre si
 scorre.
+Sul telefono la barra in alto tiene solo il marchio, il pulsante del tema e
+un menu a hamburger con le voci (`.nav-links`, aperto con `.nav.is-open`);
+ha lo sfondo sfocato, sparisce scorrendo in giù e torna scorrendo in su, con
+le frecce o scegliendo una voce, così la sezione atterra sotto la barra.
 Sul telefono il tema parte scuro (schermo fino a 640px o puntatore a dito),
 a meno che il lettore non abbia già scelto con il pulsante: la scelta è in
 `localStorage` («tema») e vale per tutte le visite successive.

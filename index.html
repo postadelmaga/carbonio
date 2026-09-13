@@ -48,7 +48,8 @@
 <body>
 <nav class="nav">
   <div class="nav-in">
-    <span class="nav-mark">CO₂</span>
+    <a class="nav-mark" href="#top" aria-label="Torna in cima">CO₂</a>
+    <div class="nav-links" id="nav-menu">
     <a href="#curva">La curva</a>
     <a href="#recenti">Ultimi anni</a>
     <a href="#caldo">Il caldo</a>
@@ -60,11 +61,18 @@
     <a href="#kyoto">Kyoto</a>
     <a href="#sintesi">In sintesi</a>
     <a href="#fonti">Fonti</a>
+    </div>
     <button id="theme-toggle" class="theme-btn" type="button" aria-label="Cambia tema chiaro o scuro" title="Cambia tema">
       <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" focusable="false">
         <path class="ic-sun" d="M12 4V2m0 20v-2m8-8h2M2 12h2m13.66-5.66 1.41-1.41M4.93 19.07l1.41-1.41m11.32 0 1.41 1.41M4.93 4.93l1.41 1.41" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
         <circle class="ic-sun" cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="1.7"/>
         <path class="ic-moon" d="M20 14.5A8.2 8.2 0 0 1 9.5 4 8.5 8.5 0 1 0 20 14.5Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+      </svg>
+    </button>
+    <button id="menu-toggle" class="menu-btn" type="button" aria-label="Apri il menu" aria-expanded="false" aria-controls="nav-menu">
+      <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false">
+        <path class="ic-burger" d="M4 7h16M4 12h16M4 17h16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        <path class="ic-close" d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
       </svg>
     </button>
   </div>

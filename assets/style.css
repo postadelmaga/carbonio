@@ -97,14 +97,15 @@ h1,h2,h3,.ui{font-family:Archivo,"Helvetica Neue",Arial,sans-serif;}
   max-width:var(--maxw);margin:0 auto;height:100%;
   padding:0 20px;
   display:flex;align-items:center;gap:6px;
-  overflow-x:auto;scrollbar-width:none;
 }
-.nav-in::-webkit-scrollbar{display:none}
+.nav-links{display:flex;align-items:center;gap:6px;height:100%;min-width:0;overflow-x:auto;scrollbar-width:none}
+.nav-links::-webkit-scrollbar{display:none}
+.menu-btn{display:none}
 .nav-mark{
   font-family:Archivo,sans-serif;font-weight:900;font-stretch:112%;
   font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;
   color:var(--source);padding-right:14px;white-space:nowrap;
-  border-right:1px solid var(--rule);margin-right:8px;
+  border-right:1px solid var(--rule);margin-right:8px;text-decoration:none;
 }
 .nav a{
   font-family:Archivo,sans-serif;font-size:.78rem;font-weight:600;
@@ -775,11 +776,37 @@ details.more > :last-child{margin-bottom:16px}
   }
   .fs-btn::after{content:" +"}
   .fig-sub.is-open .fs-btn::after{content:" −"}
-  /* barra in alto: sfumatura che dice che scorre, tema sempre a portata di dito */
-  .nav-in{padding-right:60px}
-  .nav::after{content:"";position:absolute;right:48px;top:0;bottom:1px;width:36px;pointer-events:none;
-    background:linear-gradient(to right,transparent,var(--ground))}
-  .theme-btn{position:absolute;right:12px;top:8px;margin:0;background:var(--ground)}
+  /* barra in alto: marchio a sinistra, tema e menu a destra, voci in un
+     pannello a tendina; sfondo sfocato; sparisce scorrendo in giu' */
+  .nav{
+    background:color-mix(in srgb, var(--ground) 70%, transparent);
+    backdrop-filter:blur(16px) saturate(1.2);-webkit-backdrop-filter:blur(16px) saturate(1.2);
+    transition:transform .25s ease;
+  }
+  .nav.nav-hidden{transform:translateY(-100%)}
+  .nav.nav-hidden ~ .progress{top:0}
+  .nav-in{padding:0 10px 0 16px;gap:4px}
+  .nav-mark{font-size:.78rem;border-right:0;padding-right:0;margin-right:auto}
+  .theme-btn{margin-left:0}
+  .menu-btn{
+    display:inline-flex;align-items:center;justify-content:center;
+    width:36px;height:36px;padding:0;margin-left:4px;
+    background:transparent;color:var(--ink-2);border:1px solid var(--rule);border-radius:3px;cursor:pointer;
+  }
+  .theme-btn{width:36px;height:36px}
+  .menu-btn .ic-close{display:none}
+  .nav.is-open .menu-btn .ic-burger{display:none}
+  .nav.is-open .menu-btn .ic-close{display:inline}
+  .nav-links{
+    display:none;position:absolute;left:0;right:0;top:100%;height:auto;
+    flex-direction:column;align-items:stretch;gap:0;padding:4px 0 8px;overflow:visible;
+    background:color-mix(in srgb, var(--ground) 92%, transparent);
+    backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+    border-bottom:1px solid var(--rule);box-shadow:var(--shadow);
+  }
+  .nav.is-open .nav-links{display:flex}
+  .nav-links a{padding:12px 20px;font-size:.95rem;border-bottom:0;border-left:3px solid transparent}
+  .nav-links a[aria-current="true"]{border-left-color:var(--source);color:var(--ink)}
   /* comandi delle slide: piccoli, in basso a destra, spariscono mentre si scorre */
   .deck-nav{right:10px;bottom:10px;transform:none;padding:3px 4px;transition:opacity .2s}
   .deck-nav button{width:32px;height:32px}
