@@ -295,8 +295,7 @@
           'salvati il ' + BAKED + '.';
       } else {
         box.setAttribute('data-state','baked');
-        note.textContent = 'Lettura in diretta non riuscita: mostro i valori salvati il ' + BAKED +
-          '. Lettura in diretta non riuscita.';
+        note.textContent = 'Lettura in diretta non riuscita: mostro i valori salvati il ' + BAKED + '.';
       }
     });
 })();

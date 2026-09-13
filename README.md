@@ -175,6 +175,16 @@ paragrafi) sta in un `<details class="more">` con etichetta «Approfondisci:
 entra nel conteggio delle schermate. Se aggiungi contenuto a una sezione,
 mettilo lì, non nel corpo. I grafici sono limitati a poco meno di metà schermo in altezza.
 
+Sopra i 1100px di larghezza le sezioni con classe `slide` sono una griglia a
+due colonne: titolo e sommario in cima a tutta larghezza, la figura in
+`.slide-main` a sinistra, il testo di accompagnamento (riquadro dei dati in
+diretta, callout) in `.slide-side` a destra, e il `<details>` in fondo a tutta
+larghezza. Così a 1440×900 ogni sezione sta in una schermata; sotto gli 820px
+di altezza scatta una variante più compatta (meno margini, corpo più piccolo).
+Sotto i 1100px tutto torna in colonna nell'ordine del documento. L'apertura
+è la stessa cosa: titolo e sommario a sinistra, le quattro cifre in un
+riquadro a destra. «Chi emette» è una figura sola con tre pannelli affiancati.
+
 ## Navigazione a slide
 
 Ogni sezione occupa almeno una schermata (`min-height: 100svh`) e si aggancia

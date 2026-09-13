@@ -59,9 +59,12 @@ try{var t=localStorage.getItem("tema");if(t==="dark"||t==="light"){document.docu
 <div class="wrap">
 
   <header class="hero" id="top">
+    <div class="hero-lead">
     <p class="eyebrow">Global Carbon Budget 2025 · medie 2015–2024</p>
     <h1>Il carbonio che <em>resta</em></h1>
     <p class="deck">La curva di Mauna Loa non misura quanto emettiamo. Misura quanto <b>avanza</b> dopo che oceani e vegetazione hanno assorbito la loro parte. Ogni anno ne assorbono circa la metà, gratis.</p>
+    <p class="units"><b>Le unità di questa pagina.</b> <abbr title="gigatonnellate di anidride carbonica">GtCO₂</abbr> = miliardi di tonnellate di CO₂. <abbr title="parti per milione">ppm</abbr> = molecole di CO₂ ogni milione di molecole d'aria. <b>Pozzo</b> = ciò che toglie CO₂ dall'aria: l'oceano e la vegetazione. Medie 2015–2024 del Global Carbon Budget 2025.</p>
+    </div>
 
     <div class="keys">
       <div class="key k-src">
@@ -81,7 +84,6 @@ try{var t=localStorage.getItem("tema");if(t==="dark"||t==="light"){document.docu
         <span class="lbl">Resta in aria: ciò che la curva misura</span>
       </div>
     </div>
-    <p class="units"><b>Le unità di questa pagina.</b> <abbr title="gigatonnellate di anidride carbonica">GtCO₂</abbr> = miliardi di tonnellate di CO₂. <abbr title="parti per milione">ppm</abbr> = molecole di CO₂ ogni milione di molecole d'aria. <b>Pozzo</b> = ciò che toglie CO₂ dall'aria: l'oceano e la vegetazione. Medie 2015–2024 del Global Carbon Budget 2025.</p>
 
     <nav class="guide" aria-label="Da dove cominciare">
     <p class="guide-lab">Se è la prima volta che guardi questi numeri, in tre domande</p>
@@ -95,14 +97,15 @@ try{var t=localStorage.getItem("tema");if(t==="dark"||t==="light"){document.docu
 
 
   <!-- ============ 1. LA CURVA ============ -->
-  <section id="curva">
+  <section id="curva" class="slide">
     <div class="sec-head"><span class="sec-unit">ppm</span><h2>La curva di Mauna Loa</h2></div>
     <p class="standfirst">Concentrazione media mensile di CO₂ all'osservatorio di Mauna Loa, sulle Hawaii, dal 1959 a oggi. L'oscillazione annuale è la respirazione della vegetazione dell'emisfero nord: massimo a maggio, minimo a fine settembre.</p>
 
+    <div class="slide-main">
     <figure>
       <div class="fig-head">
         <p class="fig-title">La CO₂ sale, e sempre più in fretta</p>
-        <p class="fig-sub">Concentrazione di CO₂ a Mauna Loa, 1959–oggi. Linea sottile: medie mensili. Linea spessa: media annua. I punti segnano i valori di riferimento.</p>
+        <p class="fig-sub">Mauna Loa, 1959–oggi. Linea sottile: medie mensili; linea spessa: media annua; i punti segnano i valori di riferimento.</p>
       </div>
       <div class="fig-body">
         <div class="scroller">
@@ -111,7 +114,9 @@ try{var t=localStorage.getItem("tema");if(t==="dark"||t==="light"){document.docu
       </div>
       <figcaption><b>Come leggerla.</b> L'asse verticale parte da 305 ppm, non da zero: si vede la pendenza, che è l'informazione. Il dente di sega è la stagione, non il rumore.</figcaption>
     </figure>
+    </div>
 
+    <aside class="slide-side">
     <div class="live" id="live" data-state="baked">
       <div class="live-grid">
         <div class="live-cell">
@@ -131,12 +136,9 @@ try{var t=localStorage.getItem("tema");if(t==="dark"||t==="light"){document.docu
         </div>
       </div>
       <p class="live-note" id="live-note">Valori salvati il 12 settembre 2026.</p>
-      <p class="live-legend">Il pallino dice da dove vengono i numeri: <span class="lg lg-live">letti ora dalla fonte</span> · <span class="lg lg-partial">in parte</span> · <span class="lg lg-baked">valori salvati nella pagina</span></p>
+      <p class="live-legend"><span class="lg-intro">Il pallino dice da dove vengono i numeri: </span><span class="lg lg-live">letti ora dalla fonte</span> · <span class="lg lg-partial">in parte</span> · <span class="lg lg-baked">valori salvati nella pagina</span></p>
     </div>
-
-
-
-
+    </aside>
 
     <details class="more"><summary>Approfondisci: la velocità per decennio, e quanto era caldo</summary>
     <div class="t-wrap">
@@ -158,10 +160,11 @@ try{var t=localStorage.getItem("tema");if(t==="dark"||t==="light"){document.docu
   </section>
 
   <!-- ============ 1b. ULTIMI ANNI ============ -->
-  <section id="recenti">
+  <section id="recenti" class="slide">
     <div class="sec-head"><span class="sec-unit">ppm / anno</span><h2>Gli ultimi dieci anni, da vicino</h2></div>
     <p class="standfirst">Sulla curva lunga un singolo anno non si distingue. Qui sì: e si vede che gli anni in cui la CO₂ è salita di più, 2016, 2023 e 2024, sono gli stessi anni in cui il pianeta è stato più caldo.</p>
 
+    <div class="slide-main">
     <figure>
       <div class="fig-head">
         <p class="fig-title">Gli anni caldi sono gli anni in cui sale di più</p>
@@ -174,31 +177,37 @@ try{var t=localStorage.getItem("tema");if(t==="dark"||t==="light"){document.docu
       </div>
       <figcaption><b>Gli anni in cui la CO₂ cresce di più sono gli anni caldi: 2016, 2023, 2024.</b> Non è la temperatura a produrre la CO₂ in più: è El Niño, il riscaldamento periodico del Pacifico, che scalda il pianeta e insieme secca i tropici, così la vegetazione assorbe meno. Finito El Niño, nel 2025 la crescita è tornata a 2,2 ppm.</figcaption>
     </figure>
+    </div>
 
-
-    <details class="more"><summary>Approfondisci: perché due numeri diversi per lo stesso anno</summary>
-    <p class="note-metric"><b>Perché due numeri diversi per lo stesso anno.</b> «Cresciuta di 2,23 ppm» è il tasso NOAA: quanto sale la curva di fondo fra il 1° gennaio e il 31 dicembre. La differenza fra la media di un anno e quella del precedente dà un numero un po' diverso (nel 2024: 3,53 contro 3,33), perché una media annua contiene metà dell'anno prima. Questa pagina usa sempre il tasso NOAA.</p>
-    </details>
+    <aside class="slide-side">
+    <div class="callout">
+      <span class="c-lab">Perché due numeri diversi per lo stesso anno</span>
+      <p>«Cresciuta di 2,23 ppm» è il tasso NOAA: quanto sale la curva di fondo fra il 1° gennaio e il 31 dicembre. La differenza fra la media di un anno e quella del precedente dà un numero un po' diverso (nel 2024: 3,53 contro 3,33), perché una media annua contiene metà dell'anno prima. Questa pagina usa sempre il tasso NOAA.</p>
+    </div>
+    </aside>
   </section>
 
   <!-- ============ 2. QUANTO SCALDA ============ -->
-  <section id="caldo">
+  <section id="caldo" class="slide">
     <div class="sec-head"><span class="sec-unit">°C</span><h2>E allora? Cosa fanno quei ppm</h2></div>
     <p class="standfirst">Finora abbiamo contato molecole. Più CO₂ in aria significa meno calore che riesce a uscire verso lo spazio: questo è lo stesso grafico di prima, misurato in gradi.</p>
 
+    <div class="slide-main">
     <figure>
       <div class="fig-head">
         <p class="fig-title">Il pianeta si è già scaldato di circa 1,3 gradi</p>
-        <p class="fig-sub">Di quanto ogni anno è stato più caldo della media 1850–1900, terre e oceani insieme (NOAAGlobalTemp). Lo scarto è calcolato sulla media 1850–1900, la stessa base a cui si riferisce l'obiettivo di 1,5 °C.</p>
+        <p class="fig-sub">Di quanto ogni anno è stato più caldo della media 1850–1900, terre e oceani insieme (NOAAGlobalTemp): la stessa base a cui si riferisce l'obiettivo di 1,5 °C.</p>
       </div>
       <div class="fig-body">
         <div class="scroller">
-          <svg id="temp" viewBox="0 0 880 360" role="img" aria-label="Anomalia della temperatura media globale dal 1850 al 2025 rispetto alla media 1850-1900: oscilla attorno allo zero fino agli anni Settanta, poi sale fino a 1,42 gradi nel 2024 e scende a 1,29 nel 2025. La soglia di 1,5 gradi è segnata da una linea tratteggiata poco sopra."></svg>
+          <svg id="temp" viewBox="0 0 880 342" role="img" aria-label="Anomalia della temperatura media globale dal 1850 al 2025 rispetto alla media 1850-1900: oscilla attorno allo zero fino agli anni Settanta, poi sale fino a 1,42 gradi nel 2024 e scende a 1,29 nel 2025. La soglia di 1,5 gradi è segnata da una linea tratteggiata poco sopra."></svg>
         </div>
       </div>
-      <figcaption><b>Il 2025 è più fresco del 2024, e non è una buona notizia.</b> È lo stesso rientro post-El Niño che si vede nella CO₂: il 2023 e il 2024 erano stati spinti in alto da un evento naturale sovrapposto alla tendenza di fondo. La tendenza di fondo non è cambiata.</figcaption>
+      <figcaption><b>Il limite di Parigi si misura sulla media di un decennio.</b> Un anno sopra 1,5 °C non è «aver sforato»: l'Accordo guarda la media su dieci anni, oggi a 1,18 °C. Un singolo anno caldo può essere spinto da El Niño, come il 2024; un anno più fresco non riporta indietro niente, come il 2025: è lo stesso rientro post-El Niño che si vede nella CO₂, e la tendenza di fondo non è cambiata. Il budget nel riquadro dei dati è quanto possiamo ancora emettere per avere una probabilità del 50% di restare sotto 1,5 °C: 170 GtCO₂ dall'inizio del 2026, meno i mesi già trascorsi.</figcaption>
     </figure>
+    </div>
 
+    <aside class="slide-side">
     <div class="live" id="live-t" data-state="baked">
       <div class="live-grid">
         <div class="live-cell">
@@ -218,13 +227,9 @@ try{var t=localStorage.getItem("tema");if(t==="dark"||t==="light"){document.docu
         </div>
       </div>
       <p class="live-note" id="lt-note">Valori salvati il 12 settembre 2026.</p>
-      <p class="live-legend">Il pallino dice da dove vengono i numeri: <span class="lg lg-live">letti ora dalla fonte</span> · <span class="lg lg-partial">in parte</span> · <span class="lg lg-baked">valori salvati nella pagina</span></p>
+      <p class="live-legend"><span class="lg-intro">Il pallino dice da dove vengono i numeri: </span><span class="lg lg-live">letti ora dalla fonte</span> · <span class="lg lg-partial">in parte</span> · <span class="lg lg-baked">valori salvati nella pagina</span></p>
     </div>
-
-    <div class="callout">
-      <span class="c-lab">Il limite di Parigi si misura sulla media di un decennio</span>
-      <p>Un anno sopra 1,5 °C non è «aver sforato»: l'Accordo guarda la media su dieci anni, oggi a 1,18 °C. Un singolo anno caldo può essere spinto da El Niño, come il 2024; un anno più fresco non riporta indietro niente, come il 2025. Il budget nel riquadro sopra è quanto possiamo ancora emettere per avere una probabilità del 50% di restare sotto 1,5 °C: 170 GtCO₂ dall'inizio del 2026, meno i mesi già trascorsi.</p>
-    </div>
+    </aside>
 
     <details class="more"><summary>Approfondisci: i termometri non sono d'accordo, e non c'è solo la CO₂</summary>
     <div class="prose">
@@ -257,35 +262,31 @@ try{var t=localStorage.getItem("tema");if(t==="dark"||t==="light"){document.docu
   </section>
 
   <!-- ============ 2. IL BILANCIO ============ -->
-  <section id="bilancio">
+  <section id="bilancio" class="slide">
     <div class="sec-head"><span class="sec-unit">GtCO₂ / anno</span><h2>Dove finisce quello che emettiamo</h2></div>
     <p class="standfirst">Il bilancio globale del carbonio ha due lati. A sinistra quello che immettiamo, a destra le tre destinazioni possibili. Solo la terza si vede nella curva.</p>
 
+    <div class="slide-main">
     <figure>
       <div class="fig-head">
         <p class="fig-title">Metà di quello che emettiamo sparisce in oceano e vegetazione</p>
         <p class="fig-sub">Bilancio globale del carbonio, media annua 2015–2024, in miliardi di tonnellate di CO₂. Fossili al netto della piccola quota che il cemento riassorbe. 1 ppm = 7,78 GtCO₂.</p>
       </div>
       <div class="fig-body">
-        <ul class="legend">
-          <li><span class="sw sw-source"></span>Combustibili fossili e cemento</li>
-          <li><span class="sw sw-luc"></span>Uso del suolo e deforestazione</li>
-          <li><span class="sw sw-ocean"></span>Assorbito dall'oceano</li>
-          <li><span class="sw sw-land"></span>Assorbito dalla vegetazione</li>
-          <li><span class="sw sw-atmos"></span>Resta in atmosfera</li>
-        </ul>
         <div class="scroller">
           <svg id="budget" viewBox="0 0 880 340" role="img" aria-label="Diagramma di flusso: 40,9 GtCO2 emesse ogni anno si dividono in 11,8 assorbite dall'oceano, 8,7 dalla vegetazione e 20,4 che restano in atmosfera."></svg>
         </div>
       </div>
       <figcaption><b>I baffi sotto i blocchi sono l'incertezza.</b> Il pozzo terrestre vale 8,7 GtCO₂ ma è noto entro ±2,9, un terzo; l'oceano lo conosciamo il doppio meglio. Sulla media del decennio il bilancio chiude; nel singolo anno no, e il 2024 è il caso più vistoso.</figcaption>
     </figure>
+    </div>
 
+    <aside class="slide-side">
     <div class="callout">
       <span class="c-lab">Il punto della pagina</span>
       <p>Se i pozzi smettessero di funzionare domani, a parità di emissioni la concentrazione salirebbe di <b>5,3 ppm all'anno</b> invece di 2,6. Metà del problema è già oggi nascosta sotto il tappeto da oceani e foreste. A testa fa circa <b>5 tonnellate all'anno</b>, il peso di tre automobili.</p>
     </div>
-
+    </aside>
 
     <details class="more"><summary>Il bilancio in cifre, media 2015–2024</summary>
     <div class="t-wrap">
@@ -308,9 +309,10 @@ try{var t=localStorage.getItem("tema");if(t==="dark"||t==="light"){document.docu
   </section>
 
   <!-- ============ 3b. SENZA POZZI ============ -->
-  <section id="senzapozzi">
+  <section id="senzapozzi" class="slide">
     <div class="sec-head"><span class="sec-unit">ppm</span><h2>Il lavoro che i pozzi hanno già fatto</h2></div>
     <p class="standfirst">Un modo per vedere quanto valgono oceano e vegetazione: disegnare dove sarebbe la curva se non avessero assorbito niente.</p>
+    <div class="slide-main">
     <figure>
       <div class="fig-head">
         <p class="fig-title">Senza i pozzi saremmo a 574 ppm, non a 427</p>
@@ -328,18 +330,22 @@ try{var t=localStorage.getItem("tema");if(t==="dark"||t==="light"){document.docu
       </div>
       <figcaption><b>147 ppm di differenza.</b> È più di quanto la concentrazione sia salita in tutto il periodo osservato. Detto altrimenti: dei circa 258 ppm che abbiamo immesso dal 1959, ne vediamo in aria 111 — il resto è nell'oceano e nella vegetazione. Il calcolo assume che tutte le emissioni fossero restate in atmosfera; è un confronto contabile, non una simulazione del clima che ne sarebbe seguito.</figcaption>
     </figure>
+    </div>
 
+    <aside class="slide-side">
     <div class="callout">
       <span class="c-lab">Il servizio gratuito, a tariffa crescente</span>
       <p>Finora i pozzi hanno assorbito <em>di più</em> man mano che emettevamo di più: più CO₂ in aria significa più pressione che spinge il gas nell'oceano e più fertilizzazione della vegetazione. Ma il Global Carbon Budget 2025 stima che il riscaldamento abbia <b>già</b> indebolito il pozzo terrestre del 25% e quello oceanico del 7% rispetto a un mondo che non si fosse scaldato.</p>
     </div>
+    </aside>
   </section>
 
   <!-- ============ 3. I POZZI ============ -->
-  <section id="pozzi">
+  <section id="pozzi" class="slide">
     <div class="sec-head"><span class="sec-unit">ppm / anno</span><h2>Perché il 2024 dipende da dove guardi</h2></div>
-    <p class="standfirst">Nel 2024 le emissioni sono cresciute di circa l'1%. A Mauna Loa la concentrazione è salita esattamente come l'anno prima. Nella media globale ha fatto il salto più grande dal 1980, da quando la serie esiste. Non è una contraddizione: sono due strumenti diversi, e un singolo anno non basta per giudicare.</p>
+    <p class="standfirst">Nel 2024 le emissioni sono cresciute di circa l'1%. A Mauna Loa la CO₂ è salita quanto l'anno prima; nella media globale ha fatto il salto più grande da quando la serie esiste, il 1980. Non è una contraddizione: sono due strumenti diversi, e un singolo anno non basta per giudicare.</p>
 
+    <div class="slide-main">
     <figure>
       <div class="fig-head">
         <p class="fig-title">Lo stesso anno, misurato in due modi</p>
@@ -351,16 +357,19 @@ try{var t=localStorage.getItem("tema");if(t==="dark"||t==="light"){document.docu
           <li><span class="sw sw-glob"></span>Media globale</li>
         </ul>
         <div class="scroller">
-          <svg id="duescale" viewBox="0 0 880 320" role="img" aria-label="Confronto fra il tasso di crescita della CO2 a Mauna Loa e nella media globale dal 2021 al 2025. Nel 2023 Mauna Loa segna 3,32 contro 2,70 della media globale; nel 2024 le due si invertono, 3,33 contro 3,76; nel 2025 entrambe scendono, 2,23 e 2,06."></svg>
+          <svg id="duescale" viewBox="0 0 880 290" role="img" aria-label="Confronto fra il tasso di crescita della CO2 a Mauna Loa e nella media globale dal 2021 al 2025. Nel 2023 Mauna Loa segna 3,32 contro 2,70 della media globale; nel 2024 le due si invertono, 3,33 contro 3,76; nel 2025 entrambe scendono, 2,23 e 2,06."></svg>
         </div>
       </div>
       <figcaption><b>Nel 2023 Mauna Loa correva più del pianeta, nel 2024 il contrario.</b> Un singolo osservatorio risente di come i venti gli portano l'aria: è ottimo per vedere la tendenza lunga, meno per giudicare un singolo anno. Quando si cita «il 2024 ha fatto X ppm», va detto quale delle due misure si sta usando.</figcaption>
     </figure>
+    </div>
 
+    <aside class="slide-side">
     <div class="callout">
       <span class="c-lab">Perché non fidarsi di un solo anno</span>
       <p><b>Il 2023 e il 2024 sono stati eccezionali per un motivo che non riguarda le nostre emissioni:</b> El Niño ha seccato i tropici e alimentato incendi record, e la vegetazione ha assorbito meno. Il pozzo terrestre ha trattenuto 7,4 GtCO₂ nel 2023 e 7,1 nel 2024, contro una media decennale di 8,7. L'oceano, molto più stabile, ha continuato a fare il suo lavoro.</p>
     </div>
+    </aside>
 
     <details class="more"><summary>Approfondisci: il 2024 che non torna, e com'è finita nel 2025</summary>
     <div class="prose one">
@@ -376,32 +385,26 @@ try{var t=localStorage.getItem("tema");if(t==="dark"||t==="light"){document.docu
 
     <figure>
       <div class="fig-head">
-        <p class="fig-title">Un terzo delle emissioni viene dalla Cina</p>
-        <p class="fig-sub">Emissioni da fossili e cemento nel 2024, in miliardi di tonnellate di CO₂ (Global Carbon Budget 2025 via Our World in Data). Escluso l'uso del suolo.</p>
-      </div>
-      <div class="fig-body">
-        <div class="bars">
-          <div class="bar-row is-source"><span class="bar-lab">Cina<small>31,8%</small></span><div class="bar-track"><div class="bar-fill" style="--w:100%"></div></div><span class="bar-val">12,29</span></div>
-          <div class="bar-row is-source"><span class="bar-lab">Stati Uniti<small>12,7%</small></span><div class="bar-track"><div class="bar-fill" style="--w:39.9%"></div></div><span class="bar-val">4,90</span></div>
-          <div class="bar-row is-source"><span class="bar-lab">India<small>8,3%</small></span><div class="bar-track"><div class="bar-fill" style="--w:26.0%"></div></div><span class="bar-val">3,19</span></div>
-          <div class="bar-row is-source"><span class="bar-lab">Unione Europea<small>6,3%</small></span><div class="bar-track"><div class="bar-fill" style="--w:19.8%"></div></div><span class="bar-val">2,43</span></div>
-          <div class="bar-row is-source"><span class="bar-lab">Russia<small>4,6%</small></span><div class="bar-track"><div class="bar-fill" style="--w:14.5%"></div></div><span class="bar-val">1,78</span></div>
-          <div class="bar-row is-source"><span class="bar-lab">Aereo e navale<small>internazionale · 3,1%</small></span><div class="bar-track"><div class="bar-fill" style="--w:9.7%"></div></div><span class="bar-val">1,19</span></div>
-          <div class="bar-row is-source"><span class="bar-lab">Giappone<small>2,5%</small></span><div class="bar-track"><div class="bar-fill" style="--w:7.8%"></div></div><span class="bar-val">0,96</span></div>
-          <div class="bar-row is-me"><span class="bar-lab">Italia<small>0,8%</small></span><div class="bar-track"><div class="bar-fill" style="--w:2.4%"></div></div><span class="bar-val">0,30</span></div>
-          <div class="bar-row is-muted"><span class="bar-lab">Resto del mondo<small>circa 190 paesi · 29,9%</small></span><div class="bar-track"><div class="bar-fill" style="--w:94.0%"></div></div><span class="bar-val">11,55</span></div>
-        </div>
-      </div>
-      <figcaption>Totale mondiale <b>38,6 GtCO₂</b> nel 2024. La Cina da sola vale quasi un terzo; l'Italia meno dell'1%. <b>Quale numero citare:</b> 38,6 sono i soli fossili di un anno; i 40,9 dell'apertura sono la media 2015–2024 con l'uso del suolo.</figcaption>
-    </figure>
-
-    <figure>
-      <div class="fig-head">
-        <p class="fig-title">A testa, e da quando si misura</p>
-        <p class="fig-sub">Stessi paesi, altre due metriche. Ogni pannello ha la sua scala: confronta le posizioni, non le lunghezze fra pannelli.</p>
+        <p class="fig-title">Un terzo delle emissioni viene dalla Cina. A testa e nel cumulato, la classifica cambia</p>
+        <p class="fig-sub">Emissioni da fossili e cemento, escluso l'uso del suolo (Global Carbon Budget 2025 via Our World in Data). Ogni pannello ha la sua scala: confronta le posizioni, non le lunghezze fra pannelli.</p>
       </div>
       <div class="fig-body">
         <div class="panels">
+          <div class="panel p-share">
+            <h3>Nel 2024</h3>
+            <p class="p-note">miliardi di tonnellate di CO₂ e quota sul totale mondiale</p>
+            <div class="bars">
+              <div class="bar-row is-source"><span class="bar-lab">Cina</span><div class="bar-track"><div class="bar-fill" style="--w:100%"></div></div><span class="bar-val">12,29<small>31,8%</small></span></div>
+              <div class="bar-row is-source"><span class="bar-lab">Stati Uniti</span><div class="bar-track"><div class="bar-fill" style="--w:39.9%"></div></div><span class="bar-val">4,90<small>12,7%</small></span></div>
+              <div class="bar-row is-source"><span class="bar-lab">India</span><div class="bar-track"><div class="bar-fill" style="--w:26.0%"></div></div><span class="bar-val">3,19<small>8,3%</small></span></div>
+              <div class="bar-row is-source"><span class="bar-lab">UE 27</span><div class="bar-track"><div class="bar-fill" style="--w:19.8%"></div></div><span class="bar-val">2,43<small>6,3%</small></span></div>
+              <div class="bar-row is-source"><span class="bar-lab">Russia</span><div class="bar-track"><div class="bar-fill" style="--w:14.5%"></div></div><span class="bar-val">1,78<small>4,6%</small></span></div>
+              <div class="bar-row is-source"><span class="bar-lab">Aereo e navale<small>internazionale</small></span><div class="bar-track"><div class="bar-fill" style="--w:9.7%"></div></div><span class="bar-val">1,19<small>3,1%</small></span></div>
+              <div class="bar-row is-source"><span class="bar-lab">Giappone</span><div class="bar-track"><div class="bar-fill" style="--w:7.8%"></div></div><span class="bar-val">0,96<small>2,5%</small></span></div>
+              <div class="bar-row is-me"><span class="bar-lab">Italia</span><div class="bar-track"><div class="bar-fill" style="--w:2.4%"></div></div><span class="bar-val">0,30<small>0,8%</small></span></div>
+              <div class="bar-row is-muted"><span class="bar-lab">Resto del mondo<small>circa 190 paesi</small></span><div class="bar-track"><div class="bar-fill" style="--w:94.0%"></div></div><span class="bar-val">11,55<small>29,9%</small></span></div>
+            </div>
+          </div>
           <div class="panel">
             <h3>Per persona, 2024</h3>
             <p class="p-note">tonnellate di CO₂ all'anno per abitante</p>
@@ -429,7 +432,7 @@ try{var t=localStorage.getItem("tema");if(t==="dark"||t==="light"){document.docu
           </div>
         </div>
       </div>
-      <figcaption>Il cumulativo è la lettura che conta per il clima: la CO₂ emessa nel 1950 è ancora lassù.</figcaption>
+      <figcaption>Totale mondiale <b>38,6 GtCO₂</b> nel 2024: la Cina da sola vale quasi un terzo, l'Italia meno dell'1%. <b>Il cumulativo è la lettura che conta per il clima:</b> la CO₂ emessa nel 1950 è ancora lassù. <b>Quale numero citare:</b> 38,6 sono i soli fossili di un anno; i 40,9 dell'apertura sono la media 2015–2024 con l'uso del suolo.</figcaption>
     </figure>
 
     <details class="more"><summary>Approfondisci: da quali combustibili e da quali usi</summary>
@@ -450,10 +453,11 @@ try{var t=localStorage.getItem("tema");if(t==="dark"||t==="light"){document.docu
   </section>
 
   <!-- ============ 5. LA CRESCITA ============ -->
-  <section id="crescita">
+  <section id="crescita" class="slide">
     <div class="sec-head"><span class="sec-unit">variazione 2000–2024</span><h2>È «solo la Cina»?</h2></div>
     <p class="standfirst">No per il livello, in buona parte sì per la crescita. Sul totale attuale la Cina vale un terzo. Sull'aumento degli ultimi venticinque anni vale circa due terzi, perché nel frattempo Europa e Stati Uniti sono scesi.</p>
 
+    <div class="slide-main">
     <figure>
       <div class="fig-head">
         <p class="fig-title">Dal 2000 la Cina spiega due terzi dell'aumento</p>
@@ -476,19 +480,23 @@ try{var t=localStorage.getItem("tema");if(t==="dark"||t==="light"){document.docu
       </div>
       <figcaption>Saldo netto mondiale <b>+13,1 GtCO₂</b>, da 25,5 a 38,6. La Cina copre da sola circa due terzi di quell'aumento netto.</figcaption>
     </figure>
-
-    <div class="prose one">
-      <h3>Due avvertenze prima di citarlo</h3>
-      <p>La prima: «netto» nasconde qualcosa. Europa e Stati Uniti sono scesi anche delocalizzando la produzione proprio in Cina. Contate sui consumi anziché sulla produzione, una fetta consistente delle emissioni cinesi è merce destinata a noi, e il calo europeo si assottiglia parecchio.</p>
-      <p>La seconda: il quadro si ribalta se guardi il carbonio già accumulato invece del flusso annuale. Lì il contributo occidentale resta il maggiore, e resterà tale ancora per un pezzo.</p>
     </div>
+
+    <aside class="slide-side">
+    <div class="callout">
+      <span class="c-lab">Due avvertenze prima di citarlo</span>
+      <p><b>La prima:</b> «netto» nasconde qualcosa. Europa e Stati Uniti sono scesi anche delocalizzando la produzione proprio in Cina. Contate sui consumi anziché sulla produzione, una fetta consistente delle emissioni cinesi è merce destinata a noi, e il calo europeo si assottiglia parecchio.</p>
+      <p><b>La seconda:</b> il quadro si ribalta se guardi il carbonio già accumulato invece del flusso annuale. Lì il contributo occidentale resta il maggiore, e resterà tale ancora per un pezzo.</p>
+    </div>
+    </aside>
   </section>
 
   <!-- ============ 6. KYOTO ============ -->
-  <section id="kyoto">
+  <section id="kyoto" class="slide">
     <div class="sec-head"><span class="sec-unit">1997–2012</span><h2>Perché Kyoto non ha piegato la curva</h2></div>
     <p class="standfirst">Il protocollo non era progettato per fermare la crescita. E anche se avesse funzionato alla perfezione, la concentrazione sarebbe comunque salita.</p>
 
+    <div class="slide-main">
     <figure>
       <div class="fig-head">
         <p class="fig-title">Fra la firma e la fine del primo periodo, le emissioni sono salite del 43%</p>
@@ -501,13 +509,17 @@ try{var t=localStorage.getItem("tema");if(t==="dark"||t==="light"){document.docu
       </div>
       <figcaption><b>La vasca si riempie comunque.</b> Sono i soli fossili, anno per anno. Kyoto vincolava un sottoinsieme di paesi a tagliare del 5%; fra il 1997 e il 2012 il resto del mondo è cresciuto di oltre il 60%, e i paesi senza vincoli hanno raddoppiato. L'unico calo visibile è il 2020, e non è merito di nessun trattato.</figcaption>
     </figure>
+    </div>
 
+    <aside class="slide-side">
     <div class="callout">
       <span class="c-lab">Il motivo fisico</span>
       <p>La CO₂ atmosferica è uno stock, non un flusso. È una vasca che si riempie: chiudere il rubinetto a metà non abbassa il livello, lo fa salire più lentamente. Per fermare la crescita servono emissioni nette zero, cioè non immettere più di quanto i pozzi assorbono: non basta emettere meno. Kyoto chiedeva meno 5,2% rispetto al 1990, per un sottoinsieme di paesi.</p>
     </div>
+    </aside>
 
     <details class="more"><summary>Approfondisci: la cronologia di Kyoto, e cosa ha lasciato</summary>
+    <div class="two">
     <ul class="tl">
       <li><span class="yr">1997</span><div class="ev"><b>Firma del protocollo</b><small>Obiettivo: meno 5,2% rispetto al 1990 per i soli paesi industrializzati, entro il 2008–2012. Cina, India e Brasile non hanno vincoli.</small></div></li>
       <li><span class="yr">2001</span><div class="ev"><b>Gli Stati Uniti non ratificano</b><small>Il primo emettitore del mondo all'epoca resta fuori. Il trattato copre meno di un terzo delle emissioni globali, quota in calo di anno in anno.</small></div></li>
@@ -520,14 +532,16 @@ try{var t=localStorage.getItem("tema");if(t==="dark"||t==="light"){document.docu
       <span class="c-lab">Da dire comunque</span>
       <p>Kyoto non è stato inutile. Ha creato gli inventari nazionali, i sistemi di misura e verifica e i mercati del carbonio, incluso quello europeo dei permessi di emissione (ETS). È l'infrastruttura su cui si è poi costruito l'Accordo di Parigi. Ma il suo effetto misurabile sulla curva di Mauna Loa è sostanzialmente nullo: proprio negli anni di Kyoto la concentrazione ha continuato ad accelerare, da 1,5 a 2,0 ppm all'anno fra gli anni '90 e il decennio successivo. Cosa piegherebbe la curva: emissioni nette zero, non emissioni ridotte. È l'obiettivo che l'Accordo di Parigi ha poi fissato per la metà del secolo.</p>
     </div>
+    </div>
     </details>
   </section>
 
   <!-- ============ 7b. SINTESI ============ -->
-  <section id="sintesi">
+  <section id="sintesi" class="slide">
     <div class="sec-head"><span class="sec-unit">in breve</span><h2>Cinque cose da portare via</h2></div>
     <p class="standfirst">Se di questa pagina resta una schermata, che sia questa. I numeri qui sotto si aggiornano con quelli delle sezioni precedenti.</p>
 
+    <div class="slide-main">
     <ol class="takeaways">
       <li><div><b>La CO₂ in aria è a <span data-from="live-mean">427,35</span> ppm, il 53% sopra il livello preindustriale</b>, e sale di circa 2,6 ppm all'anno: tre volte più in fretta che negli anni '60.</div></li>
       <li><div><b>Ogni anno emettiamo circa 41 miliardi di tonnellate; metà sparisce in oceano e vegetazione.</b> La curva misura solo l'altra metà. Senza i pozzi saremmo a 574 ppm invece di 427.</div></li>
@@ -535,11 +549,14 @@ try{var t=localStorage.getItem("tema");if(t==="dark"||t==="light"){document.docu
       <li><div><b>Gli anni caldi sono gli anni in cui la CO₂ sale di più.</b> Nel 2023 e 2024 El Niño ha indebolito la vegetazione e la crescita è arrivata a 3,3 ppm. Un singolo anno non fa tendenza, in nessuna direzione.</div></li>
       <li><div><b>Chi emette dipende dalla domanda.</b> Oggi la Cina emette un terzo del totale, ma uno statunitense emette una volta e mezza un cinese a testa, e in centosettant'anni Stati Uniti ed Europa hanno riempito la vasca più di tutti. Ridurre non basta: per fermare la salita servono emissioni nette zero.</div></li>
     </ol>
+    </div>
 
+    <aside class="slide-side">
     <div class="callout">
       <span class="c-lab">Cosa guardare fra un anno</span>
       <p><b>A gennaio</b> NOAA pubblica il tasso di crescita dell'anno appena finito: la pagina lo legge da sola. <b>A novembre</b> esce il Global Carbon Budget, con le emissioni dell'anno e la stima dei pozzi: quei numeri vanno aggiornati a mano nelle sezioni sul bilancio. <b>In qualunque momento</b>: lo stato di El Niño, perché un nuovo evento caldo farebbe risalire la crescita della CO₂ senza che le emissioni siano cambiate.</p>
     </div>
+    </aside>
   </section>
 
   <!-- ============ 7. FONTI ============ -->
