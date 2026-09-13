@@ -12,7 +12,10 @@ presentazione: ogni numero è accompagnato dalla fonte e dall'incertezza.
 ```
 .
 ├── publish.sh          deploy.sh con destinazione e URL pubblico incorporati
-├── index.html          pagina unica, tredici sezioni con ancore
+├── build.py            genera le pagine tradotte dal sorgente italiano
+├── i18n/               un dizionario per lingua (en, es, zh) + le chiavi estratte
+├── en/ es/ zh/         pagine generate: non modificarle a mano
+├── index.html          pagina unica in italiano, tredici sezioni con ancore
 ├── 404.html
 ├── robots.txt
 ├── deploy.sh           pubblicazione su arch_php via rsync/ssh
@@ -272,6 +275,59 @@ le frecce o scegliendo una voce, così la sezione atterra sotto la barra.
 Sul telefono il tema parte scuro (schermo fino a 640px o puntatore a dito),
 a meno che il lettore non abbia già scelto con il pulsante: la scelta è in
 `localStorage` («tema») e vale per tutte le visite successive.
+
+## Quattro lingue
+
+L'italiano in `index.html` è l'unica copia scritta a mano. `build.py` ne
+estrae le unità traducibili, le cerca in `i18n/<lingua>.json` e scrive
+`en/index.html`, `es/index.html`, `zh/index.html`.
+
+```bash
+./build.py --extract     # aggiorna i18n/_chiavi.json con le unità da tradurre
+./build.py               # genera le tre pagine; fallisce se manca una voce
+./build.py en            # solo una lingua
+```
+
+**Come sono fatte le chiavi.** Ogni unità è il contenuto di un blocco che
+contiene solo testo e tag inline, quindi la chiave porta con sé i grassetti e
+gli agganci ai dati in diretta (`<span data-from="lt-bud">`). Se il markup
+italiano cambia, la chiave non combacia più e il build lo dice invece di
+lasciare in pagina una frase vecchia. **Dopo ogni modifica al testo italiano
+va rilanciato `./build.py --extract`, tradotte le voci nuove e rifatto il
+build**, altrimenti le altre lingue restano indietro.
+
+Tre trappole già pagate, da non ripetere:
+
+- le sostituzioni vanno applicate **dalla chiave più lunga alla più corta**:
+  «Italia» compare anche dentro «Italia<small>un anno…</small>» e sostituita
+  per prima la spezzerebbe;
+- i numeri sono unità traducibili come le altre, perché inglese e cinese
+  vogliono il punto decimale: `40,9` → `40.9`. Nei grafici ci pensa `it()`,
+  che legge il separatore da `window.I18N._dec`;
+- in `charts.js` la funzione di traduzione si chiama `tr()` e non `T()`:
+  `T` è già il margine superiore del primo grafico.
+
+Le stringhe dei grafici e dei messaggi di stato passano da `tr()` o `T()` nei
+tre JavaScript, e il build le inietta nella pagina tradotta come
+`window.I18N`. In italiano quell'oggetto non esiste e le funzioni
+restituiscono la stringa originale: una sola copia del codice per tutte le
+lingue.
+
+**Come si sceglie la lingua.** Alla radice decide Caddy guardando
+`Accept-Language`, cioè la lingua del browser, non la geolocalizzazione
+dell'IP: un italiano a Madrid vuole l'italiano, e leggere l'IP vorrebbe dire
+un modulo GeoIP e un database dentro un'immagine che serve anche altri siti.
+Italiano resta alla radice, spagnolo e cinese vengono rimandati con un 302,
+tutto il resto va in inglese; senza intestazione (i crawler) si resta in
+italiano. Un indirizzo esplicito come `/es/` non viene mai deviato. La scelta
+fatta a mano col selettore è salvata in `localStorage` e uno script in testa
+alla pagina la rispetta, ma **solo quando si arriva sulla radice**: altrimenti
+un link condiviso porterebbe il destinatario in un'altra lingua.
+
+Nel Caddyfile il primo argomento di `redir` è un **selettore di percorso**,
+non la destinazione: `redir /es/ 302` non fa niente, ci vuole
+`redir * /es/ 302`. Sono due ore di diagnosi, scritte qui perché non si
+ripetano.
 
 ## Dominio
 

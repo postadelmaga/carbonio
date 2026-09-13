@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="it" prefix="og: https://ogp.me/ns#">
+<html lang="it" data-lingua="it" prefix="og: https://ogp.me/ns#">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -7,13 +7,18 @@
 <meta name="description" content="Quanta CO2 emettiamo, quanta ne assorbono oceani e foreste, e perche nella curva di Mauna Loa se ne vede solo la meta. Grafici, tabelle e fonti.">
 <meta name="author" content="">
 <meta name="robots" content="index, follow">
-<link rel="canonical" href="__CANONICAL__">
+<link rel="canonical" href="__ROOT__/">
+<link rel="alternate" hreflang="it" href="__ROOT__/">
+<link rel="alternate" hreflang="en" href="__ROOT__/en/">
+<link rel="alternate" hreflang="es" href="__ROOT__/es/">
+<link rel="alternate" hreflang="zh" href="__ROOT__/zh/">
+<link rel="alternate" hreflang="x-default" href="__ROOT__/">
 
 <meta property="og:type" content="article">
 <meta property="og:locale" content="it_IT">
 <meta property="og:title" content="Il carbonio che resta">
 <meta property="og:description" content="La curva di Mauna Loa non misura quanto emettiamo. Misura quanto avanza dopo che oceani e vegetazione hanno assorbito la loro parte.">
-<meta property="og:url" content="__CANONICAL__">
+<meta property="og:url" content="__ROOT__/">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Il carbonio che resta">
 <meta name="twitter:description" content="La curva di Mauna Loa non misura quanto emettiamo. Misura quanto avanza.">
@@ -28,6 +33,29 @@
 <link rel="stylesheet" href="assets/style.css">
 <!-- statistiche anonime senza cookie (Umami): pagine viste, paese, dispositivo -->
 <script defer src="https://cloud.umami.is/script.js" data-website-id="2cf64696-ed71-405e-9e22-b2b3e7b8bb6f"></script>
+<script>
+/* La lingua. Il redirect automatico lo fa il server guardando Accept-Language,
+   qui si onora solo una scelta fatta a mano dal lettore, e solo quando arriva
+   sulla radice: un indirizzo esplicito come /es/ vince sempre, altrimenti un
+   link condiviso porterebbe il destinatario in un'altra lingua. */
+(function(){
+  var L = document.documentElement.getAttribute("data-lingua") || "it";
+  try{
+    var scelta = localStorage.getItem("lingua");
+    var p = location.pathname.replace(/index\.html$/,"");
+    if(scelta && scelta !== L && (p === "/" || p === "")){
+      location.replace((scelta === "it" ? "/" : "/" + scelta + "/") + location.hash);
+      return;
+    }
+  }catch(e){}
+  document.addEventListener("click", function(e){
+    var a = e.target.closest && e.target.closest("a[data-lang]");
+    if(!a) return;
+    try{ localStorage.setItem("lingua", a.getAttribute("data-lang")); }catch(err){}
+    if(location.hash) a.setAttribute("href", a.getAttribute("data-href") + location.hash);
+  }, true);
+})();
+</script>
 <script>
 /* applica il tema salvato prima del primo paint, per evitare il lampo.
    Senza una scelta salvata, sul telefono (schermo stretto o puntatore a
@@ -66,6 +94,15 @@
     <a href="#sintesi">In sintesi</a>
     <a href="#fonti">Fonti</a>
     </div>
+    <details class="lang" id="lang-pick">
+      <summary title="Lingua · Language"><span class="fl">🇮🇹</span><span class="lc">IT</span></summary>
+      <ul>
+        <li><a href="/"    data-href="/"    data-lang="it" hreflang="it" aria-current="true"><span class="fl">🇮🇹</span>Italiano</a></li>
+        <li><a href="/en/" data-href="/en/" data-lang="en" hreflang="en"><span class="fl">🇬🇧</span>English</a></li>
+        <li><a href="/es/" data-href="/es/" data-lang="es" hreflang="es"><span class="fl">🇪🇸</span>Español</a></li>
+        <li><a href="/zh/" data-href="/zh/" data-lang="zh" hreflang="zh"><span class="fl">🇨🇳</span>中文</a></li>
+      </ul>
+    </details>
     <button id="theme-toggle" class="theme-btn" type="button" aria-label="Cambia tema chiaro o scuro" title="Cambia tema">
       <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" focusable="false">
         <path class="ic-sun" d="M12 4V2m0 20v-2m8-8h2M2 12h2m13.66-5.66 1.41-1.41M4.93 19.07l1.41-1.41m11.32 0 1.41 1.41M4.93 4.93l1.41 1.41" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>

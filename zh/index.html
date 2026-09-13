@@ -1,0 +1,843 @@
+<!doctype html>
+<html lang="zh" data-lingua="zh" prefix="og: https://ogp.me/ns#">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>留下来的碳 — 全球二氧化碳平衡</title>
+<meta name="description" content="我们排放了多少二氧化碳，海洋和森林吸收了多少，以及为什么莫纳罗亚曲线上只看得到其中一半。图表与资料来源。">
+<meta name="author" content="">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="__ROOT__/zh/">
+<link rel="alternate" hreflang="it" href="__ROOT__/">
+<link rel="alternate" hreflang="en" href="__ROOT__/en/">
+<link rel="alternate" hreflang="es" href="__ROOT__/es/">
+<link rel="alternate" hreflang="zh" href="__ROOT__/zh/">
+<link rel="alternate" hreflang="x-default" href="__ROOT__/">
+
+<meta property="og:type" content="article">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:title" content="留下来的碳">
+<meta property="og:description" content="莫纳罗亚曲线量的不是我们排放了多少，而是海洋与植被各取所需之后剩下的那部分。">
+<meta property="og:url" content="__ROOT__/zh/">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="留下来的碳">
+<meta name="twitter:description" content="La curva di Mauna Loa non misura quanto emettiamo. Misura quanto avanza.">
+
+<meta name="theme-color" content="#F1F4F4" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0C161B" media="(prefers-color-scheme: dark)">
+
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..900&family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400..600&display=swap">
+<script>window.I18N={"/anno":"/年","ppm/anno":"ppm/年","Oceano":"海洋","Vegetazione":"植被","Atmosfera":"大气","EMESSO OGNI ANNO":"每年排放","40,9 GtCO₂, cioè 5,3 ppm se restassero tutte in aria":"40.9 GtCO₂，若全部留在空气中即为 5.3 ppm","Fossili e cemento":"化石燃料与水泥","Uso del suolo":"土地利用","ASSORBITO":"被吸收","IN ARIA":"留在空气中","RESTA IN ARIA":"留在空气中","ppm all’anno":"ppm/年","il limite di Parigi":"巴黎的界线","il limite dell’Accordo di Parigi":"《巴黎协定》的界线","senza pozzi":"没有碳汇","osservato":"实测","tolto dai pozzi":"被碳汇取走","tolto da oceani e foreste":"被海洋和森林取走","gen feb mar apr mag giu lug ago set ott nov dic":"1月 2月 3月 4月 5月 6月 7月 8月 9月 10月 11月 12月","Mauna Loa, media mensile":"莫纳罗亚，月平均","Concentrazione, media mensile a Mauna Loa":"浓度，莫纳罗亚月平均","ultimo mese":"最近一个月","Crescita in ciascun anno, ppm":"每年的增长，ppm","Di quanto è cresciuta in ciascun anno, ppm per anno":"每一年增长了多少，ppm/年","media":"平均","Temperatura sul 1850–1900":"相对 1850–1900 的温度","Temperatura globale sul 1850–1900, media annua":"全球温度相对 1850–1900，年平均","nel":"年","impegno":"承诺期","periodo di impegno":"承诺期","firma":"签署","in vigore":"生效","fine 1° periodo":"第一期结束","pandemia":"疫情","oggi":"今天","migliaia di anni fa":"千年前","mai sopra le 300 ppm":"从未超过 300 ppm","ere glaciali":"冰期","periodi caldi":"暖期","Lettura in diretta non riuscita: mostro i valori salvati il ":"实时读取失败：显示保存于以下日期的数值：","Leggo l’ultimo dato da NOAA, l’agenzia meteo-oceanica statunitense…":"正在从美国国家海洋和大气管理局（NOAA）读取最新数据…","Letti ora da NOAA (Global Monitoring Laboratory): media annua ":"此刻读自 NOAA（全球监测实验室）：年平均 ",", serie aggiornata alla pubblicazione più recente":"，序列已更新至最近一次发布",", curva disegnata sulle medie mensili misurate.":"，曲线基于实测的月平均绘制。","Leggo temperatura e gas serra da NOAA…":"正在从 NOAA 读取温度和温室气体…","Letti ora da NOAA: temperatura dal centro NCEI, gas serra dal laboratorio GML. Il budget residuo è una sottrazione dal valore del Global Carbon Budget 2025, non una misura.":"此刻读自 NOAA：温度来自 NCEI 中心，温室气体来自 GML 实验室。剩余预算是从全球碳预算 2025 的数值中相减得到的，不是测量值。","Letto in diretta: ":"实时读取：",". Per il resto mostro i valori salvati il ":"。其余显示保存于以下日期的数值：","Sfoglia le sezioni":"浏览各节","Sezione precedente":"上一节","Precedente":"上一节","Sezione successiva":"下一节","Successiva":"下一节","tastiera":"键盘","parte":"第","di":"/","Chiudi il menu":"关闭菜单","Apri il menu":"打开菜单","_dec":"."};</script>
+<link rel="stylesheet" href="/assets/style.css">
+<!-- statistiche anonime senza cookie (Umami): pagine viste, paese, dispositivo -->
+<script defer src="https://cloud.umami.is/script.js" data-website-id="2cf64696-ed71-405e-9e22-b2b3e7b8bb6f"></script>
+<script>
+/* La lingua. Il redirect automatico lo fa il server guardando Accept-Language,
+   qui si onora solo una scelta fatta a mano dal lettore, e solo quando arriva
+   sulla radice: un indirizzo esplicito come /es/ vince sempre, altrimenti un
+   link condiviso porterebbe il destinatario in un'altra lingua. */
+(function(){
+  var L = document.documentElement.getAttribute("data-lingua") || "it";
+  try{
+    var scelta = localStorage.getItem("lingua");
+    var p = location.pathname.replace(/index\.html$/,"");
+    if(scelta && scelta !== L && (p === "/" || p === "")){
+      location.replace((scelta === "it" ? "/" : "/" + scelta + "/") + location.hash);
+      return;
+    }
+  }catch(e){}
+  document.addEventListener("click", function(e){
+    var a = e.target.closest && e.target.closest("a[data-lang]");
+    if(!a) return;
+    try{ localStorage.setItem("lingua", a.getAttribute("data-lang")); }catch(err){}
+    if(location.hash) a.setAttribute("href", a.getAttribute("data-href") + location.hash);
+  }, true);
+})();
+</script>
+<script>
+/* applica il tema salvato prima del primo paint, per evitare il lampo.
+   Senza una scelta salvata, sul telefono (schermo stretto o puntatore a
+   dito) si parte scuri: il pulsante del tema resta e la scelta si salva. */
+(function(){
+  var t=null; try{t=localStorage.getItem("tema");}catch(e){}
+  if(t!=="dark"&&t!=="light"){
+    var m=window.matchMedia&&window.matchMedia("(max-width:640px), (pointer:coarse)");
+    if(m&&m.matches) t="dark";
+  }
+  if(t){
+    document.documentElement.setAttribute("data-theme",t);
+    var col=t==="dark"?"#0C161B":"#F1F4F4";
+    var metas=document.querySelectorAll('meta[name="theme-color"]');
+    for(var i=0;i<metas.length;i++){ metas[i].setAttribute("content",col); metas[i].removeAttribute("media"); }
+  }
+})();
+</script>
+</head>
+<body>
+<nav class="nav">
+  <div class="nav-in">
+    <a class="nav-mark" href="#top" aria-label="回到顶部">CO₂</a>
+    <div class="nav-links" id="nav-menu">
+    <a href="#curva">曲线</a>
+    <a href="#recenti">近十年</a>
+    <a href="#passato">我们之前</a>
+    <a href="#caldo">升温</a>
+    <a href="#bilancio">碳平衡</a>
+    <a href="#senzapozzi">没有碳汇</a>
+    <a href="#pozzi">2024年</a>
+    <a href="#chi">谁在排放</a>
+    <a href="#crescita">增长</a>
+    <a href="#guerra">战争</a>
+    <a href="#kyoto">京都议定书</a>
+    <a href="#sintesi">要点</a>
+    <a href="#fonti">资料来源</a>
+    </div>
+    <details class="lang" id="lang-pick">
+      <summary title="Lingua · Language"><span class="fl">🇨🇳</span><span class="lc">中文</span></summary>
+      <ul>
+        <li><a href="/"    data-href="/"    data-lang="it" hreflang="it"><span class="fl">🇮🇹</span>Italiano</a></li>
+        <li><a href="/en/" data-href="/en/" data-lang="en" hreflang="en"><span class="fl">🇬🇧</span>English</a></li>
+        <li><a href="/es/" data-href="/es/" data-lang="es" hreflang="es"><span class="fl">🇪🇸</span>Español</a></li>
+        <li><a href="/zh/" data-href="/zh/" data-lang="zh" hreflang="zh" aria-current="true"><span class="fl">🇨🇳</span>中文</a></li>
+      </ul>
+    </details>
+    <button id="theme-toggle" class="theme-btn" type="button" aria-label="在浅色与深色主题之间切换" title="切换主题">
+      <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" focusable="false">
+        <path class="ic-sun" d="M12 4V2m0 20v-2m8-8h2M2 12h2m13.66-5.66 1.41-1.41M4.93 19.07l1.41-1.41m11.32 0 1.41 1.41M4.93 4.93l1.41 1.41" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+        <circle class="ic-sun" cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="1.7"/>
+        <path class="ic-moon" d="M20 14.5A8.2 8.2 0 0 1 9.5 4 8.5 8.5 0 1 0 20 14.5Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+      </svg>
+    </button>
+    <button id="menu-toggle" class="menu-btn" type="button" aria-label="打开菜单" aria-expanded="false" aria-controls="nav-menu">
+      <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false">
+        <path class="ic-burger" d="M4 7h16M4 12h16M4 17h16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        <path class="ic-close" d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+      </svg>
+    </button>
+  </div>
+</nav>
+
+<div class="wrap">
+
+  <header class="hero" id="top">
+    <div class="hero-lead">
+    <p class="eyebrow">全球碳预算 2025<span class="eb-sub"> · 2015–2024 年平均</span></p>
+    <h1>留下来的<em>碳</em></h1>
+    <p class="deck">莫纳罗亚曲线量的不是我们排放了多少，而是海洋与植被各取所需之后<b>剩下</b>的那部分。它们每年无偿吸收其中大约一半。</p>
+    <p class="units"><b>本页使用的单位。</b> <abbr title="十亿吨二氧化碳">GtCO₂</abbr> = 十亿吨二氧化碳。<abbr title="百万分之一">ppm</abbr> = 每一百万个空气分子中的二氧化碳分子数。<b>碳汇</b> = 把二氧化碳从空气中取走的东西：海洋和植被。<abbr title="二氧化碳当量">CO₂e</abbr> = 把所有温室气体折算成升温效果相同的二氧化碳量；在甲烷和氧化亚氮也要计入的地方使用，例如关于战争的那一节。数据为全球碳预算 2025 的 2015–2024 年平均值。</p>
+    </div>
+
+    <div class="keys keys-2col">
+      <div class="key k-src">
+        <span class="fig">40.9</span><span class="unit">GtCO₂ / 年</span>
+        <span class="lbl">排放：化石燃料加土地利用</span>
+      </div>
+      <div class="key k-ocean">
+        <span class="fig">11.8</span><span class="unit">GtCO₂ / 年</span>
+        <span class="lbl">被海洋吸收</span>
+      </div>
+      <div class="key k-land">
+        <span class="fig">8.7</span><span class="unit">GtCO₂ / 年</span>
+        <span class="lbl">被植被吸收</span>
+      </div>
+      <div class="key k-atm">
+        <span class="fig">20.4</span><span class="unit">GtCO₂ / 年 · 2.6 ppm</span>
+        <span class="lbl">留在空气中：曲线量到的部分</span>
+      </div>
+    </div>
+
+    <nav class="guide" aria-label="从哪里开始">
+    <p class="guide-lab">如果你第一次看这些数字，就从三个问题开始</p>
+    <ol class="guide-q">
+      <li><a href="#curva"><b>空气里有多少，涨了多久了？</b><span>1959 年以来在莫纳罗亚测到的曲线，以及它加速了多少</span></a></li>
+      <li><a href="#caldo"><b>那又怎样？实际意味着什么？</b><span>地球已经升温多少，离 1.5 °C 的界线还有多远</span></a></li>
+      <li><a href="#bilancio"><b>我们排放的都去了哪里？</b><span>大约一半消失在海洋和植被里：剩下的才是看得见的</span></a></li>
+    </ol>
+    </nav>
+  </header>
+
+
+  <!-- ============ 1. LA CURVA ============ -->
+  <section id="curva" class="slide">
+    <div class="sec-head"><span class="sec-unit">ppm</span><h2>莫纳罗亚曲线</h2></div>
+    <p class="standfirst">1959 年至今夏威夷莫纳罗亚观测站的二氧化碳月平均浓度。每年的起伏是北半球植被的呼吸：五月最高，九月底最低。</p>
+
+    <div class="slide-main">
+    <figure>
+      <div class="fig-head">
+        <p class="fig-title">二氧化碳在上升，而且越来越快</p><span class="tag tag-obs">实测</span>
+        <p class="fig-sub">莫纳罗亚，1959 年至今。细线：月平均；粗线：年平均；圆点标出参照值。</p>
+      </div>
+      <div class="fig-body">
+        <div class="scroller">
+          <svg id="keeling" viewBox="0 0 880 400" role="img" aria-label="1959 至 2025 年的基林曲线：浓度从 316 ppm 升到 427 ppm，斜率不断变陡。"></svg>
+        </div>
+      </div>
+      <figcaption><b>怎么看这张图。</b> 纵轴从 305 ppm 开始，不从零开始：这样才看得出斜率，而斜率才是信息。锯齿是季节，不是噪声。</figcaption>
+    </figure>
+    </div>
+
+    <aside class="slide-side">
+    <div class="live" id="live" data-state="baked">
+      <div class="live-grid">
+        <div class="live-cell">
+          <span class="live-k">最新年平均</span>
+          <span class="live-v"><b id="live-mean">427.35</b> ppm</span>
+          <span class="live-y">莫纳罗亚 · <span id="live-year">2025</span></span>
+        </div>
+        <div class="live-cell">
+          <span class="live-k">这一年增加了</span>
+          <span class="live-v"><b id="live-gr">+2.23</b> ppm</span>
+          <span class="live-y">美国国家海洋和大气管理局（NOAA）的增长率</span>
+        </div>
+        <div class="live-cell">
+          <span class="live-k">高于工业化前</span>
+          <span class="live-v"><b id="live-pre">+53</b> %</span>
+          <span class="live-y">相对于工业时代之前的 280 ppm</span>
+        </div>
+      </div>
+      <p class="live-note" id="live-note">数值保存于 2026 年 9 月 12 日。</p>
+      <p class="live-legend"><span class="lg-intro">圆点表示数字的来源：</span><span class="lg lg-live">此刻从数据源读取</span> · <span class="lg lg-partial">部分读取</span> · <span class="lg lg-baked">页面中保存的数值</span></p>
+    </div>
+    </aside>
+
+    <details class="more"><summary>深入了解：各十年的速度，以及当时有多热</summary>
+    <div class="t-wrap">
+      <table>
+        <caption>各十年的增长速度，以及当时有多热</caption>
+        <thead><tr><th>时期</th><th class="num">ppm / 年</th><th class="num">相对 1850–1900 年的 °C</th><th>备注</th></tr></thead>
+        <tbody>
+          <tr><td>1960–1969</td><td class="num">0.86</td><td class="num">+0.16</td><td>作为比较起点的十年</td></tr>
+          <tr><td>1970–1979</td><td class="num">1.28</td><td class="num">+0.23</td><td></td></tr>
+          <tr><td>1980–1989</td><td class="num">1.61</td><td class="num">+0.43</td><td></td></tr>
+          <tr><td>1990–1999</td><td class="num">1.51</td><td class="num">+0.56</td><td>唯一放缓的十年：皮纳图博火山爆发（1991）与苏联解体</td></tr>
+          <tr><td>2000–2009</td><td class="num">1.97</td><td class="num">+0.74</td><td></td></tr>
+          <tr><td>2010–2019</td><td class="num">2.42</td><td class="num">+0.97</td><td></td></tr>
+          <tr class="total"><td>2016–2025</td><td class="num">2.56</td><td class="num">+1.18</td><td>≈ 1960 年代的 3 倍</td></tr>
+        </tbody>
+      </table>
+    </div>
+    </details>
+  </section>
+
+
+  <!-- ============ 1c. OTTOCENTOMILA ANNI ============ -->
+  <section id="passato" class="slide">
+    <div class="sec-head"><span class="sec-unit">ppm</span><h2>上一次空气是这样，是什么时候</h2></div>
+    <p class="standfirst">南极冰芯里封存的气泡是八十万年前真正的空气，可以直接测量。在那么长的时间里，二氧化碳随着冰期来回摆动于 170 到 300 ppm 之间，一次也没有越过上限。</p>
+
+    <div class="slide-main">
+    <figure>
+      <div class="fig-head">
+        <p class="fig-title">八十万年的呼吸，然后是我们</p><span class="tag tag-obs">实测</span>
+        <p class="fig-sub">1958 年之前来自南极冰芯的二氧化碳浓度，之后是莫纳罗亚的年平均值。<span class="fs-more">横轴是线性的：一个像素大约代表一千年，所以整个工业时代还不到一个像素。右边那条竖线不是画错了。</span></p>
+      </div>
+      <div class="fig-body">
+        <div class="scroller">
+          <svg id="ghiaccio" viewBox="0 0 880 300" role="img" aria-label="南极冰芯测得的过去 80 万年二氧化碳浓度：随冰期在 170 到 300 ppm 之间摆动，从未超过 300。在最右端，曲线垂直上升到今天的 427 ppm。"></svg>
+        </div>
+      </div>
+      <figcaption><b>锯齿就是冰期</b>，八个大约十万年的循环：冰川前进时二氧化碳降到 180 ppm，退却时回到 280 ppm，始终与温度同步。<b>右边的竖线就是我们：</b>同样的幅度，用两百年而不是一万年走完，而且冲破了整条曲线的上限。</figcaption>
+    </figure>
+    </div>
+
+    <aside class="slide-side">
+      <div class="callout">
+        <span class="c-lab">没有任何人类呼吸过这样的空气</span>
+        <p>我们这个物种最古老的化石大约有 <b>31.5 万年</b>。在那么长的时间里二氧化碳从未超过 300 ppm：今天是 427。这不是修辞，就是旁边这条曲线。我们称之为人类历史的一切，都发生在图的最右端，那里的线还是平的。</p>
+      </div>
+      <div class="callout">
+        <span class="c-lab">越往前推，测得越少</span>
+        <p>冰芯只能回溯八十万年：再往前，古代空气已不存在，只能依靠间接指标，不确定性要大得多。IPCC 说今天的二氧化碳是<b>至少两百万年来</b>最高的；2023 年一项涵盖整个新生代的综合研究，把上一次达到这一水平定在<b>约一千四百万年前</b>。三把不同的尺子，三个答案：实测的那把排在最前面。</p>
+      </div>
+    </aside>
+
+    <details class="more"><summary>深入了解：上一次二氧化碳这么高时，世界是什么样子</summary>
+    <div class="t-wrap">
+      <table>
+        <caption>古气候参照时期，IPCC AR6 相对 1850–1900 年的数值</caption>
+        <thead><tr><th>时期</th><th class="num">CO₂ ppm</th><th class="num">温度</th><th class="num">海平面</th></tr></thead>
+        <tbody>
+          <tr class="total"><td>今天</td><td class="num">427</td><td class="num">+1.3 °C</td><td class="num">基准</td></tr>
+          <tr><td>末次盛冰期 · 2 万年前</td><td class="num">≈190</td><td class="num">−5 至 −7 °C</td><td class="num">−120 m</td></tr>
+          <tr><td>末次间冰期 · 12.5 万年前</td><td class="num">≈280</td><td class="num">+0.5 至 +1.5 °C</td><td class="num">+5 至 +10 m</td></tr>
+          <tr><td>上新世暖期 · 330 万年前</td><td class="num">360–420</td><td class="num">+2.5 至 +4 °C</td><td class="num">+5 至 +25 m</td></tr>
+          <tr><td>中新世气候适宜期 · 1500 万年前</td><td class="num">≈480</td><td class="num">+5 至 +10 °C</td><td class="num">—</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="prose">
+      <h3>上新世不是预测</h3>
+      <p>这是最关键的一行，因为当时的二氧化碳就是现在的水平：360 到 420 ppm，而且持续了很久。与之相伴的世界比现在暖 2.5–4 °C，海平面高 5 到 25 米。<b>但那是经过数千年才达到的平衡状态。</b>格陵兰和南极的冰盖需要几千年才会作出反应，上新世说明的是二氧化碳长期停在那里之后地球的归宿，而不是 2100 年会发生什么。本世纪的预估是另一回事，给出的是几十厘米，不是几十米。</p>
+
+      <h3>为什么冰期不构成反驳</h3>
+      <p>「二氧化碳过去本来就会自己变化」这句话是对的，图上看得很清楚。但那些循环起源于地球轨道的变化，单靠它挪动的能量很少：是变暖的海洋释放出的二氧化碳把它放大成冰期。与今天的差别在于原因和速度：那些转变用了大约一万年增加 100 ppm，我们用两百年增加了 140 ppm。</p>
+
+      <h3>三把尺子，三个答案</h3>
+      <p>冰芯是对空气的直接测量，可以回溯八十万年。再往前就需要间接指标，例如有孔虫壳中的硼：IPCC 在 2021 年据此得出，当前二氧化碳是至少两百万年来最高的。2023 年发表在《科学》上的新生代综合研究，重新梳理了过去 6600 万年的重建结果，把二氧化碳稳定处于这一水平的上一个时期定在约一千四百万年前。经常流传的「三百万年」这个数字来自更早的重建。</p>
+    </div>
+    </details>
+  </section>
+
+  <!-- ============ 1b. ULTIMI ANNI ============ -->
+  <section id="recenti" class="slide">
+    <div class="sec-head"><span class="sec-unit">ppm / 年</span><h2>最近十年，放大来看</h2></div>
+    <p class="standfirst">在长曲线上看不出单独的一年。这里看得出来：二氧化碳上升最多的那几年——2016、2023 和 2024——正是地球最热的那几年。</p>
+
+    <div class="slide-main">
+    <figure>
+      <div class="fig-head">
+        <p class="fig-title">最热的年份也是上升最多的年份</p><span class="tag tag-obs">实测</span>
+        <p class="fig-sub">最近十年，三个面板共用同一条时间轴。<span class="fs-more">上：莫纳罗亚的月平均（细线）、扣掉植物季节呼吸后的底层上升（粗线）和年平均（圆点）。中：每一年从 1 月 1 日到 12 月 31 日二氧化碳增加了多少；实心柱是高于平均的年份。下：同一年的全球温度。</span></p>
+      </div>
+      <div class="fig-body">
+        <div class="scroller">
+          <svg id="recente" viewBox="0 0 880 496" role="img" aria-label="三个面板对齐 2016 至 2026 年。上：莫纳罗亚的月浓度从 402 ppm 升到约 430 ppm，季节起伏清晰可见。中：年增长柱状图，大约每年 2 到 3 ppm，其中 2016、2023 和 2024 年超过 3 ppm，2025 年为 2.23；十年平均为 2.56。下：全球温度距平，从 2016 年的 1.17 度到 2024 年的 1.42 度和 2025 年的 1.29 度，峰值出现在二氧化碳增长最多的那几年。"></svg>
+        </div>
+      </div>
+      <figcaption><b>二氧化碳增长最多的年份就是最热的年份：2016、2023、2024。</b>多出来的二氧化碳不是温度造出来的，而是厄尔尼诺——太平洋的周期性增暖——在加热地球的同时让热带变干，于是植被吸收得更少。厄尔尼诺结束后，2025 年的增幅回到 2.2 ppm。</figcaption>
+    </figure>
+    </div>
+
+    <aside class="slide-side">
+    <div class="callout">
+      <span class="c-lab">为什么同一年会有两个不同的数字</span>
+      <p>「增加了 2.23 ppm」是 NOAA 的增长率：底层曲线从 1 月 1 日到 12 月 31 日上升了多少。用某一年的平均值减去前一年的平均值，会得到略有不同的数字（2024 年：3.53 对 3.33），因为年平均里含有前一年的一半。本页始终使用 NOAA 的增长率。</p>
+    </div>
+    </aside>
+  </section>
+
+  <!-- ============ 2. QUANTO SCALDA ============ -->
+  <section id="caldo" class="slide">
+    <div class="sec-head"><span class="sec-unit">°C</span><h2>那又怎样？这些 ppm 到底在做什么</h2></div>
+    <p class="standfirst">到目前为止我们一直在数分子。空气中二氧化碳越多，能逃向太空的热量就越少：这是同一张图，只不过换成用度来量。</p>
+
+    <div class="slide-main">
+    <figure>
+      <div class="fig-head">
+        <p class="fig-title">地球已经升温约 1.3 度</p><span class="tag tag-obs">实测</span>
+        <p class="fig-sub">每一年比 1850–1900 年平均高出多少，陆地与海洋合计（NOAAGlobalTemp）。<span class="fs-more">这正是 1.5 °C 目标所参照的同一基准。</span></p>
+      </div>
+      <div class="fig-body">
+        <div class="scroller">
+          <svg id="temp" viewBox="0 0 880 342" role="img" aria-label="1850 至 2025 年全球平均温度相对 1850-1900 年平均的距平：到七十年代为止在零附近波动，随后升至 2024 年的 1.42 度，2025 年回落到 1.29 度。1.5 度的门槛用略高处的一条虚线标出。"></svg>
+        </div>
+      </div>
+      <figcaption><span class="d-only"><b>有一年超过 1.5 °C 并不等于越过了门槛。</b>这个界线看的是底层增暖，也就是若干年的平均：本页用的是最近十年，目前为 1.18 °C。《巴黎协定》并没有规定用多少年，而 IPCC 用二十年。单独某个暖年可能被厄尔尼诺推高，比如 2024；某个偏凉的年份也收不回任何东西，比如 2025：这和二氧化碳里看到的厄尔尼诺之后的回落是同一回事，底层趋势没有改变。数据框里的预算，是要有 50% 的把握留在 1.5 °C 以下我们还能排放多少：从 2026 年初算起 170 GtCO₂，再减去已经过去的月份。</span><span class="m-only"><b>2025 年比 2024 年凉，这并不是好消息。</b>这和二氧化碳里看到的厄尔尼诺之后的回落是同一回事：底层趋势没有改变。</span></figcaption>
+    </figure>
+    </div>
+
+    <aside class="slide-side">
+    <!-- sul telefono la didascalia resta corta e il limite di Parigi torna in un riquadro suo;
+         sul desktop lo stesso testo sta nella didascalia (lo span d-only qui sopra) -->
+    <div class="callout m-only">
+      <span class="c-lab">有一年超过 1.5 °C 并不等于越过了门槛</span>
+      <p>这个界线看的是底层增暖，也就是若干年的平均：本页用的是最近十年，目前为 1.18 °C。《巴黎协定》并没有规定用多少年，而 IPCC 用二十年。单独某个暖年可能被厄尔尼诺推高，比如 2024；某个偏凉的年份也收不回任何东西，比如 2025。数据框里的预算，是要有 50% 的把握留在 1.5 °C 以下我们还能排放多少：从 2026 年初算起 170 GtCO₂，再减去已经过去的月份。</p>
+    </div>
+    <div class="live" id="live-t" data-state="baked">
+      <div class="live-grid">
+        <div class="live-cell">
+          <span class="live-k">最近一年</span>
+          <span class="live-v"><b id="lt-last">+1.29</b> °C</span>
+          <span class="live-y">高于工业化前 · <span id="lt-year">2025</span></span>
+        </div>
+        <div class="live-cell">
+          <span class="live-k">最近十年的平均</span>
+          <span class="live-v"><b id="lt-dec">+1.18</b> °C</span>
+          <span class="live-y">1.5 °C 界线所指的就是这个数</span>
+        </div>
+        <div class="live-cell">
+          <span class="live-k">1.5 °C 的预算 · 估算</span>
+          <span class="live-v"><b id="lt-bud">140</b> GtCO₂</span>
+          <span class="live-y">按 50% 的把握留在界线以下计算：以当前速度还有 <span id="lt-yrs">3.3</span> 年，这不是一个日期</span>
+        </div>
+      </div>
+      <p class="live-note" id="lt-note">数值保存于 2026 年 9 月 12 日。</p>
+      <p class="live-legend"><span class="lg-intro">圆点表示数字的来源：</span><span class="lg lg-live">此刻从数据源读取</span> · <span class="lg lg-partial">部分读取</span> · <span class="lg lg-baked">页面中保存的数值</span></p>
+    </div>
+    </aside>
+
+    <details class="more"><summary>深入了解：温度计之间并不一致，而且不只有二氧化碳</summary>
+    <div class="prose">
+
+      <h3>温度计之间相差十分之一度</h3>
+      <p>本页使用 NOAAGlobalTemp。其他权威序列——哥白尼的 ERA5、英国气象局的 HadCRUT、伯克利地球——给出的 2024 年数值在 1.5 到 1.6 °C 之间（ERA5 为 1.60；世界气象组织的综合值为 1.55）。NOAA 自己的序列在上一个版本中给出的是 1.46：2025 年的修订把近期数值下调了百分之几度。差别来自各自如何覆盖没有观测站的区域，尤其是北极，以及如何估计观测很少的工业化前时期。当你读到「我们已经超过 1.5 °C」时，值得问一句：用的是哪把尺子。</p>
+
+
+      <h3>而且不只有二氧化碳</h3>
+      <div class="gases">
+        <div class="gas">
+          <span class="gas-n">CO₂</span>
+          <span class="gas-v"><b id="g-co2">425.6</b> ppm</span>
+          <span class="gas-d">NOAA 全球平均，比工业化前高 52%；莫纳罗亚位置更靠北，读数略高</span>
+        </div>
+        <div class="gas">
+          <span class="gas-n">甲烷 · CH₄</span>
+          <span class="gas-v"><b id="g-ch4">1936</b> ppb</span>
+          <span class="gas-d">ppb = 十亿分之一 · 比工业化前高 168%（722）</span>
+        </div>
+        <div class="gas">
+          <span class="gas-n">氧化亚氮 · N₂O</span>
+          <span class="gas-v"><b id="g-n2o">338.9</b> ppb</span>
+          <span class="gas-d">比工业化前高 26%（270）</span>
+        </div>
+      </div>
+      <p>甲烷稀少得多，但就单个分子而言，它在短期内截留的热量远多于二氧化碳；作为交换，它十来年就会分解，而一部分二氧化碳会留存几个世纪。所以减甲烷见效快，减二氧化碳见效久：两件事都要做，而且不能相互替代。</p>
+    </div>
+    </details>
+  </section>
+
+  <!-- ============ 2. IL BILANCIO ============ -->
+  <section id="bilancio" class="slide">
+    <div class="sec-head"><span class="sec-unit">GtCO₂ / 年</span><h2>我们排放的都去了哪里</h2></div>
+    <p class="standfirst">全球碳平衡有两侧。左边是我们放进去的，右边是三个可能的去处。只有第三个会出现在曲线上。</p>
+
+    <div class="slide-main">
+    <figure>
+      <div class="fig-head">
+        <p class="fig-title">我们排放的一半消失在海洋和植被里</p><span class="tag tag-obs">实测与估算</span>
+        <p class="fig-sub">全球碳平衡，2015–2024 年平均，单位为十亿吨二氧化碳。<span class="fs-more">化石部分已扣除水泥重新吸收的一小部分。1 ppm = 7.78 GtCO₂。</span></p>
+      </div>
+      <div class="fig-body">
+        <div class="scroller">
+          <svg id="budget" viewBox="0 0 880 340" role="img" aria-label="流向图：每年排放的 40.9 GtCO2 分成海洋吸收的 11.8、植被吸收的 8.7，以及留在大气中的 20.4。"></svg>
+        </div>
+      </div>
+      <figcaption><b>方块下面的须线是不确定度。</b>陆地碳汇为 8.7 GtCO₂，但误差范围是 ±2.9，相当于三分之一；海洋的把握要好一倍。按十年平均，这本账是平的；具体到某一年就不平，2024 年最明显。</figcaption>
+    </figure>
+    </div>
+
+    <aside class="slide-side">
+    <div class="callout">
+      <span class="c-lab">本页的要点</span>
+      <p>如果碳汇明天停止工作，在排放不变的情况下，浓度将以每年 <b>5.3 ppm</b> 的速度上升，而不是 2.6。问题的一半今天已经被海洋和森林扫到了地毯底下。摊到每个人头上大约是<b>每年 5 吨</b>，相当于三辆汽车的重量。</p>
+    </div>
+    </aside>
+
+    <details class="more"><summary>数字形式的碳平衡，2015–2024 年平均</summary>
+    <div class="t-wrap">
+      <table>
+        <caption>全球碳预算 2025，2015–2024 年平均值换算为 GtCO₂</caption>
+        <thead><tr><th>项目</th><th class="num">GtCO₂/年</th><th class="num">ppm 当量</th><th class="num">占比</th></tr></thead>
+        <tbody>
+          <tr><td><span class="dot" style="background:var(--source)"></span>化石燃料与水泥（净值）</td><td class="num">35.9</td><td class="num">4.61</td><td class="num">88%</td></tr>
+          <tr><td><span class="dot" style="background:var(--source);opacity:.5"></span>土地利用</td><td class="num">5.0</td><td class="num">0.64</td><td class="num">12%</td></tr>
+          <tr class="total"><td>排放合计</td><td class="num">40.9</td><td class="num">5.26</td><td class="num">100%</td></tr>
+          <tr><td><span class="dot" style="background:var(--ocean)"></span>海洋碳汇</td><td class="num">11.8</td><td class="num">1.52</td><td class="num">29%</td></tr>
+          <tr><td><span class="dot" style="background:var(--land)"></span>陆地碳汇</td><td class="num">8.7</td><td class="num">1.12</td><td class="num">21%</td></tr>
+          <tr class="total"><td>吸收合计</td><td class="num">20.5</td><td class="num">2.63</td><td class="num">50%</td></tr>
+          <tr class="total"><td><span class="dot" style="background:var(--atmos)"></span>留在大气中</td><td class="num">20.4</td><td class="num">2.62</td><td class="num">50%</td></tr>
+          <tr><td>不平衡（十年平均）</td><td class="num">≈0</td><td class="num">—</td><td class="num">—</td></tr>
+        </tbody>
+      </table>
+    </div>
+    </details>
+  </section>
+
+  <!-- ============ 3b. SENZA POZZI ============ -->
+  <section id="senzapozzi" class="slide">
+    <div class="sec-head"><span class="sec-unit">ppm</span><h2>碳汇已经做过的工作</h2></div>
+    <p class="standfirst">要看清海洋和植被值多少，有一个办法：把它们什么都没吸收时曲线该在哪里画出来。</p>
+    <div class="slide-main">
+    <figure>
+      <div class="fig-head">
+        <p class="fig-title">没有碳汇，我们会在 574 ppm，而不是 427</p><span class="tag tag-est">估算</span>
+        <p class="fig-sub">虚线是在 1959 年的数值上，加上此后累计的全部排放。<span class="fs-more">两条线之间的距离，就是六十六年里海洋和植被无偿从空气中取走的二氧化碳。</span></p>
+      </div>
+      <div class="fig-body">
+        <ul class="legend">
+          <li><span class="sw sw-source"></span>莫纳罗亚实测</li>
+          <li><span class="sw sw-cf"></span>假如没有任何碳汇吸收</li>
+          <li><span class="sw sw-gap"></span>碳汇取走的部分</li>
+        </ul>
+        <div class="scroller">
+          <svg id="controfattuale" viewBox="0 0 880 320" role="img" aria-label="实测浓度与假设海洋和植被完全不吸收时浓度的对比：前者在 2025 年达到 427 ppm，后者将达到 574 ppm。两条曲线之间的差距随时间扩大。"></svg>
+        </div>
+      </div>
+      <figcaption><b>相差 147 ppm。</b>这比整个观测期内浓度上升的总量还要多。换句话说：1959 年以来我们排出的约 258 ppm 中，空气里只看到 111——其余都在海洋和植被里。这个计算假设所有排放都留在了大气中；它是一笔账面对比，而不是对随之而来的气候的模拟。</figcaption>
+    </figure>
+    </div>
+
+    <aside class="slide-side">
+    <div class="callout">
+      <span class="c-lab">免费的服务，费率却在上涨</span>
+      <p>到目前为止，我们排得越多，碳汇吸收得<em>也越多</em>：空气中二氧化碳越多，压入海洋的推力就越大，对植被的施肥效应也越强。但全球碳预算 2025 估计，与一个没有变暖的世界相比，升温<b>已经</b>让陆地碳汇减弱了 25%，海洋碳汇减弱了 7%。</p>
+    </div>
+    </aside>
+  </section>
+
+  <!-- ============ 3. I POZZI ============ -->
+  <section id="pozzi" class="slide">
+    <div class="sec-head"><span class="sec-unit">ppm / 年</span><h2>为什么 2024 年取决于你从哪里看</h2></div>
+    <p class="standfirst">2024 年排放增加了约 1%。在莫纳罗亚，二氧化碳的上升和前一年一样多；在全球平均里，却是这条序列自 1980 年开始以来最大的一次跳升。这并不矛盾：它们是两种不同的仪器，而单独一年不足以下判断。</p>
+
+    <div class="slide-main">
+    <figure>
+      <div class="fig-head">
+        <p class="fig-title">同一年，两种量法</p><span class="tag tag-obs">实测</span>
+        <p class="fig-sub">二氧化碳的年增长率。<span class="fs-more">莫纳罗亚是太平洋上的单个观测站；全球平均则由远离城市和工业的台站计算，并按各纬度带的面积加权合成。</span></p>
+      </div>
+      <div class="fig-body">
+        <ul class="legend">
+          <li><span class="sw sw-mlo"></span>莫纳罗亚</li>
+          <li><span class="sw sw-glob"></span>全球平均</li>
+        </ul>
+        <div class="scroller">
+          <svg id="duescale" viewBox="0 0 880 290" role="img" aria-label="2021 至 2025 年莫纳罗亚与全球平均二氧化碳增长率的对比。2023 年莫纳罗亚为 3.32，全球平均为 2.70；2024 年两者互换，3.33 对 3.76；2025 年双双下降，为 2.23 和 2.06。"></svg>
+        </div>
+      </div>
+      <figcaption><b>2023 年莫纳罗亚跑得比地球快，2024 年正好相反。</b>单个观测站会受到风把什么样的空气带过来的影响：它非常适合看长期趋势，不太适合判断某一年。当有人引用「2024 年是 X ppm」时，应当说明用的是两种量法中的哪一种。</figcaption>
+    </figure>
+    </div>
+
+    <aside class="slide-side">
+    <div class="callout">
+      <span class="c-lab">为什么不能只信一年</span>
+      <p><b>2023 和 2024 之所以异常，原因与我们的排放无关：</b>厄尔尼诺让热带变干并助长了创纪录的火灾，植被因此吸收得更少。陆地碳汇 2023 年留住 7.4 GtCO₂，2024 年 7.1，而十年平均是 8.7。海洋要稳定得多，照常完成了自己的工作。</p>
+    </div>
+    </aside>
+
+    <details class="more"><summary>深入了解：算不平的 2024，以及 2025 年的结局</summary>
+    <div class="prose one">
+      <p>2024 年这本账算不平：把进入空气、海洋和植被的量加起来，比记录在案的排放还要多，差额为 6 GtCO₂，是整条序列中最负的一次。全球碳计划把它单列为一项。2025 年，莫纳罗亚的增幅降到 2.23 ppm，全球平均为 2.06，全球碳预算的初步估计表明陆地碳汇已恢复到原先的强度。这次异常是一次摆动，不是断裂：只凭 2024 年就下结论，往哪个方向都不稳妥。</p>
+    </div>
+    </details>
+  </section>
+
+  <!-- ============ 4. CHI EMETTE ============ -->
+  <section id="chi">
+    <div class="sec-head"><span class="sec-unit">GtCO₂ · 吨/人 · %</span><h2>谁在排放，三种不同的读法</h2></div>
+    <p class="standfirst">这是三个不同的问题，会给出三个不同的答案。三个都需要：今天谁排得最多，按人均谁排得最多，以及谁把这个浴缸灌满的。</p>
+
+    <figure>
+      <div class="fig-head">
+        <p class="fig-title">三分之一的排放来自中国。按人均和按累计，排名就会变</p><span class="tag tag-obs">实测</span>
+        <p class="fig-sub">化石燃料与水泥的排放，不含土地利用（全球碳预算 2025，经 Our World in Data）。<span class="fs-more">每个面板都有自己的比例尺：比较位次，不要比较跨面板的长度。</span></p>
+      </div>
+      <div class="fig-body">
+        <div class="panels">
+          <div class="panel p-share">
+            <h3>2024 年</h3>
+            <p class="p-note">十亿吨二氧化碳及占世界总量的比例</p>
+            <div class="bars">
+              <div class="bar-row is-source"><span class="bar-lab">中国</span><div class="bar-track"><div class="bar-fill" style="--w:100%"></div></div><span class="bar-val">12.29<small>31.8%</small></span></div>
+              <div class="bar-row is-source"><span class="bar-lab">美国</span><div class="bar-track"><div class="bar-fill" style="--w:39.9%"></div></div><span class="bar-val">4.90<small>12.7%</small></span></div>
+              <div class="bar-row is-source"><span class="bar-lab">印度</span><div class="bar-track"><div class="bar-fill" style="--w:26.0%"></div></div><span class="bar-val">3.19<small>8.3%</small></span></div>
+              <div class="bar-row is-source"><span class="bar-lab">欧盟 27 国</span><div class="bar-track"><div class="bar-fill" style="--w:19.8%"></div></div><span class="bar-val">2.43<small>6.3%</small></span></div>
+              <div class="bar-row is-source"><span class="bar-lab">俄罗斯</span><div class="bar-track"><div class="bar-fill" style="--w:14.5%"></div></div><span class="bar-val">1.78<small>4.6%</small></span></div>
+              <div class="bar-row is-source"><span class="bar-lab">航空与航运<small>国际</small></span><div class="bar-track"><div class="bar-fill" style="--w:9.7%"></div></div><span class="bar-val">1.19<small>3.1%</small></span></div>
+              <div class="bar-row is-source"><span class="bar-lab">日本</span><div class="bar-track"><div class="bar-fill" style="--w:7.8%"></div></div><span class="bar-val">0.96<small>2.5%</small></span></div>
+              <div class="bar-row is-me"><span class="bar-lab">意大利</span><div class="bar-track"><div class="bar-fill" style="--w:2.4%"></div></div><span class="bar-val">0.30<small>0.8%</small></span></div>
+              <div class="bar-row is-muted"><span class="bar-lab">世界其余地区<small>约 190 个国家</small></span><div class="bar-track"><div class="bar-fill" style="--w:94.0%"></div></div><span class="bar-val">11.55<small>29.9%</small></span></div>
+            </div>
+          </div>
+          <div class="panel">
+            <h3>人均，2024 年</h3>
+            <p class="p-note">每位居民每年的二氧化碳吨数</p>
+            <div class="bars">
+              <div class="bar-row is-source"><span class="bar-lab">美国</span><div class="bar-track"><div class="bar-fill" style="--w:100%"></div></div><span class="bar-val">14.2</span></div>
+              <div class="bar-row is-source"><span class="bar-lab">俄罗斯</span><div class="bar-track"><div class="bar-fill" style="--w:86.6%"></div></div><span class="bar-val">12.3</span></div>
+              <div class="bar-row is-source"><span class="bar-lab">中国</span><div class="bar-track"><div class="bar-fill" style="--w:61.3%"></div></div><span class="bar-val">8.7</span></div>
+              <div class="bar-row is-source"><span class="bar-lab">日本</span><div class="bar-track"><div class="bar-fill" style="--w:54.9%"></div></div><span class="bar-val">7.8</span></div>
+              <div class="bar-row is-source"><span class="bar-lab">欧盟 27 国</span><div class="bar-track"><div class="bar-fill" style="--w:38.0%"></div></div><span class="bar-val">5.4</span></div>
+              <div class="bar-row is-me"><span class="bar-lab">意大利</span><div class="bar-track"><div class="bar-fill" style="--w:35.9%"></div></div><span class="bar-val">5.1</span></div>
+              <div class="bar-row is-source"><span class="bar-lab">印度</span><div class="bar-track"><div class="bar-fill" style="--w:15.5%"></div></div><span class="bar-val">2.2</span></div>
+            </div>
+          </div>
+          <div class="panel">
+            <h3>累计 1850–2024</h3>
+            <p class="p-note">占有史以来全部化石碳的比例</p>
+            <div class="bars">
+              <div class="bar-row is-source"><span class="bar-lab">美国</span><div class="bar-track"><div class="bar-fill" style="--w:100%"></div></div><span class="bar-val">23.5%</span></div>
+              <div class="bar-row is-source"><span class="bar-lab">欧盟 27 国</span><div class="bar-track"><div class="bar-fill" style="--w:69.4%"></div></div><span class="bar-val">16.3%</span></div>
+              <div class="bar-row is-source"><span class="bar-lab">中国</span><div class="bar-track"><div class="bar-fill" style="--w:65.5%"></div></div><span class="bar-val">15.4%</span></div>
+              <div class="bar-row is-source"><span class="bar-lab">俄罗斯</span><div class="bar-track"><div class="bar-fill" style="--w:28.1%"></div></div><span class="bar-val">6.6%</span></div>
+              <div class="bar-row is-source"><span class="bar-lab">印度</span><div class="bar-track"><div class="bar-fill" style="--w:15.3%"></div></div><span class="bar-val">3.6%</span></div>
+              <div class="bar-row is-me"><span class="bar-lab">意大利</span><div class="bar-track"><div class="bar-fill" style="--w:6.0%"></div></div><span class="bar-val">1.4%</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <figcaption>2024 年世界总量 <b>38.6 GtCO₂</b>：仅中国就接近三分之一，意大利不到 1%。<b>对气候而言，累计值才是关键的读法：</b>1950 年排出的二氧化碳仍在上面。<b>该引用哪个数字：</b>38.6 只是一年的化石排放；开头的 40.9 是 2015–2024 年的平均值，并包含土地利用。</figcaption>
+    </figure>
+
+    <details class="more"><summary>深入了解：来自哪些燃料，用在哪些用途</summary>
+    <div class="t-wrap">
+      <table>
+        <caption>化石二氧化碳从何而来 · 2023 年全球（燃料：全球碳预算；终端用途：IEA 估算）</caption>
+        <tfoot><tr><td colspan="4" style="color:var(--ink-3);font-size:.84rem;line-height:1.5">终端用途采用 IEA 的分类：电力计入生产地，而不是消费地。若改用 IPCC 的经济部门划分，同样的排放会得出不同的百分比，因为工业和建筑会把属于自己的那部分电力拿回去。</td></tr></tfoot>
+        <thead><tr><th>按燃料</th><th class="num">占比</th><th>按终端用途</th><th class="num">占比</th></tr></thead>
+        <tbody>
+          <tr><td>煤炭</td><td class="num">41%</td><td>电力与供热</td><td class="num">40%</td></tr>
+          <tr><td>石油</td><td class="num">32%</td><td>交通</td><td class="num">23%</td></tr>
+          <tr><td>天然气</td><td class="num">21%</td><td>工业（直接）</td><td class="num">19%</td></tr>
+          <tr><td>水泥</td><td class="num">4%</td><td>建筑</td><td class="num">9%</td></tr>
+          <tr><td>其他，包括油井放空燃烧的气体</td><td class="num">2%</td><td>其他</td><td class="num">9%</td></tr>
+        </tbody>
+      </table>
+    </div>
+    </details>
+  </section>
+
+  <!-- ============ 5. LA CRESCITA ============ -->
+  <section id="crescita" class="slide">
+    <div class="sec-head"><span class="sec-unit">2000–2024 年的变化</span><h2>真的「只是中国」吗？</h2></div>
+    <p class="standfirst">论总量不是，论增量则在很大程度上是。按当前总量，中国占三分之一。按最近二十五年的增量，中国约占三分之二，因为在此期间欧洲和美国都在下降。</p>
+
+    <div class="slide-main">
+    <figure>
+      <div class="fig-head">
+        <p class="fig-title">2000 年以来，中国解释了三分之二的增量</p><span class="tag tag-obs">实测</span>
+        <p class="fig-sub">从 2000 年到 2024 年各方贡献的变化，单位为每年十亿吨二氧化碳。</p>
+      </div>
+      <div class="fig-body">
+        <ul class="legend">
+          <li><span class="sw sw-source"></span>排放增加</li>
+          <li><span class="sw sw-atmos"></span>排放减少</li>
+        </ul>
+        <div class="div-chart" style="--zero:12%">
+          <div class="div-row"><span class="bar-lab">中国</span><div class="div-track"><div class="div-bar pos" style="--w:84.0%"></div></div><span class="bar-val">+8.6</span></div>
+          <div class="div-row"><span class="bar-lab">世界其余地区与国际运输</span><div class="div-track"><div class="div-bar pos" style="--w:44.0%"></div></div><span class="bar-val">+4.5</span></div>
+          <div class="div-row"><span class="bar-lab">印度</span><div class="div-track"><div class="div-bar pos" style="--w:21.5%"></div></div><span class="bar-val">+2.2</span></div>
+          <div class="div-row"><span class="bar-lab">俄罗斯</span><div class="div-track"><div class="div-bar pos" style="--w:2.9%"></div></div><span class="bar-val">+0.3</span></div>
+          <div class="div-row"><span class="bar-lab">日本</span><div class="div-track"><div class="div-bar neg" style="--w:2.9%"></div></div><span class="bar-val">−0.3</span></div>
+          <div class="div-row"><span class="bar-lab">美国</span><div class="div-track"><div class="div-bar neg" style="--w:10.9%"></div></div><span class="bar-val">−1.1</span></div>
+          <div class="div-row"><span class="bar-lab">欧盟</span><div class="div-track"><div class="div-bar neg" style="--w:11.4%"></div></div><span class="bar-val">−1.2</span></div>
+        </div>
+      </div>
+      <figcaption>世界净增 <b>+13.1 GtCO₂</b>，从 25.5 增至 38.6。仅中国就占了这一净增量的约三分之二。</figcaption>
+    </figure>
+    </div>
+
+    <aside class="slide-side">
+    <div class="callout">
+      <span class="c-lab">引用之前有两点提醒</span>
+      <p><b>第一：</b>「净」掩盖了一些东西。欧洲和美国的下降，也有把生产转移到中国的功劳。若按消费而不是按生产计算，中国排放中相当一部分是销往我们这里的货物，欧洲的降幅就会瘦下去很多。</p>
+      <p><b>第二：</b>如果看已经累积的碳而不是每年的流量，画面就会反过来。在那里，西方的贡献仍然最大，而且还会持续相当长一段时间。</p>
+    </div>
+    </aside>
+  </section>
+
+
+  <!-- ============ 5b. LE GUERRE ============ -->
+  <section id="guerra" class="slide">
+    <div class="sec-head"><span class="sec-unit">MtCO₂e</span><h2>战争的分量有多重</h2></div>
+    <p class="standfirst">两个与直觉相反的答案。和平时期的军队，排放远多于它们打的战争。而在一场战争内部，武器本身几乎不占分量：真正算数的是它们打中了什么，以及之后要重建什么。这是本页最不牢靠的估算，而且是下限，不是测量值。</p>
+
+    <div class="slide-main">
+    <figure>
+      <div class="fig-head">
+        <p class="fig-title">武器占 1%：其余是它们打中的东西</p><span class="tag tag-est">估算</span>
+        <p class="fig-sub">温室气体，单位为百万吨二氧化碳当量。<span class="fs-more">左边是每个案例的总量，时间跨度各不相同，标在每一项下面；右边是伊朗战争中这个总量的构成，也是目前最新的分解。每个面板都有自己的比例尺。</span></p>
+      </div>
+      <div class="fig-body">
+        <div class="panels">
+          <div class="panel">
+            <h3>总量有多少</h3>
+            <p class="p-note">注意时间跨度：每一项都不一样</p>
+            <div class="bars">
+              <div class="bar-row is-source"><span class="bar-lab">世界各国军队<small>每年，不含战争</small></span><div class="bar-track"><div class="bar-fill" style="--w:100%"></div></div><span class="bar-val">2 750</span></div>
+              <div class="bar-row is-source"><span class="bar-lab">乌克兰<small>四年，含重建</small></span><div class="bar-track"><div class="bar-fill" style="--w:11.3%"></div></div><span class="bar-val">311</span></div>
+              <div class="bar-row is-me"><span class="bar-lab">意大利<small>一年，用作比较</small></span><div class="bar-track"><div class="bar-fill" style="--w:10.9%"></div></div><span class="bar-val">300</span></div>
+              <div class="bar-row is-source"><span class="bar-lab">以色列与加沙<small>冲突加重建</small></span><div class="bar-track"><div class="bar-fill" style="--w:1.2%"></div></div><span class="bar-val">33</span></div>
+              <div class="bar-row is-source"><span class="bar-lab">伊朗<small>最初十四天</small></span><div class="bar-track"><div class="bar-fill" style="--w:0.19%"></div></div><span class="bar-val">5.1</span></div>
+            </div>
+          </div>
+          <div class="panel">
+            <h3>由什么构成</h3>
+            <p class="p-note"><span class="tag tag-prel">初步估算</span> 伊朗战争，2026 年 2 月 28 日 – 3 月 14 日</p>
+            <div class="bars">
+              <div class="bar-row is-source"><span class="bar-lab">被摧毁的建筑</span><div class="bar-track"><div class="bar-fill" style="--w:100%"></div></div><span class="bar-val">2.40</span></div>
+              <div class="bar-row is-source"><span class="bar-lab">燃烧的石油</span><div class="bar-track"><div class="bar-fill" style="--w:78.3%"></div></div><span class="bar-val">1.88</span></div>
+              <div class="bar-row is-source"><span class="bar-lab">装备的燃料</span><div class="bar-track"><div class="bar-fill" style="--w:22.1%"></div></div><span class="bar-val">0.53</span></div>
+              <div class="bar-row is-source"><span class="bar-lab">被摧毁的装备</span><div class="bar-track"><div class="bar-fill" style="--w:7.1%"></div></div><span class="bar-val">0.17</span></div>
+              <div class="bar-row is-muted"><span class="bar-lab">导弹与无人机</span><div class="bar-track"><div class="bar-fill" style="--w:2.3%"></div></div><span class="bar-val">0.06</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <figcaption><b>伊朗战争的两周里，导弹和无人机折合 5.5 万吨二氧化碳当量，被击中的建筑加上燃烧的石油是四百三十万吨：将近八十倍。</b>这就是为什么一场战争的账不能靠数弹药来算。<b>请注意这些总量包含什么：</b>乌克兰 3.11 亿吨中有 7300 万吨是尚未发生的重建，加沙是 3300 万吨中的 3100 万，而加沙单纯的军事行动只有 130 万吨。它们还没有进入大气：它们被归到那场让它们变得必要的战争头上。</figcaption>
+    </figure>
+    </div>
+
+    <aside class="slide-side">
+      <div class="callout">
+        <span class="c-lab">为什么说是下限，而不是测量值</span>
+        <p>军队不申报：最早的豁免来自 1997 年的《京都议定书》，2015 年起《巴黎协定》让申报变成自愿，而美国、中国和俄罗斯都不公布完整数据。战争的账由外部研究者一件件事地算，只能涵盖可以取证的部分。<b>叙利亚、也门和苏丹根本没有总量。</b>仅植被火灾一项，在十六个正在或近期发生冲突的国家，2020 年就有 1 456 MtCO₂e 进入空气：并非全部由战争造成，但也没有算到任何人头上。</p>
+      </div>
+      <div class="callout">
+        <span class="c-lab">叙利亚的悖论</span>
+        <p>战争期间叙利亚申报的排放反而<em>下降</em>了，因为石油产量崩塌了四分之一以上。与此同时，损害在别处累积：仅把被毁的房屋重新盖起来就约值 <b>22 MtCO₂</b>，它会在重建的那些年里到来。在官方的账本里，一场战争看上去可能像一项气候政策。</p>
+      </div>
+    </aside>
+
+    <details class="more"><summary>深入了解：一场战争的排放从哪里来</summary>
+    <div class="t-wrap">
+      <table>
+        <caption>乌克兰战争的四年，2022 年 2 月 24 日 – 2026 年 2 月 23 日</caption>
+        <thead><tr><th>来自什么</th><th class="num">MtCO₂e</th><th class="num">占比</th><th>备注</th></tr></thead>
+        <tbody>
+          <tr><td>战斗</td><td class="num">114.1</td><td class="num">37%</td><td>车辆和飞机的燃料、弹药</td></tr>
+          <tr><td>重建</td><td class="num">73.3</td><td class="num">23%</td><td>重建被毁之物所需的水泥和钢材</td></tr>
+          <tr><td>火灾</td><td class="num">70.3</td><td class="num">23%</td><td>被烧毁的森林和农田：仅 2025 年就有 139 万公顷</td></tr>
+          <tr><td>民航</td><td class="num">29.8</td><td class="num">9%</td><td>绕开关闭空域的改航航班</td></tr>
+          <tr><td>能源基础设施</td><td class="num">18.6</td><td class="num">6%</td><td>被击中的设施，包括甲烷泄漏</td></tr>
+          <tr><td>难民</td><td class="num">5.3</td><td class="num">2%</td><td>数百万人的迁移</td></tr>
+          <tr class="total"><td>四年合计</td><td class="num">311.4</td><td class="num">100%</td><td>仅第四年就有 75</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="prose">
+      <h3>在乌克兰，武器同样只是小头</h3>
+      <p>战斗略多于总量的三分之一。其余是战争带来的连锁后果：重建、扑不灭的火、改航的飞机、迁移的人。仅重建一项就几乎与战斗相当，而且随着破坏累积还在增长。按每吨 185 美元计算，乌克兰打算索赔的气候损害超过 570 亿。</p>
+
+      <h3>以色列与加沙：93% 在战后</h3>
+      <p>同样的模式，甚至更加明显。到 2025 年 1 月，军事行动折合略多于 130 万吨二氧化碳当量；若算上此前修建的隔离设施和未来的重建，总量达到 3320 万吨：将近 45 万套住房、3000 多公里道路，以及学校、医院和供水系统。如果这个数字与乌克兰相比显得小，那是因为地域极小，而且行动部分的口径很窄：它包括飞行和车辆，并不包括每一栋烧毁的建筑。</p>
+
+      <h3>伊朗：什么被击中了，账上又少了什么</h3>
+      <p>伊朗境内约三十处石油加工和储存设施，加上境外的炼油厂和油轮：「燃烧的石油」这一项的 188 万吨就来自这里。这笔账只覆盖最初两周，而且尚未经过学术期刊评审：我们在图中把它标成了初步估算。应当看它的数量级和各项之间的比例，而不是那个精确数字。</p>
+
+      <h3>一个先例：科威特的油井</h3>
+      <p>1991 年从科威特撤退时，伊拉克军队点燃了数百口油井。仅那些大火就相当于当年全世界化石二氧化碳排放的 2% 以上：比乌克兰四年战争产生的还要多。这是一个极端案例，说明为什么打击能源而不是打击人，才是对气候分量最重的事。</p>
+
+      <h3>而且军费还在上涨</h3>
+      <p>军费每多出 1000 亿美元，大约折合每年 32 MtCO₂e。2019 到 2024 年间北约军费的增加已经添了六十来个单位，已宣布的增加还会再带来 132：相当于智利这样一个国家每年的化石排放。这些数字的误差区间很宽，但方向没有疑问。</p>
+    </div>
+    </details>
+  </section>
+
+  <!-- ============ 6. KYOTO ============ -->
+  <section id="kyoto" class="slide">
+    <div class="sec-head"><span class="sec-unit">1997–2012</span><h2>为什么《京都议定书》没有把曲线掰弯</h2></div>
+    <p class="standfirst">这份议定书本来就不是为了阻止增长而设计的。而且即便它完美执行，浓度也照样会上升。</p>
+
+    <div class="slide-main">
+    <figure>
+      <div class="fig-head">
+        <p class="fig-title">从签署到第一承诺期结束，排放上升了 43%</p><span class="tag tag-obs">实测</span>
+        <p class="fig-sub">1990–2024 年全球化石排放，单位为十亿吨二氧化碳。阴影带标出 2008–2012 年的承诺期。</p>
+      </div>
+      <div class="fig-body">
+        <div class="scroller">
+          <svg id="kyotochart" viewBox="0 0 880 300" role="img" aria-label="1990 至 2024 年全球化石排放：从 227 亿吨升到 386 亿吨。图中标出 1997 年签署议定书时的 24.4、2005 年生效时的 29.6，以及 2012 年第一承诺期结束时的 35.0。"></svg>
+        </div>
+      </div>
+      <figcaption><b>浴缸照样在灌满。</b>这里只是化石排放，逐年列出。京都议定书要求一部分国家减排 5%；而在 1997 到 2012 年间，世界其余地区增长了 60% 以上，没有约束的国家翻了一番。唯一看得见的下降是 2020 年，这不是任何条约的功劳。</figcaption>
+    </figure>
+    </div>
+
+    <aside class="slide-side">
+    <div class="callout">
+      <span class="c-lab">物理上的原因</span>
+      <p>大气中的二氧化碳是存量，不是流量。它是一个正在灌满的浴缸：把水龙头关一半不会让水位下降，只会让它上升得慢一些。要让增长停下来，需要净零排放，也就是放进去的不超过碳汇取走的：只是少排还不够。京都议定书要求的是相对 1990 年减少 5.2%，而且只针对一部分国家。</p>
+    </div>
+    </aside>
+
+    <details class="more"><summary>深入了解：京都议定书的时间线，以及它留下了什么</summary>
+    <div class="two">
+    <ul class="tl">
+      <li><span class="yr">1997</span><div class="ev"><b>议定书签署</b><small>目标：仅工业化国家相对 1990 年减少 5.2%，期限为 2008–2012 年。中国、印度和巴西没有约束指标。</small></div></li>
+      <li><span class="yr">2001</span><div class="ev"><b>美国不予批准</b><small>当时世界第一排放国置身事外。条约覆盖的排放不到全球的三分之一，而且这一比例逐年下降。</small></div></li>
+      <li><span class="yr">2005</span><div class="ev"><b>生效</b><small>与此同时，全球排放相对签署那一年已经从 24.4 升到 29.6 GtCO₂。</small></div></li>
+      <li><span class="yr">2011</span><div class="ev"><b>加拿大退出</b><small>为了避免未达标所要承担的处罚。</small></div></li>
+      <li><span class="yr">2012</span><div class="ev"><b>第一承诺期结束</b><small>受约束的国家达成了目标，但降幅的大头来自 1991 年后前苏联工业的崩溃和产业外移，而不是气候政策。</small></div></li>
+    </ul>
+
+    <div class="callout">
+      <span class="c-lab">无论如何也要说的</span>
+      <p>京都议定书并非无用。它建立了国家清单、测量与核查体系以及碳市场，包括欧洲的排放交易体系（ETS）。《巴黎协定》正是建立在这套基础设施之上。它没有做到的，是扭转或阻止世界排放的增长，因此也没有止住大气中二氧化碳的上升：恰恰在京都议定书的那些年里，浓度继续加速，从九十年代的每年 1.5 ppm 升到下一个十年的 2.0 ppm。这是两本不同的账，应当分开来看。什么才能把曲线掰弯：净零排放，而不是减少排放。这正是《巴黎协定》后来为本世纪中叶设定的目标。</p>
+    </div>
+    </div>
+    </details>
+  </section>
+
+  <!-- ============ 7b. SINTESI ============ -->
+  <section id="sintesi" class="slide">
+    <div class="sec-head"><span class="sec-unit">要点</span><h2>带走的五件事</h2></div>
+    <p class="standfirst">如果这一页只能留下一屏，那就留这一屏。下面的数字会与前面各节一起更新。</p>
+
+    <div class="slide-main">
+    <ol class="takeaways">
+      <li><div><b>空气中的二氧化碳为 <span data-from="live-mean">427.35</span> ppm，比工业化前水平高 53%</b>，并以每年约 2.6 ppm 的速度上升：是 1960 年代的三倍。</div></li>
+      <li><div><b>我们每年排放约 410 亿吨；一半消失在海洋和植被里。</b>曲线只量到另外一半。没有碳汇，我们会是 574 ppm 而不是 427。</div></li>
+      <li><div><b>地球在最近一年升温 <span data-from="lt-last">+1.29</span> °C，最近十年平均 <span data-from="lt-dec">+1.18</span>。</b>巴黎的 1.5 °C 界线看的是若干年的平均，而不是某一年：目前尚未越过，而要有 50% 的把握留在界线以下，还剩约 <span data-from="lt-bud">140</span> GtCO₂，按当前速度不到四年的排放量。</div></li>
+      <li><div><b>最热的年份就是二氧化碳上升最多的年份。</b>2023 和 2024 年厄尔尼诺削弱了植被，增幅达到 3.3 ppm。单独一年不构成趋势，朝哪个方向都不构成。</div></li>
+      <li><div><b>谁在排放，取决于你问的是什么。</b>今天中国排放占总量的三分之一，但按人均，一个美国人相当于一个中国人的一倍半；而在一百七十年里，美国和欧洲把这个浴缸灌得最多。减排能让上升变慢；要让它停下来，需要净零排放。</div></li>
+    </ol>
+    </div>
+
+    <aside class="slide-side">
+    <div class="callout">
+      <span class="c-lab">一年后该看什么</span>
+      <p><b>一月</b>，NOAA 会公布刚结束那一年的增长率：本页会自己读取。<b>十一月</b>，全球碳预算发布，给出当年的排放和碳汇估计：那些数字需要在碳平衡各节里手动更新。<b>任何时候</b>：厄尔尼诺的状态，因为一次新的暖事件会让二氧化碳的增速回升，而排放本身并没有变化。</p>
+    </div>
+    </aside>
+  </section>
+
+  <!-- ============ 7. FONTI ============ -->
+  <section id="fonti">
+    <div class="sec-head"><span class="sec-unit">注释</span><h2>资料来源、换算与不确定性</h2></div>
+
+    <ul class="srcs">
+      <li><b>全球碳预算 2025</b><span>Friedlingstein 等，全球碳计划，2025 年 11 月 13 日在 COP30 上发布。源与汇的平衡，2015–2024 年平均。</span></li>
+      <li><b>NOAA 全球监测实验室</b><span>1958 年以来的莫纳罗亚序列与全球平均：年平均值与增长率。网络允许时由本页实时读取。</span></li>
+      <li><b>NOAA 古气候学 · 冰芯</b><span>Bereiter 等 2015，南极冰芯 80 万年二氧化碳的修订合成序列。序列嵌入页面中，不做实时读取。</span></li>
+      <li><b>《科学》· CenCO2PIP</b><span>Hönisch 等，《Toward a Cenozoic history of atmospheric CO₂》，2023 年 12 月：过去 6600 万年的重建。</span></li>
+      <li><b>Our World in Data</b><span>各国、人均以及 1850–2024 年累计排放，来自全球碳预算 2025 的数据库。</span></li>
+      <li><b>IPCC AR6 与 IEA</b><span>温室气体的工业化前水平；古气候参照时期（第 2 章跨章专栏 2.4）；按终端用途划分的排放。</span></li>
+      <li><b>Initiative on GHG Accounting of War</b><span>de Klerk 等，《Climate damage caused by Russia's war in Ukraine》，2026 年 2 月：四年战争，2022 年 2 月 24 日至 2026 年 2 月 23 日。</span></li>
+      <li><b>Scientists for Global Responsibility 与 CEOBS</b><span>Parkinson 与 Cottrell，《Estimating the military's global greenhouse gas emissions》，2022 年 11 月；以及 2025 年 9 月关于军费的后续研究。</span></li>
+      <li><b>One Earth</b><span>Neimark 等，《War on the climate》，2026 年 3 月 20 日：以色列与加沙冲突的排放。</span></li>
+      <li><b>Climate and Community Institute</b><span>与伦敦玛丽女王大学和兰卡斯特大学合作，2026 年 3 月：伊朗战争最初两周的初步估算。尚未经过同行评审。</span></li>
+      <li><b>Conflict and Environment Observatory</b><span>冲突国家的植被火灾与油井放空燃烧；叙利亚的重建；1991 年科威特被点燃的油井。</span></li>
+    </ul>
+
+    <div class="prose">
+      <details class="more"><summary>深入了解：换算，以及两种不能混淆的量法</summary>
+      <h3>本页使用的换算</h3>
+      <p class="mono" style="font-size:.88rem;line-height:1.9">1 ppm = 2.124 GtC = 7.78 GtCO₂<br>1 GtC = 3.664 GtCO₂</p>
+      <h3>两种不能混淆的量法</h3>
+      <p>NOAA 的<b>增长率</b>是 1 月 1 日到 12 月 31 日之间的增加量，按图中粗线计算，也就是去掉季节呼吸的那条线。<b>年平均之差</b>是另一回事，得到的数字也不同：2024 年前者为 3.33 ppm，后者为 3.53。此外，<b>莫纳罗亚不等于地球</b>：它是太平洋上海拔 3400 米的一个观测站，而 NOAA 的全球平均由远离城市和工业、空气充分混合的海洋台站计算，并按各纬度带的面积加权合成。2024 年这两种量法给出 3.33 和 3.76 ppm。</p>
+      <p>科学文献中出现的 <b>GtC</b>（十亿吨碳）乘以 3.664 即可换算为 GtCO₂：本页始终使用 GtCO₂。</p>
+      </details>
+      <details class="more revbox"><summary>本页改过什么：修订记录</summary>
+      <p>气候科学会自我纠正，本页也一样。最新的条目在最上面。</p>
+      <ul class="revlog">
+        <li><span class="rev-d">2026 年 9 月 13 日</span><div><b>加入了八十万年。</b>本页原本缺少长时间尺度：现在有了南极冰芯的序列，可以看到二氧化碳在八个冰期循环中从未超过 300 ppm，也可以看到没有任何人类呼吸过今天的空气。数字也用对了：这个纪录不是「三百万年」——那是已被取代的重建给出的数字——而是按 IPCC 至少两百万年，按 2023 年的综合研究约一千四百万年。上新世是上一个二氧化碳达到这一水平的时期，当时高 +2.5 至 +4 °C，海平面高 5 到 25 米，而不是 35 米：而且那是经过数千年才达到的平衡，不是对 2100 年的预测。</div></li>
+        <li><span class="rev-d">2026 年 9 月 13 日</span><div><b>每张图都标明它展示的是哪一类数字。</b>实测、实测与估算、估算、初步估算：四种标签，下面有说明。借这个机会，也修正了几处过于绝对的表述。1.5 °C 的界线并非「按十年平均来衡量」：协定没有规定用多少年，我们用十年，IPCC 用二十年。剩余预算不是一个日期，而是 50% 的概率。关于京都议定书，不再说其效果「基本为零」，而说它没有扭转排放的增长，这才是数据显示的内容。「减排还不够」改成了「减排让上升变慢，要停下来需要净零排放」。在关于战争的一节里，现在明确说明总量中有一部分是尚未发生的重建。</div></li>
+        <li><span class="rev-d">2026 年 9 月 13 日</span><div><b>加入了关于战争的一节。</b>最常被问到的那个问题此前没有答案。第一版只比较总量；这一版还展示了总量的构成，因为出人意料之处正在那里：伊朗战争最初十四天里，导弹占 1%，被击中的建筑加上燃烧的石油占 84%。四个来源彼此独立。这些总量仍然是下限：军队不申报，而叙利亚、也门和苏丹根本没有任何统计。</div></li>
+        <li><span class="rev-d">2026 年 9 月 13 日</span><div><b>修正了十年碳平衡的数字和预算计数器。</b>一次独立复核重新下载了全球碳预算 2025 的 CSV，发现页面上 2015–2024 年的平均值抄错了：土地利用是 5.0 而不是 5.6，海洋是 11.8 而不是 11.6，植被是 8.7 而不是 9.2，大气是 20.4 而不是 19.7。十年尺度上 1.2 GtCO₂ 的「无法解释的不平衡」并不存在：它几乎为零，而单独 2024 年则是 −6 GtCO₂。1.5 °C 的剩余预算应当从 2026 年初而不是 2025 年初开始计算：计数器从 98 变成了约 140 GtCO₂。各国数据也更新到了 2024 年。</div></li>
+        <li><span class="rev-d">2026 年 9 月</span><div><b>删掉了针对原始演示稿的修订注记。</b>本页最初是为了核查一份已有的幻灯片（「2020 年 425 ppm」「快 3 倍」「一个十年接一个十年」），并在图下标注它的错误。现在这一页本身就是那份演示：图是正确的，而那些注记纠正的是读者已经看不到的东西。其中真正有价值的部分，保留在了图注和按十年的表格里。</div></li>
+        <li><span class="rev-d">2026 年 9 月</span><div><b>加入了最近十年的放大图。</b>在 1959 年以来的曲线上看不出 2023–2024 年的跳升：新图展示最近的月份，下方还有每一年的增长。这张图同样会用实时读取的 NOAA 数据重绘。</div></li>
+        <li><span class="rev-d">2026 年 9 月</span><div><b>更新到全球碳预算 2025。</b>陆地碳汇从每年 11.7 修订为 8.7 GtCO₂，留在大气中的比例从 45% 升到约 50%：这是幅度最大的一次修订，既因为有了新数据，也因为参照的十年发生了移动。</div></li>
+        <li><span class="rev-d">2026 年 9 月</span><div><b>修正了一节混用两套序列的内容。</b>之前的版本说 2024 年的增幅跳升了 25%。在莫纳罗亚并没有这个跳升（3.32 对 3.33 ppm）；它出现在全球平均里（2.70 对 3.76）。那是把两套不同的数据当成了一套。</div></li>
+        <li><span class="rev-d">2026 年 9 月</span><div><b>让碳平衡的缺口显现出来。</b>在单独一年里，用独立方法测得的源与汇从来不会正好相加：这种不一致会作为单独一项公布。</div></li>
+        <li><span class="rev-d">2026 年 9 月</span><div><b>修正了换算系数</b>，每 ppm 从 7.82 改为 7.78 GtCO₂，原先与旁边标注的碳当量数值并不自洽。</div></li>
+      </ul>
+      </details>
+
+      <h3>哪些牢靠，哪些不牢靠</h3>
+      <p>每张图都带一个标签，说明它属于哪一类数字。<span class="tag tag-obs">实测</span>是已发表的测量和清单：NOAA 的序列、全球碳预算的各国排放。<span class="tag tag-obs">实测与估算</span>是全球碳平衡，其中化石源来自清单，而两个碳汇是用模型重建的，方块下面的不确定度须线正是因此而来。<span class="tag tag-est">估算</span>是一次计算或一个模型：没有碳汇的反事实曲线、战争的账。<span class="tag tag-prel">初步估算</span>是尚未经过学术期刊评审的工作，在本页只出现过一次。</p>
+      <p>化石排放的把握约在 5% 以内。海洋碳汇约在 15% 以内。陆地碳汇和土地利用是约束最差的两项，在某些年份不确定度超过数值的 50%。这本账从来不会正好平：剩余的不平衡会作为单独一项公布，2024 年达到 −6 GtCO₂（−1.7 GtC），是整条序列中最负的数值。</p>
+      <p>1850–2024 年的累计数字只涉及化石碳。若把历史上的土地利用也算进去，排名会有明显变化。</p>
+    </div>
+
+    <p class="foot">所有数值都为便于阅读做了取整。引用之前，请到上面列出的原始来源核对准确数字：NOAA 的序列和全球碳预算每一版都会修订。</p>
+  </section>
+
+  <footer class="site-foot">
+    <div class="sf-in">
+      <p class="sf-note">关于全球碳平衡的科普分析。数据来自全球碳计划、NOAA 全球监测实验室和 Our World in Data。碳平衡：全球碳预算 2025。莫纳罗亚序列：每次加载时从 NOAA 读取，并以 2026 年 9 月 12 日保存的数值作为后备。</p>
+      <p class="sf-meta"><a href="#top">回到顶部</a> · 静态页面，无 Cookie：仅有匿名的访问统计（Umami）。</p>
+    </div>
+  </footer>
+
+</div>
+<script src="/assets/charts.js" defer></script>
+<script src="/assets/live.js" defer></script>
+<script src="/assets/slides.js" defer></script>
+</body>
+</html>

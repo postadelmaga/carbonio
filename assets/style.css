@@ -380,6 +380,41 @@ td .dot{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right
 img,svg{max-width:100%}
 [hidden]{display:none!important}
 
+/* --- selettore di lingua ---
+   Un <details>: si apre senza JavaScript e si chiude con Esc. La bandiera è
+   un'emoji, quindi niente immagini da scaricare; su Windows alcune non si
+   disegnano e resta il codice della lingua accanto, che basta. */
+.lang{position:relative;flex:none;margin-left:auto}
+.lang+.theme-btn{margin-left:6px}
+.lang summary{
+  display:flex;align-items:center;gap:5px;height:32px;padding:0 8px;
+  border:1px solid var(--rule);border-radius:3px;cursor:pointer;
+  font-family:Archivo,sans-serif;font-size:.76rem;font-weight:600;color:var(--ink-2);
+  list-style:none;white-space:nowrap;
+}
+.lang summary::-webkit-details-marker{display:none}
+.lang summary::after{content:"";width:5px;height:5px;margin-left:2px;
+  border-right:1.5px solid var(--ink-3);border-bottom:1.5px solid var(--ink-3);
+  transform:rotate(45deg) translateY(-2px)}
+.lang[open] summary::after{transform:rotate(-135deg) translateY(-1px)}
+.lang summary:hover{color:var(--ink);border-color:var(--rule-strong)}
+.lang summary:focus-visible{outline:2px solid var(--source);outline-offset:2px}
+.lang .fl{font-size:1rem;line-height:1}
+.lang ul{
+  position:absolute;right:0;top:calc(100% + 6px);z-index:70;margin:0;padding:4px;
+  list-style:none;min-width:150px;
+  background:var(--surface);border:1px solid var(--rule-strong);border-radius:4px;
+  box-shadow:var(--shadow);
+}
+.lang li a{
+  display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:3px;
+  font-family:Archivo,sans-serif;font-size:.86rem;color:var(--ink-2);text-decoration:none;
+  border-bottom:0;white-space:nowrap;
+}
+.lang li a:hover{background:var(--surface-2);color:var(--ink)}
+.lang li a[aria-current="true"]{color:var(--ink);font-weight:600}
+.lang li a[aria-current="true"]::after{content:"✓";margin-left:auto;color:var(--source)}
+
 /* --- toggle tema --- */
 .theme-btn{
   margin-left:auto;flex:none;
@@ -828,6 +863,10 @@ details.more > :last-child{margin-bottom:16px}
     background:transparent;color:var(--ink-2);border:1px solid var(--rule);border-radius:3px;cursor:pointer;
   }
   .theme-btn{width:36px;height:36px}
+  .lang{margin-left:auto}
+  .lang summary{height:36px;padding:0 7px;font-size:.72rem;gap:4px}
+  .lang summary::after{display:none}
+  .lang ul{position:fixed;right:10px;top:calc(var(--nav-h) + 6px)}
   .menu-btn .ic-close{display:none}
   .nav.is-open .menu-btn .ic-burger{display:none}
   .nav.is-open .menu-btn .ic-close{display:inline}

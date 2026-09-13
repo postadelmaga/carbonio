@@ -67,29 +67,46 @@ trap 'rm -rf "$BUILD_DIR"' EXIT
 
 info "Preparo la build in $BUILD_DIR"
 cp -R "$SRC_DIR/index.html" "$SRC_DIR/404.html" "$SRC_DIR/robots.txt" "$SRC_DIR/assets" "$BUILD_DIR/"
+# Le traduzioni: cartelle generate da build.py, una per lingua. Se mancano il
+# deploy prosegue lo stesso, il sito resta in italiano.
+for L in en es zh; do
+  [ -d "$SRC_DIR/$L" ] && cp -R "$SRC_DIR/$L" "$BUILD_DIR/"
+done
 
 # I sorgenti tengono un placeholder perche' l'URL pubblico lo decide il deploy,
 # non il repository.
 ESCAPED_URL="${PUBLIC_URL//\//\\/}"
-sed -i.bak "s/__CANONICAL__/${ESCAPED_URL}\//g"     "$BUILD_DIR/index.html"
-sed -i.bak "s/__CANONICAL_ROOT__/${ESCAPED_URL}/g"  "$BUILD_DIR/robots.txt"
-rm -f "$BUILD_DIR"/*.bak
+# Un solo segnaposto, __ROOT__, in tutte le pagine: la radice italiana e le
+# traduzioni generate da build.py in en/, es/, zh/.
+while IFS= read -r f; do
+  sed -i.bak "s/__ROOT__/${ESCAPED_URL}/g" "$f"
+done < <(find "$BUILD_DIR" -name '*.html' -o -name 'robots.txt')
+find "$BUILD_DIR" -name '*.bak' -delete
 
 cat > "$BUILD_DIR/sitemap.xml" <<SITEMAP
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+$(for L in "" en/ es/ zh/; do
+cat <<UNA
   <url>
-    <loc>${PUBLIC_URL}/</loc>
+    <loc>${PUBLIC_URL}/${L}</loc>
     <lastmod>$(date -u +%Y-%m-%d)</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>1.0</priority>
+    <priority>$([ -z "$L" ] && echo 1.0 || echo 0.9)</priority>
+    <xhtml:link rel="alternate" hreflang="it" href="${PUBLIC_URL}/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="${PUBLIC_URL}/en/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="${PUBLIC_URL}/es/"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="${PUBLIC_URL}/zh/"/>
   </url>
+UNA
+done)
 </urlset>
 SITEMAP
 
-if grep -rq '__CANONICAL' "$BUILD_DIR"; then
+if grep -rq '__ROOT__' "$BUILD_DIR"; then
   err "Sono rimasti dei placeholder non risolti nella build:"
-  grep -rn '__CANONICAL' "$BUILD_DIR" >&2
+  grep -rn '__ROOT__' "$BUILD_DIR" >&2
   exit 1
 fi
 ok "Build pronta ($(du -sh "$BUILD_DIR" | cut -f1))"

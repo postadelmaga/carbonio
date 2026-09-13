@@ -1,3 +1,6 @@
+/* T(): traduzione delle etichette dei comandi. In italiano window.I18N non
+   esiste e la funzione restituisce la stringa originale. */
+function T(s){ var d=window.I18N; return (d && d[s]) || s; }
 /* ─────────────────────────────────────────────────────────────────────────
    slides.js — sfoglia la pagina una sezione alla volta.
 
@@ -23,15 +26,15 @@
 
   /* ── comandi a schermo ── */
   var bar = document.createElement('div'); bar.className='progress'; bar.setAttribute('aria-hidden','true');
-  var box = document.createElement('div'); box.className='deck-nav'; box.setAttribute('role','group'); box.setAttribute('aria-label','Sfoglia le sezioni');
+  var box = document.createElement('div'); box.className='deck-nav'; box.setAttribute('role','group'); box.setAttribute('aria-label',T('Sfoglia le sezioni'));
   box.innerHTML =
-    '<button type="button" data-go="-1" aria-label="Sezione precedente" title="Precedente (←)">' +
+    '<button type="button" data-go="-1" aria-label="'+T('Sezione precedente')+'" title="'+T('Precedente')+' (←)">' +
       '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>' +
     '<span class="deck-pos" aria-live="polite"><span data-cur>1</span> / ' + slides.length + '</span>' +
-    '<button type="button" data-go="1" aria-label="Sezione successiva" title="Successiva (→)">' +
+    '<button type="button" data-go="1" aria-label="'+T('Sezione successiva')+'" title="'+T('Successiva')+' (→)">' +
       '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>' +
     '<span class="deck-title" data-title></span><span class="deck-page" data-page hidden></span>' +
-    '<span class="deck-hint">← → tastiera</span>';
+    '<span class="deck-hint">← → '+T('tastiera')+'</span>';
   document.body.appendChild(bar);
   document.body.appendChild(box);
 
@@ -70,7 +73,7 @@
     var txt = '';
     if(pages >= 2){
       var page = Math.min(pages, Math.max(1, Math.floor((NAV_H - r.top) / avail + 0.5) + 1));
-      txt = 'parte ' + page + ' di ' + pages;
+      txt = T('parte') + ' ' + page + ' ' + T('di') + ' ' + pages;
     }
     if(txt !== lastPg){ lastPg = txt; pg.textContent = txt; pg.hidden = !txt; }
   }
@@ -163,7 +166,7 @@
     if(!navEl || !menuBtn || navEl.classList.contains('is-open') === open) return;
     navEl.classList.toggle('is-open', open);
     menuBtn.setAttribute('aria-expanded', String(open));
-    menuBtn.setAttribute('aria-label', open ? 'Chiudi il menu' : 'Apri il menu');
+    menuBtn.setAttribute('aria-label', open ? T('Chiudi il menu') : T('Apri il menu'));
   }
   if(menuBtn){
     menuBtn.addEventListener('click', function(){ setMenu(!navEl.classList.contains('is-open')); });

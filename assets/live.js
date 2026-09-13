@@ -1,3 +1,7 @@
+/* T(): traduzione delle stringhe di stato. In italiano window.I18N non esiste
+   e la funzione restituisce la stringa originale. Definita una volta per tutto
+   il file, fuori dalle due IIFE. */
+function T(s){ var d=window.I18N; return (d && d[s]) || s; }
 /* ─────────────────────────────────────────────────────────────────────────
    live.js — legge da NOAA GML l'ultimo dato di Mauna Loa e aggiorna la pagina.
 
@@ -38,13 +42,13 @@
 
   function fallback(why){
     box.setAttribute('data-state','baked');
-    note.textContent = 'Lettura in diretta non riuscita: mostro i valori salvati il ' + BAKED +
+    note.textContent = T('Lettura in diretta non riuscita: mostro i valori salvati il ') + BAKED +
                        '. ' + (why || '');
   }
 
   /* da qui in poi il JavaScript c'e' e sta girando: solo ora ha senso
      promettere una lettura in diretta */
-  note.textContent = 'Leggo l’ultimo dato da NOAA, l’agenzia meteo-oceanica statunitense…';
+  note.textContent = T('Leggo l’ultimo dato da NOAA, l’agenzia meteo-oceanica statunitense…');
 
   function get(file){
     var ctl = window.AbortController ? new AbortController() : null;
@@ -137,9 +141,9 @@
       }
 
       box.setAttribute('data-state','live');
-      note.textContent = 'Letti ora da NOAA (Global Monitoring Laboratory): media annua ' +
-        d.last[0] + ', serie aggiornata alla pubblicazione più recente' +
-        (d.monthly ? ', curva disegnata sulle medie mensili misurate.' : '.');
+      note.textContent = T('Letti ora da NOAA (Global Monitoring Laboratory): media annua ') +
+        d.last[0] + T(', serie aggiornata alla pubblicazione più recente') +
+        (d.monthly ? T(', curva disegnata sulle medie mensili misurate.') : '.');
     })
     .catch(function(err){
       fallback('Lettura non riuscita: ' + (err && err.message ? err.message : 'errore di rete') + '.');
@@ -208,7 +212,7 @@
   })();
 
   if(!window.fetch || !window.Promise) return;
-  note.textContent = 'Leggo temperatura e gas serra da NOAA…';
+  note.textContent = T('Leggo temperatura e gas serra da NOAA…');
 
   function get(url){
     var ctl = window.AbortController ? new AbortController() : null;
@@ -287,16 +291,14 @@
     .then(function(){
       if(done.length===2){
         box.setAttribute('data-state','live');
-        note.textContent = 'Letti ora da NOAA: temperatura dal centro NCEI, gas serra dal laboratorio GML. ' +
-          'Il budget residuo è una sottrazione dal valore del Global Carbon Budget 2025, non una misura.';
+        note.textContent = T('Letti ora da NOAA: temperatura dal centro NCEI, gas serra dal laboratorio GML. Il budget residuo è una sottrazione dal valore del Global Carbon Budget 2025, non una misura.');
       } else if(done.length===1){
         /* meta' fresco e meta' di riserva: non e' onesto accendere il verde */
         box.setAttribute('data-state','partial');
-        note.textContent = 'Letto in diretta: ' + done[0] + '. Per il resto mostro i valori ' +
-          'salvati il ' + BAKED + '.';
+        note.textContent = T('Letto in diretta: ') + done[0] + T('. Per il resto mostro i valori salvati il ') + BAKED + '.';
       } else {
         box.setAttribute('data-state','baked');
-        note.textContent = 'Lettura in diretta non riuscita: mostro i valori salvati il ' + BAKED + '.';
+        note.textContent = T('Lettura in diretta non riuscita: mostro i valori salvati il ') + BAKED + '.';
       }
     });
 })();
