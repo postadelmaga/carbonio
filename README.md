@@ -166,6 +166,15 @@ Il budget residuo per 1,5 °C (170 GtCO₂) è contato **dall'inizio del 2026**
 crescita», «Kyoto») sono OWID/GCB 2025, anno 2024, al lordo della
 carbonatazione: vanno aggiornati a mano a ogni edizione del GCB.
 
+## Una slide, un'idea
+
+Ogni sezione tiene in vista un messaggio, una figura e un blocco di testo
+corto. Tutto il resto (tabelle, cronologie, note metodologiche, secondi
+paragrafi) sta in un `<details class="more">` con etichetta «Approfondisci:
+…», chiuso di default: resta a un clic, non pesa sulla prima lettura e non
+entra nel conteggio delle schermate. Se aggiungi contenuto a una sezione,
+mettilo lì, non nel corpo. I grafici sono limitati a poco meno di metà schermo in altezza.
+
 ## Navigazione a slide
 
 Ogni sezione occupa almeno una schermata (`min-height: 100svh`) e si aggancia

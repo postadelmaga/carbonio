@@ -169,7 +169,7 @@ h1 em{font-style:normal;color:var(--source)}
 }
 
 /* ---------- sections ---------- */
-section{padding-block:56px 0;border-top:1px solid var(--rule);}
+section{padding-block:34px 0;border-top:1px solid var(--rule);}
 section:first-of-type{border-top:0}
 .sec-head{display:flex;align-items:baseline;gap:14px;margin-bottom:8px;flex-wrap:wrap}
 .sec-unit{
@@ -185,10 +185,10 @@ h3{
   font-size:1rem;font-weight:700;letter-spacing:.01em;
   margin:0 0 14px;color:var(--ink);
 }
-.standfirst{font-size:1.06rem;color:var(--ink-2);max-width:var(--prose);margin:14px 0 30px}
+.standfirst{font-size:1.06rem;color:var(--ink-2);max-width:var(--prose);margin:10px 0 20px}
 
 /* ---------- figure shell ---------- */
-figure{margin:0 0 34px;background:var(--surface);border:1px solid var(--rule);border-radius:4px;box-shadow:var(--shadow);overflow:hidden}
+figure{margin:0 0 20px;background:var(--surface);border:1px solid var(--rule);border-radius:4px;box-shadow:var(--shadow);overflow:hidden}
 .fig-head{padding:18px 20px 0}
 .fig-title{font-family:Archivo,sans-serif;font-weight:700;font-size:.98rem;margin:0 0 4px}
 .fig-sub{font-size:.86rem;color:var(--ink-3);margin:0;line-height:1.45}
@@ -300,7 +300,7 @@ td .dot{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right
 /* ---------- callout ---------- */
 .callout{
   border-left:3px solid var(--source);background:var(--surface);
-  padding:18px 20px;margin:0 0 30px;border-radius:0 4px 4px 0;
+  padding:16px 20px;margin:0 0 20px;border-radius:0 4px 4px 0;
   box-shadow:var(--shadow);max-width:var(--prose);
 }
 .callout p:last-child{margin-bottom:0}
@@ -542,7 +542,7 @@ html{scroll-padding-top:46px}
 .hero,section{min-height:calc(100svh - 46px);scroll-margin-top:46px;box-sizing:border-box}
 /* i grafici non crescono oltre due terzi dello schermo: su un portatile
    una figura da sola non deve occupare l'intera schermata */
-.fig-body .scroller svg{max-height:min(64svh,640px)}
+.fig-body .scroller svg{max-height:min(46svh,460px)}
 .deck-page{font-family:"IBM Plex Mono",monospace;font-size:.72rem;color:var(--ink-3);padding:0 8px;border-left:1px solid var(--rule)}
 @media (max-width:640px){.deck-page{display:none}}
 section{padding-bottom:40px}
@@ -597,7 +597,7 @@ body{padding-bottom:64px}
 .lg-live::before{background:var(--land)}.lg-partial::before{background:var(--ocean)}.lg-baked::before{background:var(--bim)}
 
 /* ---------- blocchi a scomparsa ---------- */
-details.more{border:1px solid var(--rule);border-radius:4px;background:var(--surface);margin:0 0 26px;max-width:none}
+details.more{border:1px solid var(--rule);border-radius:4px;background:var(--surface);margin:0 0 14px;max-width:none}
 details.more summary{cursor:pointer;padding:12px 16px;font-family:Archivo,sans-serif;font-weight:600;font-size:.92rem;color:var(--ink);list-style:none;display:flex;align-items:center;gap:10px}
 details.more summary::-webkit-details-marker{display:none}
 details.more summary::before{content:"";width:7px;height:7px;border-right:1.6px solid var(--ink-3);border-bottom:1.6px solid var(--ink-3);transform:rotate(-45deg);transition:transform .15s;flex:none}
