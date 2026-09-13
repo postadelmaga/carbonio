@@ -17,6 +17,8 @@
   --atmos:#38474D;
   --atmos-soft:#DCE3E4;
   --bim:#A8853F;
+
+  --heat:#C2385A;
   --shadow:0 1px 2px rgba(14,27,33,.06), 0 8px 24px -12px rgba(14,27,33,.18);
   --maxw:1320px;
   --prose:50rem;
@@ -41,6 +43,8 @@
     --atmos:#93A5AB;
     --atmos-soft:#243238;
     --bim:#C9A55E;
+
+    --heat:#E8637F;
     --shadow:0 1px 2px rgba(0,0,0,.35), 0 8px 24px -12px rgba(0,0,0,.6);
   }
 }
@@ -63,6 +67,8 @@
   --atmos:#93A5AB;
   --atmos-soft:#243238;
   --bim:#C9A55E;
+
+  --heat:#E8637F;
   --shadow:0 1px 2px rgba(0,0,0,.35), 0 8px 24px -12px rgba(0,0,0,.6);
 }
 
@@ -150,9 +156,12 @@ h1 em{font-style:normal;color:var(--source)}
   line-height:1.3;color:var(--ink-2);margin-top:10px;max-width:15ch;
 }
 .key.k-src .fig{color:var(--source)}
-.key.k-sink .fig{color:var(--ocean)}
-.key.k-atm .fig{color:var(--ink)}
-.key.k-ppm .fig{color:var(--ink)}
+.key.k-ocean .fig{color:var(--ocean)}
+.key.k-land .fig{color:var(--land)}
+.key.k-atm .fig{color:var(--atmos)}
+.units{font-size:.86rem;color:var(--ink-2);max-width:var(--prose);margin:22px 0 0;line-height:1.55}
+.units b{color:var(--ink);font-weight:600}
+.units abbr{text-decoration:underline dotted;text-underline-offset:3px;cursor:help}
 @media(max-width:640px){
   .keys{grid-template-columns:repeat(2,1fr);gap:0}
   .key{border-bottom:1px solid var(--rule);padding-block:14px 12px}
@@ -203,7 +212,7 @@ figcaption b{font-weight:600;color:var(--ink)}
 .sw-atmos{background:var(--atmos)}
 .sw-bim{background:var(--bim)}
 .sw-mlo{background:var(--source)}
-.sw-glob{background:var(--ocean)}
+.sw-glob{background:var(--atmos)}
 
 /* ---------- html bar charts ---------- */
 .bars{display:flex;flex-direction:column;gap:11px;margin:0}
@@ -216,6 +225,8 @@ figcaption b{font-weight:600;color:var(--ink)}
 .bar-row.is-muted .bar-fill{background:var(--ink-3)}
 .bar-row.is-source .bar-fill{background:var(--source)}
 .bar-row.is-land .bar-fill{background:var(--land)}
+.bar-row.is-me .bar-fill{background:var(--ink)}
+.bar-row.is-me .bar-lab{color:var(--ink);text-decoration:underline;text-decoration-color:var(--rule-strong);text-underline-offset:3px}
 @media(max-width:560px){
   .bar-row{grid-template-columns:1fr auto;grid-template-areas:"lab val" "track track";gap:4px 10px}
   .bar-lab{grid-area:lab}.bar-val{grid-area:val}.bar-track{grid-area:track;margin-bottom:4px}
@@ -249,7 +260,7 @@ figcaption b{font-weight:600;color:var(--ink)}
 .div-track{position:relative;height:22px;background:linear-gradient(to right,transparent 0,transparent calc(var(--zero) - 1px),var(--rule-strong) calc(var(--zero) - 1px),var(--rule-strong) var(--zero),transparent var(--zero),transparent 100%)}
 .div-bar{position:absolute;top:0;height:100%;border-radius:2px}
 .div-bar.pos{left:var(--zero);width:var(--w);background:var(--source)}
-.div-bar.neg{right:calc(100% - var(--zero));width:var(--w);background:var(--ocean)}
+.div-bar.neg{right:calc(100% - var(--zero));width:var(--w);background:var(--atmos)}
 @media(max-width:560px){
   .div-row{grid-template-columns:1fr auto;grid-template-areas:"lab val" "track track";gap:4px 10px}
   .div-row .bar-lab{grid-area:lab}.div-row .bar-val{grid-area:val}.div-track{grid-area:track;margin-bottom:6px}
@@ -301,7 +312,8 @@ td .dot{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right
 /* ---------- fix list ---------- */
 
 /* ---------- timeline ---------- */
-.tl{list-style:none;padding:0;margin:0 0 28px;max-width:var(--prose)}
+.tl{list-style:none;padding:0;margin:10px 0 28px;max-width:var(--prose)}
+.prose{margin-bottom:8px}
 .tl li{display:grid;grid-template-columns:4.6rem 1fr;gap:16px;padding:0 0 20px;position:relative}
 .tl li::before{content:"";position:absolute;left:4.6rem;top:9px;bottom:-2px;width:1px;background:var(--rule);margin-left:-8px}
 .tl li:last-child::before{display:none}
@@ -318,8 +330,8 @@ td .dot{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right
 
 /* ---------- svg text ---------- */
 .svg-lab{font-family:"IBM Plex Mono",monospace;font-size:12px;fill:var(--ink-3)}
-.svg-lab-b{font-family:Archivo,sans-serif;font-size:13px;font-weight:700;fill:var(--ink)}
-.svg-val{font-family:"IBM Plex Mono",monospace;font-size:13px;font-weight:600;fill:var(--ink)}
+.svg-lab-b{font-family:Archivo,sans-serif;font-size:13px;font-weight:700;fill:var(--ink);paint-order:stroke;stroke:var(--surface);stroke-width:4px;stroke-linejoin:round}
+.svg-val{font-family:"IBM Plex Mono",monospace;font-size:13px;font-weight:600;fill:var(--ink);paint-order:stroke;stroke:var(--surface);stroke-width:4px;stroke-linejoin:round}
 .svg-unit{font-family:"IBM Plex Mono",monospace;font-size:11px;fill:var(--ink-3)}
 .grid-l{stroke:var(--rule);stroke-width:1}
 .axis-l{stroke:var(--rule-strong);stroke-width:1}
@@ -538,6 +550,7 @@ body{padding-bottom:64px}
   .prose p,.prose h3,.prose ul,.prose ol{break-inside:avoid}
   .prose h3{break-after:avoid;margin-top:0}
   .prose h3:not(:first-child){margin-top:1.1em}
+  .prose.one{columns:1}
 }
 
 .progress{position:fixed;left:0;top:46px;height:2px;width:0;background:var(--source);z-index:60;transition:width .25s ease}
@@ -570,3 +583,33 @@ body{padding-bottom:64px}
 }
 @media (prefers-reduced-motion:reduce){.progress{transition:none}}
 @media print{.deck-nav,.progress{display:none}.hero,section{min-height:0}}
+
+
+/* ---------- legenda del pallino ---------- */
+.live-legend{font-size:.76rem;color:var(--ink-3);margin:6px 0 0;padding-left:20px}
+.lg{white-space:nowrap}
+.lg::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:1px}
+.lg-live::before{background:var(--land)}.lg-partial::before{background:var(--ocean)}.lg-baked::before{background:var(--bim)}
+
+/* ---------- blocchi a scomparsa ---------- */
+details.more{border:1px solid var(--rule);border-radius:4px;background:var(--surface);margin:0 0 26px;max-width:none}
+details.more summary{cursor:pointer;padding:12px 16px;font-family:Archivo,sans-serif;font-weight:600;font-size:.92rem;color:var(--ink);list-style:none;display:flex;align-items:center;gap:10px}
+details.more summary::-webkit-details-marker{display:none}
+details.more summary::before{content:"";width:7px;height:7px;border-right:1.6px solid var(--ink-3);border-bottom:1.6px solid var(--ink-3);transform:rotate(-45deg);transition:transform .15s;flex:none}
+details.more[open] summary::before{transform:rotate(45deg)}
+details.more > :not(summary){margin-left:16px;margin-right:16px}
+details.more > .t-wrap{margin:0 16px 16px;border:0}
+details.more > p{margin-top:0}
+details.more > .gases{margin-top:4px}
+details.more > :last-child{margin-bottom:16px}
+.prose details.more{break-inside:avoid}
+
+/* ---------- sintesi ---------- */
+.takeaways{list-style:none;padding:0;margin:0 0 30px;display:grid;gap:12px;counter-reset:t}
+.takeaways li{counter-increment:t;display:flex;gap:14px;align-items:flex-start;background:var(--surface);border:1px solid var(--rule);border-radius:4px;padding:16px 18px;font-size:1rem;line-height:1.5;color:var(--ink-2)}
+.takeaways li::before{content:counter(t);flex:none;width:30px;font-family:"IBM Plex Mono",monospace;font-size:1.5rem;font-weight:600;color:var(--source);line-height:1}
+.takeaways b{color:var(--ink);font-weight:600}
+@media (min-width:1000px){.takeaways{grid-template-columns:1fr 1fr}.takeaways li:last-child{grid-column:1/-1}}
+
+/* la slide fonti: titoli e registro non si separano fra le colonne */
+.revbox{break-inside:avoid}

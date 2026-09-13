@@ -12,13 +12,13 @@ presentazione: ogni numero è accompagnato dalla fonte e dall'incertezza.
 ```
 sites/carbonio/
 ├── publish.sh          deploy.sh con destinazione e URL del server e8 incorporati
-├── index.html          pagina unica, otto sezioni con ancore
+├── index.html          pagina unica, undici sezioni con ancore
 ├── 404.html
 ├── robots.txt
 ├── deploy.sh           pubblicazione su arch_php via rsync/ssh
 └── assets/
     ├── style.css       token di tema chiaro/scuro, layout, stampa
-    ├── charts.js       i sei grafici SVG + i dati di riserva incorporati
+    ├── charts.js       i sette grafici SVG + i dati di riserva incorporati
     ├── slides.js       navigazione a slide: frecce a schermo, tastiera, tocco
     ├── live.js         lettura in diretta da NOAA, con fallback
     └── favicon.svg
@@ -152,6 +152,21 @@ La curva **controfattuale** somma al valore del 1959 tutte le emissioni cumulate
 da allora (serie storica del GCB 2025, 2,124 GtC per ppm): senza pozzi saremmo a
 574 ppm invece di 427. È un confronto contabile, non una simulazione climatica,
 e la didascalia lo dichiara.
+
+## Numeri del bilancio: da dove prenderli
+
+Le medie 2015–2024 del bilancio (hero, sezione «Dove finisce», tabella a
+scomparsa, sintesi) vengono dal CSV storico del Global Carbon Budget 2025
+(`openclimatedata.github.io/global-carbon-budget/data/global-carbon-budget-2025-historical-budget.csv`),
+colonne in GtC moltiplicate per 3,664. Convenzione: fossili al netto della
+carbonatazione del cemento, come nei valori di testata del paper. Non
+trascrivere i numeri a memoria dagli articoli: la revisione del 13 settembre
+2026 ha trovato quattro errori nati esattamente così.
+
+Il budget residuo per 1,5 °C (170 GtCO₂) è contato **dall'inizio del 2026**
+(`BUD_FROM` in `live.js`). I dati per paese (sezioni «Chi emette», «La
+crescita», «Kyoto») sono OWID/GCB 2025, anno 2024, al lordo della
+carbonatazione: vanno aggiornati a mano a ogni edizione del GCB.
 
 ## Navigazione a slide
 

@@ -23,18 +23,28 @@
   if(!box || !note) return;
   if(!window.fetch || !window.Promise){ fallback('Il browser non supporta l’aggiornamento automatico.'); return; }
 
-  function $(id){ return document.getElementById(id); }
+  /* ogni valore ha copie altrove nella pagina (la sintesi finale): si
+     aggiornano insieme all'originale tramite data-from="id" */
+  function $(id){
+    var e=document.getElementById(id);
+    if(!e) return {set textContent(v){}};
+    return {set textContent(v){
+      e.textContent=v;
+      var c=document.querySelectorAll('[data-from="'+id+'"]');
+      for(var i=0;i<c.length;i++) c[i].textContent=v;
+    }};
+  }
   function fmt(n,d){ return n.toFixed(d).replace('.', ','); }
 
   function fallback(why){
     box.setAttribute('data-state','baked');
-    note.textContent = 'Valori NOAA incorporati nella pagina, aggiornati al ' + BAKED +
-                       '. ' + (why || 'Non sono riuscito a leggere il dato in diretta.');
+    note.textContent = 'Lettura in diretta non riuscita: mostro i valori salvati il ' + BAKED +
+                       '. ' + (why || '');
   }
 
   /* da qui in poi il JavaScript c'e' e sta girando: solo ora ha senso
      promettere una lettura in diretta */
-  note.textContent = 'Leggo l’ultimo dato da NOAA…';
+  note.textContent = 'Leggo l’ultimo dato da NOAA, l’agenzia meteo-oceanica statunitense…';
 
   function get(file){
     var ctl = window.AbortController ? new AbortController() : null;
@@ -126,7 +136,7 @@
       }
 
       box.setAttribute('data-state','live');
-      note.textContent = 'Letto ora da NOAA Global Monitoring Laboratory: media annua ' +
+      note.textContent = 'Letti ora da NOAA (Global Monitoring Laboratory): media annua ' +
         d.last[0] + ', serie aggiornata alla pubblicazione più recente' +
         (d.monthly ? ', curva disegnata sulle medie mensili misurate.' : '.');
     })
@@ -157,7 +167,8 @@
 
   /* Global Carbon Budget 2025: 170 GtCO2 residui all'1/1/2025 per il 50% di
      probabilita' di restare sotto 1,5 °C, a un ritmo di 42,2 GtCO2/anno. */
-  var BUD0 = 170, RATE = 42.2, BUD_FROM = Date.UTC(2025,0,1);
+  /* GCB 2025: 170 GtCO2 restanti contati dall'inizio del 2026, 42,2 GtCO2/anno nel 2025 */
+  var BUD0 = 170, RATE = 42.2, BUD_FROM = Date.UTC(2026,0,1);
 
   /* NCEI pubblica sulla base 1901-2000; l'obiettivo di Parigi si riferisce
      alla media 1850-1900. Lo scarto viene ricalcolato dalla serie letta,
@@ -171,7 +182,17 @@
   var box  = document.getElementById('live-t');
   var note = document.getElementById('lt-note');
   if(!box || !note) return;
-  function $(id){ return document.getElementById(id); }
+  /* ogni valore ha copie altrove nella pagina (la sintesi finale): si
+     aggiornano insieme all'originale tramite data-from="id" */
+  function $(id){
+    var e=document.getElementById(id);
+    if(!e) return {set textContent(v){}};
+    return {set textContent(v){
+      e.textContent=v;
+      var c=document.querySelectorAll('[data-from="'+id+'"]');
+      for(var i=0;i<c.length;i++) c[i].textContent=v;
+    }};
+  }
   function fmt(n,d){ return n.toFixed(d).replace('.', ','); }
 
   /* ── il budget e' una sottrazione, non una lettura: si aggiorna da solo ── */
@@ -267,16 +288,16 @@
     .then(function(){
       if(done.length===2){
         box.setAttribute('data-state','live');
-        note.textContent = 'Temperatura letta ora da NOAA NCEI, gas serra da NOAA GML. ' +
+        note.textContent = 'Letti ora da NOAA: temperatura dal centro NCEI, gas serra dal laboratorio GML. ' +
           'Il budget residuo è una sottrazione dal valore del Global Carbon Budget 2025, non una misura.';
       } else if(done.length===1){
         /* meta' fresco e meta' di riserva: non e' onesto accendere il verde */
         box.setAttribute('data-state','partial');
-        note.textContent = 'Letto in diretta: ' + done[0] + '. Per il resto valgono i valori ' +
-          'incorporati, aggiornati al ' + BAKED + '.';
+        note.textContent = 'Letto in diretta: ' + done[0] + '. Per il resto mostro i valori ' +
+          'salvati il ' + BAKED + '.';
       } else {
         box.setAttribute('data-state','baked');
-        note.textContent = 'Valori NOAA incorporati nella pagina, aggiornati al ' + BAKED +
+        note.textContent = 'Lettura in diretta non riuscita: mostro i valori salvati il ' + BAKED +
           '. Lettura in diretta non riuscita.';
       }
     });
