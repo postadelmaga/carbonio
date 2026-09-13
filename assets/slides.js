@@ -41,15 +41,24 @@
      barra di navigazione, con un piccolo margine di sovrapposizione cosi'
      l'ultima riga di prima resta visibile e il lettore non perde il filo */
   function pageH(){ return Math.max(200, window.innerHeight - NAV_H - 40); }
+  /* quanto di una sezione puo' restare fuori schermo senza contare come
+     "pagina in piu'": un margine, una riga, la barra di Approfondisci. Sotto
+     questa soglia la freccia passa direttamente alla sezione successiva,
+     invece di scorrere di pochi pixel e chiedere un secondo clic. */
+  function tol(){ return Math.min(160, Math.round((window.innerHeight - NAV_H) * 0.2)); }
+  /* l'hash segue la sezione; se il browser lo vieta (file://), si va avanti lo stesso */
+  function setHash(id){
+    try{ if(history.replaceState) history.replaceState(null, '', id ? '#' + id : location.pathname + location.search); }catch(e){}
+  }
   function scrollToY(y){ window.scrollTo({top:Math.max(0,y), behavior: reduce ? 'auto' : 'smooth'}); }
 
   /* indicatore "parte 2 di 3" quando la sezione non sta in una schermata */
   function updatePage(){
     var r = slides[current].getBoundingClientRect();
     var avail = window.innerHeight - NAV_H;
-    var pages = Math.max(1, Math.ceil((r.height - 8) / avail));
-    prev.disabled = current===0 && r.top >= NAV_H - 4;
-    next.disabled = current===slides.length-1 && r.bottom <= window.innerHeight + 4;
+    var pages = Math.max(1, Math.ceil((r.height - tol()) / avail));
+    prev.disabled = current===0 && r.top >= NAV_H - tol();
+    next.disabled = current===slides.length-1 && window.innerHeight + window.pageYOffset >= document.documentElement.scrollHeight - 2;
     if(pages < 2){ pg.hidden = true; return; }
     var page = Math.min(pages, Math.max(1, Math.floor((NAV_H - r.top) / avail + 0.5) + 1));
     pg.textContent = 'parte ' + page + ' di ' + pages;
@@ -61,7 +70,7 @@
     var s = slides[i];
     var y = s.getBoundingClientRect().top + window.pageYOffset - NAV_H;
     window.scrollTo({top:y, behavior: reduce ? 'auto' : 'smooth'});
-    if(history.replaceState) history.replaceState(null, '', s.id ? '#' + s.id : location.pathname + location.search);
+    setHash(s.id);
     paint(i);
   }
   function paint(i){
@@ -84,13 +93,13 @@
     var top = r.top + window.pageYOffset - NAV_H;
     var end = r.bottom + window.pageYOffset - window.innerHeight;
     scrollToY(Math.max(top, end));
-    if(history.replaceState) history.replaceState(null, '', slides[i].id ? '#' + slides[i].id : location.pathname + location.search);
+    setHash(slides[i].id);
     paint(i);
   }
   function step(dir){
     var r = slides[current].getBoundingClientRect();
     if(dir > 0){
-      if(r.bottom > window.innerHeight + 4){
+      if(r.bottom > window.innerHeight + tol()){
         var yMax = r.bottom + window.pageYOffset - window.innerHeight;
         scrollToY(Math.min(window.pageYOffset + pageH(), yMax));
       } else if(current < slides.length-1){
@@ -100,7 +109,7 @@
         scrollToY(document.documentElement.scrollHeight);
       }
     } else {
-      if(r.top < NAV_H - 4){
+      if(r.top < NAV_H - tol()){
         var yMin = r.top + window.pageYOffset - NAV_H;
         scrollToY(Math.max(window.pageYOffset - pageH(), yMin));
       } else if(current > 0){
@@ -138,8 +147,8 @@
     var t = e.target, n = t && t.tagName;
     return n==='INPUT' || n==='TEXTAREA' || n==='SELECT' || (t && t.isContentEditable);
   }
-  function slideEnd(){ return slides[current].getBoundingClientRect().bottom <= window.innerHeight + 4; }
-  function slideStart(){ return slides[current].getBoundingClientRect().top >= NAV_H - 4; }
+  function slideEnd(){ return slides[current].getBoundingClientRect().bottom <= window.innerHeight + tol(); }
+  function slideStart(){ return slides[current].getBoundingClientRect().top >= NAV_H - tol(); }
 
   document.addEventListener('keydown', function(e){
     if(e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey || typing(e)) return;
