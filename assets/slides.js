@@ -137,10 +137,24 @@
   prev.addEventListener('click', function(){ step(-1); });
   next.addEventListener('click', function(){ step(1); });
 
+  /* sul telefono la pillola sparisce mentre si scorre e torna da fermi */
+  var hideT = null;
   window.addEventListener('scroll', function(){
-    if(ticking) return; ticking = true;
-    requestAnimationFrame(function(){ detect(); ticking = false; });
+    if(!ticking){ ticking = true; requestAnimationFrame(function(){ detect(); ticking = false; }); }
+    box.classList.add('is-scrolling');
+    clearTimeout(hideT); hideT = setTimeout(function(){ box.classList.remove('is-scrolling'); }, 500);
   }, {passive:true});
+
+  /* sottotitoli dei grafici: sul telefono la coda si apre con «Come leggerlo» */
+  if(window.matchMedia && window.matchMedia('(max-width:640px)').matches){
+    Array.prototype.forEach.call(document.querySelectorAll('.fig-sub .fs-more'), function(m){
+      var p = m.parentNode;
+      var b = document.createElement('button'); b.type='button'; b.className='fs-btn';
+      b.textContent='Come leggerlo'; b.setAttribute('aria-expanded','false');
+      b.addEventListener('click', function(){ var o = p.classList.toggle('is-open'); b.setAttribute('aria-expanded', String(o)); });
+      p.appendChild(b);
+    });
+  }
 
   /* ── tastiera ──
      ← → PagSu PagGiu Home Fine sfogliano sempre. ↑ ↓ e spazio scorrono

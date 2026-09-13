@@ -168,7 +168,7 @@ try{var t=localStorage.getItem("tema");if(t==="dark"||t==="light"){document.docu
     <figure>
       <div class="fig-head">
         <p class="fig-title">Gli anni caldi sono gli anni in cui sale di più</p>
-        <p class="fig-sub">Gli ultimi dieci anni, tre pannelli sullo stesso asse dei tempi. Sopra: medie mensili di Mauna Loa (linea sottile), la salita di fondo tolto il respiro stagionale delle piante (linea spessa) e le medie annue (punti). Al centro: di quanto è cresciuta la CO₂ in ciascun anno, dal 1° gennaio al 31 dicembre; le barre piene sono gli anni sopra la media. Sotto: la temperatura globale dello stesso anno.</p>
+        <p class="fig-sub">Gli ultimi dieci anni, tre pannelli sullo stesso asse dei tempi. <span class="fs-more">Sopra: medie mensili di Mauna Loa (linea sottile), la salita di fondo tolto il respiro stagionale delle piante (linea spessa) e le medie annue (punti). Al centro: di quanto è cresciuta la CO₂ in ciascun anno, dal 1° gennaio al 31 dicembre; le barre piene sono gli anni sopra la media. Sotto: la temperatura globale dello stesso anno.</span></p>
       </div>
       <div class="fig-body">
         <div class="scroller">
@@ -196,18 +196,24 @@ try{var t=localStorage.getItem("tema");if(t==="dark"||t==="light"){document.docu
     <figure>
       <div class="fig-head">
         <p class="fig-title">Il pianeta si è già scaldato di circa 1,3 gradi</p>
-        <p class="fig-sub">Di quanto ogni anno è stato più caldo della media 1850–1900, terre e oceani insieme (NOAAGlobalTemp): la stessa base a cui si riferisce l'obiettivo di 1,5 °C.</p>
+        <p class="fig-sub">Di quanto ogni anno è stato più caldo della media 1850–1900, terre e oceani insieme (NOAAGlobalTemp). <span class="fs-more">È la stessa base a cui si riferisce l'obiettivo di 1,5 °C.</span></p>
       </div>
       <div class="fig-body">
         <div class="scroller">
           <svg id="temp" viewBox="0 0 880 342" role="img" aria-label="Anomalia della temperatura media globale dal 1850 al 2025 rispetto alla media 1850-1900: oscilla attorno allo zero fino agli anni Settanta, poi sale fino a 1,42 gradi nel 2024 e scende a 1,29 nel 2025. La soglia di 1,5 gradi è segnata da una linea tratteggiata poco sopra."></svg>
         </div>
       </div>
-      <figcaption><b>Il limite di Parigi si misura sulla media di un decennio.</b> Un anno sopra 1,5 °C non è «aver sforato»: l'Accordo guarda la media su dieci anni, oggi a 1,18 °C. Un singolo anno caldo può essere spinto da El Niño, come il 2024; un anno più fresco non riporta indietro niente, come il 2025: è lo stesso rientro post-El Niño che si vede nella CO₂, e la tendenza di fondo non è cambiata. Il budget nel riquadro dei dati è quanto possiamo ancora emettere per avere una probabilità del 50% di restare sotto 1,5 °C: 170 GtCO₂ dall'inizio del 2026, meno i mesi già trascorsi.</figcaption>
+      <figcaption><span class="d-only"><b>Il limite di Parigi si misura sulla media di un decennio.</b> Un anno sopra 1,5 °C non è «aver sforato»: l'Accordo guarda la media su dieci anni, oggi a 1,18 °C. Un singolo anno caldo può essere spinto da El Niño, come il 2024; un anno più fresco non riporta indietro niente, come il 2025: è lo stesso rientro post-El Niño che si vede nella CO₂, e la tendenza di fondo non è cambiata. Il budget nel riquadro dei dati è quanto possiamo ancora emettere per avere una probabilità del 50% di restare sotto 1,5 °C: 170 GtCO₂ dall'inizio del 2026, meno i mesi già trascorsi.</span><span class="m-only"><b>Il 2025 è più fresco del 2024, e non è una buona notizia.</b> È lo stesso rientro post-El Niño che si vede nella CO₂: la tendenza di fondo non è cambiata.</span></figcaption>
     </figure>
     </div>
 
     <aside class="slide-side">
+    <!-- sul telefono la didascalia resta corta e il limite di Parigi torna in un riquadro suo;
+         sul desktop lo stesso testo sta nella didascalia (lo span d-only qui sopra) -->
+    <div class="callout m-only">
+      <span class="c-lab">Il limite di Parigi si misura sulla media di un decennio</span>
+      <p>Un anno sopra 1,5 °C non è «aver sforato»: l'Accordo guarda la media su dieci anni, oggi a 1,18 °C. Un singolo anno caldo può essere spinto da El Niño, come il 2024; un anno più fresco non riporta indietro niente, come il 2025. Il budget nel riquadro dei dati è quanto possiamo ancora emettere per avere una probabilità del 50% di restare sotto 1,5 °C: 170 GtCO₂ dall'inizio del 2026, meno i mesi già trascorsi.</p>
+    </div>
     <div class="live" id="live-t" data-state="baked">
       <div class="live-grid">
         <div class="live-cell">
@@ -270,7 +276,7 @@ try{var t=localStorage.getItem("tema");if(t==="dark"||t==="light"){document.docu
     <figure>
       <div class="fig-head">
         <p class="fig-title">Metà di quello che emettiamo sparisce in oceano e vegetazione</p>
-        <p class="fig-sub">Bilancio globale del carbonio, media annua 2015–2024, in miliardi di tonnellate di CO₂. Fossili al netto della piccola quota che il cemento riassorbe. 1 ppm = 7,78 GtCO₂.</p>
+        <p class="fig-sub">Bilancio globale del carbonio, media annua 2015–2024, in miliardi di tonnellate di CO₂. <span class="fs-more">Fossili al netto della piccola quota che il cemento riassorbe. 1 ppm = 7,78 GtCO₂.</span></p>
       </div>
       <div class="fig-body">
         <div class="scroller">
@@ -316,7 +322,7 @@ try{var t=localStorage.getItem("tema");if(t==="dark"||t==="light"){document.docu
     <figure>
       <div class="fig-head">
         <p class="fig-title">Senza i pozzi saremmo a 574 ppm, non a 427</p>
-        <p class="fig-sub">La curva tratteggiata somma al valore del 1959 tutte le emissioni cumulate da allora. La differenza fra le due linee è la CO₂ che oceani e vegetazione hanno tolto dall'aria, gratis, in sessantasei anni.</p>
+        <p class="fig-sub">La curva tratteggiata somma al valore del 1959 tutte le emissioni cumulate da allora. <span class="fs-more">La differenza fra le due linee è la CO₂ che oceani e vegetazione hanno tolto dall'aria, gratis, in sessantasei anni.</span></p>
       </div>
       <div class="fig-body">
         <ul class="legend">
@@ -349,7 +355,7 @@ try{var t=localStorage.getItem("tema");if(t==="dark"||t==="light"){document.docu
     <figure>
       <div class="fig-head">
         <p class="fig-title">Lo stesso anno, misurato in due modi</p>
-        <p class="fig-sub">Tasso di crescita annuo della CO₂. Mauna Loa è un singolo osservatorio nel Pacifico; la media globale è calcolata su stazioni lontane da città e industrie, combinate in modo che ogni fascia del pianeta pesi quanto la sua superficie.</p>
+        <p class="fig-sub">Tasso di crescita annuo della CO₂. <span class="fs-more">Mauna Loa è un singolo osservatorio nel Pacifico; la media globale è calcolata su stazioni lontane da città e industrie, combinate in modo che ogni fascia del pianeta pesi quanto la sua superficie.</span></p>
       </div>
       <div class="fig-body">
         <ul class="legend">
@@ -386,7 +392,7 @@ try{var t=localStorage.getItem("tema");if(t==="dark"||t==="light"){document.docu
     <figure>
       <div class="fig-head">
         <p class="fig-title">Un terzo delle emissioni viene dalla Cina. A testa e nel cumulato, la classifica cambia</p>
-        <p class="fig-sub">Emissioni da fossili e cemento, escluso l'uso del suolo (Global Carbon Budget 2025 via Our World in Data). Ogni pannello ha la sua scala: confronta le posizioni, non le lunghezze fra pannelli.</p>
+        <p class="fig-sub">Emissioni da fossili e cemento, escluso l'uso del suolo (Global Carbon Budget 2025 via Our World in Data). <span class="fs-more">Ogni pannello ha la sua scala: confronta le posizioni, non le lunghezze fra pannelli.</span></p>
       </div>
       <div class="fig-body">
         <div class="panels">

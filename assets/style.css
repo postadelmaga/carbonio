@@ -590,7 +590,6 @@ body{padding-bottom:64px}
   text-overflow:ellipsis;white-space:nowrap;padding:0 8px 0 4px;border-left:1px solid var(--rule);margin-left:4px}
 .deck-hint{font-size:.72rem;color:var(--ink-3);padding:0 8px;border-left:1px solid var(--rule)}
 @media (max-width:640px){
-  .deck-nav{right:50%;transform:translateX(50%);bottom:12px}
   .deck-title,.deck-hint{display:none}
 }
 @media (prefers-reduced-motion:reduce){.progress{transition:none}}
@@ -723,6 +722,10 @@ details.more > :last-child{margin-bottom:16px}
 }
 
 
+/* blocchi che esistono solo per il telefono o solo per il desktop */
+.m-only{display:none}
+.fs-btn{display:none}
+
 /* ---------- telefono in verticale ----------
    I grafici sono disegnati su 880 unita': sotto i 640px scorrono in
    orizzontale, ma con testi piu' grandi (la scala li rimpicciolisce) e un
@@ -757,8 +760,32 @@ details.more > :last-child{margin-bottom:16px}
   .live{margin-bottom:16px}
   .live-cell{padding:12px 16px}
   .live-v b{font-size:1.4rem}
+  .live-y{font-size:.78rem}
   .live-note{padding:10px 16px;font-size:.75rem}
-  .live-legend{padding-left:16px;font-size:.72rem}
+  .live-legend{display:none}   /* la nota ha gia' il pallino: la legenda e' sul desktop */
+  .m-only{display:block}
+  .d-only{display:none}
+  .prose p{font-size:.95rem;line-height:1.55}
+  /* sottotitolo del grafico: prima frase in vista, il resto sotto «Come leggerlo» */
+  .fig-sub .fs-more{display:none}
+  .fig-sub.is-open .fs-more{display:inline}
+  .fs-btn{
+    display:inline-block;margin-left:.35em;padding:0;border:0;background:none;cursor:pointer;
+    font-family:Archivo,sans-serif;font-size:.78rem;font-weight:600;color:var(--source);
+  }
+  .fs-btn::after{content:" +"}
+  .fig-sub.is-open .fs-btn::after{content:" −"}
+  /* barra in alto: sfumatura che dice che scorre, tema sempre a portata di dito */
+  .nav-in{padding-right:60px}
+  .nav::after{content:"";position:absolute;right:48px;top:0;bottom:1px;width:36px;pointer-events:none;
+    background:linear-gradient(to right,transparent,var(--ground))}
+  .theme-btn{position:absolute;right:12px;top:8px;margin:0;background:var(--ground)}
+  /* comandi delle slide: piccoli, in basso a destra, spariscono mentre si scorre */
+  .deck-nav{right:10px;bottom:10px;transform:none;padding:3px 4px;transition:opacity .2s}
+  .deck-nav button{width:32px;height:32px}
+  .deck-pos{font-size:.72rem;min-width:4.6ch}
+  .deck-nav.is-scrolling{opacity:0;pointer-events:none}
+  body{padding-bottom:72px}
   .callout{padding:14px 16px;margin-bottom:16px}
   .callout p{font-size:.97rem;line-height:1.55}
   .slide-side{gap:14px;margin-bottom:16px}
@@ -770,8 +797,12 @@ details.more > :last-child{margin-bottom:16px}
   .foot{font-size:.8rem}
 }
 @media (max-width:560px){
-  /* barre: righe piu' strette; nei pannelli con valori corti etichetta,
-     barra e valore stanno su una riga sola */
+  /* barre: righe piu' strette; etichetta, barra e valore su una riga sola;
+     nel pannello «Nel 2024» la quota va sotto il valore */
+  .p-share .bar-row{grid-template-columns:minmax(84px,100px) 1fr auto;grid-template-areas:"lab track val";gap:8px}
+  .p-share .bar-track{margin-bottom:0}
+  .p-share .bar-val small{display:block;margin-left:0;line-height:1.2}
+  .p-share .bar-val small::before{content:""}
   .bars{gap:8px}
   .bar-row{gap:2px 10px}
   .bar-track{height:14px;margin-bottom:2px}

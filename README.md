@@ -190,6 +190,12 @@ invece di 880 (`NARROW`, `CHART_W`): più stretti e più alti, con etichette
 accorciate, così entrano nello schermo senza scorrere in orizzontale. La
 scelta è fatta al caricamento e non cambia alla rotazione. Le barre HTML
 tengono etichetta, barra e valore su una riga sola dove i valori sono corti.
+Sempre sotto i 640px: la coda dei sottotitoli dei grafici (`<span
+class="fs-more">`) si apre con un pulsante «Come leggerlo» aggiunto da
+`slides.js`; i blocchi `.m-only` esistono solo sul telefono e `.d-only` solo
+sul desktop (il limite di Parigi è callout sul telefono e didascalia sul
+desktop); la pillola delle frecce sta in basso a destra e sparisce mentre si
+scorre.
 
 ## Navigazione a slide
 

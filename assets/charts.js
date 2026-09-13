@@ -669,7 +669,7 @@
       var strong = b[1] > gMean;
       f.appendChild(el('rect',{x:bx,y:BY(b[1]),width:bw,height:pB1-BY(b[1]),fill:tok('--source'),'fill-opacity':strong?1:.55,rx:2}));
       var vt=el('text',{x:bx+bw/2,y:BY(b[1])+15,class:'svg-val','text-anchor':'middle'});
-      vt.style.fontSize=NARROW?'10px':'12px'; vt.textContent=NARROW?it(b[1],1):'+'+it(b[1],2);
+      vt.style.fontSize=NARROW?'11px':'12px'; vt.textContent=NARROW?it(b[1],1):'+'+it(b[1],2);
       vt.style.fill = strong ? tok('--surface') : tok('--ink'); vt.style.stroke='none';
       f.appendChild(vt);
     });
@@ -714,7 +714,7 @@
           var tv = hot
             ? el('text',{x:RX(t[0]+0.5),y:CY(t[1])+19,class:'svg-val','text-anchor':'middle'})
             : el('text',{x:RX(t[0]+0.5)+9,y:CY(t[1])+4,class:'svg-val','text-anchor':'start'});
-          tv.style.fontSize=NARROW?'10px':'12px'; tv.textContent=NARROW?it(t[1],1):'+'+it(t[1],2); f.appendChild(tv);
+          tv.style.fontSize=NARROW?'11px':'12px'; tv.textContent=NARROW?it(t[1],1):'+'+it(t[1],2); f.appendChild(tv);
         }
       });
       var tl=tp[tp.length-1];
