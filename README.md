@@ -183,6 +183,34 @@ pozzi del Kuwait 1991): CEOBS. Attenzione al
 periodo quando si aggiorna: nel grafico la prima barra è un anno, le altre
 sono totali di conflitto, ed è l'errore più facile da introdurre.
 
+## Che tipo di numero è: le etichette sulle figure
+
+Ogni figura porta un'etichetta (`<span class="tag …">` dentro `.fig-head`)
+che dichiara la natura del dato, così il lettore non deve fidarsi del tono
+del testo:
+
+| Etichetta | Classe | Dove |
+|---|---|---|
+| `osservato` | `.tag-obs` | misure e inventari: Mauna Loa, temperatura, per paese, crescita, Kyoto |
+| `osservato e stimato` | `.tag-obs` | il bilancio globale: fossili da inventari, i due pozzi da modelli |
+| `stima` | `.tag-est` | calcoli e modelli: il controfattuale senza pozzi, le guerre |
+| `stima preliminare` | `.tag-prel` | non ancora passato da una rivista: oggi solo il pannello sull'Iran |
+
+**Niente semaforo verde-giallo-rosso.** I pallini colorati dei riquadri dei
+dati vogliono già dire un'altra cosa (letto ora da NOAA, in parte, valori
+salvati), e due codici a colori nella stessa pagina si confondono. Qui
+distingue la parola, e il bordo fa il resto: continuo, tratteggiato,
+tratteggiato ocra. Se aggiungi una figura, aggiungi l'etichetta.
+
+Regole di prudenza applicate nel testo, da non far regredire: il limite di
+1,5 °C non «si misura sulla media di un decennio» (l'Accordo non prescrive
+quanti anni, la pagina ne usa dieci, l'IPCC venti); il budget residuo è una
+probabilità del 50%, non una data; di Kyoto si dice che non ha invertito la
+crescita delle emissioni, non che il suo effetto è «nullo»; ridurre
+«rallenta la salita», non «non basta»; e nei totali delle guerre parte è
+ricostruzione futura, non ancora emessa (73 su 311 in Ucraina, 31 su 33 a
+Gaza).
+
 ## Una slide, un'idea
 
 Ogni sezione tiene in vista un messaggio, una figura e un blocco di testo

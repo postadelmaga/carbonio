@@ -201,9 +201,26 @@ h3{
 
 /* ---------- figure shell ---------- */
 figure{margin:0 0 20px;background:var(--surface);border:1px solid var(--rule);border-radius:4px;box-shadow:var(--shadow);overflow:hidden}
-.fig-head{padding:18px 20px 0}
-.fig-title{font-family:Archivo,sans-serif;font-weight:700;font-size:.98rem;margin:0 0 4px}
-.fig-sub{font-size:.86rem;color:var(--ink-3);margin:0;line-height:1.45}
+.fig-head{padding:18px 20px 0;display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px}
+.fig-title{font-family:Archivo,sans-serif;font-weight:700;font-size:.98rem;margin:0;flex:1 1 auto}
+.fig-sub{font-size:.86rem;color:var(--ink-3);margin:0;line-height:1.45;flex:1 1 100%}
+
+/* ---------- che tipo di numero e' ----------
+   Un'etichetta per figura: misura, misura piu' modello, calcolo, lavoro non
+   ancora rivisto. Niente semaforo verde-giallo-rosso: i pallini colorati
+   della pagina vogliono gia' dire un'altra cosa (letto ora / salvato), e due
+   codici a colori nello stesso documento si confondono. Qui parla la parola,
+   il bordo distingue il grado. */
+.tag{
+  font-family:"IBM Plex Mono",monospace;font-size:.64rem;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--ink-3);white-space:nowrap;flex:none;
+  padding:2px 7px;border:1px solid var(--rule-strong);border-radius:2px;
+}
+.tag-est{border-style:dashed}
+.tag-prel{border-style:dashed;border-color:var(--bim);color:var(--bim)}
+.p-note .tag{display:inline-block;margin:0 0 5px}
+.panel .p-note{line-height:1.4}
+@media(max-width:640px){.tag{font-size:.6rem;padding:1px 6px}}
 .fig-body{padding:18px 20px 20px}
 figcaption{
   padding:12px 20px 14px;border-top:1px solid var(--rule);background:var(--surface-2);
