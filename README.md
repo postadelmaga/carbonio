@@ -10,7 +10,7 @@ presentazione: ogni numero è accompagnato dalla fonte e dall'incertezza.
 ## Struttura
 
 ```
-sites/carbonio/
+.
 ├── publish.sh          deploy.sh con destinazione e URL del server e8 incorporati
 ├── index.html          pagina unica, undici sezioni con ancore
 ├── 404.html
@@ -83,7 +83,6 @@ sistema se il CDN non è raggiungibile.
 ## Sviluppo locale
 
 ```bash
-cd sites/carbonio
 python3 -m http.server 8100
 # poi apri http://localhost:8100
 ```
@@ -91,8 +90,7 @@ python3 -m http.server 8100
 ## Pubblicazione
 
 `deploy.sh` va lanciato **dalla macchina locale**, non da dentro un container:
-usa l'alias SSH `arch_php` di `~/.ssh/config`, lo stesso che usa
-`scripts/deploy/sync-to-arch.sh`.
+usa l'alias SSH `arch_php` di `~/.ssh/config`.
 
 L'URL pubblico non è scritto nei sorgenti: `index.html` e `robots.txt` tengono
 un placeholder `__CANONICAL__` che il deploy risolve al momento della

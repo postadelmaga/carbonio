@@ -5,7 +5,7 @@ set -euo pipefail
 # deploy.sh — pubblica il sito statico "Il carbonio che resta" su arch_php
 #
 # Va lanciato dalla macchina locale: usa l'alias SSH "arch_php" definito in
-# ~/.ssh/config, lo stesso di scripts/deploy/sync-to-arch.sh.
+# ~/.ssh/config.
 #
 # Di default NON scrive niente: fa un dry-run e mostra cosa cambierebbe.
 # Serve --apply per pubblicare davvero.
