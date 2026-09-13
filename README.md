@@ -11,8 +11,8 @@ presentazione: ogni numero è accompagnato dalla fonte e dall'incertezza.
 
 ```
 .
-├── publish.sh          deploy.sh con destinazione e URL del server e8 incorporati
-├── index.html          pagina unica, undici sezioni con ancore
+├── publish.sh          deploy.sh con destinazione e URL pubblico incorporati
+├── index.html          pagina unica, dodici sezioni con ancore
 ├── 404.html
 ├── robots.txt
 ├── deploy.sh           pubblicazione su arch_php via rsync/ssh
@@ -165,6 +165,18 @@ Il budget residuo per 1,5 °C (170 GtCO₂) è contato **dall'inizio del 2026**
 (`BUD_FROM` in `live.js`). I dati per paese (sezioni «Chi emette», «La
 crescita», «Kyoto») sono OWID/GCB 2025, anno 2024, al lordo della
 carbonatazione: vanno aggiornati a mano a ogni edizione del GCB.
+
+I numeri della sezione «Quanto pesano le guerre» sono tutti a mano e vanno
+da tre fonti diverse, con cadenze diverse. Impronta degli eserciti in tempo
+di pace: 2 750 MtCO₂e l'anno, forchetta 1 600–3 500, da Parkinson e Cottrell
+(SGR e CEOBS, novembre 2022); la cifra è ancora la loro stima corrente, il
+seguito del settembre 2025 aggiunge solo l'effetto della spesa in aumento.
+Ucraina: l'Initiative on GHG Accounting of War pubblica un aggiornamento
+**ogni febbraio** sull'anniversario dell'invasione, l'ultimo è il quarto anno
+(311,4 MtCO₂e). Israele-Gaza: Neimark et al., One Earth, marzo 2026 (1,3
+MtCO₂e di operazioni, 33,2 con barriere e ricostruzione). Attenzione al
+periodo quando si aggiorna: nel grafico la prima barra è un anno, le altre
+sono totali di conflitto, ed è l'errore più facile da introdurre.
 
 ## Una slide, un'idea
 
