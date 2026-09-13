@@ -437,7 +437,7 @@
   var cs=document.getElementById('controfattuale');
   if(cs){
     var CW=880, cx0=56, cx1=CW-124, cy0=28, cy1=286;
-    var cyMin=300, cyMax=612, cxMin=1959, cxMax=2027;
+    var cyMin=300, cyMax=615, cxMin=1959, cxMax=2027;
     function CX(y){ return cx0 + (y-cxMin)/(cxMax-cxMin)*(cx1-cx0); }
     function CY(v){ return cy1 - (v-cyMin)/(cyMax-cyMin)*(cy1-cy0); }
 
@@ -448,7 +448,7 @@
       var gt=el('text',{x:cx0-10,y:CY(gv)+4,class:'svg-lab','text-anchor':'end'});
       gt.textContent=gv; cf.appendChild(gt);
     }
-    var cu=el('text',{x:cx0-10,y:CY(580)-14,class:'svg-unit','text-anchor':'end'});
+    var cu=el('text',{x:cx0-10,y:cy0-10,class:'svg-unit','text-anchor':'end'});
     cu.textContent='ppm'; cf.appendChild(cu);
     cf.appendChild(el('line',{x1:cx0,x2:cx1,y1:cy1,y2:cy1,class:'axis-l'}));
     [1960,1980,2000,2020].forEach(function(y){
