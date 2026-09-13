@@ -6,8 +6,9 @@ set -euo pipefail
 #
 # Il sito e' servito dal container "nicoweb" (Caddy) su arch_php, che monta
 # in sola lettura /home/arch/carbonioweb come /srv/carbonio e lo espone su
-#   https://e8-zdemo.duckdns.org/carbonio/
-# (blocco (e8_site) in /home/arch/nicoweb/docker/Caddyfile).
+#   https://co2.duckdns.org/
+# (blocco (carbonio_site) in /home/arch/nicoweb/docker/Caddyfile; il vecchio
+# https://e8-zdemo.duckdns.org/carbonio/ rimanda qui con un 308).
 #
 # Uso:
 #   ./publish.sh            dry-run: mostra cosa cambierebbe, non scrive
@@ -18,7 +19,7 @@ set -euo pipefail
 ##############################################################################
 
 DEST="/home/arch/carbonioweb"
-URL="https://e8-zdemo.duckdns.org/carbonio"
+URL="https://co2.duckdns.org"
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 exec "$HERE/deploy.sh" --dest "$DEST" --url "$URL" "$@"
