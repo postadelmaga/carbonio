@@ -56,16 +56,23 @@
   function scrollToY(y){ heading(y); window.scrollTo({top:Math.max(0,y), behavior: reduce ? 'auto' : 'smooth'}); }
 
   /* indicatore "parte 2 di 3" quando la sezione non sta in una schermata */
+  /* scrive nel DOM solo quando qualcosa cambia: questa funzione gira a ogni
+     fotogramma di scorrimento e ogni scrittura costa un ricalcolo di stile */
+  var lastPg = '', lastPrev = null, lastNext = null;
   function updatePage(){
     var r = slides[current].getBoundingClientRect();
     var avail = window.innerHeight - NAV_H;
     var pages = Math.max(1, Math.ceil((r.height - tol()) / avail));
-    prev.disabled = current===0 && r.top >= NAV_H - tol();
-    next.disabled = current===slides.length-1 && window.innerHeight + window.pageYOffset >= document.documentElement.scrollHeight - 2;
-    if(pages < 2){ pg.hidden = true; return; }
-    var page = Math.min(pages, Math.max(1, Math.floor((NAV_H - r.top) / avail + 0.5) + 1));
-    pg.textContent = 'parte ' + page + ' di ' + pages;
-    pg.hidden = false;
+    var pd = current===0 && r.top >= NAV_H - tol();
+    var nd = current===slides.length-1 && window.innerHeight + window.pageYOffset >= document.documentElement.scrollHeight - 2;
+    if(pd !== lastPrev){ prev.disabled = pd; lastPrev = pd; }
+    if(nd !== lastNext){ next.disabled = nd; lastNext = nd; }
+    var txt = '';
+    if(pages >= 2){
+      var page = Math.min(pages, Math.max(1, Math.floor((NAV_H - r.top) / avail + 0.5) + 1));
+      txt = 'parte ' + page + ' di ' + pages;
+    }
+    if(txt !== lastPg){ lastPg = txt; pg.textContent = txt; pg.hidden = !txt; }
   }
 
   function goTo(i){
@@ -81,7 +88,7 @@
     current = i;
     cur.textContent = i+1;
     ttl.textContent = titleOf(slides[i]);
-    bar.style.width = (i/(slides.length-1)*100) + '%';
+    bar.style.transform = 'scaleX(' + (i/(slides.length-1)) + ')';
     slides.forEach(function(s,k){ if(k===i) s.setAttribute('aria-current','true'); else s.removeAttribute('aria-current'); });
     markLink(i);
     updatePage();
@@ -151,9 +158,9 @@
      conta come "scorrere in giu'" e la barra resta visibile */
   function heading(y){ lastY = Math.max(0, y); showNav(); }
   function isMobile(){ return !!(mobileMq && mobileMq.matches); }
-  function showNav(){ if(navEl) navEl.classList.remove('nav-hidden'); }
+  function showNav(){ if(navEl && navEl.classList.contains('nav-hidden')) navEl.classList.remove('nav-hidden'); }
   function setMenu(open){
-    if(!navEl || !menuBtn) return;
+    if(!navEl || !menuBtn || navEl.classList.contains('is-open') === open) return;
     navEl.classList.toggle('is-open', open);
     menuBtn.setAttribute('aria-expanded', String(open));
     menuBtn.setAttribute('aria-label', open ? 'Chiudi il menu' : 'Apri il menu');
@@ -174,7 +181,7 @@
     if(!navEl || !isMobile()){ showNav(); lastY = window.pageYOffset; return; }
     var y = window.pageYOffset, dy = y - lastY;
     if(y < 16 || dy < -6){ showNav(); }
-    else if(dy > 6 && y > 80){ navEl.classList.add('nav-hidden'); setMenu(false); }
+    else if(dy > 6 && y > 80 && !navEl.classList.contains('nav-hidden')){ navEl.classList.add('nav-hidden'); setMenu(false); }
     lastY = y;
   }
   /* la voce del menu della sezione corrente resta evidenziata */
@@ -190,7 +197,7 @@
   window.addEventListener('scroll', function(){
     navOnScroll();
     if(!ticking){ ticking = true; requestAnimationFrame(function(){ detect(); ticking = false; }); }
-    box.classList.add('is-scrolling');
+    if(!box.classList.contains('is-scrolling')) box.classList.add('is-scrolling');
     clearTimeout(hideT); hideT = setTimeout(function(){ box.classList.remove('is-scrolling'); }, 500);
   }, {passive:true});
 

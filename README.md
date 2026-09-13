@@ -204,6 +204,21 @@ Sul telefono il tema parte scuro (schermo fino a 640px o puntatore a dito),
 a meno che il lettore non abbia già scelto con il pulsante: la scelta è in
 `localStorage` («tema») e vale per tutte le visite successive.
 
+## Prestazioni dello scorrimento
+
+La pillola delle frecce e la barra di avanzamento sono `position:fixed` e
+cambiano mentre si scorre (opacità, testo «parte 1 di 2», avanzamento).
+Senza un layer proprio ogni cambio ridipingeva l'intero documento, e sul
+telefono lo scorrimento andava a scatti: per questo hanno `will-change:
+transform`, la barra avanza con `transform:scaleX` e non con `width`, e
+`slides.js` scrive nel DOM solo quando un valore cambia davvero. Con Chrome
+in tempo reale (puppeteer, 390×844, CPU rallentata 4×, 60 passi di scroll)
+il paint è passato da 700–1100 ms a circa 100 ms e il layout da 80–100 ms a
+9 ms. `content-visibility:auto` sulle sezioni è stato provato e scartato:
+riduce il paint ma sposta il layout delle sezioni nel momento in cui entrano
+in vista, con fotogrammi da 300 ms. Il blur della barra sul telefono è a
+10px senza `saturate`: il costo è sulla GPU e non si misura in headless.
+
 ## Navigazione a slide
 
 Ogni sezione occupa almeno una schermata (`min-height: 100svh`) e si aggancia

@@ -566,13 +566,16 @@ body{padding-bottom:64px}
   .prose.one{columns:1}
 }
 
-.progress{position:fixed;left:0;top:var(--nav-h);height:2px;width:0;background:var(--source);z-index:60;transition:width .25s ease}
+/* pillola e barra di avanzamento sono fissi e cambiano mentre si scorre:
+   con un layer proprio (will-change) ridipingono solo se stessi, altrimenti
+   ogni cambio ridipinge l'intero documento e lo scorrimento va a scatti */
+.progress{position:fixed;left:0;top:var(--nav-h);height:2px;width:100%;transform:scaleX(0);transform-origin:0 50%;background:var(--source);z-index:60;transition:transform .25s ease;will-change:transform}
 .deck-nav{
-  position:fixed;right:20px;bottom:18px;z-index:60;
+  position:fixed;right:20px;bottom:18px;z-index:60;will-change:transform;contain:layout paint;
   display:flex;align-items:center;gap:4px;
   padding:5px 6px;border-radius:999px;
-  background:color-mix(in srgb, var(--surface) 92%, transparent);
-  border:1px solid var(--rule-strong);box-shadow:var(--shadow);backdrop-filter:blur(8px);
+  background:color-mix(in srgb, var(--surface) 97%, transparent);
+  border:1px solid var(--rule-strong);box-shadow:var(--shadow);
   font-family:Archivo,sans-serif;
 }
 .deck-nav button{
@@ -779,9 +782,9 @@ details.more > :last-child{margin-bottom:16px}
   /* barra in alto: marchio a sinistra, tema e menu a destra, voci in un
      pannello a tendina; sfondo sfocato; sparisce scorrendo in giu' */
   .nav{
-    background:color-mix(in srgb, var(--ground) 70%, transparent);
-    backdrop-filter:blur(16px) saturate(1.2);-webkit-backdrop-filter:blur(16px) saturate(1.2);
-    transition:transform .25s ease;
+    background:color-mix(in srgb, var(--ground) 78%, transparent);
+    backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+    transition:transform .25s ease;will-change:transform;
   }
   .nav.nav-hidden{transform:translateY(-100%)}
   .nav.nav-hidden ~ .progress{top:0}
@@ -800,8 +803,7 @@ details.more > :last-child{margin-bottom:16px}
   .nav-links{
     display:none;position:absolute;left:0;right:0;top:100%;height:auto;
     flex-direction:column;align-items:stretch;gap:0;padding:4px 0 8px;overflow:visible;
-    background:color-mix(in srgb, var(--ground) 92%, transparent);
-    backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+    background:color-mix(in srgb, var(--ground) 96%, transparent);
     border-bottom:1px solid var(--rule);box-shadow:var(--shadow);
   }
   .nav.is-open .nav-links{display:flex}
