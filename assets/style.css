@@ -164,10 +164,20 @@ h1 em{font-style:normal;color:var(--source)}
 .units{font-size:.86rem;color:var(--ink-2);max-width:var(--prose);margin:22px 0 0;line-height:1.55}
 .units b{color:var(--ink);font-weight:600}
 .units abbr{text-decoration:underline dotted;text-underline-offset:3px;cursor:help}
+/* Due colonne che vogliono dire qualcosa: a sinistra quello che emettiamo e
+   quello che resta in aria, a destra i due pozzi che tolgono la differenza.
+   L'ordine del documento resta quello di lettura (emesso, oceano, vegetazione,
+   resta): a spostare le celle e' la griglia, non il markup. */
+.keys.keys-2col{grid-template-columns:repeat(2,1fr)}
+.keys-2col .k-src{grid-area:1/1}
+.keys-2col .k-ocean{grid-area:1/2}
+.keys-2col .k-atm{grid-area:2/1}
+.keys-2col .k-land{grid-area:2/2}
+.keys-2col .key{border-right:0}
+.keys-2col .k-src,.keys-2col .k-atm{border-right:1px solid var(--rule)}
 @media(max-width:640px){
   .keys{grid-template-columns:repeat(2,1fr);gap:0}
-  .key{border-bottom:1px solid var(--rule);padding-block:14px 12px}
-  .key:nth-child(2){border-right:0}
+  .keys .key{border-bottom:1px solid var(--rule);padding-block:14px 12px}
 }
 
 /* ---------- sections ---------- */
@@ -690,6 +700,10 @@ details.more > :last-child{margin-bottom:16px}
     background:var(--rule);gap:1px;overflow:hidden;box-shadow:var(--shadow);
   }
   .hero .key{background:var(--surface);padding:20px 20px 18px;border-right:0}
+  .hero .k-src{grid-area:1/1}
+  .hero .k-ocean{grid-area:1/2}
+  .hero .k-atm{grid-area:2/1}
+  .hero .k-land{grid-area:2/2}
   .hero .key .lbl{max-width:none}
   .hero .guide{grid-column:1/-1;margin:36px 0 0}
   .hero .units{margin-top:18px}
