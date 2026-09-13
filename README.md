@@ -204,13 +204,23 @@ Sul telefono il tema parte scuro (schermo fino a 640px o puntatore a dito),
 a meno che il lettore non abbia già scelto con il pulsante: la scelta è in
 `localStorage` («tema») e vale per tutte le visite successive.
 
+## Dominio
+
+Il sito sta su **https://co2-info.duckdns.org/** (sottodominio DuckDNS che
+punta a 150.230.157.31). Sul server è il blocco `(carbonio_site)` del
+Caddyfile, che serve il mount `/srv/carbonio` alla radice del nome preso da
+`CO2_SERVER_NAME` nel compose, con blocco `http://` e `https://` come per e8
+perché i nameserver di DuckDNS rispondono a intermittenza. Il vecchio
+indirizzo `https://e8-zdemo.duckdns.org/carbonio/` rimanda qui con un 308,
+percorso per percorso.
+
 ## Statistiche di visita
 
 La pagina carica lo script di [Umami](https://cloud.umami.is) (piano
 gratuito, senza cookie, nessun dato personale): pagine viste, paese,
 referrer, browser e dispositivo, con mappa e tempo reale nel pannello. Il
 `data-website-id` è nello `<script>` in `index.html` e `404.html`; per
-cambiare account basta sostituirlo. Umami ignora le visite da `localhost`,
+cambiare account o sito basta sostituirlo. Umami ignora le visite da `localhost`,
 quindi in locale non si vede nulla: è normale.
 
 ## Prestazioni dello scorrimento
