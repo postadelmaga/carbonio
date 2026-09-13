@@ -42,6 +42,14 @@
   }
   function it(n,d){ return n.toFixed(d===undefined?1:d).replace('.',','); }
 
+  /* Sul telefono i grafici sono disegnati su 460 unita' invece di 880: piu'
+     stretti e piu' alti, con etichette accorciate, cosi' entrano nello
+     schermo senza scorrere e i testi restano leggibili. La scelta e' fatta
+     al caricamento: alla rotazione il grafico resta com'e'. */
+  var NARROW = !!(window.matchMedia && window.matchMedia('(max-width:640px)').matches);
+  var CHART_W = NARROW ? 460 : 880;
+  function fitBox(s,w,h){ if(s) s.setAttribute('viewBox','0 0 '+w+' '+h); }
+
   /* ════════════════════ dati di riserva ════════════════════
      Questi valori sono incorporati perche' la pagina deve restare corretta
      con JavaScript attivo ma rete assente, o se NOAA non risponde. live.js
@@ -64,7 +72,7 @@
 
   /* ════════════════════ curva di Keeling ════════════════════ */
   var svg = document.getElementById('keeling');
-  var W=880,H=400, L=54, R=118, T=22, B=44;
+  var W=CHART_W,H=400, L=54, R=NARROW?96:118, T=22, B=44;
   var x0=L, x1=W-R, y0=T, y1=H-B;
   var yMin=305, yMax=435;
   var xMin=1959, xMax=2027.0;
@@ -77,6 +85,7 @@
      live.js passa qui la serie mensile vera di NOAA quando riesce a leggerla. */
   function drawKeeling(annual, monthly){
     if(!svg) return;
+    fitBox(svg,W,H);
     while(svg.firstChild) svg.removeChild(svg.firstChild);
     var frag=document.createDocumentFragment();
     var last=annual[annual.length-1];
@@ -124,7 +133,7 @@
       for(var i=0;i<annual.length;i++){ if(annual[i][0]===yr) return annual[i][1]; }
       return null;
     }
-    var anchors=[[1960,'1960'],[1980,'1980'],[2000,'2000'],[2020,'2020']];
+    var anchors=NARROW ? [[1960,'1960'],[1980,'1980'],[2000,'2000']] : [[1960,'1960'],[1980,'1980'],[2000,'2000'],[2020,'2020']];
     anchors.push([last[0], String(last[0])]);
     anchors.forEach(function(a){
       var val=at(a[0]); if(val===null) return;
@@ -143,8 +152,8 @@
       var t1=el('text',{x:X(yr),y:Y(val)+dy,class:'svg-lab-b','text-anchor':'middle'});
       t1.style.fill=tok('--source'); t1.textContent=txt; frag.appendChild(t1);
     }
-    rateNote(1968,'+0,9 ppm/anno',-20);
-    rateNote(2012,'+2,4 ppm/anno',58);
+    if(NARROW){ rateNote(1969,'+0,9/anno',-36); rateNote(2005,'+2,4/anno',80); }
+    else { rateNote(1968,'+0,9 ppm/anno',-20); rateNote(2012,'+2,4 ppm/anno',58); }
 
     frag.appendChild(el('line',{x1:X(last[0]+0.5),x2:X(last[0]+0.5),y1:Y(last[1]),y2:y1,
       stroke:tok('--source'),'stroke-width':1,'stroke-dasharray':'3 3','stroke-opacity':.6}));
@@ -160,8 +169,9 @@
      arrotondamento: fonti e pozzi sono misurati con metodi indipendenti. */
   var bs=document.getElementById('budget');
   if(bs){
-    var BW=880;
-    var bx0=30, bx1=BW-30;
+    var BW=CHART_W;
+    fitBox(bs,BW,340);
+    var bx0=NARROW?16:30, bx1=BW-bx0;
     var barW=bx1-bx0;
     var topY=58, topH=42;
     var botY=190, botH=54;
@@ -192,8 +202,8 @@
 
     var th=el('text',{x:bx0,y:topY-24,class:'svg-lab-b'}); th.textContent='EMESSO OGNI ANNO';
     th.setAttribute('letter-spacing','.08em'); bf.appendChild(th);
-    var tt=el('text',{x:bx0,y:topY-6,class:'svg-val'}); tt.setAttribute('font-size','17');
-    tt.textContent='40,9 GtCO₂, cioè 5,3 ppm se restassero tutte in aria'; bf.appendChild(tt);
+    var tt=el('text',{x:bx0,y:topY-6,class:'svg-val'}); tt.style.fontSize=NARROW?'15px':'17px';
+    tt.textContent=NARROW?'40,9 GtCO₂ = 5,3 ppm':'40,9 GtCO₂, cioè 5,3 ppm se restassero tutte in aria'; bf.appendChild(tt);
 
     var f1=el('text',{x:bx0+12,y:topY+27,class:'svg-val'}); f1.style.fill=tok('--ink');
     f1.textContent='Fossili e cemento  35,9'; bf.appendChild(f1);
@@ -227,12 +237,12 @@
       /* il blocco "non spiegato" e' troppo stretto per contenere il testo:
          la sua etichetta esce sopra il blocco invece che dentro */
       {
-        var lb=el('text',{x:xA+11,y:botY+24,class:'svg-lab-b'});
+        var lb=el('text',{x:xA+11,y:botY+24,class:'svg-lab-b'}); if(NARROW) lb.style.fontSize='12px';
         lb.style.fill = p.k==='atmos' ? tok('--surface') : tok('--ink'); if(p.k==='atmos') lb.style.stroke='none';
         lb.textContent=p.lab; bf.appendChild(lb);
-        var vv=el('text',{x:xA+11,y:botY+44,class:'svg-val'});
+        var vv=el('text',{x:xA+11,y:botY+44,class:'svg-val'}); if(NARROW) vv.style.fontSize='12px';
         vv.style.fill = p.k==='atmos' ? tok('--surface') : tok('--ink'); if(p.k==='atmos') vv.style.stroke='none';
-        vv.textContent=it(p.v)+' GtCO₂ · '+p.pct; bf.appendChild(vv);
+        vv.textContent=NARROW ? it(p.v)+' · '+p.pct : it(p.v)+' GtCO₂ · '+p.pct; bf.appendChild(vv);
       }
       /* baffo di incertezza: stessa scala x dei blocchi, cosi' la larghezza
          del baffo si confronta a occhio con la larghezza del blocco */
@@ -253,12 +263,12 @@
 
     var ax=bx0+barW*((11.8+8.7)/total);
     var a1=el('text',{x:bx0,y:botY+botH+52,class:'svg-lab'});
-    a1.textContent='ASSORBITO — 20,5 GtCO₂ (50%)'; a1.setAttribute('letter-spacing','.06em'); bf.appendChild(a1);
+    a1.textContent=NARROW?'ASSORBITO 20,5 (50%)':'ASSORBITO — 20,5 GtCO₂ (50%)'; a1.setAttribute('letter-spacing','.06em'); bf.appendChild(a1);
     bf.appendChild(el('line',{x1:bx0,x2:ax-4,y1:botY+botH+62,y2:botY+botH+62,stroke:tok('--rule-strong'),'stroke-width':2}));
 
     var a2=el('text',{x:ax+8,y:botY+botH+52,class:'svg-lab'});
     a2.style.fill=tok('--source');
-    a2.textContent='RESTA IN ARIA — 20,4 GtCO₂ = 2,6 ppm all’anno'; a2.setAttribute('letter-spacing','.06em'); bf.appendChild(a2);
+    a2.textContent=NARROW?'IN ARIA 20,4 = 2,6 ppm':'RESTA IN ARIA — 20,4 GtCO₂ = 2,6 ppm all’anno'; a2.setAttribute('letter-spacing','.06em'); bf.appendChild(a2);
     bf.appendChild(el('line',{x1:ax+4,x2:bx1,y1:botY+botH+62,y2:botY+botH+62,stroke:tok('--source'),'stroke-width':2}));
 
     bs.appendChild(bf);
@@ -276,7 +286,8 @@
       {y:2024, mlo:3.33, glob:3.76},
       {y:2025, mlo:2.23, glob:2.06}
     ];
-    var DW=880, dx0=58, dx1=DW-20, dy0=34, dy1=250;
+    var DW=CHART_W, dx0=58, dx1=DW-20, dy0=34, dy1=250;
+    fitBox(ds,DW,290);
     var dMax=4;
     function DY(v){ return dy1 - v/dMax*(dy1-dy0); }
 
@@ -291,7 +302,7 @@
     du.textContent='ppm'; df.appendChild(du);
 
     var slot=(dx1-dx0)/SERIES.length;
-    var bw=Math.min(54,(slot-34)/2);
+    var bw=Math.min(54,(slot-(NARROW?14:34))/2);
     SERIES.forEach(function(s,i){
       var cx=dx0+slot*(i+0.5);
       var xa=cx-bw-5, xb=cx+5;
@@ -350,13 +361,14 @@
   ];
 
   var ts=document.getElementById('temp');
-  var TW=880, tx0=54, tx1=TW-110, ty0=26, ty1=314;
+  var TW=CHART_W, tx0=54, tx1=TW-(NARROW?84:110), ty0=26, ty1=314;
   var tMin=-0.4, tMax=1.7, txMin=1850, txMax=2028;
   function TX(y){ return tx0 + (y-txMin)/(txMax-txMin)*(tx1-tx0); }
   function TY(v){ return ty1 - (v-tMin)/(tMax-tMin)*(ty1-ty0); }
 
   function drawTemp(series){
     if(!ts) return;
+    fitBox(ts,TW,342);
     while(ts.firstChild) ts.removeChild(ts.firstChild);
     var f=document.createDocumentFragment();
     var last=series[series.length-1];
@@ -384,7 +396,7 @@
        testi si accavallerebbero */
     var sl=el('text',{x:tx0+8,y:TY(1.5)-7,class:'svg-val','text-anchor':'start'});
     sl.style.fill=tok('--heat');
-    sl.textContent='1,5 °C — il limite dell’Accordo di Parigi'; f.appendChild(sl);
+    sl.textContent=NARROW?'1,5 °C — il limite di Parigi':'1,5 °C — il limite dell’Accordo di Parigi'; f.appendChild(sl);
 
     var d='', fill='';
     for(var i=0;i<series.length;i++){
@@ -436,7 +448,8 @@
 
   var cs=document.getElementById('controfattuale');
   if(cs){
-    var CW=880, cx0=56, cx1=CW-124, cy0=28, cy1=286;
+    var CW=CHART_W, cx0=56, cx1=CW-(NARROW?100:124), cy0=28, cy1=286;
+    fitBox(cs,CW,320);
     var cyMin=300, cyMax=615, cxMin=1959, cxMax=2027;
     function CX(y){ return cx0 + (y-cxMin)/(cxMax-cxMin)*(cx1-cx0); }
     function CY(v){ return cy1 - (v-cyMin)/(cyMax-cyMin)*(cy1-cy0); }
@@ -492,12 +505,13 @@
     endLab(lastOb[1], Math.round(lastOb[1])+' ppm', 'osservato',   tok('--source'));
 
     /* freccia che misura il divario */
-    var gx=CX(2012), y1c=CY(CF[CF.length-14][1]), y2c=CY(ANNUAL[ANNUAL.length-14][1]);
+    var gYr=NARROW?2000:2012, gi=CF.length-(2025-gYr+1);
+    var gx=CX(gYr), y1c=CY(CF[gi][1]), y2c=CY(ANNUAL[ANNUAL.length-(2025-gYr+1)][1]);
     cf.appendChild(el('line',{x1:gx,x2:gx,y1:y1c,y2:y2c,stroke:tok('--land'),'stroke-width':1.6}));
     cf.appendChild(el('line',{x1:gx-5,x2:gx+5,y1:y1c,y2:y1c,stroke:tok('--land'),'stroke-width':1.6}));
     cf.appendChild(el('line',{x1:gx-5,x2:gx+5,y1:y2c,y2:y2c,stroke:tok('--land'),'stroke-width':1.6}));
-    var gl=el('text',{x:gx+11,y:y1c+(y2c-y1c)*0.38,class:'svg-lab-b','text-anchor':'start'});
-    gl.style.fill=tok('--land'); gl.textContent='tolto da oceani e foreste'; cf.appendChild(gl);
+    var gl=el('text',{x:gx+11,y:y1c+(y2c-y1c)*(NARROW?0.3:0.38),class:'svg-lab-b','text-anchor':'start'});
+    gl.style.fill=tok('--land'); gl.textContent=NARROW?'tolto dai pozzi':'tolto da oceani e foreste'; cf.appendChild(gl);
 
     cs.appendChild(cf);
   }
@@ -562,7 +576,7 @@
   var MESI=['gen','feb','mar','apr','mag','giu','lug','ago','set','ott','nov','dic'];
 
   var rs=document.getElementById('recente');
-  var RW=880, rx0=54, rx1=RW-136;
+  var RW=CHART_W, rx0=54, rx1=RW-(NARROW?112:136);
   var pT0=22,  pT1=196;    /* pannello alto: concentrazione */
   var pB0=246, pB1=326;    /* pannello centrale: crescita annua */
   var pC0=376, pC1=466;    /* pannello basso: temperatura, in parallelo */
@@ -572,6 +586,7 @@
   var rState={monthly:MONTHLY_RECENT, gr:GR, temp:null};
   function drawRecent(monthly, gr, temp){
     if(!rs) return;
+    fitBox(rs,RW,496);
     if(monthly && monthly.length>=24) rState.monthly=monthly;
     if(gr && gr.length) rState.gr=gr;
     if(temp && temp.length) rState.temp=temp;
@@ -606,7 +621,7 @@
       var cx = (yr+1<=xMax) ? RX(yr+0.5) : RX((yr+xMax)/2);
       if(xMax-yr>=0.45){
         var yl=el('text',{x:cx,y:pC1+22,class:yr<=lastG?'svg-lab-b':'svg-lab','text-anchor':'middle'});
-        yl.textContent=yr; f.appendChild(yl);
+        yl.textContent=NARROW ? '’'+String(yr).slice(2) : yr; f.appendChild(yl);
       }
     }
 
@@ -617,7 +632,7 @@
       t.textContent=v; f.appendChild(t);
     }
     var u1=el('text',{x:rx0-10,y:pT0-8,class:'svg-unit','text-anchor':'end'}); u1.textContent='ppm'; f.appendChild(u1);
-    var h1=el('text',{x:rx0,y:pT0-8,class:'svg-lab-b'}); h1.textContent='Concentrazione, media mensile a Mauna Loa'; f.appendChild(h1);
+    var h1=el('text',{x:rx0,y:pT0-8,class:'svg-lab-b'}); h1.textContent=NARROW?'Mauna Loa, media mensile':'Concentrazione, media mensile a Mauna Loa'; f.appendChild(h1);
 
     var d='', dt='', hasTrend=true;
     for(i=0;i<m.length;i++){
@@ -647,21 +662,21 @@
       var gt=el('text',{x:rx0-10,y:BY(g)+4,class:'svg-lab','text-anchor':'end'}); gt.textContent=g; f.appendChild(gt);
     }
     var u2=el('text',{x:rx0-10,y:pB0-10,class:'svg-unit','text-anchor':'end'}); u2.textContent='ppm'; f.appendChild(u2);
-    var h2=el('text',{x:rx0,y:pB0-10,class:'svg-lab-b'}); h2.textContent='Di quanto è cresciuta in ciascun anno, ppm per anno'; f.appendChild(h2);
+    var h2=el('text',{x:rx0,y:pB0-10,class:'svg-lab-b'}); h2.textContent=NARROW?'Crescita in ciascun anno, ppm':'Di quanto è cresciuta in ciascun anno, ppm per anno'; f.appendChild(h2);
 
     bars.forEach(function(b){
-      var bx=RX(b[0])+7, bw=RX(b[0]+1)-RX(b[0])-14;
+      var bp=NARROW?3:7, bx=RX(b[0])+bp, bw=RX(b[0]+1)-RX(b[0])-2*bp;
       var strong = b[1] > gMean;
       f.appendChild(el('rect',{x:bx,y:BY(b[1]),width:bw,height:pB1-BY(b[1]),fill:tok('--source'),'fill-opacity':strong?1:.55,rx:2}));
       var vt=el('text',{x:bx+bw/2,y:BY(b[1])+15,class:'svg-val','text-anchor':'middle'});
-      vt.setAttribute('font-size','12'); vt.textContent='+'+it(b[1],2);
+      vt.style.fontSize=NARROW?'10px':'12px'; vt.textContent=NARROW?it(b[1],1):'+'+it(b[1],2);
       vt.style.fill = strong ? tok('--surface') : tok('--ink'); vt.style.stroke='none';
       f.appendChild(vt);
     });
 
     f.appendChild(el('line',{x1:rx0,x2:rx1,y1:BY(gMean),y2:BY(gMean),stroke:tok('--ink-3'),'stroke-width':1,'stroke-dasharray':'4 3'}));
-    var ml=el('text',{x:rx1+12,y:BY(gMean)-4,class:'svg-val'}); ml.textContent=it(gMean,2)+' ppm/anno'; f.appendChild(ml);
-    var ml2=el('text',{x:rx1+12,y:BY(gMean)+12,class:'svg-unit'}); ml2.textContent='media '+xMin+'–'+lastG; f.appendChild(ml2);
+    var ml=el('text',{x:rx1+12,y:BY(gMean)-4,class:'svg-val'}); ml.textContent=it(gMean,2)+(NARROW?'/anno':' ppm/anno'); f.appendChild(ml);
+    var ml2=el('text',{x:rx1+12,y:BY(gMean)+12,class:'svg-unit'}); ml2.textContent='media '+xMin+'–'+(NARROW?String(lastG).slice(2):lastG); f.appendChild(ml2);
 
     /* ── pannello basso: la temperatura, in parallelo ──
        Gli anni in cui la CO2 cresce di piu' sono gli anni caldi: El Nino
@@ -681,11 +696,11 @@
       }
       f.appendChild(el('line',{x1:rx0,x2:rx1,y1:pC1,y2:pC1,class:'axis-l'}));
       var u3=el('text',{x:rx0-10,y:pC0-10,class:'svg-unit','text-anchor':'end'}); u3.textContent='°C'; f.appendChild(u3);
-      var h3=el('text',{x:rx0,y:pC0-10,class:'svg-lab-b'}); h3.textContent='Temperatura globale sul 1850–1900, media annua'; f.appendChild(h3);
+      var h3=el('text',{x:rx0,y:pC0-10,class:'svg-lab-b'}); h3.textContent=NARROW?'Temperatura sul 1850–1900':'Temperatura globale sul 1850–1900, media annua'; f.appendChild(h3);
 
       if(1.5>cMin && 1.5<cMax){
         f.appendChild(el('line',{x1:rx0,x2:rx1,y1:CY(1.5),y2:CY(1.5),stroke:tok('--heat'),'stroke-width':1.2,'stroke-dasharray':'5 4','stroke-opacity':.85}));
-        var sl=el('text',{x:rx0+8,y:CY(1.5)-6,class:'svg-unit'}); sl.style.fill=tok('--heat'); sl.textContent='1,5 °C, il limite dell’Accordo di Parigi'; f.appendChild(sl);
+        var sl=el('text',{x:rx0+8,y:CY(1.5)-6,class:'svg-unit'}); sl.style.fill=tok('--heat'); sl.textContent=NARROW?'1,5 °C, il limite di Parigi':'1,5 °C, il limite dell’Accordo di Parigi'; f.appendChild(sl);
       }
       var dT='';
       for(i=0;i<tp.length;i++){ dT += (i?'L':'M') + RX(tp[i][0]+0.5).toFixed(1) + ' ' + CY(tp[i][1]).toFixed(1); }
@@ -699,7 +714,7 @@
           var tv = hot
             ? el('text',{x:RX(t[0]+0.5),y:CY(t[1])+19,class:'svg-val','text-anchor':'middle'})
             : el('text',{x:RX(t[0]+0.5)+9,y:CY(t[1])+4,class:'svg-val','text-anchor':'start'});
-          tv.setAttribute('font-size','12'); tv.textContent='+'+it(t[1],2); f.appendChild(tv);
+          tv.style.fontSize=NARROW?'10px':'12px'; tv.textContent=NARROW?it(t[1],1):'+'+it(t[1],2); f.appendChild(tv);
         }
       });
       var tl=tp[tp.length-1];
@@ -718,7 +733,8 @@
   var KY=[22.73,23.21,22.52,22.75,22.97,23.52,24.23,24.38,24.30,24.84,25.51,25.69,26.27,27.65,28.61,29.60,30.59,31.50,32.05,31.51,33.32,34.48,34.95,35.28,35.47,35.40,35.39,35.97,36.73,37.09,35.16,36.87,37.53,38.09,38.60];
   var ks=document.getElementById('kyotochart');
   if(ks){
-    var KW=880, kx0=54, kx1=KW-30, ky0=26, ky1=250;
+    var KW=CHART_W, kx0=54, kx1=KW-30, ky0=26, ky1=250;
+    fitBox(ks,KW,300);
     var kMin=20, kMax=40, kyMin=1990, kyMax=2025;
     function KX(y){ return kx0 + (y-kyMin)/(kyMax-kyMin)*(kx1-kx0); }
     function KY_(v){ return ky1 - (v-kMin)/(kMax-kMin)*(ky1-ky0); }
@@ -741,16 +757,17 @@
     kf.appendChild(el('path',{d:ka,fill:tok('--source'),'fill-opacity':.12,stroke:'none'}));
     kf.appendChild(el('path',{d:kd,fill:'none',stroke:tok('--source'),'stroke-width':2.2,'stroke-linejoin':'round'}));
     var kw=el('text',{x:KX(2010.5),y:ky0+16,class:'svg-lab-b','text-anchor':'middle'}); kw.style.fill=tok('--source');
-    kw.textContent='periodo di impegno 2008–2012'; kf.appendChild(kw);
+    kw.textContent=NARROW?'impegno 2008–2012':'periodo di impegno 2008–2012'; kf.appendChild(kw);
     [[1997,'firma'],[2005,'in vigore'],[2012,'fine 1° periodo']].forEach(function(m){
       var v=KY[m[0]-kyMin], px=KX(m[0]+0.5), py=KY_(v);
       kf.appendChild(el('circle',{cx:px,cy:py,r:5,fill:tok('--surface'),stroke:tok('--source'),'stroke-width':2.2}));
-      var t1=el('text',{x:px+10,y:py+17,class:'svg-val'}); t1.textContent=it(v,1); kf.appendChild(t1);
-      var t2=el('text',{x:px+10,y:py+32,class:'svg-unit'}); t2.textContent=m[0]+' · '+m[1]; kf.appendChild(t2);
+      var left = NARROW && m[0]===2012;
+      var t1=el('text',{x:left?px-10:px+10,y:left?py-24:py+17,class:'svg-val','text-anchor':left?'end':'start'}); t1.textContent=it(v,1); kf.appendChild(t1);
+      var t2=el('text',{x:left?px-10:px+10,y:left?py-9:py+32,class:'svg-unit','text-anchor':left?'end':'start'}); t2.textContent=m[0]+' · '+m[1]; kf.appendChild(t2);
     });
     var lv=KY[KY.length-1], lx=KX(kyMax-0.5), ly=KY_(lv);
     kf.appendChild(el('circle',{cx:lx,cy:ly,r:5,fill:tok('--surface'),stroke:tok('--source'),'stroke-width':2.2}));
-    var l1=el('text',{x:lx-10,y:ly-12,class:'svg-val','text-anchor':'end'}); l1.textContent=it(lv,1)+' nel 2024'; kf.appendChild(l1);
+    var l1=el('text',{x:lx-10,y:ly-12,class:'svg-val','text-anchor':'end'}); l1.textContent=NARROW?it(lv,1):it(lv,1)+' nel 2024'; kf.appendChild(l1);
     var c20=el('text',{x:KX(2020.5),y:KY_(KY[30])+22,class:'svg-unit','text-anchor':'middle'}); c20.textContent='2020 · pandemia'; kf.appendChild(c20);
     ks.appendChild(kf);
   }

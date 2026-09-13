@@ -185,6 +185,12 @@ Sotto i 1100px tutto torna in colonna nell'ordine del documento. L'apertura
 è la stessa cosa: titolo e sommario a sinistra, le quattro cifre in un
 riquadro a destra. «Chi emette» è una figura sola con tre pannelli affiancati.
 
+Sul telefono (sotto i 640px) `charts.js` disegna i grafici su 460 unità
+invece di 880 (`NARROW`, `CHART_W`): più stretti e più alti, con etichette
+accorciate, così entrano nello schermo senza scorrere in orizzontale. La
+scelta è fatta al caricamento e non cambia alla rotazione. Le barre HTML
+tengono etichetta, barra e valore su una riga sola dove i valori sono corti.
+
 ## Navigazione a slide
 
 Ogni sezione occupa almeno una schermata (`min-height: 100svh`) e si aggancia
