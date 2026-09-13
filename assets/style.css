@@ -22,6 +22,7 @@
   --shadow:0 1px 2px rgba(14,27,33,.06), 0 8px 24px -12px rgba(14,27,33,.18);
   --maxw:1320px;
   --prose:50rem;
+  --nav-h:48px;   /* altezza della barra: usata da scroll-padding, sezioni, slides.js */
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
@@ -87,13 +88,13 @@ h1,h2,h3,.ui{font-family:Archivo,"Helvetica Neue",Arial,sans-serif;}
 
 /* ---------- nav ---------- */
 .nav{
-  position:sticky;top:0;z-index:50;
+  position:sticky;top:0;z-index:50;height:var(--nav-h);
   background:color-mix(in srgb, var(--ground) 88%, transparent);
   backdrop-filter:blur(10px);
   border-bottom:1px solid var(--rule);
 }
 .nav-in{
-  max-width:var(--maxw);margin:0 auto;
+  max-width:var(--maxw);margin:0 auto;height:100%;
   padding:0 20px;
   display:flex;align-items:center;gap:6px;
   overflow-x:auto;scrollbar-width:none;
@@ -108,7 +109,7 @@ h1,h2,h3,.ui{font-family:Archivo,"Helvetica Neue",Arial,sans-serif;}
 .nav a{
   font-family:Archivo,sans-serif;font-size:.78rem;font-weight:600;
   color:var(--ink-2);text-decoration:none;white-space:nowrap;
-  padding:13px 9px;border-bottom:2px solid transparent;
+  padding:12px 9px;border-bottom:2px solid transparent;
 }
 .nav a:hover{color:var(--ink);border-bottom-color:var(--rule-strong)}
 .nav a:focus-visible{outline:2px solid var(--source);outline-offset:-4px;border-radius:3px}
@@ -544,8 +545,8 @@ img,svg{max-width:100%}
    La pagina resta un documento scorrevole (accessibile, stampabile, con
    ancore), ma ogni sezione occupa almeno una schermata e si aggancia in
    alto: cosi' le frecce, a schermo o su tastiera, la sfogliano come slide. */
-html{scroll-padding-top:46px}
-.hero,section{min-height:calc(100svh - 46px);scroll-margin-top:46px;box-sizing:border-box}
+html{scroll-padding-top:var(--nav-h)}
+.hero,section{min-height:calc(100svh - var(--nav-h));box-sizing:border-box}
 /* i grafici non crescono oltre due terzi dello schermo: su un portatile
    una figura da sola non deve occupare l'intera schermata */
 .fig-body .scroller svg{max-height:min(46svh,460px)}
@@ -564,7 +565,7 @@ body{padding-bottom:64px}
   .prose.one{columns:1}
 }
 
-.progress{position:fixed;left:0;top:46px;height:2px;width:0;background:var(--source);z-index:60;transition:width .25s ease}
+.progress{position:fixed;left:0;top:var(--nav-h);height:2px;width:0;background:var(--source);z-index:60;transition:width .25s ease}
 .deck-nav{
   position:fixed;right:20px;bottom:18px;z-index:60;
   display:flex;align-items:center;gap:4px;

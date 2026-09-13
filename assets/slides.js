@@ -8,7 +8,10 @@
    ───────────────────────────────────────────────────────────────────────── */
 (function(){
   "use strict";
-  var NAV_H = 46;
+  /* l'altezza della barra si legge dal DOM: se il CSS la cambia, lo script segue */
+  var navEl = document.querySelector('.nav');
+  var NAV_H = (navEl && navEl.offsetHeight) || 48;
+  window.addEventListener('resize', function(){ NAV_H = (navEl && navEl.offsetHeight) || NAV_H; }, {passive:true});
   var slides = Array.prototype.slice.call(document.querySelectorAll('.hero, main > section, .wrap > section'));
   if(slides.length < 2) return;
 
