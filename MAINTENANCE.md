@@ -286,6 +286,27 @@ The script reads the token over SSH, so there is no copy of it on your
 machine. Moderation is not there to censor: a blunt criticism gets published
 as written. It is there so that spam never reaches the page.
 
+**One vote per question.** The table `voti` has a unique index on
+`(sezione, gruppo, impronta)`: it is the index that makes a double vote
+impossible, not a check in the code. Each section asks two questions, "was it
+useful?" and "is it clear?", and a person has one answer for each. Changing
+your mind replaces the previous answer, so a count never inflates. The page
+shows what you already answered from two sources: the server, which knows by
+fingerprint, and `localStorage`, which survives a change of address. Clearing
+the browser does not buy a second vote.
+
+**The fingerprint on votes is not purged**, unlike the one on messages. It is
+the only thing standing between the counters and a refresh loop. It is not the
+IP address: it is a SHA-256 of the address with a secret salt, so without the
+salt there is no way back, and with the salt you can only check an address you
+already hold.
+
+**The client's real address is the LAST value of `X-Forwarded-For`, not the
+first.** Caddy appends the address the request actually arrives from; whatever
+came before it may have been written by the client. Reading the first element
+would let anyone send an invented header on every click and vote forever. This
+was a real hole in the first version, fixed on 14 September 2026.
+
 **Limits already in place**: three messages a day per fingerprint, one vote
 per section, type and day, eighty votes a day, a honeypot field that bots
 fill in and humans never see, 1500 characters per message, 8 KB per request.

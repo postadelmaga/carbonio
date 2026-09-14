@@ -502,7 +502,7 @@
   "Il messaggio",
   "Come ti chiami <span>(facoltativo)</span>",
   "Invia",
-  "<b>Come funziona.</b> I messaggi vengono letti prima di comparire: non è censura, è il modo per tenere fuori lo spam, e chi scrive una critica secca la vedrà pubblicata come l'ha scritta. Non serve registrarsi, non ci sono cookie e l'indirizzo IP non viene conservato: se ne tiene un'impronta per un mese, giusto per contare una volta sola.",
+  "<b>Come funziona.</b> I messaggi vengono letti prima di comparire: non è censura, è il modo per tenere fuori lo spam, e chi scrive una critica secca la vedrà pubblicata come l'ha scritta. Non serve registrarsi e non ci sono cookie. L'indirizzo IP non viene salvato: se ne tiene un'impronta cifrata, che per i messaggi sparisce dopo un mese e per i voti resta finché resta il voto, perché è l'unica cosa che impedisce di votare due volte. Una risposta per domanda e per sezione: cambiare idea sostituisce la precedente, non ne aggiunge una seconda.",
   "Se hai un account GitHub e la segnalazione è tecnica, <a class=\"ref\" href=\"https://github.com/postadelmaga/carbonio/issues\" rel=\"noopener\">una issue</a> è più comoda per entrambi: si può discutere e chiudere.",
   "I messaggi",
   "Carico…",

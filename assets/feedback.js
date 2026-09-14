@@ -42,7 +42,7 @@
     ];
   }
 
-  function riga(sezione, conteggi) {
+  function riga(sezione, conteggi, tuoi) {
     var box = document.createElement('div');
     box.className = 'reaz';
     box.setAttribute('data-sez', sezione);
@@ -69,41 +69,60 @@
     g.className = 'reaz-grazie';
     g.setAttribute('role', 'status');
     box.appendChild(g);
-    aggiorna(box, conteggi);
+    aggiorna(box, conteggi, tuoi);
     return box;
   }
 
-  function aggiorna(box, conteggi) {
+  /* Cosa ha gia' votato questa persona: lo dice il server, che conta per
+     impronta dell'indirizzo, e in piu' il browser, che ricorda la scelta anche
+     quando l'indirizzo cambia. Le due fonti si sommano: basta una per far
+     vedere la risposta gia' data. */
+  function scelte(sez, dalServer) {
+    var locali = (letto('reaz:' + sez) || '').split(',').filter(Boolean);
+    return locali.concat(dalServer || []);
+  }
+
+  function aggiorna(box, conteggi, tuoi) {
     conteggi = conteggi || {};
     var sez = box.getAttribute('data-sez');
-    var scelto = letto('reaz:' + sez) || '';
+    var scelto = scelte(sez, tuoi);
     Array.prototype.forEach.call(box.querySelectorAll('.reaz-b'), function (b) {
       var tipo = b.getAttribute('data-tipo');
       var n = conteggi[tipo] || 0;
       b.querySelector('.reaz-n').textContent = n ? n : '';
-      if (scelto.split(',').indexOf(tipo) >= 0) b.classList.add('is-scelto');
+      b.classList.toggle('is-scelto', scelto.indexOf(tipo) >= 0);
+      b.setAttribute('aria-pressed', scelto.indexOf(tipo) >= 0 ? 'true' : 'false');
     });
   }
 
-  function attacca(conteggi) {
+  function attacca(conteggi, tuoi) {
     var sezioni = document.querySelectorAll('.wrap > section[id]');
     Array.prototype.forEach.call(sezioni, function (s) {
-      var box = riga(s.id, conteggi[s.id]);
+      var box = riga(s.id, conteggi[s.id], (tuoi || {})[s.id]);
       s.appendChild(box);
       box.addEventListener('click', function (e) {
         var b = e.target.closest && e.target.closest('.reaz-b');
         if (!b || b.disabled) return;
         var tipo = b.getAttribute('data-tipo');
         var gruppo = b.parentNode;
-        Array.prototype.forEach.call(gruppo.querySelectorAll('.reaz-b'), function (x) { x.disabled = true; });
+        var fratelli = Array.prototype.slice.call(gruppo.querySelectorAll('.reaz-b'));
+        if (b.classList.contains('is-scelto')) return;   // gia' la tua risposta
+        fratelli.forEach(function (x) { x.disabled = true; });
         invia('/reazione', { sezione: s.id, tipo: tipo }).then(function (r) {
+          fratelli.forEach(function (x) { x.disabled = false; });
           if (!r.ok) return;
-          var prima = letto('reaz:' + s.id);
-          scrivi('reaz:' + s.id, prima ? prima + ',' + tipo : tipo);
-          aggiorna(box, r.dati.reazioni);
-          b.classList.add('is-scelto');
+          /* una risposta per domanda: la scelta precedente dello stesso gruppo
+             viene sostituita, come fa il server, non aggiunta */
+          var altri = fratelli.map(function (x) { return x.getAttribute('data-tipo'); });
+          var tenute = (letto('reaz:' + s.id) || '').split(',')
+                        .filter(function (t) { return t && altri.indexOf(t) < 0; });
+          tenute.push(tipo);
+          scrivi('reaz:' + s.id, tenute.join(','));
+          aggiorna(box, r.dati.reazioni, r.dati.tuoi);
           box.querySelector('.reaz-grazie').textContent = T('grazie');
-        }).catch(function () {});
+        }).catch(function () {
+          fratelli.forEach(function (x) { x.disabled = false; });
+        });
       });
     });
   }
@@ -190,7 +209,7 @@
   fetch(API + '/stato', { cache: 'no-cache' })
     .then(function (r) { return r.json(); })
     .then(function (d) {
-      if (document.querySelector('.wrap > section[id]')) attacca(d.reazioni || {});
+      if (document.querySelector('.wrap > section[id]')) attacca(d.reazioni || {}, d.tuoi || {});
       bacheca(d.messaggi || []);
     })
     .catch(function () { bacheca([]); });

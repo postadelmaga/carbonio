@@ -47,7 +47,11 @@ ORIGINE = os.environ.get('BACHECA_ORIGINE', '')
 # chiavi nuove riempiendo il database.
 SEZIONI = {'curva', 'passato', 'recenti', 'caldo', 'bilancio', 'senzapozzi',
            'pozzi', 'chi', 'crescita', 'guerra', 'kyoto', 'sintesi', 'fonti'}
-TIPI    = {'su', 'giu', 'chiaro', 'confuso'}
+# Ogni tipo appartiene a una domanda: si puo' rispondere una volta a
+# «ti e' servita?» e una a «e' chiara?», non una per bottone. Cambiare idea
+# sostituisce la risposta, non ne aggiunge una seconda.
+GRUPPO  = {'su': 'utile', 'giu': 'utile', 'chiaro': 'chiarezza', 'confuso': 'chiarezza'}
+TIPI    = set(GRUPPO)
 LINGUE  = {'it', 'en', 'es', 'zh'}
 
 MAX_TESTO   = 1500
@@ -69,16 +73,18 @@ def prepara():
     os.makedirs(os.path.dirname(DB) or '.', exist_ok=True)
     with db() as c:
         c.executescript('''
-        CREATE TABLE IF NOT EXISTS reazioni(
+        CREATE TABLE IF NOT EXISTS voti(
             id INTEGER PRIMARY KEY,
-            sezione TEXT NOT NULL,
-            tipo    TEXT NOT NULL,
-            giorno  TEXT NOT NULL,
-            impronta TEXT,
-            ts      INTEGER NOT NULL
+            sezione  TEXT NOT NULL,
+            gruppo   TEXT NOT NULL,
+            scelta   TEXT NOT NULL,
+            impronta TEXT NOT NULL,
+            ts       INTEGER NOT NULL
         );
-        CREATE UNIQUE INDEX IF NOT EXISTS reazioni_una
-            ON reazioni(sezione, tipo, giorno, impronta);
+        -- Una riga per persona, sezione e domanda: e' questo indice a rendere
+        -- impossibile il voto doppio, non un controllo nel codice.
+        CREATE UNIQUE INDEX IF NOT EXISTS voti_uno
+            ON voti(sezione, gruppo, impronta);
         CREATE TABLE IF NOT EXISTS messaggi(
             id INTEGER PRIMARY KEY,
             testo TEXT NOT NULL,
@@ -93,6 +99,26 @@ def prepara():
         ''')
 
 
+def migra():
+    """Porta nella tabella dei voti le reazioni raccolte con lo schema vecchio,
+    che contava una volta al giorno per bottone invece di una per domanda."""
+    with db() as c:
+        vecchia = c.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='reazioni'").fetchone()
+        if not vecchia:
+            return
+        righe = c.execute('SELECT sezione, tipo, impronta, MIN(ts) ts FROM reazioni '
+                          'WHERE impronta IS NOT NULL GROUP BY sezione, tipo, impronta').fetchall()
+        for r in righe:
+            if r['tipo'] not in GRUPPO:
+                continue
+            try:
+                c.execute('INSERT INTO voti(sezione, gruppo, scelta, impronta, ts) VALUES(?,?,?,?,?)',
+                          (r['sezione'], GRUPPO[r['tipo']], r['tipo'], r['impronta'], r['ts']))
+            except sqlite3.IntegrityError:
+                pass
+        c.execute('DROP TABLE reazioni')
+
+
 def impronta(ip):
     """Impronta dell'indirizzo, non l'indirizzo: serve a contare una volta
     sola e a fermare gli abusi, non a sapere chi sei."""
@@ -100,19 +126,39 @@ def impronta(ip):
 
 
 def pulizia():
-    """Toglie le impronte piu' vecchie di trenta giorni. I conteggi restano."""
+    """Toglie l'impronta dai messaggi piu' vecchi di trenta giorni: li' serviva
+    solo a limitare gli invii.
+
+    Sui voti l'impronta resta: e' l'unica cosa che impedisce di votare due
+    volte, e cancellarla vorrebbe dire riaprire la porta. Non e' l'indirizzo
+    IP, e' la sua impronta con un sale segreto: senza il sale non si torna
+    indietro, e con il sale si puo' solo verificare un indirizzo che si ha
+    gia' in mano."""
     limite = int(time.time()) - GIORNI_SALE * 86400
     with lock, db() as c:
-        c.execute('UPDATE reazioni SET impronta=NULL WHERE ts<? AND impronta IS NOT NULL', (limite,))
         c.execute('UPDATE messaggi SET impronta=NULL WHERE ts<? AND impronta IS NOT NULL', (limite,))
 
 
 def conteggi():
     with db() as c:
-        righe = c.execute('SELECT sezione, tipo, COUNT(*) n FROM reazioni GROUP BY sezione, tipo').fetchall()
+        righe = c.execute('SELECT sezione, scelta, COUNT(*) n FROM voti GROUP BY sezione, scelta').fetchall()
     fuori = {}
     for r in righe:
-        fuori.setdefault(r['sezione'], {})[r['tipo']] = r['n']
+        fuori.setdefault(r['sezione'], {})[r['scelta']] = r['n']
+    return fuori
+
+
+def gia_votato(imp, sezione=None):
+    """Cosa ha gia' risposto questa impronta: serve alla pagina per mostrare la
+    scelta anche da un altro dispositivo o dopo aver svuotato il browser."""
+    with db() as c:
+        if sezione:
+            righe = c.execute('SELECT sezione, scelta FROM voti WHERE impronta=? AND sezione=?', (imp, sezione)).fetchall()
+        else:
+            righe = c.execute('SELECT sezione, scelta FROM voti WHERE impronta=?', (imp,)).fetchall()
+    fuori = {}
+    for r in righe:
+        fuori.setdefault(r['sezione'], []).append(r['scelta'])
     return fuori
 
 
@@ -148,8 +194,15 @@ class Gestore(http.server.BaseHTTPRequestHandler):
         self.wfile.write(corpo)
 
     def ip(self):
+        """L'ultimo valore di X-Forwarded-For, non il primo.
+
+        Caddy AGGIUNGE in coda l'indirizzo da cui la richiesta arriva davvero;
+        quello che c'era prima puo' averlo scritto il client. Prendendo il
+        primo, chiunque potrebbe mandarsi un'intestazione inventata a ogni
+        clic e votare all'infinito."""
         avanti = self.headers.get('X-Forwarded-For', '')
-        return (avanti.split(',')[0].strip() or self.client_address[0])
+        pezzi = [p.strip() for p in avanti.split(',') if p.strip()]
+        return pezzi[-1] if pezzi else self.client_address[0]
 
     def corpo(self):
         n = int(self.headers.get('Content-Length', '0') or 0)
@@ -180,7 +233,11 @@ class Gestore(http.server.BaseHTTPRequestHandler):
     def do_GET(self):
         percorso = self.path.split('?')[0].rstrip('/')
         if percorso == '/api/stato':
-            return self.rispondi(200, {'reazioni': conteggi(), 'messaggi': pubblicati()}, cache=True)
+            # niente cache condivisa: la risposta contiene anche i voti di chi
+            # la chiede, e finirebbe servita a un altro
+            return self.rispondi(200, {'reazioni': conteggi(),
+                                       'tuoi': gia_votato(impronta(self.ip())),
+                                       'messaggi': pubblicati()})
         if percorso == '/api/coda':
             if not self.autorizzato():
                 return self.rispondi(403, {'errore': 'token'})
@@ -204,16 +261,16 @@ class Gestore(http.server.BaseHTTPRequestHandler):
             tipo    = str(dati.get('tipo', ''))
             if sezione not in SEZIONI or tipo not in TIPI:
                 return self.rispondi(400, {'errore': 'sezione o tipo sconosciuti'})
-            if troppi('reazioni', 'impronta', imp, 80):
+            if troppi('voti', 'impronta', imp, 80):
                 return self.rispondi(429, {'errore': 'troppe reazioni'})
-            giorno = time.strftime('%Y-%m-%d')
+            # Una risposta per domanda: se ce n'e' gia' una la sostituisce, cosi'
+            # cambiare idea e' permesso ma il conteggio non si gonfia mai.
             with lock, db() as c:
-                try:
-                    c.execute('INSERT INTO reazioni(sezione, tipo, giorno, impronta, ts) VALUES(?,?,?,?,?)',
-                              (sezione, tipo, giorno, imp, int(time.time())))
-                except sqlite3.IntegrityError:
-                    pass    # gia' votato oggi: si risponde lo stesso, senza contare due volte
-            return self.rispondi(200, {'reazioni': conteggi().get(sezione, {})})
+                c.execute('INSERT INTO voti(sezione, gruppo, scelta, impronta, ts) VALUES(?,?,?,?,?) '
+                          'ON CONFLICT(sezione, gruppo, impronta) DO UPDATE SET scelta=excluded.scelta, ts=excluded.ts',
+                          (sezione, GRUPPO[tipo], tipo, imp, int(time.time())))
+            return self.rispondi(200, {'reazioni': conteggi().get(sezione, {}),
+                                       'tuoi': gia_votato(imp, sezione).get(sezione, [])})
 
         if percorso == '/api/messaggio':
             if str(dati.get('trappola', '')).strip():
@@ -263,6 +320,7 @@ def main():
     if not SALT or not TOKEN:
         raise SystemExit('BACHECA_SALT e BACHECA_TOKEN sono obbligatorie')
     prepara()
+    migra()
     pulizia()
     def spazzino():
         while True:
