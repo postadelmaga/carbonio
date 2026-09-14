@@ -415,6 +415,17 @@ img,svg{max-width:100%}
 .lang li a[aria-current="true"]{color:var(--ink);font-weight:600}
 .lang li a[aria-current="true"]::after{content:"✓";margin-left:auto;color:var(--source)}
 
+/* --- cento quadretti ---
+   Una percentuale piccola detta a parole resta astratta: cento caselle e
+   cinque colorate si leggono in un colpo d'occhio, senza barre che a quella
+   scala sarebbero linee da mezzo pixel. */
+.cento{
+  display:grid;grid-template-columns:repeat(20,1fr);gap:2px;
+  margin:2px 0 12px;max-width:24rem;
+}
+.cento span{aspect-ratio:1;background:var(--surface-2);border-radius:1px}
+.cento span:nth-child(-n+5){background:var(--source)}
+
 /* --- collegamento al progetto ---
    Icona disegnata in pagina, non un badge preso da un servizio esterno: niente
    richieste a terzi su una pagina che dichiara di non averne. */
