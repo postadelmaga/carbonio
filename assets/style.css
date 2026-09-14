@@ -415,6 +415,34 @@ img,svg{max-width:100%}
 .lang li a[aria-current="true"]{color:var(--ink);font-weight:600}
 .lang li a[aria-current="true"]::after{content:"✓";margin-left:auto;color:var(--source)}
 
+/* --- collegamento al progetto ---
+   Icona disegnata in pagina, non un badge preso da un servizio esterno: niente
+   richieste a terzi su una pagina che dichiara di non averne. */
+.gh-btn{
+  flex:none;display:inline-flex;align-items:center;justify-content:center;
+  width:32px;height:32px;margin-left:6px;
+  color:var(--ink-2);border:1px solid var(--rule);border-radius:3px;
+  text-decoration:none;transition:color .15s,border-color .15s;
+}
+.gh-btn:hover{color:var(--ink);border-color:var(--rule-strong)}
+.gh-btn:focus-visible{outline:2px solid var(--source);outline-offset:2px}
+
+.sf-gh{
+  display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px;
+  font-size:.86rem;color:var(--ink-2);line-height:1.55;
+  max-width:var(--prose);margin:0;
+}
+.sf-gh span{flex:1 1 22rem;min-width:0}
+.sf-gh b{color:var(--ink);font-weight:600}
+.gh-link{
+  display:inline-flex;align-items:center;gap:7px;flex:none;
+  font-family:"IBM Plex Mono",monospace;font-size:.8rem;
+  color:var(--ink);text-decoration:none;
+  border:1px solid var(--rule-strong);border-radius:3px;padding:5px 10px;
+  background:var(--surface);
+}
+.gh-link:hover{border-color:var(--source);color:var(--source)}
+
 /* --- toggle tema --- */
 .theme-btn{
   margin-left:auto;flex:none;
@@ -863,6 +891,7 @@ details.more > :last-child{margin-bottom:16px}
     background:transparent;color:var(--ink-2);border:1px solid var(--rule);border-radius:3px;cursor:pointer;
   }
   .theme-btn{width:36px;height:36px}
+  .gh-btn{width:36px;height:36px;margin-left:4px}
   .lang{margin-left:auto}
   .lang summary{height:36px;padding:0 7px;font-size:.72rem;gap:4px}
   .lang summary::after{display:none}

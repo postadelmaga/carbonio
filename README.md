@@ -329,6 +329,15 @@ non la destinazione: `redir /es/ 302` non fa niente, ci vuole
 `redir * /es/ 302`. Sono due ore di diagnosi, scritte qui perché non si
 ripetano.
 
+## Collaborare
+
+In fondo alla pagina, e con un'icona nella barra in alto, c'è il link al
+repository. L'icona è un SVG scritto in pagina, non un badge preso da un
+servizio esterno: la pagina dichiara di non fare richieste a terzi e quella
+promessa vale anche per un'immaginetta. Il testo dell'invito è tradotto come
+tutto il resto, quindi se lo cambi ricordati di rilanciare `./build.py
+--extract` e aggiornare i tre dizionari.
+
 ## Dominio
 
 Il sito sta su **https://co2-info.duckdns.org/** (sottodominio DuckDNS che

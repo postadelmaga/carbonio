@@ -485,7 +485,9 @@
   "2001": "2001",
   "2005": "2005",
   "2011": "2011",
-  "2012": "2012"
+  "2012": "2012",
+  "<b>Questa pagina si corregge in pubblico.</b> Codice, dati e registro delle revisioni stanno su GitHub. Se trovi un numero sbagliato, una fonte migliore o una frase che dice più di quanto i dati sostengano, <a class=\"ref\" href=\"https://github.com/postadelmaga/carbonio/issues\" rel=\"noopener\">aprine una segnalazione</a>: il registro qui sopra è fatto di correzioni arrivate così.": "<b>Esta página se corrige en público.</b> El código, los datos y el registro de revisiones están en GitHub. Si encuentras un número equivocado, una fuente mejor o una frase que afirma más de lo que sostienen los datos, <a class=\"ref\" href=\"https://github.com/postadelmaga/carbonio/issues\" rel=\"noopener\">abre un aviso</a>: el registro de arriba está hecho de correcciones que llegaron así.",
+  "Il progetto su GitHub": "El proyecto en GitHub"
  },
  "js": {
   "/anno": "/año",
