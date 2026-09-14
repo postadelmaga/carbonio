@@ -79,6 +79,15 @@ carries the preliminary label in the chart, and if a peer-reviewed version
 appears it must be replaced. The percentages use the UNEP Emissions Gap
 Report 2025 denominator: 57.7 GtCO₂e of all greenhouse gases in 2024.
 
+Cross-checked on 14 September 2026 against the Corriere della Sera Dataroom
+investigation on war emissions: every figure matched, because both come from
+the same studies. The article's «59 wars, the highest number since 1945» was
+not taken up: the Global Peace Index 2026 says 61 active armed conflicts in
+2024, and 59 is the 2008 value of a different indicator, the number of
+countries involved in an external conflict, which has since risen to 103. When
+a secondary source and a primary source disagree, go with the primary one and
+say so.
+
 Mind the period when updating the war chart: the first bar is one year, the
 others are conflict totals, and part of those totals is reconstruction that
 has not happened yet. It is the easiest error to introduce.
