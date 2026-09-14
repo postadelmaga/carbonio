@@ -957,3 +957,107 @@ details.more > :last-child{margin-bottom:16px}
   .div-track{height:14px;margin-bottom:2px}
   .p-share .bar-val{min-width:0}
 }
+
+
+/* ═══════════════════════════════════════════════════════════════════════
+   Reazioni sotto ogni sezione e bacheca dei messaggi.
+   La riga delle reazioni e' l'ultima cosa della sezione, discreta: chi legge
+   non deve inciamparci, chi vuole rispondere la trova dov'e' finito.
+   ═══════════════════════════════════════════════════════════════════════ */
+.reaz{
+  display:flex;flex-wrap:wrap;align-items:center;gap:6px 18px;
+  margin:14px 0 0;padding-top:12px;border-top:1px solid var(--rule);
+  font-family:Archivo,sans-serif;font-size:.78rem;color:var(--ink-3);
+}
+.slide>.reaz{grid-column:1/-1}
+.reaz-g{display:inline-flex;align-items:center;gap:6px}
+.reaz-d{margin-right:1px}
+.reaz-b{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:3px 9px;border:1px solid var(--rule);border-radius:999px;
+  background:transparent;color:var(--ink-2);cursor:pointer;
+  font-family:inherit;font-size:.78rem;line-height:1.5;
+  transition:border-color .15s,color .15s;
+}
+.reaz-b:hover:not([disabled]){border-color:var(--rule-strong);color:var(--ink)}
+.reaz-b:focus-visible{outline:2px solid var(--source);outline-offset:2px}
+.reaz-b[disabled]{cursor:default;opacity:.75}
+.reaz-b.is-scelto{border-color:var(--source);color:var(--source);opacity:1}
+.reaz-e{font-size:.85rem;line-height:1}
+.reaz-n{font-family:"IBM Plex Mono",monospace;font-size:.72rem;font-variant-numeric:tabular-nums}
+.reaz-grazie{color:var(--land);font-size:.76rem}
+@media (max-width:640px){
+  .reaz{gap:6px 12px;font-size:.74rem;margin-top:12px}
+  .reaz-b{padding:4px 10px}
+}
+
+/* La bacheca non ha il menu a tendina del telefono, perche' non ha sezioni da
+   sfogliare: i suoi due link stanno nella barra anche sullo schermo stretto. */
+@media (max-width:640px){
+  body.bac .nav-links{
+    display:flex;position:static;flex-direction:row;height:100%;
+    background:none;border:0;box-shadow:none;backdrop-filter:none;padding:0;gap:0;
+  }
+  body.bac .nav-links a{padding:12px 9px;font-size:.8rem;border-left:0}
+  body.bac .nav-mark{margin-right:8px}
+}
+
+/* ── la pagina della bacheca ── */
+.bac-wrap{padding-bottom:40px}
+.bac-cima{padding-block:44px 8px;border-bottom:0}
+.bac-cima h1{font-size:clamp(2.1rem,5.5vw,3.2rem);max-width:18ch;margin-bottom:16px}
+.bac-due{display:grid;gap:36px;align-items:start;margin-top:26px}
+@media (min-width:1000px){
+  .bac-due{grid-template-columns:minmax(0,26rem) minmax(0,1fr);gap:56px}
+  .bac-scrivi{position:sticky;top:calc(var(--nav-h) + 20px)}
+}
+.bac-scrivi h2,.bac-muro h2{
+  font-size:1.05rem;font-weight:700;margin:0 0 14px;letter-spacing:.01em;
+}
+.bac-l{
+  display:block;font-family:Archivo,sans-serif;font-size:.78rem;font-weight:600;
+  letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);margin:0 0 6px;
+}
+.bac-l span{text-transform:none;letter-spacing:0;font-weight:400}
+#bac-modulo textarea,#bac-modulo input[type=text]{
+  width:100%;box-sizing:border-box;margin:0 0 16px;padding:11px 13px;
+  font-family:"Source Serif 4",Georgia,serif;font-size:1rem;line-height:1.5;
+  color:var(--ink);background:var(--surface);
+  border:1px solid var(--rule-strong);border-radius:4px;resize:vertical;
+}
+#bac-modulo textarea::placeholder,#bac-modulo input::placeholder{color:var(--ink-3);opacity:.85}
+#bac-modulo textarea:focus,#bac-modulo input:focus{outline:2px solid var(--source);outline-offset:1px;border-color:var(--source)}
+.bac-trappola{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+.bac-invia{
+  font-family:Archivo,sans-serif;font-size:.92rem;font-weight:600;
+  color:var(--surface);background:var(--source);
+  border:0;border-radius:4px;padding:10px 20px;cursor:pointer;
+}
+.bac-invia:hover{filter:brightness(1.06)}
+.bac-invia:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.bac-invia[disabled]{opacity:.6;cursor:default}
+.bac-esito{font-size:.88rem;color:var(--ink-2);margin:12px 0 0;min-height:1.2em;line-height:1.5}
+.bac-nota{font-size:.84rem;color:var(--ink-3);line-height:1.55;margin:18px 0 0;max-width:34rem}
+.bac-nota b{color:var(--ink-2)}
+.bac-lista{list-style:none;padding:0;margin:0;display:grid;gap:14px}
+.bac-m{
+  background:var(--surface);border:1px solid var(--rule);border-radius:4px;
+  padding:14px 18px 16px;box-shadow:var(--shadow);
+}
+.bac-testa{
+  display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;margin:0 0 6px;
+  font-family:Archivo,sans-serif;font-size:.86rem;
+}
+.bac-testa b{color:var(--ink);font-weight:600}
+.bac-testa span{font-family:"IBM Plex Mono",monospace;font-size:.74rem;color:var(--ink-3)}
+.bac-testo{margin:0;font-size:1rem;line-height:1.55;color:var(--ink-2);white-space:pre-wrap;overflow-wrap:anywhere}
+.bac-risposta{
+  margin:12px 0 0;padding:10px 14px;border-left:3px solid var(--source);
+  background:var(--surface-2);border-radius:0 4px 4px 0;
+  font-size:.94rem;line-height:1.5;color:var(--ink-2);
+}
+.bac-risposta span{
+  display:block;font-family:"IBM Plex Mono",monospace;font-size:.66rem;
+  letter-spacing:.13em;text-transform:uppercase;color:var(--source);margin-bottom:5px;
+}
+.bac-vuoto{font-size:.92rem;color:var(--ink-3);margin:0}

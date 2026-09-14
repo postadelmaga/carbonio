@@ -20,6 +20,7 @@ import json, re, sys, os
 from bs4 import BeautifulSoup, NavigableString, Tag
 
 QUI = os.path.dirname(os.path.abspath(__file__))
+PAGINE = ['index.html', 'feedback.html']   # sorgenti italiani da tradurre
 SRC = os.path.join(QUI, 'index.html')
 LINGUE = {'en': 'English', 'es': 'Español', 'zh': '中文'}
 
@@ -122,20 +123,20 @@ def sostituisci(src, chiave, valore, errori):
     return nuovo
 
 def sostituisci_attr(src, chiave, valore, errori):
-    pat = re.compile(r'((?:title|aria-label|alt|content)=")' + re.escape(chiave) + r'(")')
+    pat = re.compile(r'((?:title|aria-label|alt|content|placeholder)=")' + re.escape(chiave) + r'(")')
     nuovo, n = pat.subn(lambda m: m.group(1)+valore+m.group(2), src)
     if n == 0: errori.append('[attr] ' + chiave)
     return nuovo
 
-def genera(codice, dizionario, permissivo):
+def genera(codice, dizionario, permissivo, pagina='index.html'):
     meta = LANG_META[codice]
-    src = open(SRC, encoding='utf-8').read()
-    soup = BeautifulSoup(src, 'html.parser')
+    src = open(os.path.join(QUI, pagina), encoding='utf-8').read()
     html_dict = dizionario.get('html', {})
     mancanti, non_trovate = [], []
 
     # Dalla chiave piu' lunga alla piu' corta: «Italia» e «osservato» compaiono
     # anche dentro unita' piu' grandi, e sostituendole prima le spezzerebbero.
+    soup = BeautifulSoup(src, 'html.parser')
     for k in sorted(raccogli(soup), key=len, reverse=True):
         v = html_dict.get(k)
         if v is None:
@@ -143,7 +144,7 @@ def genera(codice, dizionario, permissivo):
         if v == k: continue
         if k not in src:
             continue   # gia' tradotta dentro un'unita' piu' grande che la contiene
-        if re.search(r'(?:title|aria-label|alt|content)="' + re.escape(k) + '"', src):
+        if re.search(r'(?:title|aria-label|alt|content|placeholder)="' + re.escape(k) + '"', src):
             src = sostituisci_attr(src, k, v, non_trovate)
         else:
             src = sostituisci(src, k, v, non_trovate)
@@ -151,8 +152,15 @@ def genera(codice, dizionario, permissivo):
     # radice del documento
     src = src.replace('<html lang="it" data-lingua="it"', '<html lang="%s" data-lingua="%s"' % (meta['lang'], codice))
     src = src.replace('<meta property="og:locale" content="it_IT">', '<meta property="og:locale" content="%s">' % meta['locale'])
-    src = src.replace('<link rel="canonical" href="__ROOT__/">', '<link rel="canonical" href="__ROOT__/%s/">' % codice)
-    src = src.replace('<meta property="og:url" content="__ROOT__/">', '<meta property="og:url" content="__ROOT__/%s/">' % codice)
+    coda = '' if pagina == 'index.html' else pagina
+    src = src.replace('<link rel="canonical" href="__ROOT__/%s">' % coda,
+                      '<link rel="canonical" href="__ROOT__/%s/%s">' % (codice, coda))
+    src = src.replace('<meta property="og:url" content="__ROOT__/%s">' % coda,
+                      '<meta property="og:url" content="__ROOT__/%s/%s">' % (codice, coda))
+    # i collegamenti interni fra le due pagine restano dentro la lingua
+    if pagina != 'index.html':
+        src = src.replace('href="/"', 'href="/%s/"' % codice)
+    src = src.replace('href="/feedback.html"', 'href="/%s/feedback.html"' % codice)
     # le pagine stanno in una sottocartella: percorsi assoluti per gli asset
     src = re.sub(r'(href|src)="assets/', r'\1="/assets/', src)
     # selettore: bandiera corrente e spunta sulla lingua attiva
@@ -168,15 +176,18 @@ def genera(codice, dizionario, permissivo):
 
     fuori = os.path.join(QUI, codice)
     os.makedirs(fuori, exist_ok=True)
-    open(os.path.join(fuori, 'index.html'), 'w', encoding='utf-8').write(src)
+    open(os.path.join(fuori, pagina), 'w', encoding='utf-8').write(src)
     return mancanti, non_trovate
 
 def main():
-    soup = BeautifulSoup(open(SRC, encoding='utf-8').read(), 'html.parser')
-    chiavi = raccogli(soup)
+    chiavi = []
+    for nome in PAGINE:
+        soup = BeautifulSoup(open(os.path.join(QUI, nome), encoding='utf-8').read(), 'html.parser')
+        for k in raccogli(soup):
+            if k not in chiavi: chiavi.append(k)
     if '--extract' in sys.argv:
         js = []
-        for f in ('charts.js', 'live.js', 'slides.js'):
+        for f in ('charts.js', 'live.js', 'slides.js', 'feedback.js', 'tema.js'):
             testo = open(os.path.join(QUI, 'assets', f), encoding='utf-8').read()
             for m in re.finditer(r"\b(?:T|tr)\('((?:[^'\\]|\\.)*)'\)", testo):
                 k = m.group(1).replace("\\'", "'")
@@ -194,12 +205,13 @@ def main():
         if not os.path.exists(f):
             print('  %s: manca %s, saltata' % (codice, f)); guai += 1; continue
         d = json.load(open(f, encoding='utf-8'))
-        mancanti, non_trovate = genera(codice, d, permissivo)
-        stato = 'ok' if not mancanti and not non_trovate else 'INCOMPLETA'
-        print('  %s/index.html  %s  (%d voci mancanti, %d non agganciate)' % (codice, stato, len(mancanti), len(non_trovate)))
-        for k in mancanti[:5]:   print('     manca:      ' + k[:90])
-        for k in non_trovate[:5]: print('     non trovata: ' + k[:90])
-        if (mancanti or non_trovate) and not permissivo: guai += 1
+        for pagina in PAGINE:
+            mancanti, non_trovate = genera(codice, d, permissivo, pagina)
+            stato = 'ok' if not mancanti and not non_trovate else 'INCOMPLETA'
+            print('  %s/%s  %s  (%d voci mancanti, %d non agganciate)' % (codice, pagina, stato, len(mancanti), len(non_trovate)))
+            for k in mancanti[:5]:   print('     manca:      ' + k[:90])
+            for k in non_trovate[:5]: print('     non trovata: ' + k[:90])
+            if (mancanti or non_trovate) and not permissivo: guai += 1
     if guai and not permissivo:
         print('\nAlcune lingue sono incomplete. Con --allow-missing genero lo stesso.')
         sys.exit(1)

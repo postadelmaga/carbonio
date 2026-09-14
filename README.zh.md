@@ -33,8 +33,10 @@
 - **某句话说得超出了数据所能支撑的范围** —— 本页力图避免，但并非每次都做到；
 - 某处译文在你的语言里读起来别扭；
 
-请[提一个 issue](https://github.com/postadelmaga/carbonio/issues)，也欢迎直接
-提交修改。两条规矩：绝不从文章里转抄数字，要回到原始来源；如果你改动了意大利文
+请[提一个 issue](https://github.com/postadelmaga/carbonio/issues)；如果你不想注册
+GitHub 账号，也可以在[留言板](https://co2-info.duckdns.org/feedback.html)上写。
+每一节下面还有两个问题——「有用吗？」和「清楚吗？」——这是告诉我哪里出问题最省力的
+办法。当然也欢迎直接提交修改。两条规矩：绝不从文章里转抄数字，要回到原始来源；如果你改动了意大利文
 正文，请重新生成译文（`./build.py --extract`、翻译、`./build.py`）。
 
 ## 它是怎么做的

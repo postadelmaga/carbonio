@@ -40,8 +40,11 @@ posto. Ogni numero porta con sé la fonte e la sua incertezza.
   evitarlo e non sempre ci riesce;
 - una traduzione che nella tua lingua suona male;
 
-[apri una segnalazione](https://github.com/postadelmaga/carbonio/issues). Anche
-le proposte di modifica sono benvenute. Due regole: mai trascrivere una cifra
+[apri una segnalazione](https://github.com/postadelmaga/carbonio/issues) o
+scrivi sulla [bacheca](https://co2-info.duckdns.org/feedback.html), se preferisci
+non avere un account GitHub. Sotto ogni sezione c'è anche una riga con due
+domande, «ti è servita?» e «è chiara?»: è il modo più economico per dirmi dove
+la pagina non funziona. Anche le proposte di modifica sono benvenute. Due regole: mai trascrivere una cifra
 da un articolo, si va alla fonte primaria; e se cambi il testo italiano,
 rigenera le traduzioni (`./build.py --extract`, tradurre, `./build.py`).
 

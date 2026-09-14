@@ -66,7 +66,7 @@ BUILD_DIR="$(mktemp -d)"
 trap 'rm -rf "$BUILD_DIR"' EXIT
 
 info "Preparo la build in $BUILD_DIR"
-cp -R "$SRC_DIR/index.html" "$SRC_DIR/404.html" "$SRC_DIR/robots.txt" "$SRC_DIR/assets" "$BUILD_DIR/"
+cp -R "$SRC_DIR/index.html" "$SRC_DIR/feedback.html" "$SRC_DIR/404.html" "$SRC_DIR/robots.txt" "$SRC_DIR/assets" "$BUILD_DIR/"
 # Le traduzioni: cartelle generate da build.py, una per lingua. Se mancano il
 # deploy prosegue lo stesso, il sito resta in italiano.
 for L in en es zh; do

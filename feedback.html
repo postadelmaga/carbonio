@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="it" data-lingua="it" prefix="og: https://ogp.me/ns#">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bacheca — Il carbonio che resta</title>
+<meta name="description" content="Cosa pensano i lettori della pagina sul bilancio globale della CO2, e come lasciare un commento o segnalare un errore.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="__ROOT__/feedback.html">
+<link rel="alternate" hreflang="it" href="__ROOT__/feedback.html">
+<link rel="alternate" hreflang="en" href="__ROOT__/en/feedback.html">
+<link rel="alternate" hreflang="es" href="__ROOT__/es/feedback.html">
+<link rel="alternate" hreflang="zh" href="__ROOT__/zh/feedback.html">
+<link rel="alternate" hreflang="x-default" href="__ROOT__/feedback.html">
+
+<meta property="og:type" content="website">
+<meta property="og:locale" content="it_IT">
+<meta property="og:title" content="Bacheca">
+<meta property="og:description" content="Cosa pensano i lettori, e come segnalare un errore.">
+<meta property="og:url" content="__ROOT__/feedback.html">
+
+<meta name="theme-color" content="#F1F4F4" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0C161B" media="(prefers-color-scheme: dark)">
+
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..900&family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400..600&display=swap">
+<link rel="stylesheet" href="assets/style.css">
+<script defer src="https://cloud.umami.is/script.js" data-website-id="2cf64696-ed71-405e-9e22-b2b3e7b8bb6f"></script>
+<script>
+/* stesso tema della pagina principale, prima del primo paint */
+try{var t=localStorage.getItem("tema");if(t==="dark"||t==="light"){document.documentElement.setAttribute("data-theme",t);}
+else if(window.matchMedia&&window.matchMedia("(max-width:640px), (pointer:coarse)").matches){document.documentElement.setAttribute("data-theme","dark");}}catch(e){}
+document.addEventListener("click",function(e){var a=e.target.closest&&e.target.closest("a[data-lang]");if(!a)return;try{localStorage.setItem("lingua",a.getAttribute("data-lang"));}catch(err){}},true);
+</script>
+</head>
+<body class="bac">
+
+<nav class="nav">
+  <div class="nav-in">
+    <a class="nav-mark" href="/" aria-label="Torna alla pagina">CO₂</a>
+    <div class="nav-links" id="nav-menu">
+    <a href="/">La pagina</a>
+    <a href="/feedback.html" aria-current="page">Bacheca</a>
+    </div>
+    <details class="lang" id="lang-pick">
+      <summary title="Lingua · Language"><span class="fl">🇮🇹</span><span class="lc">IT</span></summary>
+      <ul>
+        <li><a href="/feedback.html"    data-href="/feedback.html"    data-lang="it" hreflang="it" aria-current="true"><span class="fl">🇮🇹</span>Italiano</a></li>
+        <li><a href="/en/feedback.html" data-href="/en/feedback.html" data-lang="en" hreflang="en"><span class="fl">🇬🇧</span>English</a></li>
+        <li><a href="/es/feedback.html" data-href="/es/feedback.html" data-lang="es" hreflang="es"><span class="fl">🇪🇸</span>Español</a></li>
+        <li><a href="/zh/feedback.html" data-href="/zh/feedback.html" data-lang="zh" hreflang="zh"><span class="fl">🇨🇳</span>中文</a></li>
+      </ul>
+    </details>
+    <a class="gh-btn" href="https://github.com/postadelmaga/carbonio" title="Il progetto su GitHub" aria-label="Il progetto su GitHub" rel="noopener">
+      <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
+    </a>
+    <button id="theme-toggle" class="theme-btn" type="button" aria-label="Cambia tema chiaro o scuro" title="Cambia tema">
+      <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" focusable="false">
+        <path class="ic-sun" d="M12 4V2m0 20v-2m8-8h2M2 12h2m13.66-5.66 1.41-1.41M4.93 19.07l1.41-1.41m11.32 0 1.41 1.41M4.93 4.93l1.41 1.41" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+        <circle class="ic-sun" cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="1.7"/>
+        <path class="ic-moon" d="M20 14.5A8.2 8.2 0 0 1 9.5 4 8.5 8.5 0 1 0 20 14.5Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+      </svg>
+    </button>
+  </div>
+</nav>
+
+<div class="wrap bac-wrap">
+
+  <header class="bac-cima">
+    <p class="eyebrow">Bacheca</p>
+    <h1>Cosa ne pensate</h1>
+    <p class="deck">Questa pagina si corregge da anni grazie a chi la legge. Qui si scrive: un errore trovato, una fonte migliore, un grafico che non si capisce, o anche solo che è servita.</p>
+  </header>
+
+  <div class="bac-due">
+    <section class="bac-scrivi" aria-labelledby="bac-h-scrivi">
+      <h2 id="bac-h-scrivi">Lascia un messaggio</h2>
+      <form id="bac-modulo" novalidate>
+        <label class="bac-l" for="bac-testo">Il messaggio</label>
+        <textarea id="bac-testo" name="testo" rows="6" maxlength="1500" required
+                  placeholder="Per esempio: «Nella sezione sul bilancio il numero X non torna con la fonte Y», oppure «il grafico delle ere glaciali sul telefono è illeggibile»."></textarea>
+        <label class="bac-l" for="bac-nome">Come ti chiami <span>(facoltativo)</span></label>
+        <input id="bac-nome" name="nome" type="text" maxlength="40" autocomplete="name" placeholder="Anche un nome di battaglia va bene">
+        <p class="bac-trappola" aria-hidden="true"><label>Non compilare questo campo<input name="sito" type="text" tabindex="-1" autocomplete="off"></label></p>
+        <button type="submit" class="bac-invia">Invia</button>
+        <p class="bac-esito" id="bac-esito" role="status"></p>
+      </form>
+      <p class="bac-nota"><b>Come funziona.</b> I messaggi vengono letti prima di comparire: non è censura, è il modo per tenere fuori lo spam, e chi scrive una critica secca la vedrà pubblicata come l'ha scritta. Non serve registrarsi, non ci sono cookie e l'indirizzo IP non viene conservato: se ne tiene un'impronta per un mese, giusto per contare una volta sola.</p>
+      <p class="bac-nota">Se hai un account GitHub e la segnalazione è tecnica, <a class="ref" href="https://github.com/postadelmaga/carbonio/issues" rel="noopener">una issue</a> è più comoda per entrambi: si può discutere e chiudere.</p>
+    </section>
+
+    <section class="bac-muro" aria-labelledby="bac-h-muro">
+      <h2 id="bac-h-muro">I messaggi</h2>
+      <ul class="bac-lista" id="bac-lista"><li class="bac-vuoto">Carico…</li></ul>
+    </section>
+  </div>
+
+  <footer class="site-foot">
+    <div class="sf-in">
+      <p class="sf-note"><a class="ref" href="/">Torna alla pagina</a> · Le reazioni sotto ogni sezione e i messaggi qui sopra stanno su un piccolo servizio ospitato sullo stesso server, senza servizi di terzi.</p>
+      <p class="sf-meta">Pagina statica, nessun cookie. · Testi e grafici <a class="ref" href="https://creativecommons.org/licenses/by/4.0/deed.it" rel="noopener">CC BY 4.0</a>, codice MIT.</p>
+    </div>
+  </footer>
+
+</div>
+<script src="assets/tema.js" defer></script>
+<script src="assets/feedback.js" defer></script>
+</body>
+</html>

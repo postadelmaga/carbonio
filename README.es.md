@@ -40,8 +40,11 @@ Esta es la parte útil. Si encuentras:
   intenta evitarlo y no siempre lo consigue;
 - una traducción que en tu idioma suena mal;
 
-[abre un aviso](https://github.com/postadelmaga/carbonio/issues). Las
-propuestas de cambio también son bienvenidas. Dos reglas: nunca transcribas una
+[abre un aviso](https://github.com/postadelmaga/carbonio/issues) o escribe en el
+[tablón](https://co2-info.duckdns.org/feedback.html), si prefieres no tener
+cuenta de GitHub. Bajo cada sección hay además una fila con dos preguntas,
+«¿te ha servido?» y «¿es clara?»: es la manera más barata de decirme dónde
+falla la página. Las propuestas de cambio también son bienvenidas. Dos reglas: nunca transcribas una
 cifra de un artículo, ve a la fuente primaria; y si cambias el texto italiano,
 regenera las traducciones (`./build.py --extract`, traducir, `./build.py`).
 

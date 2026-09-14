@@ -40,7 +40,11 @@ This is the useful part. If you find:
   to avoid this and does not always succeed;
 - a translation that reads badly in your language;
 
-please [open an issue](https://github.com/postadelmaga/carbonio/issues).
+please [open an issue](https://github.com/postadelmaga/carbonio/issues), or
+write on the [board](https://co2-info.duckdns.org/feedback.html) if you would
+rather not have a GitHub account. Every section also carries a two-question
+row, "was it useful?" and "is it clear?", which is the cheapest way to tell me
+where the page is failing.
 Pull requests are welcome too. Two rules: never transcribe a figure from an
 article, go to the primary source; and if you change the Italian text,
 regenerate the translations (`./build.py --extract`, translate, `./build.py`).

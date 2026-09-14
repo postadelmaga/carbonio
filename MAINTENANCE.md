@@ -253,6 +253,50 @@ describing what it shows, translated like the rest. The theme follows the
 system setting, with a manual toggle saved in `localStorage`; on phones it
 starts dark. Reduced motion is honoured.
 
+## The board and the reactions
+
+Under every section there is a row with two questions ("was it useful?",
+"is it clear?"), and `/feedback.html` carries the message board. Both talk to
+one small service that runs on the same server.
+
+**The service** is `server/bacheca.py`: the standard library only, no
+packages to install, one file to read before trusting it. It stores everything
+in SQLite, behind Caddy at `/api/`, and it lives in its own container
+(`server/docker-compose.yml`, stack in `/home/arch/bacheca`) so that a fault
+there cannot touch the static site. It publishes no port: Caddy reaches it on
+the `edge` network, the same one Umami uses.
+
+**Privacy.** No cookies: what you have already voted lives in `localStorage`,
+which is yours and never travels. IP addresses are not stored: a salted
+fingerprint is kept for thirty days, only to count a person once and to stop
+abuse, then it is erased. The salt and the moderation token are in
+`/home/arch/bacheca/.env` on the server, never in this repository.
+
+**Nothing is published on its own.** Every message waits for approval:
+
+```bash
+./server/modera.sh coda                 # what is waiting
+./server/modera.sh pubblica 3           # publish message 3
+./server/modera.sh pubblica 3 "Fixed, thanks."   # publish with a reply
+./server/modera.sh rifiuta 4            # keep it out
+./server/modera.sh cancella 4           # delete it
+```
+
+The script reads the token over SSH, so there is no copy of it on your
+machine. Moderation is not there to censor: a blunt criticism gets published
+as written. It is there so that spam never reaches the page.
+
+**Limits already in place**: three messages a day per fingerprint, one vote
+per section, type and day, eighty votes a day, a honeypot field that bots
+fill in and humans never see, 1500 characters per message, 8 KB per request.
+If spam still gets through, the next step is a delay between loading the page
+and posting.
+
+**In development** the page and the service sit on different ports, so the
+browser blocks the requests. Set `BACHECA_ORIGINE=http://127.0.0.1:8100` when
+starting the service, and `window.BACHECA_API` in the page. In production they
+share a domain and neither is needed.
+
 ## Licence
 
 Code MIT, text and charts CC BY 4.0: see [LICENSE](LICENSE) and
