@@ -252,3 +252,10 @@ table with the same values under "Go deeper". Each chart has an `aria-label`
 describing what it shows, translated like the rest. The theme follows the
 system setting, with a manual toggle saved in `localStorage`; on phones it
 starts dark. Reduced motion is honoured.
+
+## Licence
+
+Code MIT, text and charts CC BY 4.0: see [LICENSE](LICENSE) and
+[LICENSE-CONTENT.md](LICENSE-CONTENT.md). The line in the page footer says so
+too, in all four languages, so a reader who wants to reuse a chart does not
+have to go looking for the repository first.

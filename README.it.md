@@ -91,8 +91,17 @@ traduzioni, come il server sceglie la lingua, cosa è stato misurato e scartato
 Conversione usata ovunque: `1 ppm = 2,124 GtC = 7,78 GtCO₂`,
 `1 GtC = 3,664 GtCO₂`.
 
-## Riuso
+## Licenza
 
-I dati appartengono alle fonti citate qui sopra e in pagina: cita quelle, non
-questo repository. Una licenza per il codice e per il testo non è ancora
-dichiarata: se vuoi riusarli, apri una segnalazione e chiedi.
+- **Codice** — [MIT](LICENSE): `assets/*.js`, `style.css`, `build.py`, gli
+  script di pubblicazione, la struttura HTML.
+- **Testi, grafici e traduzioni** — [CC BY 4.0][cc]: riusali, adattali,
+  vendili pure, a una condizione: dire da dove vengono e se hai cambiato
+  qualcosa.
+- **I dati non sono nostri.** Sono di NOAA, Global Carbon Project, Our World
+  in Data, IPCC, UNEP e dei gruppi di ricerca citati in pagina. Cita la fonte
+  primaria, non questo repository.
+
+Il dettaglio in [LICENSE-CONTENT.md](LICENSE-CONTENT.md).
+
+[cc]: https://creativecommons.org/licenses/by/4.0/deed.it

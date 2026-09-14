@@ -80,7 +80,15 @@ python3 -m http.server 8100     # 然后打开 http://localhost:8100
 
 全页统一使用的换算：`1 ppm = 2.124 GtC = 7.78 GtCO₂`，`1 GtC = 3.664 GtCO₂`。
 
-## 再使用
+## 许可协议
 
-数据属于上文及页面中列出的各来源：请引用它们，而不是这个代码仓库。代码和文字
-尚未声明许可协议：如果你想再使用，请提一个 issue 询问。
+- **代码** —— [MIT](LICENSE)：`assets/*.js`、`style.css`、`build.py`、发布脚本
+  以及 HTML 结构。
+- **文字、图表与译文** —— [CC BY 4.0][cc]：可以再使用、改编，也可以用于商业用途，
+  只有一个条件：说明它们的出处，以及你是否做过改动。
+- **数据不属于我们。** 它们属于 NOAA、全球碳计划、Our World in Data、IPCC、
+  联合国环境规划署，以及页面中引用的各研究团队。请引用原始来源，而不是这个仓库。
+
+细节见 [LICENSE-CONTENT.md](LICENSE-CONTENT.md)。
+
+[cc]: https://creativecommons.org/licenses/by/4.0/deed.zh

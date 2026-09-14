@@ -498,7 +498,8 @@
   "4 novembre 2025: totale mondiale di tutti i gas serra nel 2024, 57,7 GtCO₂e, +2,3% sull'anno prima. È il denominatore delle percentuali nella sezione sulle guerre.": "2025 年 11 月 4 日：2024 年全球所有温室气体总量 57.7 GtCO₂e，比上一年高 2.3%。它就是关于战争那一节中各百分比的分母。",
   "14 settembre 2026": "2026 年 9 月 14 日",
   "<b>La quota sul totale mondiale, che mancava.</b> La sezione sulle guerre dava cifre assolute e confronti, ma non rispondeva alla domanda più diretta: quanto pesano eserciti e guerre sulle emissioni di un anno. Ora c'è, con il denominatore dichiarato: 57,7 miliardi di tonnellate di gas serra nel 2024, dal rapporto UNEP. Cinque quadretti su cento, di cui 4,8 l'apparato militare e 0,2 le due guerre per cui esiste un conto.": "<b>此前缺少的那个占比。</b>关于战争的一节此前给出的是绝对数字和对比，却没有回答最直接的问题：军队和战争在一年的排放中占多少。现在有了，而且写明了分母：2024 年全球温室气体 577 亿吨，来自联合国环境规划署的报告。一百格里的五格，其中 4.8 来自军事体系，0.2 来自有账可查的两场战争。",
-  "<b>La pagina è in quattro lingue</b> — italiano, inglese, spagnolo e cinese — e rimanda al proprio repository: correzioni e segnalazioni sono benvenute.": "<b>本页现有四种语言</b>——意大利语、英语、西班牙语和中文——并链接到它自己的代码仓库：欢迎指正与反馈。"
+  "<b>La pagina è in quattro lingue</b> — italiano, inglese, spagnolo e cinese — e rimanda al proprio repository: correzioni e segnalazioni sono benvenute.": "<b>本页现有四种语言</b>——意大利语、英语、西班牙语和中文——并链接到它自己的代码仓库：欢迎指正与反馈。",
+  "<a href=\"#top\">Torna in cima</a> · Pagina statica, nessun cookie: solo statistiche anonime di visita (Umami). · Testi e grafici <a class=\"ref\" href=\"https://creativecommons.org/licenses/by/4.0/deed.it\" rel=\"noopener\">CC BY 4.0</a>, codice MIT.": "<a href=\"#top\">回到顶部</a> · 静态页面，无 Cookie：仅有匿名的访问统计（Umami）。 · 文字与图表采用 <a class=\"ref\" href=\"https://creativecommons.org/licenses/by/4.0/deed.zh\" rel=\"noopener\">CC BY 4.0</a>，代码采用 MIT。"
  },
  "js": {
   "/anno": "/年",

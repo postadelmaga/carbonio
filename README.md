@@ -92,8 +92,17 @@ are in **[MAINTENANCE.md](MAINTENANCE.md)**.
 Conversion used throughout: `1 ppm = 2.124 GtC = 7.78 GtCO₂`,
 `1 GtC = 3.664 GtCO₂`.
 
-## Reuse
+## Licence
 
-The data belong to the sources cited above and on the page; cite them, not
-this repository. A licence for the code and the text has not been declared
-yet: if you want to reuse either, open an issue and ask.
+- **Code** — [MIT](LICENSE): `assets/*.js`, `style.css`, `build.py`, the
+  deploy scripts, the HTML structure.
+- **Text, charts and translations** — [CC BY 4.0][cc]: reuse them, adapt them,
+  sell them if you like, as long as you say where they come from and whether
+  you changed anything.
+- **The data are not ours.** They belong to NOAA, the Global Carbon Project,
+  Our World in Data, the IPCC, UNEP and the research groups cited on the page.
+  Cite the primary source, not this repository.
+
+Details in [LICENSE-CONTENT.md](LICENSE-CONTENT.md).
+
+[cc]: https://creativecommons.org/licenses/by/4.0/
