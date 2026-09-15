@@ -1,6 +1,7 @@
 # 留下来的碳
 
-[English](README.md) · [Italiano](README.it.md) · [Español](README.es.md) · **中文**
+[English](README.md) · [Italiano](README.it.md) · [Español](README.es.md) ·
+[Français](README.fr.md) · **中文**
 
 一个关于全球碳平衡的单页网站：我们排放了多少二氧化碳，海洋和植被吸收了多少，
 以及为什么莫纳罗亚曲线上只看得到其中一半。
@@ -47,7 +48,7 @@ GitHub 账号，也可以在[留言板](https://co2-info.duckdns.org/feedback.ht
 ```
 .
 ├── index.html          页面本体，意大利文：唯一手写的版本
-├── en/ es/ zh/         生成的译文：请勿手动修改
+├── en/ es/ fr/ zh/         生成的译文：请勿手动修改
 ├── i18n/               每种语言一个词典 + 抽取出来的键
 ├── build.py            从意大利文原文生成译文页面
 ├── publish.sh          已填好目标路径和公开网址的 deploy.sh
@@ -55,7 +56,7 @@ GitHub 账号，也可以在[留言板](https://co2-info.duckdns.org/feedback.ht
 ├── 404.html  robots.txt
 └── assets/
     ├── style.css       明暗主题变量、版式、打印样式
-    ├── charts.js       八张 SVG 图表 + 内嵌的备用数据
+    ├── charts.js       九张 SVG 图表 + 内嵌的备用数据
     ├── slides.js       幻灯片式导航：屏上箭头、键盘、触摸
     ├── live.js         从 NOAA 实时读取，并带后备方案
     └── favicon.svg
@@ -63,7 +64,7 @@ GitHub 账号，也可以在[留言板](https://co2-info.duckdns.org/feedback.ht
 
 ```bash
 python3 -m http.server 8100     # 然后打开 http://localhost:8100
-./build.py                      # 重新生成 en/、es/、zh/
+./build.py                      # 重新生成 en/、es/、fr/、zh/
 ./publish.sh --apply            # 发布
 ```
 

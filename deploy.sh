@@ -69,7 +69,7 @@ info "Preparo la build in $BUILD_DIR"
 cp -R "$SRC_DIR/index.html" "$SRC_DIR/feedback.html" "$SRC_DIR/404.html" "$SRC_DIR/robots.txt" "$SRC_DIR/assets" "$BUILD_DIR/"
 # Le traduzioni: cartelle generate da build.py, una per lingua. Se mancano il
 # deploy prosegue lo stesso, il sito resta in italiano.
-for L in en es zh; do
+for L in en es fr zh; do
   [ -d "$SRC_DIR/$L" ] && cp -R "$SRC_DIR/$L" "$BUILD_DIR/"
 done
 
@@ -77,7 +77,7 @@ done
 # non il repository.
 ESCAPED_URL="${PUBLIC_URL//\//\\/}"
 # Un solo segnaposto, __ROOT__, in tutte le pagine: la radice italiana e le
-# traduzioni generate da build.py in en/, es/, zh/.
+# traduzioni generate da build.py in en/, es/, fr/, zh/.
 while IFS= read -r f; do
   sed -i.bak "s/__ROOT__/${ESCAPED_URL}/g" "$f"
 done < <(find "$BUILD_DIR" -name '*.html' -o -name 'robots.txt')
@@ -87,7 +87,7 @@ cat > "$BUILD_DIR/sitemap.xml" <<SITEMAP
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:xhtml="http://www.w3.org/1999/xhtml">
-$(for L in "" en/ es/ zh/; do
+$(for L in "" en/ es/ fr/ zh/; do
 cat <<UNA
   <url>
     <loc>${PUBLIC_URL}/${L}</loc>
@@ -97,6 +97,7 @@ cat <<UNA
     <xhtml:link rel="alternate" hreflang="it" href="${PUBLIC_URL}/"/>
     <xhtml:link rel="alternate" hreflang="en" href="${PUBLIC_URL}/en/"/>
     <xhtml:link rel="alternate" hreflang="es" href="${PUBLIC_URL}/es/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="${PUBLIC_URL}/fr/"/>
     <xhtml:link rel="alternate" hreflang="zh" href="${PUBLIC_URL}/zh/"/>
   </url>
 UNA

@@ -1,6 +1,7 @@
 # The carbon that stays
 
-**English** · [Italiano](README.it.md) · [Español](README.es.md) · [中文](README.zh.md)
+**English** · [Italiano](README.it.md) · [Español](README.es.md) ·
+[Français](README.fr.md) · [中文](README.zh.md)
 
 A single-page site about the global carbon budget: how much CO₂ we emit, how
 much the oceans and vegetation absorb, and why the Mauna Loa curve shows only
@@ -57,7 +58,7 @@ compile in order to serve it.
 ```
 .
 ├── index.html          the page, in Italian: the only hand-written copy
-├── en/ es/ zh/         generated translations: do not edit by hand
+├── en/ es/ fr/ zh/         generated translations: do not edit by hand
 ├── i18n/               one dictionary per language + the extracted keys
 ├── build.py            generates the translated pages from the Italian source
 ├── publish.sh          deploy.sh with destination and public URL filled in
@@ -65,7 +66,7 @@ compile in order to serve it.
 ├── 404.html  robots.txt
 └── assets/
     ├── style.css       light/dark tokens, layout, print
-    ├── charts.js       the eight SVG charts + the embedded fallback data
+    ├── charts.js       the nine SVG charts + the embedded fallback data
     ├── slides.js       slide navigation: on-screen arrows, keyboard, touch
     ├── live.js         live reading from NOAA, with fallback
     └── favicon.svg
@@ -73,7 +74,7 @@ compile in order to serve it.
 
 ```bash
 python3 -m http.server 8100     # then open http://localhost:8100
-./build.py                      # regenerate en/, es/, zh/
+./build.py                      # regenerate en/, es/, fr/, zh/
 ./publish.sh --apply            # publish
 ```
 

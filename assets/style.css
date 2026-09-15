@@ -365,6 +365,15 @@ td .dot{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right
 .srcs{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:0 24px;list-style:none;padding:0;margin:0 0 24px}
 .srcs li{padding:12px 0;border-bottom:1px solid var(--rule);font-size:.88rem;line-height:1.5}
 .srcs b{display:block;font-family:Archivo,sans-serif;font-size:.86rem}
+/* il titolo di ogni fonte è il collegamento alla fonte stessa: niente
+   azzurro sottolineato, che in una griglia di diciotto voci sarebbe un
+   muro, ma una freccia che dice che si esce dal sito. L'area cliccabile
+   è tutto il titolo, perché l'<a> avvolge il <b>, che è display:block. */
+.srcs .src-l{display:block;color:inherit;text-decoration:none;border-radius:2px}
+.srcs .src-l b::after{content:'\2197';margin-left:.35em;font-weight:400;color:var(--ink-3)}
+.srcs .src-l:hover b,.srcs .src-l:focus-visible b{color:var(--source);text-decoration:underline;text-underline-offset:2px}
+.srcs .src-l:hover b::after,.srcs .src-l:focus-visible b::after{color:var(--source)}
+.srcs .src-l:focus-visible{outline:2px solid var(--source);outline-offset:3px}
 .srcs span{color:var(--ink-3);font-size:.83rem}
 .foot{font-size:.84rem;color:var(--ink-3);max-width:none;border-top:2px solid var(--ink);padding-top:16px}
 

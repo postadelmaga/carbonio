@@ -2,7 +2,7 @@
 
 Everything you need to change a number, add a section, translate it or put it
 online. English only: it is the language of whoever ends up running this.
-The reader-facing README is in [four languages](README.md).
+The reader-facing README is in [five languages](README.md).
 
 ## Running it
 
@@ -157,6 +157,26 @@ Mind the period when updating the war chart: the first bar is one year, the
 others are conflict totals, and part of those totals is reconstruction that
 has not happened yet. It is the easiest error to introduce.
 
+## The sources section
+
+Each of the eighteen titles under "Fonti" is a link to the source itself,
+opening in a new tab. The markup is `<li><a class="src-l" href="…"
+target="_blank" rel="noopener"><b>Title</b></a><span>…</span></li>`, in that
+order for a reason: with the `<a>` **outside** the `<b>`, the translation key
+stays `<b>Title</b>` and the URL never enters `i18n/*.json`, so changing a link
+does not invalidate four translations. Put the `<a>` inside the `<b>` and the
+key becomes the whole anchor, URL included.
+
+No blue underline: eighteen of them in a grid would be a wall. The affordance
+is a `↗` drawn by `.srcs .src-l b::after`, with the colour and the underline
+appearing on hover and on keyboard focus.
+
+Prefer a DOI over a publisher page and a publisher page over an aggregator.
+Every URL was opened before being committed — three of them (science.org,
+unep.org, the Vision of Humanity resources page) answer 403 to `curl` because
+of a Cloudflare challenge and 200 to a real browser, so check with a browser
+before concluding a link is dead.
+
 ## Live data
 
 `live.js` has two independent blocks, so a failure on one front does not take
@@ -228,11 +248,23 @@ On phones (below 640px) `charts.js` draws the charts on 460 units instead of
 fit without horizontal scrolling. The choice is made at load time and does not
 change on rotation.
 
-## Four languages
+## Five languages
 
 Italian in `index.html` is the only hand-written copy. `build.py` extracts the
 translatable units, looks them up in `i18n/<lang>.json` and writes
-`en/index.html`, `es/index.html`, `zh/index.html`.
+`en/index.html`, `es/index.html`, `fr/index.html`, `zh/index.html`.
+
+**Adding a language** touches six places and nothing else: `LANG_META` and
+`LINGUE` in `build.py` (the flag, the two-letter chip, the locale and the
+decimal separator), the `hreflang` links and the picker `<li>` in both
+`index.html` and `feedback.html`, the `for L in …` loops and the sitemap in
+`deploy.sh`, a `LINGUE` entry in `social.py` (then re-run it), a new
+`i18n/<lang>.json`, and the Accept-Language block in the server Caddyfile.
+French, added on 15 September 2026, needed 517 hand-written units: the other
+157 keys are pure numbers, and French uses the comma for decimals like
+Italian and Spanish, so they carry over unchanged. Do not skip the server
+block: without it a French browser lands on `/en/`, which still works but is
+not what the picker promises.
 
 ```bash
 ./build.py --extract     # refresh i18n/_chiavi.json with the units to translate

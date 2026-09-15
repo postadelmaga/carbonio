@@ -1,0 +1,1079 @@
+<!doctype html>
+<html lang="fr" data-lingua="fr" prefix="og: https://ogp.me/ns#">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Le carbone qui reste — bilan mondial du CO₂</title>
+<meta name="description" content="Combien de CO2 nous emettons, combien en absorbent les oceans et les forets, et pourquoi la courbe de Mauna Loa n'en montre que la moitie. Graphiques, tableaux et sources.">
+<meta name="author" content="">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="__ROOT__/fr/">
+<link rel="alternate" hreflang="it" href="__ROOT__/">
+<link rel="alternate" hreflang="en" href="__ROOT__/en/">
+<link rel="alternate" hreflang="es" href="__ROOT__/es/">
+<link rel="alternate" hreflang="fr" href="__ROOT__/fr/">
+<link rel="alternate" hreflang="zh" href="__ROOT__/zh/">
+<link rel="alternate" hreflang="x-default" href="__ROOT__/">
+
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Le carbone qui reste">
+<meta property="og:locale" content="fr_FR">
+<meta property="og:title" content="Le carbone qui reste">
+<meta property="og:description" content="La courbe de Mauna Loa ne mesure pas ce que nous émettons. Elle mesure ce qu'il reste une fois que l'océan et la végétation ont pris leur part.">
+<meta property="og:url" content="__ROOT__/fr/">
+<!-- La cartolina la disegna ./social.py, una per lingua. Senza og:image
+     Facebook e WhatsApp non hanno niente da mostrare: la pagina non contiene
+     nemmeno un <img>, i grafici li scrive JavaScript in SVG e nessuno di quei
+     servizi esegue JavaScript. L'indirizzo dev'essere assoluto. -->
+<meta property="og:image" content="__ROOT__/assets/social-fr.png">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Des 40,9 GtCO2 émises chaque année, l'océan en absorbe 11,8, la végétation 8,7, et 20,4 restent dans l'air.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Le carbone qui reste">
+<meta name="twitter:description" content="La courbe de Mauna Loa ne mesure pas ce que nous émettons. Elle mesure ce qu'il reste.">
+<meta name="twitter:image" content="__ROOT__/assets/social-fr.png">
+
+<meta name="theme-color" content="#F1F4F4" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0C161B" media="(prefers-color-scheme: dark)">
+
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..900&family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400..600&display=swap">
+<script>window.I18N={"/anno":"/an","ppm/anno":"ppm/an","Oceano":"Océan","Vegetazione":"Végétation","Atmosfera":"Atmosphère","EMESSO OGNI ANNO":"ÉMIS CHAQUE ANNÉE","40,9 GtCO₂, cioè 5,3 ppm se restassero tutte in aria":"40,9 GtCO₂, soit 5,3 ppm si tout restait dans l’air","Fossili e cemento":"Fossiles et ciment","Uso del suolo":"Usage des sols","ASSORBITO":"ABSORBÉ","IN ARIA":"DANS L’AIR","RESTA IN ARIA":"RESTE DANS L’AIR","ppm all’anno":"ppm par an","QUELLO CHE ARRIVA DAL SOLE":"CE QUI ARRIVE DU SOLEIL","Assorbita":"Absorbée","Riflessa":"Réfléchie","QUELLO CHE RIPARTE, COME INFRAROSSO":"CE QUI REPART, EN INFRAROUGE","Riemessa verso lo spazio":"Réémise vers l’espace","Trattenuta":"Retenue","DOVE VA A FINIRE":"OÙ CELA FINIT","Terre emerse":"Terres émergées","Ghiacci":"Glaces",": è questa che sentiamo come temperatura":" : c’est elle que nous sentons comme température","il limite di Parigi":"la limite de Paris","il limite dell’Accordo di Parigi":"la limite de l’Accord de Paris","senza pozzi":"sans puits","osservato":"mesuré","tolto dai pozzi":"retiré par les puits","tolto da oceani e foreste":"retiré par les océans et les forêts","gen feb mar apr mag giu lug ago set ott nov dic":"janv févr mars avr mai juin juil août sept oct nov déc","Mauna Loa, media mensile":"Mauna Loa, moyenne mensuelle","Concentrazione, media mensile a Mauna Loa":"Concentration, moyenne mensuelle à Mauna Loa","ultimo mese":"dernier mois","Crescita in ciascun anno, ppm":"Croissance de chaque année, ppm","Di quanto è cresciuta in ciascun anno, ppm per anno":"De combien elle a augmenté chaque année, ppm par an","media":"moyenne","Temperatura sul 1850–1900":"Température sur 1850–1900","Temperatura globale sul 1850–1900, media annua":"Température mondiale sur 1850–1900, moyenne annuelle","nel":"en","impegno":"engagement","periodo di impegno":"période d’engagement","firma":"signature","in vigore":"en vigueur","fine 1° periodo":"fin 1re période","pandemia":"pandémie","oggi":"aujourd’hui","migliaia di anni fa":"milliers d’années avant aujourd’hui","mai sopra le 300 ppm":"jamais au-dessus de 300 ppm","ere glaciali":"glaciations","periodi caldi":"périodes chaudes","Lettura in diretta non riuscita: mostro i valori salvati il ":"Lecture en direct impossible : j’affiche les valeurs enregistrées le ","Leggo l’ultimo dato da NOAA, l’agenzia meteo-oceanica statunitense…":"Je lis la dernière donnée auprès de la NOAA, l’agence météo-océanique américaine…","Letti ora da NOAA (Global Monitoring Laboratory): media annua ":"Lus à l’instant auprès de la NOAA (Global Monitoring Laboratory) : moyenne annuelle ",", serie aggiornata alla pubblicazione più recente":", série à jour de la publication la plus récente",", curva disegnata sulle medie mensili misurate.":", courbe tracée sur les moyennes mensuelles mesurées.","Leggo temperatura e gas serra da NOAA…":"Je lis la température et les gaz à effet de serre auprès de la NOAA…","Letti ora da NOAA: temperatura dal centro NCEI, gas serra dal laboratorio GML. Il budget residuo è una sottrazione dal valore del Global Carbon Budget 2025, non una misura.":"Lus à l’instant auprès de la NOAA : la température au centre NCEI, les gaz à effet de serre au laboratoire GML. Le budget restant est une soustraction à partir de la valeur du Global Carbon Budget 2025, pas une mesure.","Letto in diretta: ":"Lu en direct : ",". Per il resto mostro i valori salvati il ":". Pour le reste, j’affiche les valeurs enregistrées le ","Leggo il calore degli oceani dal centro NCEI di NOAA…":"Je lis la chaleur des océans au centre NCEI de la NOAA…","Letti ora da NOAA (centro NCEI): calore nei primi 2000 metri d’oceano, media annua ":"Lus à l’instant auprès de la NOAA (centre NCEI) : chaleur des 2000 premiers mètres d’océan, moyenne annuelle ",", e medie mobili di cinque anni per il confronto con il 1971.":", et moyennes mobiles sur cinq ans pour la comparaison avec 1971.","Sfoglia le sezioni":"Parcourir les sections","Sezione precedente":"Section précédente","Precedente":"Précédente","Sezione successiva":"Section suivante","Successiva":"Suivante","tastiera":"clavier","parte":"partie","di":"sur","Chiudi il menu":"Fermer le menu","Apri il menu":"Ouvrir le menu","Come leggerlo":"Comment le lire","Ti è servita?":"Vous a-t-elle servi ?","Sì, mi è servita":"Oui, elle m’a servi","No, non mi è servita":"Non, elle ne m’a pas servi","È chiara?":"Est-elle claire ?","Sì":"Oui","Sì, è chiara":"Oui, elle est claire","Poco":"Peu","No, poco chiara":"Non, peu claire","grazie":"merci","Ancora nessun messaggio pubblicato. Il primo può essere il tuo.":"Aucun message publié pour l’instant. Le premier peut être le vôtre.","anonimo":"anonyme","risposta":"réponse","Scrivi qualcosa di più lungo.":"Écrivez quelque chose d’un peu plus long.","Invio…":"Envoi…","Ricevuto. Comparirà qui dopo una lettura: la bacheca è moderata, non per censura ma per tenere fuori lo spam.":"Bien reçu. Le message paraîtra ici après lecture : les messages sont modérés, non par censure mais pour tenir le spam dehors.","Hai già scritto tre messaggi oggi. Torna domani.":"Vous avez déjà écrit trois messages aujourd’hui. Revenez demain.","Non è andata. Riprova fra poco.":"Cela n’a pas marché. Réessayez dans un instant.","_dec":","};</script>
+<link rel="stylesheet" href="/assets/style.css">
+<!-- statistiche anonime senza cookie (Umami): pagine viste, paese, dispositivo -->
+<script defer src="https://cloud.umami.is/script.js" data-website-id="2cf64696-ed71-405e-9e22-b2b3e7b8bb6f"></script>
+<script>
+/* La lingua. Il redirect automatico lo fa il server guardando Accept-Language,
+   qui si onora solo una scelta fatta a mano dal lettore, e solo quando arriva
+   sulla radice: un indirizzo esplicito come /es/ vince sempre, altrimenti un
+   link condiviso porterebbe il destinatario in un'altra lingua. */
+(function(){
+  var L = document.documentElement.getAttribute("data-lingua") || "it";
+  try{
+    var scelta = localStorage.getItem("lingua");
+    var p = location.pathname.replace(/index\.html$/,"");
+    if(scelta && scelta !== L && (p === "/" || p === "")){
+      location.replace((scelta === "it" ? "/" : "/" + scelta + "/") + location.hash);
+      return;
+    }
+  }catch(e){}
+  document.addEventListener("click", function(e){
+    var a = e.target.closest && e.target.closest("a[data-lang]");
+    if(!a) return;
+    try{ localStorage.setItem("lingua", a.getAttribute("data-lang")); }catch(err){}
+    if(location.hash) a.setAttribute("href", a.getAttribute("data-href") + location.hash);
+  }, true);
+})();
+</script>
+<script>
+/* applica il tema salvato prima del primo paint, per evitare il lampo.
+   Senza una scelta salvata, sul telefono (schermo stretto o puntatore a
+   dito) si parte scuri: il pulsante del tema resta e la scelta si salva. */
+(function(){
+  var t=null; try{t=localStorage.getItem("tema");}catch(e){}
+  if(t!=="dark"&&t!=="light"){
+    var m=window.matchMedia&&window.matchMedia("(max-width:640px), (pointer:coarse)");
+    if(m&&m.matches) t="dark";
+  }
+  if(t){
+    document.documentElement.setAttribute("data-theme",t);
+    var col=t==="dark"?"#0C161B":"#F1F4F4";
+    var metas=document.querySelectorAll('meta[name="theme-color"]');
+    for(var i=0;i<metas.length;i++){ metas[i].setAttribute("content",col); metas[i].removeAttribute("media"); }
+  }
+})();
+</script>
+</head>
+<body>
+<nav class="nav">
+  <div class="nav-in">
+    <a class="nav-mark" href="#top" aria-label="Retour en haut">CO₂</a>
+    <div class="nav-links" id="nav-menu">
+    <a href="#curva">La courbe</a>
+    <a href="#recenti">Années récentes</a>
+    <a href="#passato">Avant nous</a>
+    <a href="#caldo">La chaleur</a>
+    <a href="#energia">L'énergie</a>
+    <a href="#bilancio">Le bilan</a>
+    <a href="#senzapozzi">Sans puits</a>
+    <a href="#pozzi">2024</a>
+    <a href="#chi">Qui émet</a>
+    <a href="#crescita">La croissance</a>
+    <a href="#adesso">Ralentit-elle</a>
+    <a href="#guerra">Les guerres</a>
+    <a href="#kyoto">Kyoto</a>
+    <a href="#sintesi">En bref</a>
+    <a href="#fonti">Sources</a>
+    </div>
+    <details class="lang" id="lang-pick">
+      <summary title="Lingua · Language"><span class="fl">🇫🇷</span><span class="lc">FR</span></summary>
+      <ul>
+        <li><a href="/"    data-href="/"    data-lang="it" hreflang="it"><span class="fl">🇮🇹</span>Italiano</a></li>
+        <li><a href="/en/" data-href="/en/" data-lang="en" hreflang="en"><span class="fl">🇬🇧</span>English</a></li>
+        <li><a href="/es/" data-href="/es/" data-lang="es" hreflang="es"><span class="fl">🇪🇸</span>Español</a></li>
+        <li><a href="/fr/" data-href="/fr/" data-lang="fr" hreflang="fr" aria-current="true"><span class="fl">🇫🇷</span>Français</a></li>
+        <li><a href="/zh/" data-href="/zh/" data-lang="zh" hreflang="zh"><span class="fl">🇨🇳</span>中文</a></li>
+      </ul>
+    </details>
+    <a class="gh-btn" href="https://github.com/postadelmaga/carbonio" title="Le projet sur GitHub" aria-label="Le projet sur GitHub" rel="noopener">
+      <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
+    </a>
+    <button id="theme-toggle" class="theme-btn" type="button" aria-label="Basculer entre thème clair et sombre" title="Changer de thème">
+      <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" focusable="false">
+        <path class="ic-sun" d="M12 4V2m0 20v-2m8-8h2M2 12h2m13.66-5.66 1.41-1.41M4.93 19.07l1.41-1.41m11.32 0 1.41 1.41M4.93 4.93l1.41 1.41" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+        <circle class="ic-sun" cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="1.7"/>
+        <path class="ic-moon" d="M20 14.5A8.2 8.2 0 0 1 9.5 4 8.5 8.5 0 1 0 20 14.5Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+      </svg>
+    </button>
+    <button id="menu-toggle" class="menu-btn" type="button" aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="nav-menu">
+      <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false">
+        <path class="ic-burger" d="M4 7h16M4 12h16M4 17h16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        <path class="ic-close" d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+      </svg>
+    </button>
+  </div>
+</nav>
+
+<div class="wrap">
+
+  <header class="hero" id="top">
+    <div class="hero-lead">
+    <p class="eyebrow">Global Carbon Budget 2025<span class="eb-sub"> · moyennes 2015–2024</span></p>
+    <h1>Le carbone qui <em>reste</em></h1>
+    <p class="deck">La courbe de Mauna Loa ne mesure pas ce que nous émettons. Elle mesure ce qu'il <b>reste</b> une fois que l'océan et la végétation ont pris leur part. Chaque année, ils en absorbent près de la moitié, gratuitement.</p>
+    <p class="units"><b>Les unités de cette page.</b> <abbr title="gigatonnes de dioxyde de carbone">GtCO₂</abbr> = milliards de tonnes de CO₂. <abbr title="parties par million">ppm</abbr> = molécules de CO₂ pour un million de molécules d'air. <b>Puits</b> = ce qui retire du CO₂ de l'air : l'océan et la végétation. <abbr title="dioxyde de carbone équivalent">CO₂e</abbr> = tous les gaz à effet de serre convertis en la quantité de CO₂ qui réchaufferait autant ; on l'emploie là où le méthane et le protoxyde d'azote comptent, comme dans la section sur les guerres. Moyennes 2015–2024 du Global Carbon Budget 2025.</p>
+    </div>
+
+    <div class="keys keys-2col">
+      <div class="key k-src">
+        <span class="fig">40,9</span><span class="unit">GtCO₂ / an</span>
+        <span class="lbl">Émis : fossiles plus usage des sols</span>
+      </div>
+      <div class="key k-ocean">
+        <span class="fig">11,8</span><span class="unit">GtCO₂ / an</span>
+        <span class="lbl">Absorbé par l'océan</span>
+      </div>
+      <div class="key k-land">
+        <span class="fig">8,7</span><span class="unit">GtCO₂ / an</span>
+        <span class="lbl">Absorbé par la végétation</span>
+      </div>
+      <div class="key k-atm">
+        <span class="fig">20,4</span><span class="unit">GtCO₂ / an · 2,6 ppm</span>
+        <span class="lbl">Reste dans l'air : ce que la courbe mesure</span>
+      </div>
+    </div>
+
+    <nav class="guide" aria-label="Par où commencer">
+    <p class="guide-lab">Si c'est la première fois que vous voyez ces chiffres, en trois questions</p>
+    <ol class="guide-q">
+      <li><a href="#curva"><b>Combien y en a-t-il dans l'air, et depuis quand cela monte-t-il ?</b><span>La courbe mesurée à Mauna Loa depuis 1959, et son accélération</span></a></li>
+      <li><a href="#caldo"><b>Et alors ? Qu'est-ce que cela change, concrètement ?</b><span>De combien la planète s'est déjà réchauffée, et ce qui reste avant la limite de 1,5 °C</span></a></li>
+      <li><a href="#bilancio"><b>Où va celui que nous émettons ?</b><span>Près de la moitié disparaît dans l'océan et la végétation : le reste est ce que l'on voit</span></a></li>
+    </ol>
+    </nav>
+  </header>
+
+
+  <!-- ============ 1. LA CURVA ============ -->
+  <section id="curva" class="slide">
+    <div class="sec-head"><span class="sec-unit">ppm</span><h2>La courbe de Mauna Loa</h2></div>
+    <p class="standfirst">Concentration moyenne mensuelle de CO₂ à l'observatoire de Mauna Loa, à Hawaï, de 1959 à aujourd'hui. L'oscillation annuelle est la respiration de la végétation de l'hémisphère nord : maximum en mai, minimum fin septembre.</p>
+
+    <div class="slide-main">
+    <figure>
+      <div class="fig-head">
+        <p class="fig-title">Le CO₂ monte, et de plus en plus vite</p><span class="tag tag-obs">mesuré</span>
+        <p class="fig-sub">Mauna Loa, 1959–aujourd'hui. Trait fin : moyennes mensuelles ; trait épais : moyenne annuelle ; les points marquent les valeurs de référence.</p>
+      </div>
+      <div class="fig-body">
+        <div class="scroller">
+          <svg id="keeling" viewBox="0 0 880 400" role="img" aria-label="Courbe de Keeling de 1959 à 2025 : la concentration monte de 316 à 427 ppm avec une pente croissante."></svg>
+        </div>
+      </div>
+      <figcaption><b>Comment la lire.</b> L'axe vertical part de 305 ppm, pas de zéro : on voit la pente, et c'est elle l'information. La dent de scie, c'est la saison, pas du bruit.</figcaption>
+    </figure>
+    </div>
+
+    <aside class="slide-side">
+    <div class="live" id="live" data-state="baked">
+      <div class="live-grid">
+        <div class="live-cell">
+          <span class="live-k">Dernière moyenne annuelle</span>
+          <span class="live-v"><b id="live-mean">427,35</b> ppm</span>
+          <span class="live-y">Mauna Loa · <span id="live-year">2025</span></span>
+        </div>
+        <div class="live-cell">
+          <span class="live-k">Hausse sur l'année</span>
+          <span class="live-v"><b id="live-gr">+2,23</b> ppm</span>
+          <span class="live-y">taux de croissance NOAA, l'agence météo-océanique américaine</span>
+        </div>
+        <div class="live-cell">
+          <span class="live-k">Au-dessus du préindustriel</span>
+          <span class="live-v"><b id="live-pre">+53</b> %</span>
+          <span class="live-y">par rapport aux 280 ppm d'avant l'ère industrielle</span>
+        </div>
+      </div>
+      <p class="live-note" id="live-note">Valeurs enregistrées le 12 septembre 2026.</p>
+      <p class="live-legend"><span class="lg-intro">La pastille dit d'où viennent les chiffres : </span><span class="lg lg-live">lus à l'instant à la source</span> · <span class="lg lg-partial">en partie</span> · <span class="lg lg-baked">valeurs enregistrées dans la page</span></p>
+    </div>
+    </aside>
+
+    <details class="more"><summary>Pour aller plus loin : la vitesse par décennie, et la chaleur d'alors</summary>
+    <div class="t-wrap">
+      <table>
+        <caption>Vitesse de croissance par décennie, et chaleur d'alors</caption>
+        <thead><tr><th>Période</th><th class="num">ppm / an</th><th class="num">°C sur 1850–1900</th><th>Note</th></tr></thead>
+        <tbody>
+          <tr><td>1960–1969</td><td class="num">0,86</td><td class="num">+0,16</td><td>La décennie de départ de la comparaison</td></tr>
+          <tr><td>1970–1979</td><td class="num">1,28</td><td class="num">+0,23</td><td></td></tr>
+          <tr><td>1980–1989</td><td class="num">1,61</td><td class="num">+0,43</td><td></td></tr>
+          <tr><td>1990–1999</td><td class="num">1,51</td><td class="num">+0,56</td><td>Seule décennie en baisse : éruption du Pinatubo (1991), effondrement soviétique</td></tr>
+          <tr><td>2000–2009</td><td class="num">1,97</td><td class="num">+0,74</td><td></td></tr>
+          <tr><td>2010–2019</td><td class="num">2,42</td><td class="num">+0,97</td><td></td></tr>
+          <tr class="total"><td>2016–2025</td><td class="num">2,56</td><td class="num">+1,18</td><td>≈ 3 fois les années 1960</td></tr>
+        </tbody>
+      </table>
+    </div>
+    </details>
+  </section>
+
+
+  <!-- ============ 1c. OTTOCENTOMILA ANNI ============ -->
+  <section id="passato" class="slide">
+    <div class="sec-head"><span class="sec-unit">ppm</span><h2>La dernière fois que l'air était ainsi</h2></div>
+    <p class="standfirst">Les bulles emprisonnées dans la glace antarctique sont de l'air véritable, vieux de huit cent mille ans, et on peut le mesurer. Pendant tout ce temps, le CO₂ a oscillé entre 170 et 300 parties par million, d'avant en arrière, au rythme des glaciations. Jamais une seule fois au-dessus.</p>
+
+    <div class="slide-main">
+    <figure>
+      <div class="fig-head">
+        <p class="fig-title">Huit cent mille ans de respiration, et puis nous</p><span class="tag tag-obs">mesuré</span>
+        <p class="fig-sub">Concentration de CO₂ d'après les carottes de glace antarctiques jusqu'en 1958, puis les moyennes annuelles de Mauna Loa. <span class="fs-more">L'axe horizontal est linéaire : un pixel vaut environ mille ans, si bien que toute l'ère industrielle tient dans moins d'un pixel. Le trait vertical à droite n'est pas une erreur de tracé.</span></p>
+      </div>
+      <div class="fig-body">
+        <div class="scroller">
+          <svg id="ghiaccio" viewBox="0 0 880 300" role="img" aria-label="Concentration de CO2 au cours des 800 mille dernières années mesurée dans les carottes de glace antarctiques : elle oscille entre 170 et 300 parties par million au rythme des glaciations, sans jamais dépasser 300. À l'extrémité droite, la courbe monte verticalement jusqu'aux 427 ppm d'aujourd'hui."></svg>
+        </div>
+      </div>
+      <figcaption><b>La dent de scie, ce sont les glaciations</b>, huit cycles d'environ cent mille ans chacun : le CO₂ descendait à 180 ppm quand la glace avançait et remontait à 280 quand elle reculait, toujours de concert avec la température. <b>Le trait vertical à droite, c'est nous :</b> la même distance parcourue en deux cents ans au lieu de dix mille, et en montant au-dessus du plafond de toute la série.</figcaption>
+    </figure>
+    </div>
+
+    <aside class="slide-side">
+      <div class="callout">
+        <span class="c-lab">Aucun être humain n'a jamais respiré cet air</span>
+        <p>Les plus anciens fossiles de notre espèce ont environ <b>315 000 ans</b>. Pendant tout ce temps, le CO₂ n'a jamais dépassé 300 parties par million : nous en sommes aujourd'hui à 427. Ce n'est pas une figure de style, c'est la série ci-contre. Tout ce que nous appelons histoire humaine s'est déroulé dans la partie droite du graphique, là où la ligne est plate.</p>
+      </div>
+      <div class="callout">
+        <span class="c-lab">Plus on remonte, moins on mesure</span>
+        <p>La glace remonte à huit cent mille ans : au-delà, l'air ancien n'existe plus et l'on passe aux indicateurs indirects, dont les incertitudes sont bien plus larges. Le GIEC affirme que le CO₂ d'aujourd'hui est le plus élevé <b>depuis au moins deux millions d'années</b> ; une synthèse de 2023 sur tout le Cénozoïque situe la dernière fois à ce niveau il y a <b>quatorze millions d'années</b> environ. Trois règles différentes, trois réponses : celle qui est mesurée est la première.</p>
+      </div>
+    </aside>
+
+    <details class="more"><summary>Pour aller plus loin : à quoi ressemblait le monde la dernière fois avec ce CO₂</summary>
+    <div class="t-wrap">
+      <table>
+        <caption>Périodes de référence du paléoclimat, valeurs du GIEC AR6 par rapport à 1850–1900</caption>
+        <thead><tr><th>Période</th><th class="num">CO₂ ppm</th><th class="num">Température</th><th class="num">Niveau de la mer</th></tr></thead>
+        <tbody>
+          <tr class="total"><td>Aujourd'hui</td><td class="num">427</td><td class="num">+1,3 °C</td><td class="num">référence</td></tr>
+          <tr><td>Dernier maximum glaciaire · il y a 20 mille ans</td><td class="num">≈190</td><td class="num">−5 à −7 °C</td><td class="num">−120 m</td></tr>
+          <tr><td>Dernier interglaciaire · il y a 125 mille ans</td><td class="num">≈280</td><td class="num">+0,5 à +1,5 °C</td><td class="num">+5 à +10 m</td></tr>
+          <tr><td>Pliocène chaud · il y a 3,3 millions d'années</td><td class="num">360–420</td><td class="num">+2,5 à +4 °C</td><td class="num">+5 à +25 m</td></tr>
+          <tr><td>Optimum du Miocène · il y a 15 millions d'années</td><td class="num">≈480</td><td class="num">+5 à +10 °C</td><td class="num">—</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="prose">
+      <h3>Le Pliocène n'est pas une prévision</h3>
+      <p>C'est la ligne qui compte, parce que le CO₂ d'alors est celui d'aujourd'hui : entre 360 et 420 ppm, sur une longue période. Le monde qui en résultait était plus chaud de 2,5 à 4 °C et la mer y était de 5 à 25 mètres plus haut. <b>Mais ces valeurs sont des états d'équilibre, atteints en millénaires.</b> Les calottes du Groenland et de l'Antarctique mettent des milliers d'années à répondre, et le Pliocène dit où finit la planète si le CO₂ reste là, pas ce qui se passe en 2100. Les projections pour ce siècle sont autre chose et donnent des dizaines de centimètres, pas des dizaines de mètres.</p>
+
+      <h3>Pourquoi les glaciations ne sont pas une objection</h3>
+      <p>« Le CO₂ a déjà changé tout seul par le passé » : c'est vrai, et cela se voit très bien sur le graphique. Mais ces cycles partent de variations de l'orbite terrestre, qui à elles seules déplacent peu d'énergie : c'est le CO₂ libéré par des océans qui se réchauffaient qui les amplifie jusqu'à faire une glaciation. La différence avec aujourd'hui, c'est la cause et la vitesse : ces transitions ont ajouté 100 ppm en dix mille ans environ, nous en avons ajouté 140 en deux cents ans.</p>
+
+      <h3>Trois règles, trois réponses</h3>
+      <p>Les carottes de glace sont des mesures directes de l'air et remontent à huit cent mille ans. Pour aller au-delà, il faut des indicateurs indirects, comme le bore dans les coquilles des foraminifères : le GIEC, en 2021, en conclut que le CO₂ actuel est le plus élevé depuis au moins deux millions d'années. La synthèse du Cénozoïque publiée dans Science en 2023 a révisé la reconstruction des 66 derniers millions d'années et situe la dernière période où le CO₂ s'est durablement maintenu à ces niveaux il y a environ quatorze millions d'années. Le chiffre que l'on entend souvent, « trois millions d'années », vient de reconstructions antérieures.</p>
+    </div>
+    </details>
+  </section>
+
+  <!-- ============ 1b. ULTIMI ANNI ============ -->
+  <section id="recenti" class="slide">
+    <div class="sec-head"><span class="sec-unit">ppm / an</span><h2>Les dix dernières années, de près</h2></div>
+    <p class="standfirst">Sur la courbe longue, une année isolée ne se distingue pas. Ici, si : et l'on voit que les années où le CO₂ a le plus monté, 2016, 2023 et 2024, sont les années où la planète a été la plus chaude.</p>
+
+    <div class="slide-main">
+    <figure>
+      <div class="fig-head">
+        <p class="fig-title">Les années chaudes sont celles où il monte le plus</p><span class="tag tag-obs">mesuré</span>
+        <p class="fig-sub">Les dix dernières années, trois panneaux sur le même axe du temps. <span class="fs-more">En haut : moyennes mensuelles de Mauna Loa (trait fin), la montée de fond une fois ôtée la respiration saisonnière des plantes (trait épais) et les moyennes annuelles (points). Au milieu : de combien le CO₂ a augmenté chaque année, du 1<sup>er</sup> janvier au 31 décembre ; les barres pleines sont les années au-dessus de la moyenne. En bas : la température mondiale de la même année.</span></p>
+      </div>
+      <div class="fig-body">
+        <div class="scroller">
+          <svg id="recente" viewBox="0 0 880 496" role="img" aria-label="Trois panneaux alignés sur les années 2016 à 2026. En haut : la concentration mensuelle à Mauna Loa monte de 402 à environ 430 ppm, avec l'oscillation saisonnière bien visible. Au milieu : les barres de la croissance annuelle, autour de 2 ou 3 ppm par an, avec 2016, 2023 et 2024 au-dessus de 3 ppm et 2025 à 2,23 ; la moyenne de la décennie est de 2,56. En bas : l'anomalie de la température mondiale, de 1,17 degré en 2016 à 1,42 en 2024 et 1,29 en 2025, avec les maximums les mêmes années que celles où le CO2 a le plus augmenté."></svg>
+        </div>
+      </div>
+      <figcaption><b>Les années où le CO₂ croît le plus sont les années chaudes : 2016, 2023, 2024.</b> Ce n'est pas la température qui produit le CO₂ supplémentaire : c'est El Niño, le réchauffement périodique du Pacifique, qui réchauffe la planète et assèche en même temps les tropiques, de sorte que la végétation absorbe moins. El Niño terminé, la croissance est retombée à 2,2 ppm en 2025.</figcaption>
+    </figure>
+    </div>
+
+    <aside class="slide-side">
+    <div class="callout">
+      <span class="c-lab">Pourquoi deux chiffres différents pour la même année</span>
+      <p>« Hausse de 2,23 ppm », c'est le taux NOAA : de combien monte la courbe de fond entre le 1<sup>er</sup> janvier et le 31 décembre. La différence entre la moyenne d'une année et celle de la précédente donne un chiffre un peu différent (en 2024 : 3,53 contre 3,33), parce qu'une moyenne annuelle contient la moitié de l'année d'avant. Cette page utilise toujours le taux NOAA.</p>
+    </div>
+    </aside>
+  </section>
+
+  <!-- ============ 2. QUANTO SCALDA ============ -->
+  <section id="caldo" class="slide">
+    <div class="sec-head"><span class="sec-unit">°C</span><h2>Et alors ? Que font ces ppm</h2></div>
+    <p class="standfirst">Jusqu'ici nous avons compté des molécules. Plus de CO₂ dans l'air, c'est moins de chaleur qui parvient à sortir vers l'espace : voici le même graphique que tout à l'heure, mesuré en degrés.</p>
+
+    <div class="slide-main">
+    <figure>
+      <div class="fig-head">
+        <p class="fig-title">La planète s'est déjà réchauffée d'environ 1,3 degré</p><span class="tag tag-obs">mesuré</span>
+        <p class="fig-sub">De combien chaque année a été plus chaude que la moyenne 1850–1900, terres et océans réunis (NOAAGlobalTemp). <span class="fs-more">C'est la même base que celle à laquelle se réfère l'objectif de 1,5 °C.</span></p>
+      </div>
+      <div class="fig-body">
+        <div class="scroller">
+          <svg id="temp" viewBox="0 0 880 342" role="img" aria-label="Anomalie de la température moyenne mondiale de 1850 à 2025 par rapport à la moyenne 1850-1900 : elle oscille autour de zéro jusqu'aux années soixante-dix, puis monte jusqu'à 1,42 degré en 2024 et redescend à 1,29 en 2025. Le seuil de 1,5 degré est marqué par une ligne pointillée un peu au-dessus."></svg>
+        </div>
+      </div>
+      <figcaption><span class="d-only"><b>Une année au-dessus de 1,5 °C, ce n'est pas le seuil franchi.</b> La limite se juge sur le réchauffement de fond, c'est-à-dire sur une moyenne de plusieurs années : ici celle des dix dernières, aujourd'hui 1,18 °C. L'Accord de Paris ne prescrit pas combien d'années, et le GIEC en prend vingt. Une seule année chaude peut être poussée par El Niño, comme 2024 ; une année plus fraîche ne ramène rien en arrière, comme 2025 : c'est le même reflux post-El Niño que l'on voit dans le CO₂, et la tendance de fond n'a pas changé. Le budget dans l'encadré des données, c'est ce que nous pouvons encore émettre pour avoir une probabilité de 50 % de rester sous 1,5 °C : 170 GtCO₂ à partir du début de 2026, moins les mois déjà écoulés.</span><span class="m-only"><b>2025 est plus frais que 2024, et ce n'est pas une bonne nouvelle.</b> C'est le même reflux post-El Niño que l'on voit dans le CO₂ : la tendance de fond n'a pas changé.</span></figcaption>
+    </figure>
+    </div>
+
+    <aside class="slide-side">
+    <!-- sul telefono la didascalia resta corta e il limite di Parigi torna in un riquadro suo;
+         sul desktop lo stesso testo sta nella didascalia (lo span d-only qui sopra) -->
+    <div class="callout m-only">
+      <span class="c-lab">Une année au-dessus de 1,5 °C, ce n'est pas le seuil franchi</span>
+      <p>La limite se juge sur le réchauffement de fond, c'est-à-dire sur une moyenne de plusieurs années : ici celle des dix dernières, aujourd'hui 1,18 °C. L'Accord de Paris ne prescrit pas combien d'années, et le GIEC en prend vingt. Une seule année chaude peut être poussée par El Niño, comme 2024 ; une année plus fraîche ne ramène rien en arrière, comme 2025. Le budget dans l'encadré des données, c'est ce que nous pouvons encore émettre pour avoir une probabilité de 50 % de rester sous 1,5 °C : 170 GtCO₂ à partir du début de 2026, moins les mois déjà écoulés.</p>
+    </div>
+    <div class="live" id="live-t" data-state="baked">
+      <div class="live-grid">
+        <div class="live-cell">
+          <span class="live-k">Dernière année</span>
+          <span class="live-v"><b id="lt-last">+1,29</b> °C</span>
+          <span class="live-y">au-dessus du préindustriel · <span id="lt-year">2025</span></span>
+        </div>
+        <div class="live-cell">
+          <span class="live-k">Moyenne de la dernière décennie</span>
+          <span class="live-v"><b id="lt-dec">+1,18</b> °C</span>
+          <span class="live-y">le chiffre auquel se réfère la limite de 1,5 °C</span>
+        </div>
+        <div class="live-cell">
+          <span class="live-k">Budget pour 1,5 °C · estimation</span>
+          <span class="live-v"><b id="lt-bud">140</b> GtCO₂</span>
+          <span class="live-y">pour 50 % de probabilité de rester dessous : <span id="lt-yrs">3,3</span> ans au rythme actuel, pas une date</span>
+        </div>
+      </div>
+      <p class="live-note" id="lt-note">Valeurs enregistrées le 12 septembre 2026.</p>
+      <p class="live-legend"><span class="lg-intro">La pastille dit d'où viennent les chiffres : </span><span class="lg lg-live">lus à l'instant à la source</span> · <span class="lg lg-partial">en partie</span> · <span class="lg lg-baked">valeurs enregistrées dans la page</span></p>
+    </div>
+    </aside>
+
+    <details class="more"><summary>Pour aller plus loin : les thermomètres ne sont pas d'accord, et il n'y a pas que le CO₂</summary>
+    <div class="prose">
+
+      <h3>Un dixième de degré de désaccord entre les thermomètres</h3>
+      <p>Cette page utilise NOAAGlobalTemp. D'autres séries de référence — ERA5 de Copernicus, HadCRUT du Met Office, Berkeley Earth — donnent pour 2024 des valeurs entre 1,5 et 1,6 °C (ERA5 : 1,60 ; la synthèse de l'Organisation météorologique mondiale : 1,55). La série NOAA elle-même, dans sa version précédente, donnait 1,46 : la révision de 2025 a abaissé les valeurs récentes de quelques centièmes. L'écart tient à la façon dont chacune couvre les zones sans stations, l'Arctique surtout, et dont elle estime la période préindustrielle, pour laquelle les mesures sont rares. Quand on lit « nous avons dépassé 1,5 °C », il vaut la peine de demander avec quelle règle.</p>
+
+
+      <h3>Et il n'y a pas que le dioxyde de carbone</h3>
+      <div class="gases">
+        <div class="gas">
+          <span class="gas-n">CO₂</span>
+          <span class="gas-v"><b id="g-co2">425,6</b> ppm</span>
+          <span class="gas-d">moyenne mondiale NOAA, +52 % au-dessus du préindustriel ; Mauna Loa, plus au nord, affiche un peu plus</span>
+        </div>
+        <div class="gas">
+          <span class="gas-n">Méthane · CH₄</span>
+          <span class="gas-v"><b id="g-ch4">1936</b> ppb</span>
+          <span class="gas-d">ppb = parties par milliard · +168 % au-dessus du préindustriel (722)</span>
+        </div>
+        <div class="gas">
+          <span class="gas-n">Protoxyde d'azote · N₂O</span>
+          <span class="gas-v"><b id="g-n2o">338,9</b> ppb</span>
+          <span class="gas-d">+26 % au-dessus du préindustriel (270)</span>
+        </div>
+      </div>
+      <p>Le méthane est bien plus rare mais, molécule pour molécule, il retient beaucoup plus de chaleur que le CO₂ à court terme ; en revanche il se dégrade en une dizaine d'années, alors qu'une fraction du CO₂ reste des siècles. C'est pourquoi réduire le méthane fait effet vite et réduire le CO₂ fait effet pour toujours : il faut les deux, et ils ne sont pas interchangeables.</p>
+    </div>
+    </details>
+  </section>
+
+  <!-- ============ 1c. LO SQUILIBRIO ENERGETICO ============ -->
+  <section id="energia" class="slide">
+    <div class="sec-head"><span class="sec-unit">W / m²</span><h2>Pourquoi cela se réchauffe : le compte de l'énergie</h2></div>
+    <p class="standfirst">Sous les degrés, il y a un compte plus simple : combien d'énergie arrive du Soleil, combien en repart vers l'espace sous forme d'infrarouge. Les gaz à effet de serre rendent la sortie plus difficile, le compte s'ouvre, et la planète accumule — presque tout en mer — jusqu'à ce qu'il s'équilibre de nouveau.</p>
+
+    <div class="slide-main">
+    <figure>
+      <div class="fig-head">
+        <p class="fig-title">Sur 240 watts absorbés, un peu plus d'un seul reste à l'intérieur</p><span class="tag tag-obs">mesuré et estimé</span>
+        <p class="fig-sub">Flux moyens au sommet de l'atmosphère, en watts par mètre carré de surface terrestre. <span class="fs-more">En haut, les flux du GIEC AR6 (figure 7.2, conditions de début de siècle) ; en bas, le déséquilibre agrandi et réparti par destination : 1,12 W/m² en moyenne entre 2013 et 2025, répartition 1971–2020.</span></p>
+      </div>
+      <div class="fig-body">
+        <div class="scroller">
+          <svg id="squilibrio" viewBox="0 0 880 350" role="img" aria-label="Des 340 watts par mètre carré qui arrivent du Soleil, 100 sont réfléchis et 240 absorbés ; de ceux-ci, 239 repartent vers l'espace sous forme d'infrarouge et un peu plus d'un seul reste à l'intérieur. Ce peu plus d'un, agrandi, se répartit en 89 pour cent à l'océan, 6 aux terres émergées, 4 aux glaces et 1 à l'atmosphère."></svg>
+        </div>
+      </div>
+      <figcaption><span class="d-only"><b>Le déséquilibre ne se mesure pas en soustrayant 239 de 240.</b> Chacun des deux flux, pris isolément, n'est connu qu'à quelques watts par mètre carré près : une différence qui vaut un disparaîtrait dans cette incertitude. Il se mesure par l'autre bout, en comptant la chaleur qui s'accumule — et comme elle s'accumule presque toute en mer, le thermomètre le plus fiable du réchauffement mondial est un flotteur dans le Pacifique, pas un thermomètre de jardin. Le trait rouge est à l'échelle.</span><span class="m-only"><b>Le trait rouge est à l'échelle.</b> Le déséquilibre représente vraiment cette fraction des flux : un peu plus d'un watt sur deux cent quarante. Et il ne se mesure pas en soustrayant les deux flux, connus à quelques watts près : il se mesure en comptant la chaleur qui s'accumule, presque toute dans l'océan.</span></figcaption>
+    </figure>
+    </div>
+
+    <aside class="slide-side">
+    <div class="callout">
+      <span class="c-lab">Pourquoi l'eau et pas l'air</span>
+      <p>Toute l'atmosphère de la planète a la capacité thermique de <b>trois mètres et demi d'eau de mer</b>, et l'océan est profond de près de quatre mille mètres : à degrés égaux, il encaisse mille fois plus de chaleur. C'est pour cela que la chaleur finit là, et pas dans l'air.</p>
+    </div>
+    <div class="live" id="live-o" data-state="baked">
+      <div class="live-grid">
+        <div class="live-cell">
+          <span class="live-k">Chaleur en plus dans les océans</span>
+          <span class="live-v"><b id="lo-zj">+325</b> ZJ</span>
+          <span class="live-y">2000 premiers mètres, au-dessus de la moyenne 1955–2006 · <span id="lo-yr">2025</span>. 1 ZJ = 10²¹ joules</span>
+        </div>
+        <div class="live-cell">
+          <span class="live-k">Combien il en entre chaque année</span>
+          <span class="live-v"><b id="lo-rate">11</b> ZJ</span>
+          <span class="live-y">moyenne depuis 2005 : dix-sept fois l'énergie que le monde consomme en un an</span>
+        </div>
+        <div class="live-cell">
+          <span class="live-k">De combien cette eau se réchauffe</span>
+          <span class="live-v"><b id="lo-dt">+0,12</b> °C</span>
+          <span class="live-y">les 2000 premiers mètres depuis 1971 : c'est là qu'a fini presque toute la chaleur</span>
+        </div>
+      </div>
+      <p class="live-note" id="lo-note">Valeurs enregistrées le 15 septembre 2026.</p>
+      <p class="live-legend"><span class="lg-intro">La pastille dit d'où viennent les chiffres : </span><span class="lg lg-live">lus à l'instant à la source</span> · <span class="lg lg-partial">en partie</span> · <span class="lg lg-baked">valeurs enregistrées dans la page</span></p>
+    </div>
+    </aside>
+
+    <details class="more"><summary>Pour aller plus loin : comment un gaz retient la chaleur, et où va l'énergie</summary>
+    <div class="prose">
+
+      <h3>Comment un gaz retient la chaleur</h3>
+      <p>La surface de la Terre émet en moyenne 398 watts par mètre carré de rayonnement infrarouge. Il n'en parvient que 239 jusqu'à l'espace : les 159 de différence sont l'effet de serre, et ce sont eux qui maintiennent la surface à environ 15 °C au lieu des −18 °C qu'aurait une planète nue réémettant les 240 watts qu'elle absorbe. Les gaz à effet de serre ne réfléchissent pas la chaleur comme un miroir : ils l'absorbent et la réémettent dans toutes les directions, vers le bas aussi, et ils le font depuis des altitudes de plus en plus hautes à mesure que leur concentration augmente.</p>
+      <p>C'est cela, le mécanisme, et il est plus subtil qu'on ne le raconte d'habitude. Plus haut il fait plus froid, et un corps plus froid rayonne moins : ajouter du CO₂ signifie que l'infrarouge qui part réellement vers l'espace provient de couches plus froides, et qu'il en part donc moins. Le compte s'ouvre. Dès lors la planète — surface, atmosphère, océan — se réchauffe jusqu'à ce que l'infrarouge sortant égale de nouveau la lumière solaire absorbée. Le déséquilibre mesure ce qui manque à cet équilibre : <b>c'est la part de réchauffement déjà décidée et pas encore survenue</b>.</p>
+
+      <h3>Pourquoi le thermomètre de l'air ne mesure que la pointe</h3>
+      <p>Entre 1971 et 2020, le système Terre a accumulé <b>381 ZJ</b> de chaleur, à 61 près. L'atmosphère en a pris 5 : très peu, et cela a suffi à réchauffer l'air d'environ un degré, parce que l'air n'a presque pas de capacité thermique. L'océan en a pris environ 341, près de soixante-dix fois plus, et il s'est réchauffé très peu : dans les deux mille premiers mètres, là où les mesures sont denses, d'un peu plus d'un dixième de degré. C'est le même phénomène lu sur deux instruments aux sensibilités radicalement différentes : <b>le grand nombre est en mer, le nombre visible est dans l'air</b>.</p>
+      <div class="t-wrap">
+        <table>
+          <caption>Où a fini la chaleur accumulée entre 1971 et 2020 (von Schuckmann et al. 2023)</caption>
+          <thead><tr><th>Destination</th><th class="num">ZJ</th><th class="num">Part</th></tr></thead>
+          <tbody>
+            <tr><td><span class="dot" style="background:var(--ocean)"></span>Océan, toutes profondeurs</td><td class="num">≈341</td><td class="num">89%</td></tr>
+            <tr><td><span class="dot" style="background:var(--land)"></span>Terres émergées</td><td class="num">21 ± 2</td><td class="num">6%</td></tr>
+            <tr><td><span class="dot" style="background:var(--bim)"></span>Glaces qui fondent</td><td class="num">14 ± 4</td><td class="num">4%</td></tr>
+            <tr><td><span class="dot" style="background:var(--heat)"></span>Atmosphère</td><td class="num">5 ± 1</td><td class="num">1%</td></tr>
+            <tr class="total"><td>Total</td><td class="num">381 ± 61</td><td class="num">100%</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>La ligne de l'océan est obtenue par différence : l'étude publie le total et les trois postes mineurs. Le GIEC AR6, sur la période 1971–2018 et avec une méthode un peu différente, donne 91 % à l'océan, 5 % aux terres, 3 % aux glaces et 1 % à l'atmosphère : les deux répartitions disent la même chose.</p>
+
+      <h3>Si tout avait fini dans l'air</h3>
+      <p>Un calcul, pas un scénario. L'atmosphère pèse 5,15·10¹⁸ kg et sa chaleur massique est d'environ 1005 joules par kilogramme et par degré : en tout 5,2·10²¹ joules par degré, soit 5,2 ZJ. Les 381 ZJ accumulés depuis 1971, s'ils n'étaient allés que là, l'auraient réchauffée de <b>plus de soixante-dix degrés</b>. Ce n'est pas arrivé, et cela ne pouvait pas arriver — un air aussi chaud rayonnerait bien davantage et le bilan se refermerait tout seul — mais cela donne la mesure de ce que les océans absorbent à notre place, et de ce que risque quiconque juge le réchauffement à la seule température de l'air.</p>
+      <p>Le même calcul pour l'eau : un mètre carré d'océan sur un mètre de profondeur, ce sont 1027 kg d'eau à 3990 joules par kilogramme et par degré, et la surface des océans est de 3,62·10¹⁴ m². Il s'ensuit qu'un seul mètre d'océan vaut 1,5 ZJ par degré, et que toute l'atmosphère équivaut à trois mètres et demi d'eau.</p>
+
+      <h3>Le déséquilibre augmente</h3>
+      <div class="t-wrap">
+        <table>
+          <caption>Déséquilibre énergétique de la Terre, en watts par mètre carré (Forster et al., Indicators of Global Climate Change 2025)</caption>
+          <thead><tr><th>Période</th><th class="num">W/m²</th><th class="num">Intervalle à 90 %</th></tr></thead>
+          <tbody>
+            <tr><td>1976–1995</td><td class="num">0,40</td><td class="num">−0,03 à 0,84</td></tr>
+            <tr><td>2006–2025</td><td class="num">1,04</td><td class="num">0,82 à 1,25</td></tr>
+            <tr><td>2013–2025</td><td class="num">1,12</td><td class="num">0,78 à 1,46</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Plus que doublé en trente ans. Pourquoi, cela se discute encore : l'augmentation des gaz à effet de serre y est pour quelque chose, mais aussi la baisse des aérosols — les poussières qui salissaient l'air et réfléchissaient un peu de lumière solaire — et un recul des nuages bas qui, ces dernières années, a fait absorber plus de Soleil. Le saut de 2023 et 2024 est encore à l'étude.</p>
+      <p>Une remarque qui mérite d'être lue deux fois : c'est la grandeur que l'Accord de Paris ne nomme pas. On négocie sur les degrés, qui sont un effet retardé et bruyant ; le déséquilibre est la cause, il bouge plus tôt et fait moins de bruit. Les auteurs de l'étude de 2023 demandent depuis des années qu'il entre dans le bilan mondial de l'Accord.</p>
+    </div>
+    </details>
+  </section>
+
+  <!-- ============ 2. IL BILANCIO ============ -->
+  <section id="bilancio" class="slide">
+    <div class="sec-head"><span class="sec-unit">GtCO₂ / an</span><h2>Où va ce que nous émettons</h2></div>
+    <p class="standfirst">Le bilan mondial du carbone a deux côtés. À gauche ce que nous injectons, à droite les trois destinations possibles. Seule la troisième se voit dans la courbe.</p>
+
+    <div class="slide-main">
+    <figure>
+      <div class="fig-head">
+        <p class="fig-title">La moitié de ce que nous émettons disparaît dans l'océan et la végétation</p><span class="tag tag-obs">mesuré et estimé</span>
+        <p class="fig-sub">Bilan mondial du carbone, moyenne annuelle 2015–2024, en milliards de tonnes de CO₂. <span class="fs-more">Fossiles déduction faite de la petite part que le ciment réabsorbe. 1 ppm = 7,78 GtCO₂.</span></p>
+      </div>
+      <div class="fig-body">
+        <div class="scroller">
+          <svg id="budget" viewBox="0 0 880 340" role="img" aria-label="Diagramme de flux : les 40,9 GtCO2 émises chaque année se répartissent en 11,8 absorbées par l'océan, 8,7 par la végétation et 20,4 qui restent dans l'atmosphère."></svg>
+        </div>
+      </div>
+      <figcaption><b>Les moustaches sous les blocs sont l'incertitude.</b> Le puits terrestre vaut 8,7 GtCO₂ mais n'est connu qu'à ±2,9 près, soit un tiers ; l'océan, nous le connaissons deux fois mieux. Sur la moyenne de la décennie le bilan boucle ; sur une année isolée non, et 2024 en est le cas le plus voyant.</figcaption>
+    </figure>
+    </div>
+
+    <aside class="slide-side">
+    <div class="callout">
+      <span class="c-lab">Le point de cette page</span>
+      <p>Si les puits cessaient de fonctionner demain, à émissions égales la concentration monterait de <b>5,3 ppm par an</b> au lieu de 2,6. La moitié du problème est déjà aujourd'hui passée sous le tapis par les océans et les forêts. Par personne, cela fait environ <b>5 tonnes par an</b>, le poids de trois automobiles.</p>
+    </div>
+    </aside>
+
+    <details class="more"><summary>Le bilan en chiffres, moyenne 2015–2024</summary>
+    <div class="t-wrap">
+      <table>
+        <caption>Global Carbon Budget 2025, moyennes 2015–2024 converties en GtCO₂</caption>
+        <thead><tr><th>Poste</th><th class="num">GtCO₂/an</th><th class="num">ppm équiv.</th><th class="num">Part</th></tr></thead>
+        <tbody>
+          <tr><td><span class="dot" style="background:var(--source)"></span>Fossiles et ciment (net)</td><td class="num">35,9</td><td class="num">4,61</td><td class="num">88%</td></tr>
+          <tr><td><span class="dot" style="background:var(--source);opacity:.5"></span>Usage des sols</td><td class="num">5,0</td><td class="num">0,64</td><td class="num">12%</td></tr>
+          <tr class="total"><td>Total émis</td><td class="num">40,9</td><td class="num">5,26</td><td class="num">100%</td></tr>
+          <tr><td><span class="dot" style="background:var(--ocean)"></span>Puits océanique</td><td class="num">11,8</td><td class="num">1,52</td><td class="num">29%</td></tr>
+          <tr><td><span class="dot" style="background:var(--land)"></span>Puits terrestre</td><td class="num">8,7</td><td class="num">1,12</td><td class="num">21%</td></tr>
+          <tr class="total"><td>Total absorbé</td><td class="num">20,5</td><td class="num">2,63</td><td class="num">50%</td></tr>
+          <tr class="total"><td><span class="dot" style="background:var(--atmos)"></span>Reste dans l'atmosphère</td><td class="num">20,4</td><td class="num">2,62</td><td class="num">50%</td></tr>
+          <tr><td>Déséquilibre (moyenne de la décennie)</td><td class="num">≈0</td><td class="num">—</td><td class="num">—</td></tr>
+        </tbody>
+      </table>
+    </div>
+    </details>
+  </section>
+
+  <!-- ============ 3b. SENZA POZZI ============ -->
+  <section id="senzapozzi" class="slide">
+    <div class="sec-head"><span class="sec-unit">ppm</span><h2>Le travail que les puits ont déjà fait</h2></div>
+    <p class="standfirst">Une façon de voir ce que valent l'océan et la végétation : dessiner où serait la courbe s'ils n'avaient rien absorbé.</p>
+    <div class="slide-main">
+    <figure>
+      <div class="fig-head">
+        <p class="fig-title">Sans les puits nous serions à 574 ppm, pas à 427</p><span class="tag tag-est">estimation</span>
+        <p class="fig-sub">La courbe en pointillés ajoute à la valeur de 1959 toutes les émissions cumulées depuis. <span class="fs-more">L'écart entre les deux lignes, c'est le CO₂ que les océans et la végétation ont retiré de l'air, gratuitement, en soixante-six ans.</span></p>
+      </div>
+      <div class="fig-body">
+        <ul class="legend">
+          <li><span class="sw sw-source"></span>Mesuré à Mauna Loa</li>
+          <li><span class="sw sw-cf"></span>Si aucun puits n'avait absorbé</li>
+          <li><span class="sw sw-gap"></span>Ce que les puits ont retiré</li>
+        </ul>
+        <div class="scroller">
+          <svg id="controfattuale" viewBox="0 0 880 320" role="img" aria-label="Comparaison entre la concentration mesurée, qui atteint 427 ppm en 2025, et celle que l'on aurait eue sans aucune absorption par les océans et la végétation, qui atteindrait 574 ppm. L'écart entre les deux courbes croît avec le temps."></svg>
+        </div>
+      </div>
+      <figcaption><b>147 ppm d'écart.</b> C'est plus que la hausse de la concentration sur toute la période observée. Autrement dit : des quelque 258 ppm que nous avons injectés depuis 1959, nous n'en voyons que 111 dans l'air — le reste est dans l'océan et la végétation. Le calcul suppose que toutes les émissions soient restées dans l'atmosphère ; c'est une comparaison comptable, pas une simulation du climat qui en aurait découlé.</figcaption>
+    </figure>
+    </div>
+
+    <aside class="slide-side">
+    <div class="callout">
+      <span class="c-lab">Le service gratuit, à tarif croissant</span>
+      <p>Jusqu'ici les puits ont absorbé <em>davantage</em> à mesure que nous émettions davantage : plus de CO₂ dans l'air, c'est plus de pression qui pousse le gaz dans l'océan et plus de fertilisation de la végétation. Mais le Global Carbon Budget 2025 estime que le réchauffement a <b>déjà</b> affaibli le puits terrestre de 25 % et le puits océanique de 7 % par rapport à un monde qui ne se serait pas réchauffé.</p>
+    </div>
+    </aside>
+  </section>
+
+  <!-- ============ 3. I POZZI ============ -->
+  <section id="pozzi" class="slide">
+    <div class="sec-head"><span class="sec-unit">ppm / an</span><h2>Pourquoi 2024 dépend d'où l'on regarde</h2></div>
+    <p class="standfirst">En 2024 les émissions ont augmenté d'environ 1 %. À Mauna Loa, le CO₂ a monté autant que l'année précédente ; dans la moyenne mondiale, il a fait le plus grand bond depuis que la série existe, 1980. Ce n'est pas une contradiction : ce sont deux instruments différents, et une seule année ne suffit pas pour juger.</p>
+
+    <div class="slide-main">
+    <figure>
+      <div class="fig-head">
+        <p class="fig-title">La même année, mesurée de deux façons</p><span class="tag tag-obs">mesuré</span>
+        <p class="fig-sub">Taux de croissance annuel du CO₂. <span class="fs-more">Mauna Loa est un observatoire unique dans le Pacifique ; la moyenne mondiale est calculée sur des stations éloignées des villes et des industries, combinées de sorte que chaque bande de la planète pèse autant que sa surface.</span></p>
+      </div>
+      <div class="fig-body">
+        <ul class="legend">
+          <li><span class="sw sw-mlo"></span>Mauna Loa</li>
+          <li><span class="sw sw-glob"></span>Moyenne mondiale</li>
+        </ul>
+        <div class="scroller">
+          <svg id="duescale" viewBox="0 0 880 290" role="img" aria-label="Comparaison entre le taux de croissance du CO2 à Mauna Loa et dans la moyenne mondiale de 2021 à 2025. En 2023, Mauna Loa affiche 3,32 contre 2,70 pour la moyenne mondiale ; en 2024 les deux s'inversent, 3,33 contre 3,76 ; en 2025 les deux baissent, 2,23 et 2,06."></svg>
+        </div>
+      </div>
+      <figcaption><b>En 2023 Mauna Loa allait plus vite que la planète, en 2024 c'est l'inverse.</b> Un observatoire unique dépend de la façon dont les vents lui amènent l'air : excellent pour voir la tendance longue, moins pour juger une année isolée. Quand on cite « 2024 a fait X ppm », il faut dire laquelle des deux mesures on emploie.</figcaption>
+    </figure>
+    </div>
+
+    <aside class="slide-side">
+    <div class="callout">
+      <span class="c-lab">Pourquoi ne pas se fier à une seule année</span>
+      <p><b>2023 et 2024 ont été exceptionnelles pour une raison qui ne tient pas à nos émissions :</b> El Niño a asséché les tropiques et alimenté des incendies records, et la végétation a moins absorbé. Le puits terrestre a retenu 7,4 GtCO₂ en 2023 et 7,1 en 2024, contre une moyenne décennale de 8,7. L'océan, bien plus stable, a continué à faire son travail.</p>
+    </div>
+    </aside>
+
+    <details class="more"><summary>Pour aller plus loin : le 2024 qui ne boucle pas, et comment cela s'est terminé en 2025</summary>
+    <div class="prose one">
+      <p>Pour 2024 le bilan ne boucle pas : en additionnant ce qui a fini dans l'air, en mer et dans la végétation, on obtient plus que ce qui figure comme émis, avec un écart de 6 GtCO₂, le plus négatif de la série. Le Global Carbon Project le publie comme un poste à part. En 2025 la croissance est redescendue à 2,23 ppm à Mauna Loa et 2,06 dans la moyenne mondiale, et l'estimation préliminaire du Global Carbon Budget indique que le puits terrestre a retrouvé sa force d'avant. L'anomalie était une oscillation, pas une rupture : bâtir une thèse sur la seule année 2024 serait imprudent dans les deux sens.</p>
+    </div>
+    </details>
+  </section>
+
+  <!-- ============ 4. CHI EMETTE ============ -->
+  <section id="chi">
+    <div class="sec-head"><span class="sec-unit">GtCO₂ · t/personne · %</span><h2>Qui émet, en trois lectures différentes</h2></div>
+    <p class="standfirst">Ce sont trois questions distinctes et elles donnent trois réponses distinctes. Les trois sont nécessaires : qui émet le plus aujourd'hui, qui émet le plus par habitant, et qui a rempli la baignoire.</p>
+
+    <figure>
+      <div class="fig-head">
+        <p class="fig-title">Un tiers des émissions vient de la Chine. Par habitant et en cumulé, le classement change</p><span class="tag tag-obs">mesuré</span>
+        <p class="fig-sub">Émissions des fossiles et du ciment, hors usage des sols (Global Carbon Budget 2025 via Our World in Data). <span class="fs-more">Chaque panneau a sa propre échelle : comparez les positions, pas les longueurs d'un panneau à l'autre.</span></p>
+      </div>
+      <div class="fig-body">
+        <div class="panels">
+          <div class="panel p-share">
+            <h3>En 2024</h3>
+            <p class="p-note">milliards de tonnes de CO₂ et part du total mondial</p>
+            <div class="bars">
+              <div class="bar-row is-source"><span class="bar-lab">Chine</span><div class="bar-track"><div class="bar-fill" style="--w:100%"></div></div><span class="bar-val">12,29<small>31,8 %</small></span></div>
+              <div class="bar-row is-source"><span class="bar-lab">États-Unis</span><div class="bar-track"><div class="bar-fill" style="--w:39.9%"></div></div><span class="bar-val">4,90<small>12,7 %</small></span></div>
+              <div class="bar-row is-source"><span class="bar-lab">Inde</span><div class="bar-track"><div class="bar-fill" style="--w:26.0%"></div></div><span class="bar-val">3,19<small>8,3 %</small></span></div>
+              <div class="bar-row is-source"><span class="bar-lab">UE 27</span><div class="bar-track"><div class="bar-fill" style="--w:19.8%"></div></div><span class="bar-val">2,43<small>6,3 %</small></span></div>
+              <div class="bar-row is-source"><span class="bar-lab">Russie</span><div class="bar-track"><div class="bar-fill" style="--w:14.5%"></div></div><span class="bar-val">1,78<small>4,6 %</small></span></div>
+              <div class="bar-row is-source"><span class="bar-lab">Aérien et maritime<small>international</small></span><div class="bar-track"><div class="bar-fill" style="--w:9.7%"></div></div><span class="bar-val">1,19<small>3,1 %</small></span></div>
+              <div class="bar-row is-source"><span class="bar-lab">Japon</span><div class="bar-track"><div class="bar-fill" style="--w:7.8%"></div></div><span class="bar-val">0,96<small>2,5 %</small></span></div>
+              <div class="bar-row is-me"><span class="bar-lab">Italie</span><div class="bar-track"><div class="bar-fill" style="--w:2.4%"></div></div><span class="bar-val">0,30<small>0,8 %</small></span></div>
+              <div class="bar-row is-muted"><span class="bar-lab">Reste du monde<small>environ 190 pays</small></span><div class="bar-track"><div class="bar-fill" style="--w:94.0%"></div></div><span class="bar-val">11,55<small>29,9 %</small></span></div>
+            </div>
+          </div>
+          <div class="panel">
+            <h3>Par habitant, 2024</h3>
+            <p class="p-note">tonnes de CO₂ par an et par habitant</p>
+            <div class="bars">
+              <div class="bar-row is-source"><span class="bar-lab">États-Unis</span><div class="bar-track"><div class="bar-fill" style="--w:100%"></div></div><span class="bar-val">14,2</span></div>
+              <div class="bar-row is-source"><span class="bar-lab">Russie</span><div class="bar-track"><div class="bar-fill" style="--w:86.6%"></div></div><span class="bar-val">12,3</span></div>
+              <div class="bar-row is-source"><span class="bar-lab">Chine</span><div class="bar-track"><div class="bar-fill" style="--w:61.3%"></div></div><span class="bar-val">8,7</span></div>
+              <div class="bar-row is-source"><span class="bar-lab">Japon</span><div class="bar-track"><div class="bar-fill" style="--w:54.9%"></div></div><span class="bar-val">7,8</span></div>
+              <div class="bar-row is-source"><span class="bar-lab">UE 27</span><div class="bar-track"><div class="bar-fill" style="--w:38.0%"></div></div><span class="bar-val">5,4</span></div>
+              <div class="bar-row is-me"><span class="bar-lab">Italie</span><div class="bar-track"><div class="bar-fill" style="--w:35.9%"></div></div><span class="bar-val">5,1</span></div>
+              <div class="bar-row is-source"><span class="bar-lab">Inde</span><div class="bar-track"><div class="bar-fill" style="--w:15.5%"></div></div><span class="bar-val">2,2</span></div>
+            </div>
+          </div>
+          <div class="panel">
+            <h3>Cumulé 1850–2024</h3>
+            <p class="p-note">% du carbone fossile total jamais émis</p>
+            <div class="bars">
+              <div class="bar-row is-source"><span class="bar-lab">États-Unis</span><div class="bar-track"><div class="bar-fill" style="--w:100%"></div></div><span class="bar-val">23,5%</span></div>
+              <div class="bar-row is-source"><span class="bar-lab">UE 27</span><div class="bar-track"><div class="bar-fill" style="--w:69.4%"></div></div><span class="bar-val">16,3%</span></div>
+              <div class="bar-row is-source"><span class="bar-lab">Chine</span><div class="bar-track"><div class="bar-fill" style="--w:65.5%"></div></div><span class="bar-val">15,4%</span></div>
+              <div class="bar-row is-source"><span class="bar-lab">Russie</span><div class="bar-track"><div class="bar-fill" style="--w:28.1%"></div></div><span class="bar-val">6,6%</span></div>
+              <div class="bar-row is-source"><span class="bar-lab">Inde</span><div class="bar-track"><div class="bar-fill" style="--w:15.3%"></div></div><span class="bar-val">3,6%</span></div>
+              <div class="bar-row is-me"><span class="bar-lab">Italie</span><div class="bar-track"><div class="bar-fill" style="--w:6.0%"></div></div><span class="bar-val">1,4%</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <figcaption>Total mondial <b>38,6 GtCO₂</b> en 2024 : la Chine à elle seule pèse près d'un tiers, l'Italie moins de 1 %. <b>Le cumulé est la lecture qui compte pour le climat :</b> le CO₂ émis en 1950 est encore là-haut. <b>Quel chiffre citer :</b> 38,6, ce sont les seuls fossiles d'une année ; les 40,9 de l'ouverture sont la moyenne 2015–2024 avec l'usage des sols.</figcaption>
+    </figure>
+
+    <details class="more"><summary>Pour aller plus loin : de quels combustibles et de quels usages</summary>
+    <div class="t-wrap">
+      <table>
+        <caption>D'où vient le CO₂ fossile · monde 2023 (combustibles : Global Carbon Budget ; usages finaux : estimations AIE)</caption>
+        <tfoot><tr><td colspan="4" style="color:var(--ink-3);font-size:.84rem;line-height:1.5">Les usages finaux suivent la classification de l'AIE : l'électricité est comptée là où elle est produite, pas là où elle est consommée. Avec la répartition par secteur économique employée par le GIEC, les mêmes émissions donnent d'autres pourcentages, parce que l'industrie et les bâtiments récupèrent leur part d'électricité.</td></tr></tfoot>
+        <thead><tr><th>Par combustible</th><th class="num">Part</th><th>Par usage final</th><th class="num">Part</th></tr></thead>
+        <tbody>
+          <tr><td>Charbon</td><td class="num">41%</td><td>Électricité et chaleur</td><td class="num">40%</td></tr>
+          <tr><td>Pétrole</td><td class="num">32%</td><td>Transports</td><td class="num">23%</td></tr>
+          <tr><td>Gaz naturel</td><td class="num">21%</td><td>Industrie (directe)</td><td class="num">19%</td></tr>
+          <tr><td>Ciment</td><td class="num">4%</td><td>Bâtiments</td><td class="num">9%</td></tr>
+          <tr><td>Autres, y compris le gaz brûlé en torchère</td><td class="num">2%</td><td>Autres</td><td class="num">9%</td></tr>
+        </tbody>
+      </table>
+    </div>
+    </details>
+  </section>
+
+  <!-- ============ 5. LA CRESCITA ============ -->
+  <section id="crescita" class="slide">
+    <div class="sec-head"><span class="sec-unit">variation 2000–2024</span><h2>Est-ce « seulement la Chine » ?</h2></div>
+    <p class="standfirst">Non pour le niveau, en bonne partie oui pour la croissance. Sur le total actuel, la Chine pèse un tiers. Sur la hausse des vingt-cinq dernières années, elle pèse environ deux tiers, parce qu'entre-temps l'Europe et les États-Unis ont baissé.</p>
+
+    <div class="slide-main">
+    <figure>
+      <div class="fig-head">
+        <p class="fig-title">Depuis 2000, la Chine explique deux tiers de la hausse</p><span class="tag tag-obs">mesuré</span>
+        <p class="fig-sub">De combien la contribution de chacun a changé entre 2000 et 2024, en milliards de tonnes de CO₂ par an.</p>
+      </div>
+      <div class="fig-body">
+        <ul class="legend">
+          <li><span class="sw sw-source"></span>Émissions en hausse</li>
+          <li><span class="sw sw-atmos"></span>Émissions en baisse</li>
+        </ul>
+        <div class="div-chart" style="--zero:12%">
+          <div class="div-row"><span class="bar-lab">Chine</span><div class="div-track"><div class="div-bar pos" style="--w:84.0%"></div></div><span class="bar-val">+8,6</span></div>
+          <div class="div-row"><span class="bar-lab">Reste du monde et transports internationaux</span><div class="div-track"><div class="div-bar pos" style="--w:44.0%"></div></div><span class="bar-val">+4,5</span></div>
+          <div class="div-row"><span class="bar-lab">Inde</span><div class="div-track"><div class="div-bar pos" style="--w:21.5%"></div></div><span class="bar-val">+2,2</span></div>
+          <div class="div-row"><span class="bar-lab">Russie</span><div class="div-track"><div class="div-bar pos" style="--w:2.9%"></div></div><span class="bar-val">+0,3</span></div>
+          <div class="div-row"><span class="bar-lab">Japon</span><div class="div-track"><div class="div-bar neg" style="--w:2.9%"></div></div><span class="bar-val">−0,3</span></div>
+          <div class="div-row"><span class="bar-lab">États-Unis</span><div class="div-track"><div class="div-bar neg" style="--w:10.9%"></div></div><span class="bar-val">−1,1</span></div>
+          <div class="div-row"><span class="bar-lab">Union européenne</span><div class="div-track"><div class="div-bar neg" style="--w:11.4%"></div></div><span class="bar-val">−1,2</span></div>
+        </div>
+      </div>
+      <figcaption>Solde net mondial <b>+13,1 GtCO₂</b>, de 25,5 à 38,6. La Chine couvre à elle seule environ deux tiers de cette hausse nette.</figcaption>
+    </figure>
+    </div>
+
+    <aside class="slide-side">
+    <div class="callout">
+      <span class="c-lab">Deux avertissements avant de le citer</span>
+      <p><b>Le premier :</b> « net » cache quelque chose. L'Europe et les États-Unis ont aussi baissé en délocalisant la production précisément en Chine. Comptées sur la consommation plutôt que sur la production, une part non négligeable des émissions chinoises est de la marchandise qui nous est destinée, et la baisse européenne s'amincit beaucoup.</p>
+      <p><b>Le second :</b> le tableau s'inverse si l'on regarde le carbone déjà accumulé plutôt que le flux annuel. Là, la contribution occidentale reste la plus grande, et le restera encore un bon moment.</p>
+    </div>
+    </aside>
+  </section>
+
+
+  <!-- ============ 5b. STA RALLENTANDO ============ -->
+  <section id="adesso" class="slide">
+    <div class="sec-head"><span class="sec-unit">% / an</span><h2>La Chine ralentit-elle ?</h2></div>
+    <p class="standfirst">Oui, et beaucoup : la vitesse est passée de +3,9 % par an en 2023 à −0,3 % en 2025, et depuis le pic de mars 2024 les émissions chinoises oscillent autour de zéro. Mais s'arrêter n'est pas descendre, et la Chine s'est arrêtée au sommet. Pendant ce temps, en 2025, ceux qui descendaient ont cessé de descendre.</p>
+
+    <div class="slide-main">
+    <figure>
+      <div class="fig-head">
+        <p class="fig-title">De +3,9 % par an à zéro, en trois ans</p><span class="tag tag-obs">mesuré et estimé</span>
+        <p class="fig-sub">Variation des émissions de CO₂ des fossiles et du ciment par rapport à la même période de l'année précédente. <span class="fs-more">Jusqu'en 2024, c'est l'inventaire du Global Carbon Budget 2025 ; 2025 et les trimestres de 2026 sont des estimations tirées des données énergétiques mensuelles officielles chinoises. Chaque panneau a sa propre échelle.</span></p>
+      </div>
+      <div class="fig-body">
+        <ul class="legend">
+          <li><span class="sw sw-source"></span>Émissions en hausse</li>
+          <li><span class="sw sw-atmos"></span>Émissions en baisse</li>
+        </ul>
+        <div class="panels due">
+          <div class="panel">
+            <h3>La Chine, année par année</h3>
+            <p class="p-note">variation sur la période correspondante, %</p>
+            <div class="div-chart" style="--zero:21.2%">
+              <div class="div-row"><span class="bar-lab">2021</span><div class="div-track"><div class="div-bar pos" style="--w:69.2%"></div></div><span class="bar-val">+3,6%</span></div>
+              <div class="div-row"><span class="bar-lab">2022</span><div class="div-track"><div class="div-bar pos" style="--w:73.1%"></div></div><span class="bar-val">+3,8%</span></div>
+              <div class="div-row"><span class="bar-lab">2023</span><div class="div-track"><div class="div-bar pos" style="--w:75.0%"></div></div><span class="bar-val">+3,9%</span></div>
+              <div class="div-row"><span class="bar-lab">2024</span><div class="div-track"><div class="div-bar pos" style="--w:19.2%"></div></div><span class="bar-val">+1,0%</span></div>
+              <div class="div-row"><span class="bar-lab">2025</span><div class="div-track"><div class="div-bar neg" style="--w:5.8%"></div></div><span class="bar-val">−0,3%</span></div>
+              <div class="div-row"><span class="bar-lab">2026<small>premier trimestre</small></span><div class="div-track"><div class="div-bar pos" style="--w:38.5%"></div></div><span class="bar-val">+2,0%</span></div>
+              <div class="div-row"><span class="bar-lab">2026<small>deuxième trimestre</small></span><div class="div-track"><div class="div-bar neg" style="--w:19.2%"></div></div><span class="bar-val">−1,0%</span></div>
+            </div>
+          </div>
+          <div class="panel">
+            <h3>Les autres grands, sur les mêmes années</h3>
+            <p class="p-note">moyenne annuelle 2019–2024, %</p>
+            <div class="div-chart" style="--zero:46.3%">
+              <div class="div-row"><span class="bar-lab">Inde</span><div class="div-track"><div class="div-bar pos" style="--w:51.3%"></div></div><span class="bar-val">+4,1%</span></div>
+              <div class="div-row"><span class="bar-lab">Chine</span><div class="div-track"><div class="div-bar pos" style="--w:35.0%"></div></div><span class="bar-val">+2,8%</span></div>
+              <div class="div-row"><span class="bar-lab">Russie</span><div class="div-track"><div class="div-bar pos" style="--w:11.3%"></div></div><span class="bar-val">+0,9%</span></div>
+              <div class="div-row"><span class="bar-lab">Monde</span><div class="div-track"><div class="div-bar pos" style="--w:10.0%"></div></div><span class="bar-val">+0,8%</span></div>
+              <div class="div-row"><span class="bar-lab">États-Unis</span><div class="div-track"><div class="div-bar neg" style="--w:16.3%"></div></div><span class="bar-val">−1,3%</span></div>
+              <div class="div-row"><span class="bar-lab">Japon</span><div class="div-track"><div class="div-bar neg" style="--w:33.8%"></div></div><span class="bar-val">−2,7%</span></div>
+              <div class="div-row"><span class="bar-lab">UE 27</span><div class="div-track"><div class="div-bar neg" style="--w:43.8%"></div></div><span class="bar-val">−3,5%</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <figcaption><b>Sur les cinq années jusqu'à 2024, la Chine a ajouté 1,58 milliard de tonnes par an : plus que la hausse mondiale tout entière, qui a été de 1,51.</b> Tout le reste s'annule presque : autant l'Inde et la Russie montaient, autant l'Union européenne, les États-Unis et le Japon descendaient. <b>Puis la vitesse chinoise s'est effondrée</b> et 2025 s'est clos sous zéro. C'était déjà arrivé en 2015 et 2016, mais la demande d'énergie ralentissait alors elle aussi : cette fois-ci non.</figcaption>
+    </figure>
+    </div>
+
+    <aside class="slide-side">
+      <div class="callout">
+        <span class="c-lab">La réponse, en trois mots</span>
+        <p><b>Ralentie, presque à l'arrêt, pas descendue.</b> Depuis le pic de mars 2024, les émissions chinoises sont restées plates ou en baisse vingt et un mois d'affilée, et en 2026 elles continuent d'osciller autour de zéro : +2 % un trimestre, −1 % le suivant.</p>
+        <p><b>Mais le plateau est au sommet.</b> En restant à l'arrêt, la Chine injecte 12,3 milliards de tonnes de CO₂ par an, près d'un tiers du total mondial. Arrêter la croissance des émissions n'arrête pas la croissance du CO₂ dans l'air : pour cela, il faut des émissions nettes nulles.</p>
+      </div>
+      <div class="callout">
+        <span class="c-lab">En 2025, les rôles se sont inversés</span>
+        <p>Pendant que la Chine s'arrêtait, ceux qui descendaient ont cessé de descendre. Les projections du Global Carbon Budget pour 2025 : <b>États-Unis +2,5 %</b>, Inde +1,1 %, Chine +0,4 %, <b>Union européenne −0,1 %</b> après des années de baisses autour de 3 %. Total mondial <b>+1,0 %</b>, un record de plus. Le monde n'est pas sur un plateau : il monte encore, seulement plus lentement.</p>
+      </div>
+    </aside>
+
+    <details class="more"><summary>Pour aller plus loin : pourquoi elle s'est arrêtée, pourquoi elle peut repartir, et les chiffres exacts</summary>
+      <p><b>Pourquoi elle s'est arrêtée.</b> En 2025, le solaire chinois a crû de 43 % et l'éolien de 14 % : 490 TWh d'électricité propre en plus en un an, de quoi couvrir à eux seuls toute la hausse de la demande électrique. Puis est venue la route : au deuxième trimestre 2026, la consommation chinoise de pétrole a baissé de 9 %, et de 16 % dans les transports, alors que les déplacements augmentaient. C'est la première fois que ce qui fait baisser les émissions chinoises est le pétrole et non le charbon.</p>
+      <p><b>Pourquoi elle peut repartir.</b> Une partie de cette baisse n'est pas structurelle mais conjoncturelle : avec la crise du détroit d'Ormuz, les prix ont monté et en un trimestre la Chine a réduit de 32 % ses importations de brut. Et le plateau est si plat qu'il faut peu de chose pour dépasser l'ancien pic : au premier trimestre 2026, les émissions étaient déjà remontées à +2 %. C'est une course entre la demande d'énergie qui croît et les renouvelables qui croissent, et jusqu'ici l'issue s'est jouée trimestre après trimestre.</p>
+    <div class="t-wrap">
+      <table>
+        <caption>Les plus gros émetteurs des cinq dernières années · CO₂ des fossiles et du ciment, milliards de tonnes</caption>
+        <tfoot><tr><td colspan="6" style="color:var(--ink-3);font-size:.84rem;line-height:1.5">Émissions territoriales avant déduction de la carbonatation du ciment, tirées de la base de données du Global Carbon Budget 2025. La moyenne annuelle est composée sur les cinq années entre les deux extrémités : l'année 2020 de la pandémie est à l'intérieur de la période, mais pas à ses bornes, et n'en gonfle donc pas le résultat. La colonne 2025 est la projection publiée par le Global Carbon Budget, qui ne donne pas de ligne propre pour la Russie et le Japon ; pour la Chine, l'estimation définitive fondée sur les données énergétiques mensuelles donne en revanche −0,3 %, juste sous le minimum de la fourchette de projection, qui allait de −0,1 % à +0,9 %.</td></tr></tfoot>
+        <thead><tr><th>Pays</th><th class="num">2019</th><th class="num">2024</th><th class="num">Variation</th><th class="num">Moyenne annuelle</th><th class="num">2025 (projection)</th></tr></thead>
+        <tbody>
+          <tr><td>Chine</td><td class="num">10,71</td><td class="num">12,29</td><td class="num">+14,7%</td><td class="num">+2,8%</td><td class="num">+0,4%</td></tr>
+          <tr><td>États-Unis</td><td class="num">5,24</td><td class="num">4,90</td><td class="num">−6,3%</td><td class="num">−1,3%</td><td class="num">+2,5%</td></tr>
+          <tr><td>Inde</td><td class="num">2,61</td><td class="num">3,19</td><td class="num">+22,3%</td><td class="num">+4,1%</td><td class="num">+1,1%</td></tr>
+          <tr><td>UE 27</td><td class="num">2,90</td><td class="num">2,43</td><td class="num">−16,5%</td><td class="num">−3,5%</td><td class="num">−0,1%</td></tr>
+          <tr><td>Russie</td><td class="num">1,70</td><td class="num">1,78</td><td class="num">+4,5%</td><td class="num">+0,9%</td><td class="num">—</td></tr>
+          <tr><td>Japon</td><td class="num">1,10</td><td class="num">0,96</td><td class="num">−12,7%</td><td class="num">−2,7%</td><td class="num">—</td></tr>
+          <tr><td>Monde</td><td class="num">37,09</td><td class="num">38,60</td><td class="num">+4,1%</td><td class="num">+0,8%</td><td class="num">+1,0%</td></tr>
+        </tbody>
+      </table>
+    </div>
+    </details>
+  </section>
+
+
+  <!-- ============ 5c. LE GUERRE ============ -->
+  <section id="guerra" class="slide">
+    <div class="sec-head"><span class="sec-unit">MtCO₂e</span><h2>Ce que pèsent les guerres</h2></div>
+    <p class="standfirst">Deux réponses contre-intuitives. Les armées en temps de paix émettent bien plus que les guerres qu'elles mènent. Et à l'intérieur d'une guerre, les armes ne pèsent presque rien : ce qui compte, c'est ce qu'elles touchent, et ce qu'il faudra ensuite reconstruire. Ensemble elles valent environ 5 % des gaz à effet de serre du monde. Ce sont les estimations les moins solides de cette page, et ce sont des valeurs minimales, pas des mesures.</p>
+
+    <div class="slide-main">
+    <figure>
+      <div class="fig-head">
+        <p class="fig-title">Les armes, c'est 1 % : le reste, c'est ce qu'elles touchent</p><span class="tag tag-est">estimation</span>
+        <p class="fig-sub">Gaz à effet de serre en millions de tonnes de CO₂ équivalent. <span class="fs-more">À gauche le total de chaque cas, sur des périodes différentes indiquées sous chaque ligne ; à droite d'où vient ce total dans la guerre en Iran, la décomposition la plus récente dont on dispose. Chaque panneau a sa propre échelle.</span></p>
+      </div>
+      <div class="fig-body">
+        <div class="panels">
+          <div class="panel">
+            <h3>Ce que cela pèse en tout</h3>
+            <p class="p-note">attention à la période : elle change d'une ligne à l'autre</p>
+            <div class="bars">
+              <div class="bar-row is-source"><span class="bar-lab">Armées du monde<small>chaque année, hors guerres</small></span><div class="bar-track"><div class="bar-fill" style="--w:100%"></div></div><span class="bar-val">2 750</span></div>
+              <div class="bar-row is-source"><span class="bar-lab">Ukraine<small>quatre ans, reconstruction comprise</small></span><div class="bar-track"><div class="bar-fill" style="--w:11.3%"></div></div><span class="bar-val">311</span></div>
+              <div class="bar-row is-me"><span class="bar-lab">Italie<small>un an, pour comparaison</small></span><div class="bar-track"><div class="bar-fill" style="--w:10.9%"></div></div><span class="bar-val">300</span></div>
+              <div class="bar-row is-source"><span class="bar-lab">Israël et Gaza<small>conflit et reconstruction</small></span><div class="bar-track"><div class="bar-fill" style="--w:1.2%"></div></div><span class="bar-val">33</span></div>
+              <div class="bar-row is-source"><span class="bar-lab">Iran<small>quatorze premiers jours</small></span><div class="bar-track"><div class="bar-fill" style="--w:0.19%"></div></div><span class="bar-val">5,1</span></div>
+            </div>
+          </div>
+          <div class="panel">
+            <h3>De quoi elle est faite</h3>
+            <p class="p-note"><span class="tag tag-prel">estimation préliminaire</span> guerre en Iran, 28 février – 14 mars 2026</p>
+            <div class="bars">
+              <div class="bar-row is-source"><span class="bar-lab">Bâtiments détruits</span><div class="bar-track"><div class="bar-fill" style="--w:100%"></div></div><span class="bar-val">2,40</span></div>
+              <div class="bar-row is-source"><span class="bar-lab">Pétrole brûlé</span><div class="bar-track"><div class="bar-fill" style="--w:78.3%"></div></div><span class="bar-val">1,88</span></div>
+              <div class="bar-row is-source"><span class="bar-lab">Carburant des véhicules</span><div class="bar-track"><div class="bar-fill" style="--w:22.1%"></div></div><span class="bar-val">0,53</span></div>
+              <div class="bar-row is-source"><span class="bar-lab">Véhicules détruits</span><div class="bar-track"><div class="bar-fill" style="--w:7.1%"></div></div><span class="bar-val">0,17</span></div>
+              <div class="bar-row is-muted"><span class="bar-lab">Missiles et drones</span><div class="bar-track"><div class="bar-fill" style="--w:2.3%"></div></div><span class="bar-val">0,06</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <figcaption><b>En deux semaines de guerre en Iran, les missiles et les drones valent 55 mille tonnes de CO₂e, les bâtiments touchés et le pétrole brûlé quatre millions trois cent mille : près de quatre-vingts fois plus.</b> Voilà pourquoi le compte d'une guerre ne se fait pas en comptant les munitions. <b>Attention à ce que contiennent ces totaux :</b> en Ukraine, 73 des 311 millions de tonnes sont la reconstruction à venir, à Gaza 31 sur 33, et les seules opérations militaires à Gaza valent 1,3. Elles ne sont pas encore dans l'atmosphère : elles sont attribuées à la guerre qui les rendra nécessaires.</figcaption>
+    </figure>
+    </div>
+
+    <aside class="slide-side">
+      <div class="callout">
+        <span class="c-lab">Ce que cela fait sur le total d'une année</span>
+        <div class="cento" aria-hidden="true">
+        <span></span>        <span></span>        <span></span>        <span></span>        <span></span>        <span></span>        <span></span>        <span></span>        <span></span>        <span></span>        <span></span>        <span></span>        <span></span>        <span></span>        <span></span>        <span></span>        <span></span>        <span></span>        <span></span>        <span></span>
+        <span></span>        <span></span>        <span></span>        <span></span>        <span></span>        <span></span>        <span></span>        <span></span>        <span></span>        <span></span>        <span></span>        <span></span>        <span></span>        <span></span>        <span></span>        <span></span>        <span></span>        <span></span>        <span></span>        <span></span>
+        <span></span>        <span></span>        <span></span>        <span></span>        <span></span>        <span></span>        <span></span>        <span></span>        <span></span>        <span></span>        <span></span>        <span></span>        <span></span>        <span></span>        <span></span>        <span></span>        <span></span>        <span></span>        <span></span>        <span></span>
+        <span></span>        <span></span>        <span></span>        <span></span>        <span></span>        <span></span>        <span></span>        <span></span>        <span></span>        <span></span>        <span></span>        <span></span>        <span></span>        <span></span>        <span></span>        <span></span>        <span></span>        <span></span>        <span></span>        <span></span>
+        <span></span>        <span></span>        <span></span>        <span></span>        <span></span>        <span></span>        <span></span>        <span></span>        <span></span>        <span></span>        <span></span>        <span></span>        <span></span>        <span></span>        <span></span>        <span></span>        <span></span>        <span></span>        <span></span>        <span></span>
+        </div>
+        <p><b>Cinq carrés sur cent.</b> C'est ce que pèsent ensemble l'appareil militaire en temps de paix, <b>4,8 %</b>, et les deux guerres pour lesquelles un compte existe, <b>0,2 %</b>, sur les 57,7 milliards de tonnes de gaz à effet de serre que le monde a émis en 2024. Le premier chiffre a une large fourchette, entre 2,8 et 6,1 % ; le second est presque entièrement l'Ukraine, et ne comprend pas les conflits que personne n'a comptés.</p>
+      </div>
+      <div class="callout">
+        <span class="c-lab">Pourquoi ce sont des minimums, pas des mesures</span>
+        <p><b>En 2024, 61 conflits armés étaient actifs, le nombre le plus élevé depuis la fin de la Seconde Guerre mondiale. Deux ont un compte du carbone :</b> l'Ukraine et Gaza. Pour l'Iran il existe une estimation préliminaire ; pour la Syrie, le Liban, le Yémen et le Soudan, rien. Les armées, de leur côté, ne déclarent pas : les premières exemptions sont arrivées avec le protocole de Kyoto en 1997, depuis 2015 l'Accord de Paris rend la déclaration facultative, et les États-Unis, la Chine et la Russie ne publient pas de données complètes. Et même là où un compte existe, il ne compte que les gaz à effet de serre.</p>
+      </div>
+    </aside>
+
+    <details class="more"><summary>Pour aller plus loin : d'où viennent les émissions d'une guerre</summary>
+    <div class="t-wrap">
+      <table>
+        <caption>Quatre ans de guerre en Ukraine, 24 février 2022 – 23 février 2026</caption>
+        <thead><tr><th>De quoi</th><th class="num">MtCO₂e</th><th class="num">Part</th><th>Note</th></tr></thead>
+        <tbody>
+          <tr><td>Combats</td><td class="num">114,1</td><td class="num">37%</td><td>Carburant des véhicules et des avions, munitions</td></tr>
+          <tr><td>Reconstruction</td><td class="num">73,3</td><td class="num">23%</td><td>Ciment et acier pour refaire ce qui est détruit</td></tr>
+          <tr><td>Incendies</td><td class="num">70,3</td><td class="num">23%</td><td>Forêts et champs brûlés : 1,39 million d'hectares pour la seule année 2025</td></tr>
+          <tr><td>Aviation civile</td><td class="num">29,8</td><td class="num">9%</td><td>Vols déroutés autour de l'espace aérien fermé</td></tr>
+          <tr><td>Infrastructures énergétiques</td><td class="num">18,6</td><td class="num">6%</td><td>Installations touchées, fuites de méthane comprises</td></tr>
+          <tr><td>Réfugiés</td><td class="num">5,3</td><td class="num">2%</td><td>Déplacement de millions de personnes</td></tr>
+          <tr class="total"><td>Total sur quatre ans</td><td class="num">311,4</td><td class="num">100%</td><td>La quatrième année vaut à elle seule 75</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="prose">
+      <h3>En Ukraine aussi, les armes sont la petite part</h3>
+      <p>Les combats représentent un peu plus d'un tiers du total. Le reste est ce que la guerre traîne derrière elle : reconstruire, ne pas parvenir à éteindre les incendies, dérouter les avions, déplacer les gens. La reconstruction à elle seule pèse presque autant que les combats, et elle croît à mesure que la destruction s'accumule. À 185 dollars la tonne, le dommage climatique que l'Ukraine entend réclamer dépasse 57 milliards.</p>
+
+      <h3>Israël et Gaza : 93 % est l'après</h3>
+      <p>Le même schéma, encore plus net. Les opérations militaires valent un peu plus de 1,3 MtCO₂e jusqu'en janvier 2025 ; le total atteint 33,2 en comptant les barrières construites avant et la reconstruction à venir : près de 450 mille logements, plus de 3 000 kilomètres de routes, des écoles, des hôpitaux, des réseaux d'eau. Si le chiffre paraît petit à côté de l'Ukraine, c'est que le territoire est minuscule et que le compte des opérations est étroit : il comprend les vols et les véhicules, pas chaque bâtiment qui a brûlé.</p>
+
+      <h3>Iran : ce qui a été touché, et ce qui manque au compte</h3>
+      <p>Une trentaine d'installations de traitement et de stockage du pétrole en Iran, plus des raffineries et des navires-citernes hors du pays : c'est de là que viennent les 1,88 million de tonnes de la ligne « pétrole brûlé ». Le compte couvre les deux premières semaines et n'est pas encore passé par une revue scientifique : nous l'avons marqué comme estimation préliminaire dans le graphique. Il est à prendre pour son ordre de grandeur et pour les proportions entre les lignes, pas pour le chiffre exact.</p>
+
+      <h3>Le paradoxe syrien</h3>
+      <p>Pendant la guerre, les émissions déclarées par la Syrie ont <em>baissé</em>, parce que la production de pétrole s'est effondrée de plus d'un quart. Pendant ce temps, le dommage s'accumulait ailleurs : rien que remettre debout les maisons détruites vaut environ 22 MtCO₂, et cela arrivera dans les années de la reconstruction. Dans les comptes officiels, une guerre peut ressembler à une politique climatique, et c'est une raison de plus pour laquelle la part ci-contre est un minimum.</p>
+
+      <h3>Ce qui n'entre dans aucun compte</h3>
+      <p>Même les meilleurs comptes ne mesurent qu'une seule chose, les gaz à effet de serre. En restent dehors les mines qui rendent les champs incultivables, les métaux lourds dans le sol — plomb, zinc, chrome, arsenic autour de Soumy —, les PFAS et l'amiante soulevés par les décombres, les dioxines des incendies, le brut répandu en mer dans le golfe Persique. Ce n'est pas du climat, c'est un autre dommage, et aucun des pourcentages de cette page ne le comprend. En restent dehors aussi les incendies de végétation : dans les seize pays en conflit, en cours ou récent, pour la seule année 2020, 1 456 MtCO₂e sont parties en fumée. Pas toutes du fait de la guerre, mais attribuées à personne.</p>
+
+      <h3>Un précédent : les puits du Koweït</h3>
+      <p>En 1991, en se retirant du Koweït, l'armée irakienne incendia des centaines de puits de pétrole. Ces incendies à eux seuls ont valu plus de 2 % de tout le CO₂ fossile émis dans le monde cette année-là : plus que quatre ans de guerre en Ukraine. C'est le cas limite qui explique pourquoi frapper l'énergie, et non les personnes, est ce qui pèse le plus sur le climat.</p>
+
+      <h3>Comment sont faits ces deux pourcentages</h3>
+      <p>Le dénominateur est le total mondial de tous les gaz à effet de serre en 2024, 57,7 GtCO₂e, tiré du rapport du PNUE sur l'écart entre les besoins et les perspectives en matière de réduction des émissions. Les 4,8 % sont les 2 750 MtCO₂e des armées : les auteurs de l'estimation écrivent 5,5 %, calculé sur un total mondial plus ancien et plus bas, et le fond ne change pas. Les 0,2 % sont la somme de ce qui est attribué à chaque année de guerre : 78 MtCO₂e pour l'Ukraine, quatre ans divisés par quatre, et 27 pour le conflit entre Israël et Gaza. Les deux semaines en Iran valent 5 MtCO₂e de plus, un millième du total mondial, et ne peuvent pas être annualisées.</p>
+
+      <h3>Les 5,5 % des armées comprennent-ils les guerres ? Non</h3>
+      <p>C'est la question que ce chiffre traîne derrière lui, et la réponse change le sens de la somme. Les 4,8 %, c'est <b>l'appareil qui tient debout de toute façon</b> : le carburant des véhicules, des navires et des avions, les bases, et surtout l'industrie qui les construit et les approvisionne. De ce total, un cinquième seulement, 1 % des émissions mondiales, est du carburant brûlé par les forces armées ; le reste, c'est la filière. Les auteurs de l'estimation écrivent qu'elle est <b>conservatrice</b> précisément parce qu'elle <b>laisse dehors les émissions du combat</b> : ce qui se passe quand on tire n'y est pas.</p>
+      <p>Les 0,2 % des guerres comptent au contraire exactement cela : carburant dépensé au combat, munitions, véhicules détruits à remplacer, bâtiments brûlés, reconstruction. Les deux chiffres mesurent des choses différentes, et c'est pour cela qu'on peut les additionner sans rien compter deux fois. La zone grise existe — une armée en guerre consomme plus qu'une armée en caserne, et ce surplus pourrait apparaître des deux côtés — mais elle est petite au regard de la fourchette du premier chiffre, qui va de 2,8 à 6,1 %.</p>
+
+      <h3>Et la dépense militaire augmente</h3>
+      <p>Chaque tranche de 100 milliards de dollars de dépense militaire supplémentaire vaut environ 32 MtCO₂e par an. La hausse de la dépense de l'OTAN entre 2019 et 2024 en a déjà ajouté une soixantaine, et les hausses annoncées en apporteraient 132 de plus : autant que les émissions fossiles d'un pays comme le Chili, chaque année. Les chiffres ont une marge large, le signe non.</p>
+    </div>
+    </details>
+  </section>
+
+  <!-- ============ 6. KYOTO ============ -->
+  <section id="kyoto" class="slide">
+    <div class="sec-head"><span class="sec-unit">1997–2012</span><h2>Pourquoi Kyoto n'a pas infléchi la courbe</h2></div>
+    <p class="standfirst">Le protocole n'était pas conçu pour arrêter la croissance. Et même s'il avait fonctionné à la perfection, la concentration aurait monté quand même.</p>
+
+    <div class="slide-main">
+    <figure>
+      <div class="fig-head">
+        <p class="fig-title">Entre la signature et la fin de la première période, les émissions ont augmenté de 43 %</p><span class="tag tag-obs">mesuré</span>
+        <p class="fig-sub">Émissions fossiles mondiales 1990–2024, en milliards de tonnes de CO₂. La bande marque la période d'engagement 2008–2012.</p>
+      </div>
+      <div class="fig-body">
+        <div class="scroller">
+          <svg id="kyotochart" viewBox="0 0 880 300" role="img" aria-label="Émissions fossiles mondiales de 1990 à 2024 : elles montent de 22,7 à 38,6 milliards de tonnes. Sont marquées la signature du protocole en 1997 à 24,4, l'entrée en vigueur en 2005 à 29,6 et la fin de la première période d'engagement en 2012 à 35,0."></svg>
+        </div>
+      </div>
+      <figcaption><b>La baignoire se remplit quand même.</b> Ce sont les seuls fossiles, année par année. Kyoto obligeait un sous-ensemble de pays à réduire de 5 % ; entre 1997 et 2012, le reste du monde a augmenté de plus de 60 %, et les pays sans contrainte ont doublé. La seule baisse visible est 2020, et aucun traité n'y est pour quelque chose.</figcaption>
+    </figure>
+    </div>
+
+    <aside class="slide-side">
+    <div class="callout">
+      <span class="c-lab">La raison physique</span>
+      <p>Le CO₂ atmosphérique est un stock, pas un flux. C'est une baignoire qui se remplit : fermer le robinet à moitié ne fait pas baisser le niveau, cela le fait monter plus lentement. Pour arrêter la croissance il faut des émissions nettes nulles, c'est-à-dire ne pas injecter plus que ce que les puits absorbent : émettre moins ne suffit pas. Kyoto demandait moins 5,2 % par rapport à 1990, pour un sous-ensemble de pays.</p>
+    </div>
+    </aside>
+
+    <details class="more"><summary>Pour aller plus loin : la chronologie de Kyoto, et ce qu'il a laissé</summary>
+    <div class="two">
+    <ul class="tl">
+      <li><span class="yr">1997</span><div class="ev"><b>Signature du protocole</b><small>Objectif : moins 5,2 % par rapport à 1990 pour les seuls pays industrialisés, d'ici 2008–2012. La Chine, l'Inde et le Brésil n'ont pas de contrainte.</small></div></li>
+      <li><span class="yr">2001</span><div class="ev"><b>Les États-Unis ne ratifient pas</b><small>Le premier émetteur mondial de l'époque reste dehors. Le traité couvre moins d'un tiers des émissions mondiales, part qui décline d'année en année.</small></div></li>
+      <li><span class="yr">2005</span><div class="ev"><b>Entrée en vigueur</b><small>Entre-temps, les émissions mondiales sont déjà passées de 24,4 à 29,6 GtCO₂ par rapport à l'année de la signature.</small></div></li>
+      <li><span class="yr">2011</span><div class="ev"><b>Le Canada se retire</b><small>Pour éviter les sanctions prévues en cas de non-atteinte de l'objectif.</small></div></li>
+      <li><span class="yr">2012</span><div class="ev"><b>Fin de la première période</b><small>Les pays contraints atteignent l'objectif, mais l'essentiel de la baisse vient de l'effondrement industriel ex-soviétique après 1991 et de la délocalisation, pas de politiques climatiques.</small></div></li>
+    </ul>
+
+    <div class="callout">
+      <span class="c-lab">À dire quand même</span>
+      <p>Kyoto n'a pas été inutile. Il a créé les inventaires nationaux, les systèmes de mesure et de vérification et les marchés du carbone, y compris le marché européen des quotas d'émission (SEQE). C'est l'infrastructure sur laquelle s'est ensuite bâti l'Accord de Paris. Ce qu'il n'a pas fait, c'est inverser ou arrêter la croissance des émissions mondiales, et de fait il n'a pas stoppé l'augmentation du CO₂ dans l'atmosphère : dans les années mêmes de Kyoto, la concentration a continué d'accélérer, de 1,5 à 2,0 ppm par an entre les années 1990 et la décennie suivante. Ce sont deux bilans distincts, et il faut les tenir distincts. Ce qui infléchirait la courbe : des émissions nettes nulles, pas des émissions réduites. C'est l'objectif que l'Accord de Paris a ensuite fixé pour le milieu du siècle.</p>
+    </div>
+    </div>
+    </details>
+  </section>
+
+  <!-- ============ 7b. SINTESI ============ -->
+  <section id="sintesi" class="slide">
+    <div class="sec-head"><span class="sec-unit">en bref</span><h2>Sept choses à retenir</h2></div>
+    <p class="standfirst">S'il ne devait rester qu'un écran de cette page, que ce soit celui-ci. Les chiffres ci-dessous se mettent à jour avec ceux des sections précédentes.</p>
+
+    <div class="slide-main">
+    <ol class="takeaways">
+      <li><div><b>Le CO₂ dans l'air est à <span data-from="live-mean">427,35</span> ppm, 53 % au-dessus du niveau préindustriel</b>, et il monte d'environ 2,6 ppm par an : trois fois plus vite que dans les années 1960.</div></li>
+      <li><div><b>Chaque année nous émettons environ 41 milliards de tonnes ; la moitié disparaît dans l'océan et la végétation.</b> La courbe ne mesure que l'autre moitié. Sans les puits nous serions à 574 ppm au lieu de 427.</div></li>
+      <li><div><b>La planète s'est réchauffée de <span data-from="lt-last">+1,29</span> °C sur la dernière année, <span data-from="lt-dec">+1,18</span> en moyenne sur la dernière décennie.</b> La limite de Paris, 1,5 °C, se juge sur la moyenne de plusieurs années, pas sur une seule : elle n'est pas encore franchie, et il reste environ <span data-from="lt-bud">140</span> GtCO₂ pour avoir une probabilité de 50 % de rester dessous, moins de quatre ans d'émissions au rythme actuel.</div></li>
+      <li><div><b>Le réchauffement n'est pas fait d'air : environ 90 % de l'énergie en excès a fini dans l'océan.</b> La planète retient un peu plus d'un watt par mètre carré de plus qu'elle n'en rend à l'espace, et depuis 1971 elle a accumulé 381 ZJ de chaleur. L'atmosphère en a pris 1 % : la température de l'air est la pointe fine, et le vrai thermomètre est en mer.</div></li>
+      <li><div><b>Les années chaudes sont les années où le CO₂ monte le plus.</b> En 2023 et 2024, El Niño a affaibli la végétation et la croissance a atteint 3,3 ppm. Une seule année ne fait pas une tendance, dans aucun sens.</div></li>
+      <li><div><b>Qui émet dépend de la question posée.</b> Aujourd'hui la Chine émet un tiers du total, mais un Américain émet une fois et demie un Chinois par habitant, et en cent soixante-dix ans les États-Unis et l'Europe ont rempli la baignoire plus que tout le monde. Réduire ralentit la montée ; pour l'arrêter il faut des émissions nettes nulles.</div></li>
+      <li><div><b>La Chine a cessé d'accélérer, mais un plateau n'est pas une descente.</b> Les émissions chinoises sont à l'arrêt depuis deux ans au niveau le plus élevé jamais atteint et en 2025 elles ont baissé de 0,3 % ; la même année, celles des États-Unis ont augmenté de 2,5 % et le total mondial de 1,0 %, un record de plus.</div></li>
+    </ol>
+    </div>
+
+    <aside class="slide-side">
+    <div class="callout">
+      <span class="c-lab">Quoi regarder dans un an</span>
+      <p><b>En janvier</b>, la NOAA publie le taux de croissance de l'année qui vient de finir : la page le lit toute seule. <b>En novembre</b> paraît le Global Carbon Budget, avec les émissions de l'année et l'estimation des puits : ces chiffres-là sont à mettre à jour à la main dans les sections sur le bilan. <b>À tout moment</b> : l'état d'El Niño, parce qu'un nouvel épisode chaud ferait remonter la croissance du CO₂ sans que les émissions aient changé.</p>
+    </div>
+    </aside>
+  </section>
+
+  <!-- ============ 7. FONTI ============ -->
+  <section id="fonti">
+    <div class="sec-head"><span class="sec-unit">notes</span><h2>Sources, conversions et incertitudes</h2></div>
+    <p class="standfirst">Les titres mènent à la source, dans un nouvel onglet : le document original, pas un article qui en parle.</p>
+
+    <ul class="srcs">
+      <li><a class="src-l" href="https://globalcarbonbudget.org/" target="_blank" rel="noopener"><b>Global Carbon Budget 2025</b></a><span>Friedlingstein et al., Global Carbon Project, présenté à la COP30 le 13 novembre 2025 et publié dans Earth System Science Data en 2026. Bilan des sources et des puits, moyennes 2015–2024 ; les projections pour 2025 sont celles de la version publiée, qui corrige dans quelques cas le communiqué de novembre.</span></li>
+      <li><a class="src-l" href="https://gml.noaa.gov/ccgg/trends/" target="_blank" rel="noopener"><b>NOAA Global Monitoring Laboratory</b></a><span>Série de Mauna Loa depuis 1958 et moyenne mondiale : moyennes annuelles et taux de croissance. Lus en direct par la page, quand le réseau le permet.</span></li>
+      <li><a class="src-l" href="https://www.ncei.noaa.gov/access/paleo-search/study/17975" target="_blank" rel="noopener"><b>NOAA Paleoclimatology · carottes de glace</b></a><span>Bereiter et al. 2015, composite révisé des 800 mille ans de CO₂ tirés des carottes antarctiques. Série intégrée à la page, pas lue en direct.</span></li>
+      <li><a class="src-l" href="https://doi.org/10.1126/science.adi5177" target="_blank" rel="noopener"><b>Science · CenCO2PIP</b></a><span>Hönisch et al., « Toward a Cenozoic history of atmospheric CO₂ », décembre 2023 : reconstruction des 66 derniers millions d'années.</span></li>
+      <li><a class="src-l" href="https://ourworldindata.org/co2-emissions" target="_blank" rel="noopener"><b>Our World in Data</b></a><span>Émissions par pays, par habitant et cumulées 1850–2024, tirées de la base de données du Global Carbon Budget 2025. De là vient aussi la consommation mondiale d'énergie primaire, 178 000 TWh en 2025 (0,64 ZJ), utilisée comme terme de comparaison dans la section sur l'énergie.</span></li>
+      <li><a class="src-l" href="https://www.ipcc.ch/report/ar6/wg1/" target="_blank" rel="noopener"><b>GIEC AR6 et AIE</b></a><span>Niveaux préindustriels des gaz à effet de serre ; périodes de référence du paléoclimat (encadré 2.4 du chapitre 2) ; répartition des émissions par usage final.</span></li>
+      <li><a class="src-l" href="https://www.ipcc.ch/report/ar6/wg1/chapter/chapter-7/" target="_blank" rel="noopener"><b>GIEC AR6 · chapitre 7</b></a><span>« The Earth's energy budget, climate feedbacks and climate sensitivity », figure 7.2 : les flux moyens d'énergie au sommet de l'atmosphère et à la surface, adaptés de Wild et al. 2015, pour des conditions de début de siècle.</span></li>
+      <li><a class="src-l" href="https://doi.org/10.5194/essd-18-3889-2026" target="_blank" rel="noopener"><b>Earth System Science Data · IGCC 2025</b></a><span>Forster et al., « Indicators of Global Climate Change 2025 », juin 2026 : le déséquilibre énergétique de la Terre période par période, 1,12 W/m² entre 2013 et 2025. Mise à jour annuelle des indicateurs de l'AR6.</span></li>
+      <li><a class="src-l" href="https://doi.org/10.5194/essd-15-1675-2023" target="_blank" rel="noopener"><b>Earth System Science Data · inventaire de la chaleur</b></a><span>von Schuckmann et al., « Heat stored in the Earth system 1960–2020: where does the energy go? », 2023 : 381 ZJ accumulés de 1971 à 2020 et leur répartition entre océan, terres, glaces et atmosphère.</span></li>
+      <li><a class="src-l" href="https://www.ncei.noaa.gov/access/global-ocean-heat-content/" target="_blank" rel="noopener"><b>NOAA NCEI · contenu thermique des océans</b></a><span>Série de Levitus et collègues, chaleur des 2000 premiers mètres par rapport à la moyenne 1955–2006. Moyenne annuelle depuis 2005 et moyennes mobiles sur cinq ans depuis 1957. Lue en direct par la page.</span></li>
+      <li><a class="src-l" href="https://energyandcleanair.org/" target="_blank" rel="noopener"><b>Centre for Research on Energy and Clean Air</b></a><span>Myllyvirta, analyses trimestrielles des émissions chinoises tirées des données énergétiques mensuelles officielles, publiées sur Carbon Brief : 12 février 2026 pour l'année 2025, 2 septembre 2026 pour le deuxième trimestre 2026.</span></li>
+      <li><a class="src-l" href="https://en.ecoaction.org.ua/wp-content/uploads/2026/02/Climate-Damage-Caused-by-War-48-months_ENs.pdf" target="_blank" rel="noopener"><b>Initiative on GHG Accounting of War</b></a><span>de Klerk et al., « Climate damage caused by Russia's war in Ukraine », février 2026 : quatre ans de guerre, du 24 février 2022 au 23 février 2026.</span></li>
+      <li><a class="src-l" href="https://www.sgr.org.uk/publications/estimating-military-s-global-greenhouse-gas-emissions" target="_blank" rel="noopener"><b>Scientists for Global Responsibility et CEOBS</b></a><span>Parkinson et Cottrell, « Estimating the military's global greenhouse gas emissions », novembre 2022 ; et la suite sur la dépense militaire, septembre 2025.</span></li>
+      <li><a class="src-l" href="https://doi.org/10.1016/j.oneear.2026.101648" target="_blank" rel="noopener"><b>One Earth</b></a><span>Neimark et al., « Israel-Gaza conflict carbon emissions exceeded 30 million tons », 20 mars 2026. C'est le titre de la version publiée : le préprint circulait sous le titre « War on the climate ».</span></li>
+      <li><a class="src-l" href="https://climateandcommunity.org/" target="_blank" rel="noopener"><b>Climate and Community Institute</b></a><span>Avec Queen Mary University of London et Lancaster University, mars 2026 : estimation préliminaire des deux premières semaines de guerre en Iran. Pas encore soumise à une évaluation par les pairs.</span></li>
+      <li><a class="src-l" href="https://www.unep.org/resources/emissions-gap-report-2025" target="_blank" rel="noopener"><b>PNUE · Emissions Gap Report 2025</b></a><span>4 novembre 2025 : total mondial de tous les gaz à effet de serre en 2024, 57,7 GtCO₂e, +2,3 % sur l'année précédente. C'est le dénominateur des pourcentages de la section sur les guerres.</span></li>
+      <li><a class="src-l" href="https://www.visionofhumanity.org/resources/" target="_blank" rel="noopener"><b>Institute for Economics and Peace</b></a><span>Global Peace Index 2026 : 61 conflits armés actifs en 2024, le nombre le plus élevé depuis la fin de la Seconde Guerre mondiale.</span></li>
+      <li><a class="src-l" href="https://ceobs.org/" target="_blank" rel="noopener"><b>Conflict and Environment Observatory</b></a><span>Incendies de végétation et gaz brûlé en torchère dans les pays en conflit ; reconstruction de la Syrie ; les puits incendiés au Koweït en 1991.</span></li>
+    </ul>
+
+    <div class="prose">
+      <details class="more"><summary>Pour aller plus loin : conversions et deux mesures à ne pas confondre</summary>
+      <h3>Conversions utilisées dans cette page</h3>
+      <p class="mono" style="font-size:.88rem;line-height:1.9">1 ppm = 2,124 GtC = 7,78 GtCO₂<br>1 GtC = 3,664 GtCO₂</p>
+      <h3>Deux mesures à ne pas confondre</h3>
+      <p>Le <b>taux de croissance</b> NOAA est la hausse entre le 1<sup>er</sup> janvier et le 31 décembre, calculée sur le trait épais des graphiques, celui sans la respiration saisonnière. La <b>différence entre moyennes annuelles</b> est autre chose et donne d'autres chiffres : en 2024, 3,33 ppm pour la première, 3,53 pour la seconde. De plus, <b>Mauna Loa n'est pas la planète</b> : c'est un observatoire à 3 400 mètres dans le Pacifique, tandis que la moyenne mondiale NOAA est calculée sur des stations marines éloignées des villes et des industries, où l'air est bien mélangé, combinées de sorte que chaque bande de latitude pèse autant que sa surface. En 2024 les deux mesures donnent 3,33 et 3,76 ppm.</p>
+      <p>Les <b>GtC</b> (milliards de tonnes de carbone) qui figurent dans les publications scientifiques se convertissent en GtCO₂ en multipliant par 3,664 : cette page utilise toujours les GtCO₂.</p>
+      </details>
+      <details class="more revbox"><summary>Ce qui a changé dans cette page : le registre des révisions</summary>
+      <p>La science du climat se corrige, et cette page fait de même. Les entrées les plus récentes sont en haut.</p>
+      <ul class="revlog">
+        <li><span class="rev-d">15 septembre 2026</span><div><b>La page est aussi en français.</b> Cinq langues : italien, anglais, espagnol, français et chinois. La traduction est complète — texte, légendes, tableaux, étiquettes des graphiques et messages d'état — et le français, comme l'italien et l'espagnol, utilise la virgule pour les décimales : 40,9 GtCO₂, et non 40.9.</div></li>
+        <li><span class="rev-d">15 septembre 2026</span><div><b>Ajout de la section sur l'énergie : pourquoi le CO₂ réchauffe, et où va la chaleur.</b> La page passait des molécules aux degrés sans dire ce qu'il y avait entre les deux. Entre les deux il y a un bilan : des 340 watts par mètre carré qui arrivent du Soleil, cent sont réfléchis et deux cent quarante absorbés, et de ces deux cent quarante, deux cent trente-neuf repartent vers l'espace. Ce qui reste — un peu plus d'un watt — c'est tout le réchauffement en cours, et depuis un demi-siècle il ne revient pas à zéro. Avec le détail qui change l'échelle du problème : de cette chaleur, l'océan prend environ 90 % et l'atmosphère 1 %, si bien que juger le réchauffement à la seule température de l'air revient à regarder un pour cent de ce qui se passe. La section dit aussi une chose qu'on tient d'ordinaire pour acquise : le déséquilibre ne s'obtient pas en soustrayant les deux flux, connus à quelques watts près, mais en comptant la chaleur qui s'accumule en mer.</div></li>
+        <li><span class="rev-d">15 septembre 2026</span><div><b>Ajout de la section sur le présent : qui est en train de ralentir.</b> La page disait combien chacun émet et de combien cela a augmenté depuis 2000, mais ne répondait pas à la question qui vient juste après : la direction est-elle en train de changer ? Pour la Chine oui, et vite — +3,9 % en 2023, +1,0 % en 2024, −0,3 % en 2025, vingt et un mois plats ou en baisse depuis le pic de mars 2024 — et c'est la première fois que cela arrive sans un ralentissement de la demande d'énergie derrière. Le reste de la section est la partie inconfortable : s'arrêter n'est pas descendre, en 2025 les États-Unis ont augmenté de 2,5 % et l'Union européenne s'est arrêtée, et le total mondial a signé un nouveau record.</div></li>
+        <li><span class="rev-d">14 septembre 2026</span><div><b>Correction d'une phrase fausse sur les guerres.</b> Elle disait qu'« aucun des deux chiffres ne comprend le combat proprement dit » : c'est vrai pour les 4,8 % des armées, pas pour les 0,2 % des guerres, qui comptent le combat, et largement. À sa place se trouve maintenant la réponse à la question que ce chiffre traîne derrière lui : les 5,5 % des armées ne comprennent pas les guerres, c'est l'appareil qui tient debout de toute façon, et de ce total un cinquième seulement est du carburant brûlé par les forces armées, le reste est l'industrie qui les approvisionne. C'est pourquoi les deux chiffres s'additionnent sans rien compter deux fois.</div></li>
+        <li><span class="rev-d">14 septembre 2026</span><div><b>Recoupement avec une enquête du Corriere.</b> Un lecteur a signalé le Dataroom de Milena Gabanelli sur les émissions des guerres : tous les chiffres coïncident avec ceux de cette page, parce qu'ils viennent des mêmes études. À cette occasion, ce qui manquait a été ajouté : des 61 conflits actifs en 2024, deux seulement ont un compte du carbone, le Liban s'ajoute à la liste de ceux qui n'en ont pas, et une note précise que même les meilleurs comptes ne mesurent que les gaz à effet de serre, pas les mines, les métaux lourds ou le pétrole en mer. Un chiffre de l'article n'a pas été repris : les « 59 guerres, le nombre le plus élevé depuis 1945 » sont en réalité 61 conflits actifs, tandis que 59 est la valeur de 2008 d'un autre indicateur.</div></li>
+        <li><span class="rev-d">14 septembre 2026</span><div><b>La part sur le total mondial, qui manquait.</b> La section sur les guerres donnait des chiffres absolus et des comparaisons, mais ne répondait pas à la question la plus directe : combien pèsent les armées et les guerres sur les émissions d'une année. C'est désormais le cas, avec le dénominateur annoncé : 57,7 milliards de tonnes de gaz à effet de serre en 2024, d'après le rapport du PNUE. Cinq carrés sur cent, dont 4,8 pour l'appareil militaire et 0,2 pour les deux guerres dont on a un compte.</div></li>
+        <li><span class="rev-d">14 septembre 2026</span><div><b>La page est en quatre langues</b> — italien, anglais, espagnol et chinois — et renvoie à son propre dépôt : corrections et signalements sont les bienvenus.</div></li>
+        <li><span class="rev-d">13 septembre 2026</span><div><b>Ajout des huit cent mille ans.</b> Il manquait à la page l'échelle longue : il y a maintenant la série des carottes antarctiques, où l'on voit que le CO₂ n'a jamais dépassé 300 ppm en huit cycles glaciaires, et qu'aucun être humain n'a jamais respiré l'air d'aujourd'hui. Avec les bons chiffres : le record n'est pas « de trois millions d'années », chiffre de reconstructions dépassées, mais d'au moins deux millions selon le GIEC et d'environ quatorze selon la synthèse de 2023. Le Pliocène, la dernière époque avec ce CO₂, avait +2,5 à +4 °C et la mer de 5 à 25 mètres plus haut, pas 35 : et c'étaient des équilibres atteints en millénaires, pas des prévisions pour 2100.</div></li>
+        <li><span class="rev-d">13 septembre 2026</span><div><b>Chaque figure déclare quel type de chiffre elle montre.</b> Mesuré, mesuré et estimé, estimation, estimation préliminaire : quatre étiquettes, expliquées ci-dessous. À cette occasion, quelques formulations trop tranchées ont été corrigées. La limite de 1,5 °C ne se « mesure pas sur la moyenne d'une décennie » : l'Accord ne prescrit pas combien d'années, nous en prenons dix et le GIEC vingt. Le budget restant n'est pas une date mais une probabilité de 50 %. De Kyoto on ne dit plus que l'effet est « pratiquement nul » mais qu'il n'a pas inversé la croissance des émissions, ce qui est ce que les données montrent. « Réduire ne suffit pas » est devenu « réduire ralentit la montée, l'arrêter demande des émissions nettes nulles ». Dans la section sur les guerres, il est désormais explicite qu'une partie des totaux est de la reconstruction future, pas encore émise.</div></li>
+        <li><span class="rev-d">13 septembre 2026</span><div><b>Ajout de la section sur les guerres.</b> Il manquait une réponse à la question la plus fréquente de toutes. La première version ne comparait que les totaux ; celle-ci montre aussi d'où ils viennent, car c'est là qu'est la surprise : dans les quatorze premiers jours de guerre en Iran, les missiles valent 1 % et les bâtiments touchés avec le pétrole brûlé 84 %. Les sources sont quatre et indépendantes les unes des autres. Les totaux restent des valeurs minimales : les armées ne déclarent pas et pour la Syrie, le Yémen et le Soudan il n'existe aucun compte.</div></li>
+        <li><span class="rev-d">13 septembre 2026</span><div><b>Correction des chiffres du bilan décennal et du compteur du budget.</b> Une relecture indépendante a retéléchargé le CSV du Global Carbon Budget 2025 et constaté que les moyennes 2015–2024 de la page avaient été mal recopiées : usage des sols 5,0 et non 5,6, océan 11,8 et non 11,6, végétation 8,7 et non 9,2, atmosphère 20,4 et non 19,7. Le « déséquilibre inexpliqué » de 1,2 GtCO₂ sur la décennie n'existe pas : il est quasi nul, alors que pour la seule année 2024 il vaut −6 GtCO₂. Le budget restant pour 1,5 °C se compte à partir du début de 2026, pas de 2025 : le compteur est passé de 98 à environ 140 GtCO₂. Les données par pays ont également été mises à jour à 2024.</div></li>
+        <li><span class="rev-d">septembre 2026</span><div><b>Suppression des notes de relecture de la présentation d'origine.</b> La page était née pour vérifier une diapositive existante (« 425 ppm en 2020 », « 3 fois plus vite », « décennie après décennie ») et en annotait les erreurs sous les graphiques. Désormais la page est la présentation : les graphiques sont corrects, et les notes corrigeaient quelque chose que le lecteur ne voit plus. Ce qu'elles avaient de vrai est resté dans les légendes et dans le tableau par décennie.</div></li>
+        <li><span class="rev-d">septembre 2026</span><div><b>Ajout du zoom sur les dix dernières années.</b> Sur la courbe depuis 1959, le saut de 2023–2024 ne se voit pas : le nouveau graphique montre les mois récents et, en dessous, la croissance de chaque année. Lui aussi se redessine avec les données NOAA lues en direct.</div></li>
+        <li><span class="rev-d">septembre 2026</span><div><b>Mise à jour au Global Carbon Budget 2025.</b> Le puits terrestre a été revu de 11,7 à 8,7 GtCO₂ par an et la part qui reste dans l'atmosphère est passée de 45 % à environ 50 % : la révision la plus importante, due à la fois aux nouvelles données et au décalage de la décennie de référence.</div></li>
+        <li><span class="rev-d">septembre 2026</span><div><b>Correction d'une section qui mélangeait deux séries.</b> La version précédente parlait d'un bond de 25 % dans la croissance de 2024. À Mauna Loa ce bond n'existe pas (3,32 contre 3,33 ppm) ; il existe dans la moyenne mondiale (2,70 contre 3,76). C'étaient deux jeux de données différents cités comme s'ils n'en faisaient qu'un.</div></li>
+        <li><span class="rev-d">septembre 2026</span><div><b>Le déséquilibre du bilan rendu visible.</b> Sur une année isolée, sources et puits, mesurés par des méthodes indépendantes, ne s'additionnent jamais exactement : le désaccord est publié comme un poste à part.</div></li>
+        <li><span class="rev-d">septembre 2026</span><div><b>Correction du facteur de conversion</b> de 7,82 à 7,78 GtCO₂ par ppm, qui n'était pas cohérent avec la valeur en carbone indiquée à côté.</div></li>
+      </ul>
+      </details>
+
+      <h3>Ce qui est solide et ce qui ne l'est pas</h3>
+      <p>Chaque figure porte une étiquette qui dit de quel type de chiffre il s'agit. <span class="tag tag-obs">mesuré</span> désigne des mesures et des inventaires publiés : les séries NOAA, les émissions par pays du Global Carbon Budget. <span class="tag tag-obs">mesuré et estimé</span>, c'est le bilan mondial, où les sources fossiles sont des inventaires mais où les deux puits sont reconstruits par des modèles, et c'est la raison des moustaches d'incertitude sous les blocs. <span class="tag tag-est">estimation</span>, c'est un calcul ou un modèle : le contrefactuel sans puits, le compte des guerres. <span class="tag tag-prel">estimation préliminaire</span>, c'est un travail qui n'est pas encore passé par une revue scientifique, et il n'apparaît qu'une seule fois dans cette page.</p>
+      <p>Les émissions fossiles sont connues à environ 5 % près. Le puits océanique à environ 15 % près. Le puits terrestre et l'usage des sols sont les postes les moins bien contraints, avec des incertitudes qui, certaines années, dépassent 50 % de la valeur. Le bilan ne boucle jamais exactement : le déséquilibre résiduel est publié comme un poste à part, et en 2024 il a atteint −6 GtCO₂ (−1,7 GtC), la valeur la plus négative de la série.</p>
+      <p>Les chiffres cumulés 1850–2024 ne concernent que le carbone fossile. En incluant l'usage historique des sols, le classement change sensiblement.</p>
+    </div>
+
+    <p class="foot">Toutes les valeurs sont arrondies pour la lisibilité. Avant d'en citer une, vérifiez le chiffre exact à la source primaire indiquée plus haut : les séries NOAA et le Global Carbon Budget sont révisés à chaque édition.</p>
+  </section>
+
+  <footer class="site-foot">
+    <div class="sf-in">
+      <p class="sf-note">Analyse de vulgarisation sur le bilan mondial du carbone. Les données proviennent du Global Carbon Project, du NOAA Global Monitoring Laboratory et d'Our World in Data. Bilan : Global Carbon Budget 2025. Série de Mauna Loa : lue auprès de la NOAA à chaque chargement, avec les valeurs enregistrées le 12 septembre 2026 comme secours.</p>
+      <p class="sf-gh"><a class="gh-link" href="https://github.com/postadelmaga/carbonio" rel="noopener"><svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true" focusable="false"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>postadelmaga/carbonio</a><span><b>Cette page se corrige en public.</b> Le code, les données et le registre des révisions sont sur GitHub. Si vous trouvez un chiffre faux, une meilleure source ou une phrase qui dit plus que ce que les données soutiennent, <a class="ref" href="https://github.com/postadelmaga/carbonio/issues" rel="noopener">ouvrez un signalement</a> : le registre ci-dessus est fait de corrections arrivées ainsi. Sans compte, il y a le <a class="ref" href="/fr/feedback.html">tableau de messages</a>.</span></p>
+      <p class="sf-meta"><a href="#top">Retour en haut</a> · Page statique, aucun cookie : seulement des statistiques de visite anonymes (Umami). · Textes et graphiques <a class="ref" href="https://creativecommons.org/licenses/by/4.0/deed.fr" rel="noopener">CC BY 4.0</a>, code MIT.</p>
+    </div>
+  </footer>
+
+</div>
+<script src="/assets/tema.js" defer></script>
+<script src="/assets/charts.js" defer></script>
+<script src="/assets/live.js" defer></script>
+<script src="/assets/slides.js" defer></script>
+<script src="/assets/feedback.js" defer></script>
+</body>
+</html>

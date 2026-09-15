@@ -53,6 +53,12 @@ LINGUE = {
    deck='Cada año el océano y la vegetación absorben cerca de la mitad, gratis.',
    emesso='Emitido 40,9 GtCO₂ / año', periodo='medias 2015–2024', totale='40,9',
    voci=[('11,8', 'océano'), ('8,7', 'vegetación'), ('20,4', 'queda en el aire')]),
+ 'fr': dict(
+   eyebrow='GLOBAL CARBON BUDGET 2025',
+   titolo=('Le carbone qui ', 'reste'),
+   deck='Chaque année, l’océan et la végétation en absorbent près de la moitié, gratuitement.',
+   emesso='Émis 40,9 GtCO₂ / an', periodo='moyennes 2015–2024', totale='40,9',
+   voci=[('11,8', 'océan'), ('8,7', 'végétation'), ('20,4', 'reste dans l’air')]),
  'zh': dict(
    eyebrow='全球碳预算 2025',
    titolo=('留下来的', '碳'),

@@ -22,7 +22,7 @@ from bs4 import BeautifulSoup, NavigableString, Tag
 QUI = os.path.dirname(os.path.abspath(__file__))
 PAGINE = ['index.html', 'feedback.html']   # sorgenti italiani da tradurre
 SRC = os.path.join(QUI, 'index.html')
-LINGUE = {'en': 'English', 'es': 'Español', 'zh': '中文'}
+LINGUE = {'en': 'English', 'es': 'Español', 'fr': 'Français', 'zh': '中文'}
 
 INLINE = {'b','i','em','strong','abbr','span','small','a','sub','sup','br','code','u','mark'}
 SALTA   = {'script','style','svg','head'}
@@ -116,6 +116,7 @@ def raccogli(soup):
 LANG_META = {
     'en': {'lang':'en', 'locale':'en_GB', 'dec':'.', 'fl':'🇬🇧', 'lc':'EN'},
     'es': {'lang':'es', 'locale':'es_ES', 'dec':',', 'fl':'🇪🇸', 'lc':'ES'},
+    'fr': {'lang':'fr', 'locale':'fr_FR', 'dec':',', 'fl':'🇫🇷', 'lc':'FR'},
     'zh': {'lang':'zh', 'locale':'zh_CN', 'dec':'.', 'fl':'🇨🇳', 'lc':'中文'},
 }
 

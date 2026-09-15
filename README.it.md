@@ -1,6 +1,7 @@
 # Il carbonio che resta
 
-[English](README.md) · **Italiano** · [Español](README.es.md) · [中文](README.zh.md)
+[English](README.md) · **Italiano** · [Español](README.es.md) ·
+[Français](README.fr.md) · [中文](README.zh.md)
 
 Sito a pagina singola sul bilancio globale del carbonio: quanta CO₂ emettiamo,
 quanta ne assorbono oceani e vegetazione, e perché nella curva di Mauna Loa se
@@ -57,7 +58,7 @@ niente da compilare per servirlo.
 ```
 .
 ├── index.html          la pagina, in italiano: l'unica copia scritta a mano
-├── en/ es/ zh/         traduzioni generate: non modificarle a mano
+├── en/ es/ fr/ zh/         traduzioni generate: non modificarle a mano
 ├── i18n/               un dizionario per lingua + le chiavi estratte
 ├── build.py            genera le pagine tradotte dal sorgente italiano
 ├── publish.sh          deploy.sh con destinazione e URL pubblico incorporati
@@ -65,7 +66,7 @@ niente da compilare per servirlo.
 ├── 404.html  robots.txt
 └── assets/
     ├── style.css       token di tema chiaro/scuro, layout, stampa
-    ├── charts.js       gli otto grafici SVG + i dati di riserva incorporati
+    ├── charts.js       i nove grafici SVG + i dati di riserva incorporati
     ├── slides.js       navigazione a slide: frecce, tastiera, tocco
     ├── live.js         lettura in diretta da NOAA, con ripiego
     └── favicon.svg
@@ -73,7 +74,7 @@ niente da compilare per servirlo.
 
 ```bash
 python3 -m http.server 8100     # poi apri http://localhost:8100
-./build.py                      # rigenera en/, es/, zh/
+./build.py                      # rigenera en/, es/, fr/, zh/
 ./publish.sh --apply            # pubblica
 ```
 
