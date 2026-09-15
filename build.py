@@ -96,8 +96,13 @@ def raccogli(soup):
         for a in ATTR_TRAD:
             v = t.get(a)
             if v and not re.fullmatch(r'[\d\s.,%+\-–—·/]+', v): attributi.append(v)
+    # Il nome del meta sta in 'property' per Open Graph e in 'name' per Twitter:
+    # guardarne uno solo lasciava twitter:description in italiano su tutte e tre
+    # le traduzioni.
+    META_TRAD = ('description', 'og:title', 'og:description', 'og:site_name',
+                 'og:image:alt', 'twitter:title', 'twitter:description')
     for t in soup.head.find_all('meta') if soup.head else []:
-        if t.get('name') in ('description',) or t.get('property') in ('og:title','og:description','twitter:title','twitter:description'):
+        if (t.get('property') or t.get('name')) in META_TRAD:
             if t.get('content'): attributi.append(t['content'])
     if soup.head and soup.head.title: attributi.append(soup.head.title.string or '')
     # dedup conservando l'ordine
@@ -157,6 +162,8 @@ def genera(codice, dizionario, permissivo, pagina='index.html'):
                       '<link rel="canonical" href="__ROOT__/%s/%s">' % (codice, coda))
     src = src.replace('<meta property="og:url" content="__ROOT__/%s">' % coda,
                       '<meta property="og:url" content="__ROOT__/%s/%s">' % (codice, coda))
+    # la cartolina di anteprima e' una per lingua, disegnata da ./social.py
+    src = src.replace('/assets/social-it.png', '/assets/social-%s.png' % codice)
     # i collegamenti interni fra le due pagine restano dentro la lingua
     if pagina != 'index.html':
         src = src.replace('href="/"', 'href="/%s/"' % codice)
