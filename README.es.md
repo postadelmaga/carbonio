@@ -16,8 +16,9 @@ lugar. Cada número lleva su fuente y su incertidumbre.
 
 ## Qué tiene de insólito
 
-- **Lee sus propios datos.** La curva del CO₂, la tasa de crecimiento y la
-  serie de temperaturas se piden a la NOAA en cada carga. Si la red no
+- **Lee sus propios datos.** La curva del CO₂, la tasa de crecimiento, la
+  serie de temperaturas y el calor acumulado en los océanos se piden a la NOAA
+  en cada carga. Si la red no
   responde, la página muestra los valores guardados en el HTML y lo declara con
   un punto de color, en lugar de disimular.
 - **Cada figura declara qué tipo de número muestra**: `observado`,
@@ -26,8 +27,8 @@ lugar. Cada número lleva su fuente y su incertidumbre.
 - **Se corrige en público.** El registro de revisiones del final enumera qué
   cambió y por qué, incluidas las veces en que la página se equivocaba.
 - **Nada que compilar para servirla, sin cookies, sin peticiones a terceros**
-  más allá de las tipografías y el contador de visitas. Quince pantallas,
-  catorce secciones, ocho gráficos dibujados como SVG en la propia página.
+  más allá de las tipografías y el contador de visitas. Dieciséis pantallas,
+  quince secciones, nueve gráficos dibujados como SVG en la propia página.
 
 ## Colaborar
 

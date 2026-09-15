@@ -16,8 +16,8 @@ Every number carries its source and its uncertainty.
 
 ## What is unusual about it
 
-- **It reads its own data.** The CO₂ curve, the growth rate and the
-  temperature series are fetched from NOAA at every load. If the network is
+- **It reads its own data.** The CO₂ curve, the growth rate, the temperature
+  series and the heat stored in the oceans are fetched from NOAA at every load. If the network is
   down the page shows values baked into the HTML and says so with a coloured
   dot, instead of pretending.
 - **Every figure declares what kind of number it is**: `observed`,
@@ -26,7 +26,7 @@ Every number carries its source and its uncertainty.
 - **It corrects itself in public.** The revision log at the bottom lists what
   changed and why, including the times the page itself was wrong.
 - **No build to serve it, no cookies, no third-party requests** beyond the
-  fonts and the visit counter. Fifteen screens, fourteen sections, eight
+  fonts and the visit counter. Sixteen screens, fifteen sections, nine
   charts drawn as inline SVG.
 
 ## Contributing

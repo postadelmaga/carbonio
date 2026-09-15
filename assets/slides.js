@@ -209,7 +209,7 @@ function T(s){ var d=window.I18N; return (d && d[s]) || s; }
     Array.prototype.forEach.call(document.querySelectorAll('.fig-sub .fs-more'), function(m){
       var p = m.parentNode;
       var b = document.createElement('button'); b.type='button'; b.className='fs-btn';
-      b.textContent='Come leggerlo'; b.setAttribute('aria-expanded','false');
+      b.textContent=T('Come leggerlo'); b.setAttribute('aria-expanded','false');
       b.addEventListener('click', function(){ var o = p.classList.toggle('is-open'); b.setAttribute('aria-expanded', String(o)); });
       p.appendChild(b);
     });

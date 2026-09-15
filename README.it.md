@@ -16,8 +16,9 @@ posto. Ogni numero porta con sé la fonte e la sua incertezza.
 
 ## Cosa ha di insolito
 
-- **Legge i propri dati.** La curva della CO₂, il tasso di crescita e la serie
-  delle temperature vengono presi da NOAA a ogni caricamento. Se la rete non
+- **Legge i propri dati.** La curva della CO₂, il tasso di crescita, la serie
+  delle temperature e il calore accumulato negli oceani vengono presi da NOAA a
+  ogni caricamento. Se la rete non
   risponde la pagina mostra i valori salvati nell'HTML e lo dichiara con un
   pallino colorato, invece di far finta di niente.
 - **Ogni figura dichiara che tipo di numero mostra**: `osservato`,
@@ -26,8 +27,8 @@ posto. Ogni numero porta con sé la fonte e la sua incertezza.
 - **Si corregge in pubblico.** Il registro delle revisioni in fondo elenca cosa
   è cambiato e perché, comprese le volte in cui la pagina aveva torto.
 - **Nessuna compilazione per servirla, nessun cookie, nessuna richiesta a
-  terzi** oltre ai caratteri e al contatore di visite. Quindici schermate,
-  quattordici sezioni, otto grafici disegnati come SVG in pagina.
+  terzi** oltre ai caratteri e al contatore di visite. Sedici schermate,
+  quindici sezioni, nove grafici disegnati come SVG in pagina.
 
 ## Collaborare
 

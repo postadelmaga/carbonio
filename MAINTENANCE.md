@@ -81,6 +81,46 @@ And **Mauna Loa is not the planet**: the global mean comes from marine
 stations far from cities, weighted by latitude band. In 2024 the two give
 3.33 and 3.76 ppm.
 
+**The energy imbalance** ("Perché si scalda: il conto dell'energia"). Three
+sources with three vintages, and the figure keeps them apart on purpose. The
+fluxes in the top two bars — 340 arriving, 100 reflected, 240 absorbed, 239
+re-emitted — are IPCC AR6 WGI figure 7.2 (adapted from Wild et al. 2015), for
+early-21st-century conditions. That same figure gives the imbalance as 0.7
+(0.5–0.9) W/m²; the page does **not** use it. The number in the red sliver,
+1.12 [0.78 to 1.46] W/m² for 2013–2025, is the updated one from Forster et al.,
+*Indicators of Global Climate Change 2025* (ESSD 18, 3889–3933, 2026), table 4,
+which also has 1.04 [0.82 to 1.25] for 2006–2025 and 0.40 [−0.03 to 0.84] for
+1976–1995 — the three rows of the "go deeper" table. **Update in June**, when
+the IGCC annual update comes out.
+
+Do not "close" the figure by subtracting. 240 − 239 = 1 is a rounding
+coincidence: each top-of-atmosphere flux is known to a few W/m², and a
+difference worth one would vanish inside that. The imbalance is measured from
+the heat inventory instead, and the caption says so. It is the one sentence in
+the section that must not be cut.
+
+The split of the imbalance — ocean 89%, land 6%, cryosphere 4%, atmosphere 1%,
+over 1971–2020 — is von Schuckmann et al. 2023 (ESSD 15, 1675–1709), with the
+381 ± 61 ZJ total and the component values (land 21 ± 2, cryosphere 14 ± 4,
+atmosphere 5 ± 1 ZJ). The ocean row in the table is the residual and the page
+says so: the paper publishes the total and the three smaller terms. AR6 gives
+91/5/3/1 for 1971–2018; both are quoted, neither is silently mixed with the
+other.
+
+Two results in that section are **computed here, not transcribed**, and the
+constants are printed so a reader can redo them. The atmosphere's heat capacity
+(5.15·10¹⁸ kg × 1005 J kg⁻¹ K⁻¹ = 5.2 ZJ per degree; the mass is Trenberth and
+Smith 2005) equals 3.5 m of seawater (3.618·10¹⁴ m² × 1027 kg m⁻³ ×
+3990 J kg⁻¹ K⁻¹ = 1.5 ZJ per degree per metre). And 381 ZJ put into the
+atmosphere alone would be more than seventy degrees — labelled "un conto, non
+uno scenario" on purpose, because air that hot would radiate its way out of the
+imbalance long before. The −18 °C in the same block is (240/σ)^¼ = 255 K,
+against an observed surface of about 288 K. The "seventeen times the energy the
+world uses in a year" in the data box is 11.2 ZJ a year of ocean heat uptake
+against 178 000 TWh = 0.64 ZJ of world primary energy in 2025 (OWID, by the
+substitution method, traditional biomass included; without it the ratio is
+nineteen, hence the round word rather than a decimal).
+
 **Palaeoclimate.** Ice cores: Bereiter et al. 2015 composite from NOAA
 Paleoclimatology, embedded in `charts.js` as `ICE`, reduced from 1901 to 718
 points keeping peaks and troughs (at 880 units wide one pixel is about a
@@ -128,6 +168,15 @@ down the other.
   ten-year zoom takes monthlies, deseasonalised curve and growth rates from
   the same download.
 - **Temperature and other gases** from NOAA NCEI and GML.
+- **Ocean heat** from NOAA NCEI: the Levitus series for the top 2000 m,
+  in units of 10²² J against the 1955–2006 mean (1 unit = 10 ZJ). Two files and
+  **two cadences that must not be mixed**: `yearly/h22-w0-2000m.dat` is annual
+  and starts in 2005, `pentad/pent_h22-w0-2000m.dat` is a five-year running
+  mean and starts in 1957. The latest value and the yearly rate come from the
+  annual file; the comparison with 1971 comes from the pentadal file alone, at
+  both ends. Mixing them turns 0.12 °C into 0.13 °C. The conversion to degrees
+  is in `live.js`: ocean area 3.618·10¹⁴ m², 2000 m, 1027 kg/m³,
+  3990 J kg⁻¹ K⁻¹.
 
 At rest the page shows the values baked into the HTML, so it is correct with
 JavaScript off or the network down. The coloured dot in each data box says
@@ -167,9 +216,12 @@ If you add content to a section, put it there, not in the body.
 Above 1100px a section with class `slide` becomes a grid: heading and
 standfirst across the top, the figure in `.slide-main` on the left, the
 data box and callouts in `.slide-side` on the right, the `<details>` full
-width at the bottom. At 1440×900 every section fits one screen; below 820px
-of height a more compact variant kicks in. Below 1100px everything goes back
-to one column in document order.
+width at the bottom. At 1440×900 most sections fit one screen (852 px, the
+viewport minus the bar); three run over — wars 1011, energy 982, China 880 —
+and the row height is set by the taller of the two columns, so it is usually
+the data box plus callout on the right, not the chart. Below 820px of height a
+more compact variant kicks in. Below 1100px everything goes back to one column
+in document order.
 
 On phones (below 640px) `charts.js` draws the charts on 460 units instead of
 880 (`NARROW`, `CHART_W`): narrower and taller, with shortened labels, so they
@@ -204,6 +256,11 @@ Three traps already paid for, do not repeat them:
 - numbers are translatable units like any other, because English and Chinese
   want a decimal point: `40,9` → `40.9`. In the charts `it()` handles it,
   reading the separator from `window.I18N._dec`;
+- the decimal separator is **not** a constant. `charts.js` has `DEC`,
+  `live.js` has `SEP`, both read from `window.I18N._dec`; three places used to
+  hard-code the comma and the English page showed "+1,29 °C". The same trap in
+  reverse: a string that never goes through `T()` stays Italian everywhere, as
+  the "Come leggerlo" button in `slides.js` did;
 - in `charts.js` the translation function is called `tr()` and not `T()`:
   `T` is already the top margin of the first chart. One letter, and no chart
   is drawn at all.

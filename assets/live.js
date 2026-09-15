@@ -2,6 +2,11 @@
    e la funzione restituisce la stringa originale. Definita una volta per tutto
    il file, fuori dalle due IIFE. */
 function T(s){ var d=window.I18N; return (d && d[s]) || s; }
+/* Il separatore decimale: lo scrive la versione tradotta insieme alle stringhe
+   (inglese e cinese vogliono il punto). In italiano window.I18N non esiste e
+   resta la virgola. Era fisso alla virgola, e le pagine tradotte mostravano
+   «+1,29 °C» accanto a un testo inglese. */
+var SEP = (window.I18N && window.I18N._dec) || ',';
 /* ─────────────────────────────────────────────────────────────────────────
    live.js — legge da NOAA GML l'ultimo dato di Mauna Loa e aggiorna la pagina.
 
@@ -38,7 +43,7 @@ function T(s){ var d=window.I18N; return (d && d[s]) || s; }
       for(var i=0;i<c.length;i++) c[i].textContent=v;
     }};
   }
-  function fmt(n,d){ return n.toFixed(d).replace('.', ','); }
+  function fmt(n,d){ return n.toFixed(d).replace('.', SEP); }
 
   function fallback(why){
     box.setAttribute('data-state','baked');
@@ -196,7 +201,7 @@ function T(s){ var d=window.I18N; return (d && d[s]) || s; }
       for(var i=0;i<c.length;i++) c[i].textContent=v;
     }};
   }
-  function fmt(n,d){ return n.toFixed(d).replace('.', ','); }
+  function fmt(n,d){ return n.toFixed(d).replace('.', SEP); }
 
   /* ── il budget e' una sottrazione, non una lettura: si aggiorna da solo ── */
   (function budget(){
@@ -301,4 +306,101 @@ function T(s){ var d=window.I18N; return (d && d[s]) || s; }
         note.textContent = T('Lettura in diretta non riuscita: mostro i valori salvati il ') + BAKED + '.';
       }
     });
+})();
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Terzo blocco, indipendente dagli altri: il calore accumulato negli oceani,
+   dal centro NCEI di NOAA. Due file e due cadenze, che non vanno mescolate:
+   la media annua dei primi 2000 metri esiste dal 2005, la media mobile di
+   cinque anni dal 1957. Il valore piu' recente e il ritmo vengono dalle medie
+   annue; il confronto lungo con il 1971 usa solo le medie mobili.
+
+   NCEI serve questi file con Access-Control-Allow-Origin: *, come il GML.
+   ───────────────────────────────────────────────────────────────────────── */
+(function(){
+  "use strict";
+
+  var NCEI = 'https://www.ncei.noaa.gov/data/oceans/woa/DATA_ANALYSIS/3M_HEAT_CONTENT/DATA/basin/';
+  var ANNUE = NCEI + 'yearly/h22-w0-2000m.dat';
+  var PENTA = NCEI + 'pentad/pent_h22-w0-2000m.dat';
+  var BAKED = '15 settembre 2026';
+  var TIMEOUT = 7000;
+
+  /* I file sono in 10^22 J rispetto alla media 1955-2006: 1 unita' = 10 ZJ.
+     Per passare a gradi sui primi 2000 metri servono la superficie degli
+     oceani (3,618e14 m2), la densita' dell'acqua di mare (1027 kg/m3) e il
+     suo calore specifico (3990 J per kg e grado). Il risultato e' quanto
+     vale un grado in unita' del file. */
+  var PER_GRADO = 3.618e14 * 2000 * 1027 * 3990 / 1e22;
+
+  var box  = document.getElementById('live-o');
+  var note = document.getElementById('lo-note');
+  if(!box || !note) return;
+
+  function $(id){
+    var e=document.getElementById(id);
+    if(!e) return {set textContent(v){}};
+    return {set textContent(v){
+      e.textContent=v;
+      var c=document.querySelectorAll('[data-from="'+id+'"]');
+      for(var i=0;i<c.length;i++) c[i].textContent=v;
+    }};
+  }
+  function fmt(n,d){ return n.toFixed(d).replace('.', SEP); }
+  function fallback(){
+    box.setAttribute('data-state','baked');
+    note.textContent = T('Lettura in diretta non riuscita: mostro i valori salvati il ') + BAKED + '.';
+  }
+
+  if(!window.fetch || !window.Promise){ fallback(); return; }
+  note.textContent = T('Leggo il calore degli oceani dal centro NCEI di NOAA…');
+
+  function get(url){
+    var ctl = window.AbortController ? new AbortController() : null;
+    var timer = ctl && setTimeout(function(){ ctl.abort(); }, TIMEOUT);
+    return fetch(url, ctl ? {signal:ctl.signal} : undefined).then(function(r){
+      if(timer) clearTimeout(timer);
+      if(!r.ok) throw new Error('HTTP ' + r.status);
+      return r.text();
+    });
+  }
+  /* prima colonna l'anno (con il ,5 di meta' anno), seconda il valore
+     globale; la riga di intestazione non e' fatta di numeri e cade da sola */
+  function serie(txt){
+    var out=[], lines=txt.split('\n');
+    for(var i=0;i<lines.length;i++){
+      var l=lines[i].trim();
+      if(!l) continue;
+      var p=l.split(/\s+/).map(Number);
+      if(p.length>=2 && p[0]>1900 && p[0]<2200 && !isNaN(p[1])) out.push([p[0],p[1]]);
+    }
+    out.sort(function(a,b){ return a[0]-b[0]; });
+    return out;
+  }
+
+  Promise.all([get(ANNUE), get(PENTA)]).then(function(t){
+    var a=serie(t[0]), p=serie(t[1]);
+    if(a.length<10 || p.length<40) throw new Error('serie troppo corte');
+
+    var ultimo=a[a.length-1], primo=a[0];
+    var zj = ultimo[1]*10;
+    var anni = ultimo[0]-primo[0];
+    if(!(zj>100 && zj<2000) || anni<10) throw new Error('valori implausibili');
+    $('lo-zj').textContent = '+' + Math.round(zj);
+    $('lo-yr').textContent = String(Math.floor(ultimo[0]));
+    $('lo-rate').textContent = String(Math.round((ultimo[1]-primo[1])*10/anni));
+
+    /* il confronto lungo resta tutto dentro le medie mobili di cinque anni:
+       mescolarle con la media annua darebbe un decimo di grado sbagliato */
+    var p71=null, i;
+    for(i=0;i<p.length;i++){ if(Math.floor(p[i][0])===1971) p71=p[i][1]; }
+    if(p71!==null){
+      var dt=(p[p.length-1][1]-p71)/PER_GRADO;
+      if(dt>0 && dt<1) $('lo-dt').textContent = '+' + fmt(dt,2);
+    }
+
+    box.setAttribute('data-state','live');
+    note.textContent = T('Letti ora da NOAA (centro NCEI): calore nei primi 2000 metri d’oceano, media annua ') +
+      Math.floor(ultimo[0]) + T(', e medie mobili di cinque anni per il confronto con il 1971.');
+  }).catch(function(){ fallback(); });
 })();

@@ -258,6 +258,125 @@
     bs.appendChild(bf);
   }
 
+  /* ════════════════════ lo squilibrio energetico ════════════════════
+     Due barre sulla stessa scala (0-340 W/m2) e uno zoom.
+     Sopra: quello che arriva dal Sole, diviso fra riflesso e assorbito.
+     Sotto: di quello assorbito, quanto riparte come infrarosso e quanto
+     resta dentro. La riga rossa e' disegnata in scala, e per questo e'
+     un filo: e' tutto il riscaldamento in corso.
+     Flussi: IPCC AR6, figura 7.2 (da Wild et al. 2015), inizio secolo.
+     Squilibrio: 1,12 W/m2 nel 2013-2025, Forster et al., IGCC 2025.
+     Ripartizione: von Schuckmann et al. 2023, 1971-2020. */
+  var qs=document.getElementById('squilibrio');
+  if(qs){
+    var QW=CHART_W, QH=NARROW?398:350;
+    fitBox(qs,QW,QH);
+    var qx0=NARROW?16:30, qx1=QW-qx0, qbar=qx1-qx0;
+    var SOLAR=340, REFL=100, ABSORB=SOLAR-REFL, EEI=1.12, IR=ABSORB-EEI;
+    var U=qbar/SOLAR;                       /* pixel per W/m2 */
+
+    var r1y=NARROW?50:46, r1h=NARROW?36:40;
+    var r2y=NARROW?138:124, r2h=r1h;
+    var r3y=NARROW?244:224, r3h=NARROW?40:44;
+    var leadX=NARROW?184:520;               /* dove finiscono le linee guida */
+
+    var qf=document.createDocumentFragment();
+
+    /* il riflesso e' pur sempre luce solare: stesso colore, tratteggiato.
+       Il motivo ha un id suo e non riusa quello del grafico del bilancio,
+       che in questa pagina potrebbe non esserci. */
+    var qd=el('defs',{});
+    var qp=el('pattern',{id:'hatch-sole',width:6,height:6,patternUnits:'userSpaceOnUse',patternTransform:'rotate(45)'});
+    qp.appendChild(el('rect',{width:6,height:6,fill:tok('--source'),'fill-opacity':.18}));
+    qp.appendChild(el('rect',{width:2.2,height:6,fill:tok('--source')}));
+    qd.appendChild(qp); qf.appendChild(qd);
+
+    /* fill uguale a --surface vuol dire testo dentro un blocco scuro: li'
+       l'alone bianco di .svg-val andrebbe a mangiarsi le lettere */
+    function qlab(x,y,s,cls,anchor,fill,size){
+      var t=el('text',{x:x,y:y,class:cls||'svg-lab'});
+      if(anchor) t.setAttribute('text-anchor',anchor);
+      if(fill){ t.style.fill=fill; if(fill===tok('--surface')) t.style.stroke='none'; }
+      if(size) t.style.fontSize=size;
+      t.textContent=s; qf.appendChild(t); return t;
+    }
+    var SMALL=NARROW?'12px':null;
+
+    /* ── riga 1: quello che arriva ── */
+    var h1=qlab(qx0,r1y-24,tr('QUELLO CHE ARRIVA DAL SOLE'),'svg-lab-b');
+    h1.setAttribute('letter-spacing','.08em');
+    qlab(qx1,r1y-24,it(SOLAR,0)+' W/m²','svg-val','end');
+
+    qf.appendChild(el('rect',{x:qx0,y:r1y,width:ABSORB*U-1,height:r1h,fill:tok('--source'),rx:3}));
+    qf.appendChild(el('rect',{x:qx0+ABSORB*U+1,y:r1y,width:REFL*U-1,height:r1h,
+      fill:'url(#hatch-sole)',stroke:tok('--source'),'stroke-width':1,rx:3}));
+    qlab(qx0+11,r1y+r1h/2+5,tr('Assorbita')+'  '+it(ABSORB,0),'svg-val',null,tok('--ink'),SMALL);
+    /* l'etichetta del riflesso sta dentro il suo blocco: fuori finirebbe
+       addosso all'intestazione della riga sotto, sullo schermo stretto */
+    qlab(qx1-11,r1y+r1h/2+5,tr('Riflessa')+'  '+it(REFL,0),'svg-val','end',tok('--ink'),SMALL);
+
+    /* ── riga 2: di quello assorbito, quanto riparte ── */
+    var h2q=qlab(qx0,r2y-24,tr('QUELLO CHE RIPARTE, COME INFRAROSSO'),'svg-lab-b');
+    h2q.setAttribute('letter-spacing','.08em');
+
+    qf.appendChild(el('rect',{x:qx0,y:r2y,width:IR*U,height:r2h,fill:tok('--atmos'),rx:3}));
+    qlab(qx0+11,r2y+r2h/2+5,tr('Riemessa verso lo spazio')+'  '+it(IR,0),'svg-val',null,tok('--surface'),SMALL);
+
+    /* la riga rossa e' in scala: a questa larghezza vale due o tre pixel.
+       L'etichetta esce a destra, all'altezza della barra: sopra finirebbe
+       contro l'intestazione, e non c'e' larghezza che tenga. */
+    var slivX=qx0+IR*U, slivW=Math.max(EEI*U,2.2);
+    qf.appendChild(el('rect',{x:slivX,y:r2y-7,width:slivW,height:r2h+14,fill:tok('--heat')}));
+    var midY=r2y+r2h/2;
+    qf.appendChild(el('line',{x1:slivX+slivW,x2:slivX+slivW+8,y1:midY,y2:midY,stroke:tok('--heat'),'stroke-width':1.4}));
+    qlab(slivX+slivW+12,midY+5,tr('Trattenuta')+'  '+it(EEI,2),'svg-val',null,tok('--heat'),SMALL);
+
+    /* ── il ventaglio: la riga rossa allargata a tutta la barra ── */
+    var fy0=r2y+r2h+8, fy1=r3y, fm=(fy0+fy1)/2;
+    qf.appendChild(el('path',{fill:tok('--heat'),'fill-opacity':.13,
+      d:'M'+slivX+' '+fy0+
+        ' C'+slivX+' '+fm+' '+qx0+' '+fm+' '+qx0+' '+fy1+
+        ' L'+qx1+' '+fy1+
+        ' C'+qx1+' '+fm+' '+(slivX+slivW)+' '+fm+' '+(slivX+slivW)+' '+fy0+' Z'}));
+    var zl=qlab(qx0,fy1-13,tr('DOVE VA A FINIRE'),'svg-lab-b');
+    zl.setAttribute('letter-spacing','.08em');
+
+    /* ── riga 3: la ripartizione ── */
+    var DEST=[
+      {k:'oceano',   v:89, c:tok('--ocean'), lab:tr('Oceano')},
+      {k:'terre',    v:6,  c:tok('--land'),  lab:tr('Terre emerse')},
+      {k:'ghiacci',  v:4,  c:tok('--bim'),   lab:tr('Ghiacci')},
+      {k:'atmosfera',v:1,  c:tok('--heat'),  lab:tr('Atmosfera')}
+    ];
+    var qacc=0, piccoli=[];
+    DEST.forEach(function(p,i){
+      var w=qbar*p.v/100, gap=2;
+      var xA=qx0+qacc+(i>0?gap/2:0), ww=w-(i>0?gap/2:0)-(i<DEST.length-1?gap/2:0);
+      qf.appendChild(el('rect',{x:xA,y:r3y,width:Math.max(ww,1.6),height:r3h,fill:p.c,rx:2}));
+      if(p.k==='oceano'){
+        qlab(xA+11,r3y+(NARROW?18:20),p.lab,'svg-lab-b',null,tok('--surface'),SMALL);
+        qlab(xA+11,r3y+(NARROW?36:40),it(p.v,0)+'%','svg-val',null,tok('--surface'),SMALL);
+      } else {
+        piccoli.push({cx:xA+ww/2, lab:p.lab, v:p.v, c:p.c, k:p.k});
+      }
+      qacc+=w;
+    });
+
+    /* le tre fette strette non hanno spazio per un'etichetta dentro: esce
+       sotto, con una linea guida che scende e poi va a sinistra. L'ordine
+       e' da sinistra a destra, cosi' le linee non si incrociano mai. */
+    piccoli.forEach(function(p,i){
+      var ly=r3y+r3h+20+i*(NARROW?26:24);
+      qf.appendChild(el('polyline',{points:p.cx+','+(r3y+r3h+4)+' '+p.cx+','+ly+' '+(leadX+8)+','+ly,
+        fill:'none',stroke:p.c,'stroke-width':1.4}));
+      var txt=p.lab+' — '+it(p.v,0)+'%';
+      if(p.k==='atmosfera' && !NARROW) txt=txt+tr(': è questa che sentiamo come temperatura');
+      qlab(leadX,ly+5,txt,'svg-val','end',p.c,SMALL);
+    });
+
+    qs.appendChild(qf);
+  }
+
   /* ════════════════════ due scale a confronto ════════════════════
      Tasso di crescita NOAA: Mauna Loa (una stazione) contro la media
      globale (stazioni marine remote). Nel 2023 e 2024 le due si invertono. */
@@ -360,7 +479,7 @@
     [0,0.5,1,1.5].forEach(function(v){
       f.appendChild(el('line',{x1:tx0,x2:tx1,y1:TY(v),y2:TY(v),class:v===0?'axis-l':'grid-l'}));
       var t=el('text',{x:tx0-10,y:TY(v)+4,class:'svg-lab','text-anchor':'end'});
-      t.textContent=(v===0?'0':('+'+String(v).replace('.',',')));
+      t.textContent=(v===0?'0':('+'+String(v).replace('.',DEC)));
       f.appendChild(t);
     });
     var tu=el('text',{x:tx0-10,y:TY(1.5)-16,class:'svg-unit','text-anchor':'end'});
@@ -400,7 +519,7 @@
       f.appendChild(el('circle',{cx:px,cy:py,r:5,fill:tok('--surface'),stroke:tok('--heat'),'stroke-width':2.2}));
       var lastA = a[0]===last[0];
       var tv=el('text',{x:px+11,y:lastA?py-7:py+17,class:'svg-val','text-anchor':'start'});
-      tv.textContent=(v>=0?'+':'')+v.toFixed(2).replace('.',','); f.appendChild(tv);
+      tv.textContent=(v>=0?'+':'')+it(v,2); f.appendChild(tv);
       var tl=el('text',{x:px+11,y:lastA?py+8:py+32,class:'svg-unit','text-anchor':'start'});
       tl.textContent=a[1]; f.appendChild(tl);
     });
