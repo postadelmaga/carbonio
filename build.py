@@ -152,6 +152,12 @@ def genera(codice, dizionario, permissivo, pagina='index.html'):
             continue   # gia' tradotta dentro un'unita' piu' grande che la contiene
         if re.search(r'(?:title|aria-label|alt|content|placeholder)="' + re.escape(k) + '"', src):
             src = sostituisci_attr(src, k, v, non_trovate)
+            # La stessa stringa puo' stare anche FUORI da un attributo. Il <title>
+            # della bacheca e' identico al suo twitter:title: prendendo solo il ramo
+            # degli attributi restava «Bacheca — Il carbonio che resta» nella
+            # linguetta del browser di tutte e quattro le traduzioni. Qui gli errori
+            # si buttano via: fuori dall'attributo la stringa puo' benissimo non esserci.
+            src = sostituisci(src, k, v, [])
         else:
             src = sostituisci(src, k, v, non_trovate)
 

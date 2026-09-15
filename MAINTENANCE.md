@@ -280,7 +280,7 @@ sentence on the page. **After every change to the Italian text, re-run
 `./build.py --extract`, translate the new entries and build again**, otherwise
 the other languages fall behind.
 
-Three traps already paid for, do not repeat them:
+Four traps already paid for, do not repeat them:
 
 - apply substitutions **from the longest key to the shortest**: "Italia" also
   appears inside "Italia<small>one year…</small>", and replacing it first
@@ -288,6 +288,13 @@ Three traps already paid for, do not repeat them:
 - numbers are translatable units like any other, because English and Chinese
   want a decimal point: `40,9` → `40.9`. In the charts `it()` handles it,
   reading the separator from `window.I18N._dec`;
+- a string that is **both** a text node and an attribute needs both
+  substitutions. `<title>` is collected as a translatable unit, but the
+  board's title is byte-identical to its `twitter:title`, so the attribute
+  branch won and the browser tab said «Bacheca — Il carbonio che resta» in
+  all four translations. `genera()` now runs the text substitution too,
+  discarding its errors, because outside the attribute the string may
+  legitimately be absent;
 - the decimal separator is **not** a constant. `charts.js` has `DEC`,
   `live.js` has `SEP`, both read from `window.I18N._dec`; three places used to
   hard-code the comma and the English page showed "+1,29 °C". The same trap in
