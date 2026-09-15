@@ -26,7 +26,7 @@ Every number carries its source and its uncertainty.
 - **It corrects itself in public.** The revision log at the bottom lists what
   changed and why, including the times the page itself was wrong.
 - **No build to serve it, no cookies, no third-party requests** beyond the
-  fonts and the visit counter. Fourteen screens, thirteen sections, eight
+  fonts and the visit counter. Fifteen screens, fourteen sections, eight
   charts drawn as inline SVG.
 
 ## Contributing

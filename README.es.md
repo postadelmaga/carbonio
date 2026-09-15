@@ -26,8 +26,8 @@ lugar. Cada número lleva su fuente y su incertidumbre.
 - **Se corrige en público.** El registro de revisiones del final enumera qué
   cambió y por qué, incluidas las veces en que la página se equivocaba.
 - **Nada que compilar para servirla, sin cookies, sin peticiones a terceros**
-  más allá de las tipografías y el contador de visitas. Catorce pantallas,
-  trece secciones, ocho gráficos dibujados como SVG en la propia página.
+  más allá de las tipografías y el contador de visitas. Quince pantallas,
+  catorce secciones, ocho gráficos dibujados como SVG en la propia página.
 
 ## Colaborar
 

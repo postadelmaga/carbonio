@@ -47,6 +47,31 @@ found four numbers that had been transcribed by hand and were wrong.
 **Country data** ("Who emits", "The growth", "Kyoto") is OWID/GCB 2025 for
 2024, gross of carbonation: update by hand with each GCB edition.
 
+**Is China slowing down** ("La Cina sta rallentando?"). Two sources with two
+cadences, and mixing them up is the trap. The yearly changes up to 2024 and the
+2019–2024 compound averages are computed from the same GCB 2025 country
+database as the section above (`co2` column of `owid-co2-data.csv`, gross of
+carbonation, endpoints 2019 and 2024 so the pandemic year sits inside the
+window and not at its ends). The 2025 projections by country come from the
+**published** paper (Global Carbon Budget 2025, *Earth System Science Data*,
+2026), not from the November 2025 press release: the two disagree, +2.5%
+against +1.9% for the United States and −0.1% against +0.4% for the EU, and
+the published version wins. China's 2025 (−0.3%) and the 2026 quarters (+2%,
+−1%) are CREA's estimates from China's official monthly energy statistics,
+published on Carbon Brief about two months after each quarter closes — the
+figure carries the "observed and estimated" label for exactly this reason, and
+the table note says where the estimate and the projection disagree (−0.3%
+against a projected range of −0.1% to +0.9%). Update in November with the new
+GCB, and after each CREA quarterly. The plateau claim is time-stamped on
+purpose: twenty-one flat-or-falling months from the peak of March 2024, not
+"China has peaked", which nobody has established.
+
+The figure is HTML and CSS, not a chart in `charts.js`: two `.panel` blocks of
+diverging bars, with `.panels.due` for the two-column variant (plain `.panels`
+is three columns and would leave an empty third). Each panel has its own
+scale; the widths are the value divided by the full span of the panel, and the
+`--zero` percentage is where the zero line falls.
+
 **Two measures that must not be confused**, and it is the mistake the earlier
 version of this page fell into: the NOAA **growth rate** is the increase
 between 1 January and 31 December on the deseasonalised curve; the

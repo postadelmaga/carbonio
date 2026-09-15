@@ -26,8 +26,8 @@ posto. Ogni numero porta con sé la fonte e la sua incertezza.
 - **Si corregge in pubblico.** Il registro delle revisioni in fondo elenca cosa
   è cambiato e perché, comprese le volte in cui la pagina aveva torto.
 - **Nessuna compilazione per servirla, nessun cookie, nessuna richiesta a
-  terzi** oltre ai caratteri e al contatore di visite. Quattordici schermate,
-  tredici sezioni, otto grafici disegnati come SVG in pagina.
+  terzi** oltre ai caratteri e al contatore di visite. Quindici schermate,
+  quattordici sezioni, otto grafici disegnati come SVG in pagina.
 
 ## Collaborare
 
