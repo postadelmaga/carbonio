@@ -313,8 +313,9 @@ the original string: one copy of the code for every language.
 `Accept-Language`, the language the browser declares, not at IP geolocation:
 an Italian in Madrid wants Italian, and reading the IP would mean a GeoIP
 module and a database inside an image that also serves other sites. Italian
-stays at the root, Spanish and Chinese get a 302, everything else goes to
-English; with no header (crawlers) it stays Italian. An explicit address like
+stays at the root, Spanish, French and Chinese get a 302, everything else goes
+to English; with no header at all (crawlers) it stays Italian, though an
+*empty* `Accept-Language` counts as present and lands on English. An explicit address like
 `/es/` is never redirected. A manual choice from the selector is saved in
 `localStorage` and honoured by a script in the head, but **only when you land
 on the root**: otherwise a shared link would take the recipient somewhere else.
@@ -333,6 +334,28 @@ serving the `/srv/carbonio` mount at the root of the name taken from
 certificate that does not arrive would otherwise mean a dead site. The old
 address `https://e8-zdemo.duckdns.org/carbonio/` redirects here with a 308,
 path by path.
+
+**The Caddyfile has `admin off`**, so there is no hot reload: `frankenphp
+reload` fails with `connection refused` on port 2019 and the only way to apply
+a change is `docker restart nicoweb`, about three seconds of downtime for all
+three sites on that container, not just this one. The sequence that worked,
+and the one to repeat:
+
+1. back up with a timestamped copy next to the file, the convention that
+   config already follows (`Caddyfile.bak-fr-<epoch>`);
+2. edit, then `diff` against the backup and read it — the whole point of the
+   backup is being able to see exactly what changed;
+3. `docker exec nicoweb frankenphp validate --config /etc/frankenphp/Caddyfile
+   --adapter caddyfile`. It must end with `Valid configuration`. The mount is
+   live, so this validates the file you just edited. A pre-existing
+   "input is not formatted" warning about line 6 is not yours;
+4. record what the three sites answer *before* restarting;
+5. `docker restart nicoweb`, then check all three again — this host also
+   serves niccolomenegazzo.com and e8-zdemo, and the board's `/api/` too.
+
+The Caddyfile belongs to the **nicoweb** project, not this one. Do not edit it
+from here without being asked: it is the one file where the two projects
+touch.
 
 ## Visit statistics
 
