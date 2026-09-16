@@ -250,9 +250,29 @@ change on rotation.
 
 ## Five languages
 
-Italian in `index.html` is the only hand-written copy. `build.py` extracts the
-translatable units, looks them up in `i18n/<lang>.json` and writes
-`en/index.html`, `es/index.html`, `fr/index.html`, `zh/index.html`.
+Italian in `index.html` is the only hand-written copy — that has not changed,
+even though Italian is no longer the language at the root. `build.py` extracts
+the translatable units, looks them up in `i18n/<lang>.json` and writes
+`it/`, `en/`, `es/`, `fr/`, `zh/`, two pages each.
+
+Two constants at the top of `build.py` carry the whole arrangement:
+
+- `SORGENTE = 'it'` — the hand-written language. For it nothing is substituted
+  and **no `window.I18N` block is injected**, because the three JavaScript
+  files fall back to their Italian literals precisely when that object is
+  missing. `it/` is therefore the source with different links, nothing else.
+- `RADICE = 'en'` — the language served at the site root. Its page is still
+  written into `en/`, but with canonical, `og:url` and the links between the
+  two pages in *root* form; `deploy.sh` then copies the contents of `en/` one
+  level up and never publishes the folder itself. That is why `en/` exists in
+  the repository and `/en/` does not exist on the server.
+
+**A local `python3 -m http.server` does not show the published layout**: at
+the root you get the Italian source, not English. To see what the server
+actually serves, rebuild the real tree — 404, robots, assets, then
+`en/index.html` and `en/feedback.html` at the top, then `it/ es/ fr/ zh/` —
+and resolve `__ROOT__` yourself. It takes five lines of shell and it is the
+only way to check the links between languages before publishing.
 
 **Adding a language** touches six places and nothing else: `LANG_META` and
 `LINGUE` in `build.py` (the flag, the two-letter chip, the locale and the
@@ -309,14 +329,22 @@ JavaScript files, and the build injects them into the translated page as
 `window.I18N`. In Italian that object does not exist and the functions return
 the original string: one copy of the code for every language.
 
+**Where each language lives.** **English is the site root**, and Italian sits
+in `/it/` like every other translation. It moved there on 16 September 2026:
+the page is read mostly outside Italy. `/en/` still answers, with a 308 to the
+root, so links already in circulation keep working.
+
 **How the language is chosen.** At the root Caddy decides by looking at
 `Accept-Language`, the language the browser declares, not at IP geolocation:
 an Italian in Madrid wants Italian, and reading the IP would mean a GeoIP
-module and a database inside an image that also serves other sites. Italian
-stays at the root, Spanish, French and Chinese get a 302, everything else goes
-to English; with no header at all (crawlers) it stays Italian, though an
-*empty* `Accept-Language` counts as present and lands on English. An explicit address like
-`/es/` is never redirected. A manual choice from the selector is saved in
+module and a database inside an image that also serves other sites. It
+redirects **only towards a language that actually exists** — `it*`, `es*`,
+`fr*`, `zh*`, each a 302 to its folder. Everything else, English included,
+German and Japanese and the crawlers that send no header at all, simply stays
+on the root, which is already English. Nobody is shipped to a page they did
+not ask for: before the move, an unmatched language was sent to `/en/`, and
+that was the wrong default dressed up as a helpful one. An explicit address
+like `/es/` is never redirected. A manual choice from the selector is saved in
 `localStorage` and honoured by a script in the head, but **only when you land
 on the root**: otherwise a shared link would take the recipient somewhere else.
 
@@ -333,7 +361,8 @@ serving the `/srv/carbonio` mount at the root of the name taken from
 `https://` block because the DuckDNS nameservers answer intermittently and a
 certificate that does not arrive would otherwise mean a dead site. The old
 address `https://e8-zdemo.duckdns.org/carbonio/` redirects here with a 308,
-path by path.
+path by path, and so does `/en/*`, the address English had until the root
+became English itself.
 
 **The Caddyfile has `admin off`**, so there is no hot reload: `frankenphp
 reload` fails with `connection refused` on port 2019 and the only way to apply

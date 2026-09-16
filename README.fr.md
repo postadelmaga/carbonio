@@ -7,10 +7,10 @@ Site d'une seule page sur le bilan mondial du carbone : combien de CO₂ nous
 émettons, combien en absorbent les océans et la végétation, et pourquoi la
 courbe de Mauna Loa n'en montre que la moitié.
 
-**→ [co2-info.duckdns.org](https://co2-info.duckdns.org/)** — également en
-[italien](https://co2-info.duckdns.org/),
-[anglais](https://co2-info.duckdns.org/en/),
-[espagnol](https://co2-info.duckdns.org/es/) et
+**→ [co2-info.duckdns.org](https://co2-info.duckdns.org/)** — l'anglais à la racine,
+et aussi en [italien](https://co2-info.duckdns.org/it/),
+[espagnol](https://co2-info.duckdns.org/es/),
+[français](https://co2-info.duckdns.org/fr/) et
 [chinois](https://co2-info.duckdns.org/zh/)
 
 Née pour vérifier une présentation existante, la page a fini par prendre sa
@@ -62,7 +62,8 @@ rien à compiler pour l'héberger.
 ```
 .
 ├── index.html          la page, en italien : la seule copie écrite à la main
-├── en/ es/ fr/ zh/     traductions générées : ne pas les modifier à la main
+├── it/ en/ es/ fr/ zh/ pages générées : ne pas les modifier à la main.
+│                    en/ est publiée à la racine, pas sur /en/
 ├── i18n/               un dictionnaire par langue + les clés extraites
 ├── build.py            génère les pages traduites depuis la source italienne
 ├── publish.sh          deploy.sh avec la destination et l'URL publique intégrées
@@ -78,7 +79,7 @@ rien à compiler pour l'héberger.
 
 ```bash
 python3 -m http.server 8100     # puis ouvrez http://localhost:8100
-./build.py                      # régénère en/, es/, fr/, zh/
+./build.py                      # régénère it/, en/, es/, fr/, zh/
 ./publish.sh --apply            # publie
 ```
 

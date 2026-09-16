@@ -6,9 +6,10 @@
 一个关于全球碳平衡的单页网站：我们排放了多少二氧化碳，海洋和植被吸收了多少，
 以及为什么莫纳罗亚曲线上只看得到其中一半。
 
-**→ [co2-info.duckdns.org](https://co2-info.duckdns.org/)** —— 另有
-[英文](https://co2-info.duckdns.org/en/)、
-[西班牙文](https://co2-info.duckdns.org/es/)和
+**→ [co2-info.duckdns.org](https://co2-info.duckdns.org/)** —— 根地址是英文，另有
+[意大利文](https://co2-info.duckdns.org/it/)、
+[西班牙文](https://co2-info.duckdns.org/es/)、
+[法文](https://co2-info.duckdns.org/fr/)和
 [中文](https://co2-info.duckdns.org/zh/)版本
 
 它最初是为了核查一份已有的演示稿，最后取而代之。每一个数字都附有来源和不确定度。
@@ -48,7 +49,8 @@ GitHub 账号，也可以在[留言板](https://co2-info.duckdns.org/feedback.ht
 ```
 .
 ├── index.html          页面本体，意大利文：唯一手写的版本
-├── en/ es/ fr/ zh/         生成的译文：请勿手动修改
+├── it/ en/ es/ fr/ zh/     生成的页面：请勿手动修改。
+│                        en/ 发布在根地址，而不是 /en/
 ├── i18n/               每种语言一个词典 + 抽取出来的键
 ├── build.py            从意大利文原文生成译文页面
 ├── publish.sh          已填好目标路径和公开网址的 deploy.sh
@@ -64,7 +66,7 @@ GitHub 账号，也可以在[留言板](https://co2-info.duckdns.org/feedback.ht
 
 ```bash
 python3 -m http.server 8100     # 然后打开 http://localhost:8100
-./build.py                      # 重新生成 en/、es/、fr/、zh/
+./build.py                      # 重新生成 it/、en/、es/、fr/、zh/
 ./publish.sh --apply            # 发布
 ```
 

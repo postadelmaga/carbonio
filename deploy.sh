@@ -66,18 +66,27 @@ BUILD_DIR="$(mktemp -d)"
 trap 'rm -rf "$BUILD_DIR"' EXIT
 
 info "Preparo la build in $BUILD_DIR"
-cp -R "$SRC_DIR/index.html" "$SRC_DIR/feedback.html" "$SRC_DIR/404.html" "$SRC_DIR/robots.txt" "$SRC_DIR/assets" "$BUILD_DIR/"
-# Le traduzioni: cartelle generate da build.py, una per lingua. Se mancano il
-# deploy prosegue lo stesso, il sito resta in italiano.
-for L in en es fr zh; do
+cp -R "$SRC_DIR/404.html" "$SRC_DIR/robots.txt" "$SRC_DIR/assets" "$BUILD_DIR/"
+# La radice del sito e' l'inglese. build.py lo genera dentro en/, ma con
+# canonical e collegamenti interni gia' nella forma della radice: qui il
+# contenuto di quella cartella sale di un livello, e en/ non viene pubblicata.
+# L'italiano, che nel repository e' il sorgente scritto a mano, viene
+# pubblicato come tutte le altre lingue, in it/.
+if [ -f "$SRC_DIR/en/index.html" ]; then
+  cp "$SRC_DIR/en/index.html" "$SRC_DIR/en/feedback.html" "$BUILD_DIR/"
+else
+  err "manca en/index.html: lancia ./build.py prima di pubblicare"
+  exit 1
+fi
+for L in it es fr zh; do
   [ -d "$SRC_DIR/$L" ] && cp -R "$SRC_DIR/$L" "$BUILD_DIR/"
 done
 
 # I sorgenti tengono un placeholder perche' l'URL pubblico lo decide il deploy,
 # non il repository.
 ESCAPED_URL="${PUBLIC_URL//\//\\/}"
-# Un solo segnaposto, __ROOT__, in tutte le pagine: la radice italiana e le
-# traduzioni generate da build.py in en/, es/, fr/, zh/.
+# Un solo segnaposto, __ROOT__, in tutte le pagine: la radice inglese e le
+# altre lingue generate da build.py in it/, es/, fr/, zh/.
 while IFS= read -r f; do
   sed -i.bak "s/__ROOT__/${ESCAPED_URL}/g" "$f"
 done < <(find "$BUILD_DIR" -name '*.html' -o -name 'robots.txt')
@@ -87,15 +96,15 @@ cat > "$BUILD_DIR/sitemap.xml" <<SITEMAP
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:xhtml="http://www.w3.org/1999/xhtml">
-$(for L in "" en/ es/ fr/ zh/; do
+$(for L in "" it/ es/ fr/ zh/; do
 cat <<UNA
   <url>
     <loc>${PUBLIC_URL}/${L}</loc>
     <lastmod>$(date -u +%Y-%m-%d)</lastmod>
     <changefreq>monthly</changefreq>
     <priority>$([ -z "$L" ] && echo 1.0 || echo 0.9)</priority>
-    <xhtml:link rel="alternate" hreflang="it" href="${PUBLIC_URL}/"/>
-    <xhtml:link rel="alternate" hreflang="en" href="${PUBLIC_URL}/en/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="${PUBLIC_URL}/"/>
+    <xhtml:link rel="alternate" hreflang="it" href="${PUBLIC_URL}/it/"/>
     <xhtml:link rel="alternate" hreflang="es" href="${PUBLIC_URL}/es/"/>
     <xhtml:link rel="alternate" hreflang="fr" href="${PUBLIC_URL}/fr/"/>
     <xhtml:link rel="alternate" hreflang="zh" href="${PUBLIC_URL}/zh/"/>

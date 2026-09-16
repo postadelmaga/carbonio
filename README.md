@@ -7,9 +7,10 @@ A single-page site about the global carbon budget: how much CO₂ we emit, how
 much the oceans and vegetation absorb, and why the Mauna Loa curve shows only
 half of it.
 
-**→ [co2-info.duckdns.org](https://co2-info.duckdns.org/)** — also in
-[English](https://co2-info.duckdns.org/en/),
-[Spanish](https://co2-info.duckdns.org/es/) and
+**→ [co2-info.duckdns.org](https://co2-info.duckdns.org/)** — English at the root,
+and also in [Italian](https://co2-info.duckdns.org/it/),
+[Spanish](https://co2-info.duckdns.org/es/),
+[French](https://co2-info.duckdns.org/fr/) and
 [Chinese](https://co2-info.duckdns.org/zh/)
 
 It was born to fact-check an existing slide deck and ended up replacing it.
@@ -57,8 +58,9 @@ compile in order to serve it.
 
 ```
 .
-├── index.html          the page, in Italian: the only hand-written copy
-├── en/ es/ fr/ zh/         generated translations: do not edit by hand
+├── index.html          the source, in Italian: the only hand-written copy
+├── it/ en/ es/ fr/ zh/     generated pages: do not edit by hand.
+│                        en/ is published at the site root, not at /en/
 ├── i18n/               one dictionary per language + the extracted keys
 ├── build.py            generates the translated pages from the Italian source
 ├── publish.sh          deploy.sh with destination and public URL filled in
@@ -74,7 +76,7 @@ compile in order to serve it.
 
 ```bash
 python3 -m http.server 8100     # then open http://localhost:8100
-./build.py                      # regenerate en/, es/, fr/, zh/
+./build.py                      # regenerate it/, en/, es/, fr/, zh/
 ./publish.sh --apply            # publish
 ```
 

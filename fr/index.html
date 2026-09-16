@@ -8,8 +8,8 @@
 <meta name="author" content="">
 <meta name="robots" content="index, follow">
 <link rel="canonical" href="__ROOT__/fr/">
-<link rel="alternate" hreflang="it" href="__ROOT__/">
-<link rel="alternate" hreflang="en" href="__ROOT__/en/">
+<link rel="alternate" hreflang="it" href="__ROOT__/it/">
+<link rel="alternate" hreflang="en" href="__ROOT__/">
 <link rel="alternate" hreflang="es" href="__ROOT__/es/">
 <link rel="alternate" hreflang="fr" href="__ROOT__/fr/">
 <link rel="alternate" hreflang="zh" href="__ROOT__/zh/">
@@ -57,7 +57,7 @@
     var scelta = localStorage.getItem("lingua");
     var p = location.pathname.replace(/index\.html$/,"");
     if(scelta && scelta !== L && (p === "/" || p === "")){
-      location.replace((scelta === "it" ? "/" : "/" + scelta + "/") + location.hash);
+      location.replace((scelta === "en" ? "/" : "/" + scelta + "/") + location.hash);
       return;
     }
   }catch(e){}
@@ -112,8 +112,8 @@
     <details class="lang" id="lang-pick">
       <summary title="Lingua · Language"><span class="fl">🇫🇷</span><span class="lc">FR</span></summary>
       <ul>
-        <li><a href="/"    data-href="/"    data-lang="it" hreflang="it"><span class="fl">🇮🇹</span>Italiano</a></li>
-        <li><a href="/en/" data-href="/en/" data-lang="en" hreflang="en"><span class="fl">🇬🇧</span>English</a></li>
+        <li><a href="/it/" data-href="/it/" data-lang="it" hreflang="it"><span class="fl">🇮🇹</span>Italiano</a></li>
+        <li><a href="/"    data-href="/"    data-lang="en" hreflang="en"><span class="fl">🇬🇧</span>English</a></li>
         <li><a href="/es/" data-href="/es/" data-lang="es" hreflang="es"><span class="fl">🇪🇸</span>Español</a></li>
         <li><a href="/fr/" data-href="/fr/" data-lang="fr" hreflang="fr" aria-current="true"><span class="fl">🇫🇷</span>Français</a></li>
         <li><a href="/zh/" data-href="/zh/" data-lang="zh" hreflang="zh"><span class="fl">🇨🇳</span>中文</a></li>
@@ -1032,6 +1032,7 @@
       <details class="more revbox"><summary>Ce qui a changé dans cette page : le registre des révisions</summary>
       <p>La science du climat se corrige, et cette page fait de même. Les entrées les plus récentes sont en haut.</p>
       <ul class="revlog">
+        <li><span class="rev-d">16 septembre 2026</span><div><b>L'anglais est passé à la racine, l'italien est allé sur /it/.</b> Cette page est lue surtout hors d'Italie, et l'adresse principale le dit désormais. L'ancien /en/ renvoie à la racine, si bien que les liens déjà en circulation continuent de fonctionner. Le changement a aussi corrigé un défaut qui était là depuis toujours : avant, qui arrivait en déclarant une langue que nous n'avons pas — allemand, portugais, japonais — était expédié sur /en/, c'est-à-dire sur une page qu'il n'avait pas demandée. Désormais le serveur ne redirige que vers les quatre langues qui existent vraiment, et tous les autres restent là où ils ont atterri. La source écrite à la main reste l'italien : c'est de là que sont générées toutes les autres, l'anglais compris.</div></li>
         <li><span class="rev-d">15 septembre 2026</span><div><b>La page est aussi en français, et les sources sont cliquables.</b> Cinq langues : italien, anglais, espagnol, français et chinois, et qui arrive avec un navigateur en français y atterrit tout seul. La traduction est complète — texte, légendes, tableaux, étiquettes des graphiques et messages d'état — et le français, comme l'italien et l'espagnol, utilise la virgule pour les décimales : 40,9 GtCO₂, et non 40.9. Dans la section des sources, entre-temps, les dix-huit titres mènent désormais au document original au lieu de se contenter de le nommer.</div></li>
         <li><span class="rev-d">15 septembre 2026</span><div><b>Ajout de la section sur l'énergie : pourquoi le CO₂ réchauffe, et où va la chaleur.</b> La page passait des molécules aux degrés sans dire ce qu'il y avait entre les deux. Entre les deux il y a un bilan : des 340 watts par mètre carré qui arrivent du Soleil, cent sont réfléchis et deux cent quarante absorbés, et de ces deux cent quarante, deux cent trente-neuf repartent vers l'espace. Ce qui reste — un peu plus d'un watt — c'est tout le réchauffement en cours, et depuis un demi-siècle il ne revient pas à zéro. Avec le détail qui change l'échelle du problème : de cette chaleur, l'océan prend environ 90 % et l'atmosphère 1 %, si bien que juger le réchauffement à la seule température de l'air revient à regarder un pour cent de ce qui se passe. La section dit aussi une chose qu'on tient d'ordinaire pour acquise : le déséquilibre ne s'obtient pas en soustrayant les deux flux, connus à quelques watts près, mais en comptant la chaleur qui s'accumule en mer.</div></li>
         <li><span class="rev-d">15 septembre 2026</span><div><b>Ajout de la section sur le présent : qui est en train de ralentir.</b> La page disait combien chacun émet et de combien cela a augmenté depuis 2000, mais ne répondait pas à la question qui vient juste après : la direction est-elle en train de changer ? Pour la Chine oui, et vite — +3,9 % en 2023, +1,0 % en 2024, −0,3 % en 2025, vingt et un mois plats ou en baisse depuis le pic de mars 2024 — et c'est la première fois que cela arrive sans un ralentissement de la demande d'énergie derrière. Le reste de la section est la partie inconfortable : s'arrêter n'est pas descendre, en 2025 les États-Unis ont augmenté de 2,5 % et l'Union européenne s'est arrêtée, et le total mondial a signé un nouveau record.</div></li>

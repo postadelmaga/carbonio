@@ -7,9 +7,10 @@ Sito a pagina singola sul bilancio globale del carbonio: quanta CO₂ emettiamo,
 quanta ne assorbono oceani e vegetazione, e perché nella curva di Mauna Loa se
 ne vede solo la metà.
 
-**→ [co2-info.duckdns.org](https://co2-info.duckdns.org/)** — anche in
-[inglese](https://co2-info.duckdns.org/en/),
-[spagnolo](https://co2-info.duckdns.org/es/) e
+**→ [co2-info.duckdns.org](https://co2-info.duckdns.org/)** — inglese alla radice,
+e anche in [italiano](https://co2-info.duckdns.org/it/),
+[spagnolo](https://co2-info.duckdns.org/es/),
+[francese](https://co2-info.duckdns.org/fr/) e
 [cinese](https://co2-info.duckdns.org/zh/)
 
 È nato per verificare una presentazione esistente ed è finito col prenderne il
@@ -57,8 +58,9 @@ niente da compilare per servirlo.
 
 ```
 .
-├── index.html          la pagina, in italiano: l'unica copia scritta a mano
-├── en/ es/ fr/ zh/         traduzioni generate: non modificarle a mano
+├── index.html          il sorgente, in italiano: l'unica copia scritta a mano
+├── it/ en/ es/ fr/ zh/     pagine generate: non modificarle a mano.
+│                        en/ viene pubblicata alla radice, non su /en/
 ├── i18n/               un dizionario per lingua + le chiavi estratte
 ├── build.py            genera le pagine tradotte dal sorgente italiano
 ├── publish.sh          deploy.sh con destinazione e URL pubblico incorporati
@@ -74,7 +76,7 @@ niente da compilare per servirlo.
 
 ```bash
 python3 -m http.server 8100     # poi apri http://localhost:8100
-./build.py                      # rigenera en/, es/, fr/, zh/
+./build.py                      # rigenera it/, en/, es/, fr/, zh/
 ./publish.sh --apply            # pubblica
 ```
 

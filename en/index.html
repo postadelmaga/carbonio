@@ -7,9 +7,9 @@
 <meta name="description" content="How much CO2 we emit, how much oceans and forests absorb, and why the Mauna Loa curve shows only half of it. Charts, tables and sources.">
 <meta name="author" content="">
 <meta name="robots" content="index, follow">
-<link rel="canonical" href="__ROOT__/en/">
-<link rel="alternate" hreflang="it" href="__ROOT__/">
-<link rel="alternate" hreflang="en" href="__ROOT__/en/">
+<link rel="canonical" href="__ROOT__/">
+<link rel="alternate" hreflang="it" href="__ROOT__/it/">
+<link rel="alternate" hreflang="en" href="__ROOT__/">
 <link rel="alternate" hreflang="es" href="__ROOT__/es/">
 <link rel="alternate" hreflang="fr" href="__ROOT__/fr/">
 <link rel="alternate" hreflang="zh" href="__ROOT__/zh/">
@@ -20,7 +20,7 @@
 <meta property="og:locale" content="en_GB">
 <meta property="og:title" content="The carbon that stays">
 <meta property="og:description" content="The Mauna Loa curve does not measure what we emit. It measures what is left over after the oceans and vegetation have taken their share.">
-<meta property="og:url" content="__ROOT__/en/">
+<meta property="og:url" content="__ROOT__/">
 <!-- La cartolina la disegna ./social.py, una per lingua. Senza og:image
      Facebook e WhatsApp non hanno niente da mostrare: la pagina non contiene
      nemmeno un <img>, i grafici li scrive JavaScript in SVG e nessuno di quei
@@ -57,7 +57,7 @@
     var scelta = localStorage.getItem("lingua");
     var p = location.pathname.replace(/index\.html$/,"");
     if(scelta && scelta !== L && (p === "/" || p === "")){
-      location.replace((scelta === "it" ? "/" : "/" + scelta + "/") + location.hash);
+      location.replace((scelta === "en" ? "/" : "/" + scelta + "/") + location.hash);
       return;
     }
   }catch(e){}
@@ -112,8 +112,8 @@
     <details class="lang" id="lang-pick">
       <summary title="Lingua · Language"><span class="fl">🇬🇧</span><span class="lc">EN</span></summary>
       <ul>
-        <li><a href="/"    data-href="/"    data-lang="it" hreflang="it"><span class="fl">🇮🇹</span>Italiano</a></li>
-        <li><a href="/en/" data-href="/en/" data-lang="en" hreflang="en" aria-current="true"><span class="fl">🇬🇧</span>English</a></li>
+        <li><a href="/it/" data-href="/it/" data-lang="it" hreflang="it"><span class="fl">🇮🇹</span>Italiano</a></li>
+        <li><a href="/"    data-href="/"    data-lang="en" hreflang="en" aria-current="true"><span class="fl">🇬🇧</span>English</a></li>
         <li><a href="/es/" data-href="/es/" data-lang="es" hreflang="es"><span class="fl">🇪🇸</span>Español</a></li>
         <li><a href="/fr/" data-href="/fr/" data-lang="fr" hreflang="fr"><span class="fl">🇫🇷</span>Français</a></li>
         <li><a href="/zh/" data-href="/zh/" data-lang="zh" hreflang="zh"><span class="fl">🇨🇳</span>中文</a></li>
@@ -1032,6 +1032,7 @@
       <details class="more revbox"><summary>What has changed on this page: the revision log</summary>
       <p>Climate science corrects itself, and this page does the same. The most recent entries are at the top.</p>
       <ul class="revlog">
+        <li><span class="rev-d">16 September 2026</span><div><b>English moved to the root, Italian moved to /it/.</b> This page is read mostly outside Italy, and the main address now says so. The old /en/ redirects to the root, so links already out there keep working. The change also fixed a flaw that had always been there: before, anyone arriving with a language we do not have — German, Portuguese, Japanese — was sent to /en/, that is, to a page they had not asked for. Now the server redirects only to the four languages that actually exist, and everyone else stays where they landed. The hand-written source is still Italian: everything else is generated from it, English included.</div></li>
         <li><span class="rev-d">15 September 2026</span><div><b>The page is now in French too, and the sources are clickable.</b> Five languages: Italian, English, Spanish, French and Chinese, and anyone arriving with a French browser now lands there by itself. The translation is complete — text, captions, tables, chart labels and status messages — and French, like Italian and Spanish, uses the comma for decimals: 40,9 GtCO₂, not 40.9. In the sources section, meanwhile, the eighteen titles now lead to the original document instead of merely naming it.</div></li>
         <li><span class="rev-d">15 September 2026</span><div><b>Added the section on energy: why CO₂ warms, and where the heat goes.</b> The page went from molecules to degrees without saying what lies in between. In between there is an account: of the 340 watts per square metre that arrive from the Sun, one hundred are reflected and two hundred and forty absorbed, and of those two hundred and forty, two hundred and thirty-nine leave again for space. What is left — just over a watt — is the whole of the warming under way, and it has not returned to zero for half a century. With the detail that changes the scale of the problem: of that heat the ocean takes about 90% and the atmosphere 1%, so judging warming from air temperature alone means looking at one per cent of what is happening. The section also says something usually taken for granted: the imbalance is not obtained by subtracting the two fluxes, which are known to within a few watts, but by counting the heat that piles up at sea.</div></li>
         <li><span class="rev-d">15 September 2026</span><div><b>Added the section on the present: who is actually slowing down.</b> The page said how much each country emits and how much it has grown since 2000, but it did not answer the question that comes straight after: is the direction changing now? For China yes, and fast — +3.9% in 2023, +1.0% in 2024, −0.3% in 2025, twenty-one months flat or falling since the peak of March 2024 — and it is the first time this has happened without a slowdown in energy demand behind it. The rest of the section is the uncomfortable part: stopping is not coming down, in 2025 the United States grew by 2.5% and the European Union stalled, and the world total set another record.</div></li>
@@ -1064,7 +1065,7 @@
   <footer class="site-foot">
     <div class="sf-in">
       <p class="sf-note">A plain-language analysis of the global carbon budget. The data come from the Global Carbon Project, the NOAA Global Monitoring Laboratory and Our World in Data. Budget: Global Carbon Budget 2025. Mauna Loa series: read from NOAA at every load, with the values saved on 12 September 2026 as a fallback.</p>
-      <p class="sf-gh"><a class="gh-link" href="https://github.com/postadelmaga/carbonio" rel="noopener"><svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true" focusable="false"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>postadelmaga/carbonio</a><span><b>This page corrects itself in public.</b> Code, data and the revision log are on GitHub. If you find a wrong number, a better source, or a sentence that claims more than the data support, <a class="ref" href="https://github.com/postadelmaga/carbonio/issues" rel="noopener">open an issue about it</a>: the log above is made of corrections that arrived that way. Without an account, there is the <a class="ref" href="/en/feedback.html">board</a>.</span></p>
+      <p class="sf-gh"><a class="gh-link" href="https://github.com/postadelmaga/carbonio" rel="noopener"><svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true" focusable="false"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>postadelmaga/carbonio</a><span><b>This page corrects itself in public.</b> Code, data and the revision log are on GitHub. If you find a wrong number, a better source, or a sentence that claims more than the data support, <a class="ref" href="https://github.com/postadelmaga/carbonio/issues" rel="noopener">open an issue about it</a>: the log above is made of corrections that arrived that way. Without an account, there is the <a class="ref" href="/feedback.html">board</a>.</span></p>
       <p class="sf-meta"><a href="#top">Back to top</a> · Static page, no cookies: only anonymous visit statistics (Umami). · Text and charts <a class="ref" href="https://creativecommons.org/licenses/by/4.0/" rel="noopener">CC BY 4.0</a>, code MIT.</p>
     </div>
   </footer>

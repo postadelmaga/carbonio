@@ -22,7 +22,16 @@ from bs4 import BeautifulSoup, NavigableString, Tag
 QUI = os.path.dirname(os.path.abspath(__file__))
 PAGINE = ['index.html', 'feedback.html']   # sorgenti italiani da tradurre
 SRC = os.path.join(QUI, 'index.html')
-LINGUE = {'en': 'English', 'es': 'Español', 'fr': 'Français', 'zh': '中文'}
+LINGUE = {'it': 'Italiano', 'en': 'English', 'es': 'Español', 'fr': 'Français', 'zh': '中文'}
+
+# SORGENTE e' la lingua scritta a mano in index.html: per lei non si sostituisce
+# niente e non si inietta window.I18N, perche' il codice torna all'italiano
+# proprio quando quell'oggetto non c'e'.
+# RADICE e' la lingua servita all'indirizzo principale del sito. La sua pagina
+# viene comunque scritta in una cartella (en/), ma con i collegamenti nella
+# forma della radice: e' deploy.sh a portarne il contenuto al livello di sopra.
+SORGENTE = 'it'
+RADICE   = 'en'
 
 INLINE = {'b','i','em','strong','abbr','span','small','a','sub','sup','br','code','u','mark'}
 SALTA   = {'script','style','svg','head'}
@@ -114,6 +123,7 @@ def raccogli(soup):
     return fuori
 
 LANG_META = {
+    'it': {'lang':'it', 'locale':'it_IT', 'dec':',', 'fl':'🇮🇹', 'lc':'IT'},
     'en': {'lang':'en', 'locale':'en_GB', 'dec':'.', 'fl':'🇬🇧', 'lc':'EN'},
     'es': {'lang':'es', 'locale':'es_ES', 'dec':',', 'fl':'🇪🇸', 'lc':'ES'},
     'fr': {'lang':'fr', 'locale':'fr_FR', 'dec':',', 'fl':'🇫🇷', 'lc':'FR'},
@@ -143,7 +153,7 @@ def genera(codice, dizionario, permissivo, pagina='index.html'):
     # Dalla chiave piu' lunga alla piu' corta: «Italia» e «osservato» compaiono
     # anche dentro unita' piu' grandi, e sostituendole prima le spezzerebbero.
     soup = BeautifulSoup(src, 'html.parser')
-    for k in sorted(raccogli(soup), key=len, reverse=True):
+    for k in ([] if codice == SORGENTE else sorted(raccogli(soup), key=len, reverse=True)):
         v = html_dict.get(k)
         if v is None:
             mancanti.append(k); continue
@@ -165,16 +175,19 @@ def genera(codice, dizionario, permissivo, pagina='index.html'):
     src = src.replace('<html lang="it" data-lingua="it"', '<html lang="%s" data-lingua="%s"' % (meta['lang'], codice))
     src = src.replace('<meta property="og:locale" content="it_IT">', '<meta property="og:locale" content="%s">' % meta['locale'])
     coda = '' if pagina == 'index.html' else pagina
-    src = src.replace('<link rel="canonical" href="__ROOT__/%s">' % coda,
-                      '<link rel="canonical" href="__ROOT__/%s/%s">' % (codice, coda))
-    src = src.replace('<meta property="og:url" content="__ROOT__/%s">' % coda,
-                      '<meta property="og:url" content="__ROOT__/%s/%s">' % (codice, coda))
+    if codice != RADICE:
+        src = src.replace('<link rel="canonical" href="__ROOT__/%s">' % coda,
+                          '<link rel="canonical" href="__ROOT__/%s/%s">' % (codice, coda))
+        src = src.replace('<meta property="og:url" content="__ROOT__/%s">' % coda,
+                          '<meta property="og:url" content="__ROOT__/%s/%s">' % (codice, coda))
     # la cartolina di anteprima e' una per lingua, disegnata da ./social.py
     src = src.replace('/assets/social-it.png', '/assets/social-%s.png' % codice)
-    # i collegamenti interni fra le due pagine restano dentro la lingua
-    if pagina != 'index.html':
-        src = src.replace('href="/"', 'href="/%s/"' % codice)
-    src = src.replace('href="/feedback.html"', 'href="/%s/feedback.html"' % codice)
+    # i collegamenti interni fra le due pagine restano dentro la lingua. Per la
+    # lingua della radice restano come sono: la sua pagina finisce in alto.
+    if codice != RADICE:
+        if pagina != 'index.html':
+            src = src.replace('href="/"', 'href="/%s/"' % codice)
+        src = src.replace('href="/feedback.html"', 'href="/%s/feedback.html"' % codice)
     # le pagine stanno in una sottocartella: percorsi assoluti per gli asset
     src = re.sub(r'(href|src)="assets/', r'\1="/assets/', src)
     # selettore: bandiera corrente e spunta sulla lingua attiva
@@ -183,10 +196,11 @@ def genera(codice, dizionario, permissivo, pagina='index.html'):
     src = src.replace('data-lang="it" hreflang="it" aria-current="true"', 'data-lang="it" hreflang="it"')
     src = src.replace('data-lang="%s" hreflang="%s"' % (codice, codice), 'data-lang="%s" hreflang="%s" aria-current="true"' % (codice, codice))
     # stringhe dei grafici e dei messaggi, lette da T() nei tre JavaScript
-    js = dict(dizionario.get('js', {}))
-    js['_dec'] = meta['dec']
-    blocco = '<script>window.I18N=' + json.dumps(js, ensure_ascii=False, separators=(',', ':')) + ';</script>'
-    src = src.replace('<link rel="stylesheet" href="/assets/style.css">', blocco + '\n<link rel="stylesheet" href="/assets/style.css">', 1)
+    if codice != SORGENTE:
+        js = dict(dizionario.get('js', {}))
+        js['_dec'] = meta['dec']
+        blocco = '<script>window.I18N=' + json.dumps(js, ensure_ascii=False, separators=(',', ':')) + ';</script>'
+        src = src.replace('<link rel="stylesheet" href="/assets/style.css">', blocco + '\n<link rel="stylesheet" href="/assets/style.css">', 1)
 
     fuori = os.path.join(QUI, codice)
     os.makedirs(fuori, exist_ok=True)
@@ -215,10 +229,15 @@ def main():
     quali = [a for a in sys.argv[1:] if a in LANG_META] or list(LANG_META)
     guai = 0
     for codice in quali:
-        f = os.path.join(QUI, 'i18n', codice + '.json')
-        if not os.path.exists(f):
-            print('  %s: manca %s, saltata' % (codice, f)); guai += 1; continue
-        d = json.load(open(f, encoding='utf-8'))
+        # La lingua sorgente non ha dizionario: la sua copia è l'originale, e
+        # cambiano solo i collegamenti, perché finisce in una sottocartella.
+        if codice == SORGENTE:
+            d = {}
+        else:
+            f = os.path.join(QUI, 'i18n', codice + '.json')
+            if not os.path.exists(f):
+                print('  %s: manca %s, saltata' % (codice, f)); guai += 1; continue
+            d = json.load(open(f, encoding='utf-8'))
         for pagina in PAGINE:
             mancanti, non_trovate = genera(codice, d, permissivo, pagina)
             stato = 'ok' if not mancanti and not non_trovate else 'INCOMPLETA'
