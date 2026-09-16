@@ -28,7 +28,12 @@ purpose: `--dest` points at a docroot.
 
 The public URL is not written in the sources. Every HTML file and `robots.txt`
 carry a `__ROOT__` placeholder that the deploy resolves, and `sitemap.xml` is
-generated there with all four language versions.
+generated there with all five language versions: the root, which is English,
+plus `/it/`, `/es/`, `/fr/` and `/zh/`.
+
+`deploy.sh` does not publish the repository's own `index.html`: the root of
+the site is the content of `en/`, copied one level up. If you run it before
+`./build.py` has ever written `en/index.html` it stops and says so.
 
 ## Where the numbers come from
 
@@ -274,21 +279,36 @@ actually serves, rebuild the real tree — 404, robots, assets, then
 and resolve `__ROOT__` yourself. It takes five lines of shell and it is the
 only way to check the links between languages before publishing.
 
-**Adding a language** touches six places and nothing else: `LANG_META` and
-`LINGUE` in `build.py` (the flag, the two-letter chip, the locale and the
-decimal separator), the `hreflang` links and the picker `<li>` in both
-`index.html` and `feedback.html`, the `for L in …` loops and the sitemap in
-`deploy.sh`, a `LINGUE` entry in `social.py` (then re-run it), a new
-`i18n/<lang>.json`, and the Accept-Language block in the server Caddyfile.
+**Adding a language** touches six places and nothing else:
+
+1. `LANG_META` and `LINGUE` in `build.py` — the flag, the two-letter chip, the
+   locale and the decimal separator;
+2. the `hreflang` links and the picker `<li>` in **both** `index.html` and
+   `feedback.html`;
+3. the `for L in …` loop and the sitemap in `deploy.sh`;
+4. a `LINGUE` entry in `social.py`, then re-run it to draw the card;
+5. a new `i18n/<lang>.json`;
+6. an `@radice_<lang>` block in the server Caddyfile, or the new language is
+   reachable only from the picker.
+
 French, added on 15 September 2026, needed 517 hand-written units: the other
-157 keys are pure numbers, and French uses the comma for decimals like
-Italian and Spanish, so they carry over unchanged. Do not skip the server
-block: without it a French browser lands on `/en/`, which still works but is
-not what the picker promises.
+157 keys are pure numbers, and French uses the comma for decimals like Italian
+and Spanish, so they carry over unchanged. Budget roughly that for any new
+language, plus the README.
+
+**Changing which language sits at the root** is a different job and touches
+`RADICE` in `build.py`, the two `cp` lines in `deploy.sh`, the `hreflang` and
+picker hrefs in the sources, the `(scelta === "en" ? "/" : …)` line in the
+head script of `index.html`, the language of `404.html`, and the Caddyfile:
+the old root language needs an `@radice_<lang>` block it did not have, the new
+one loses its own, and its old folder needs a 308 to the root so existing
+links survive. Publish **before** touching Caddy and **without** `--prune`, so
+that no address is ever briefly missing; prune on a second pass once the
+redirects are live.
 
 ```bash
 ./build.py --extract     # refresh i18n/_chiavi.json with the units to translate
-./build.py               # generate the three pages; fails if an entry is missing
+./build.py               # generate all five; fails if an entry is missing
 ./build.py en            # one language only
 ```
 
@@ -504,5 +524,5 @@ share a domain and neither is needed.
 
 Code MIT, text and charts CC BY 4.0: see [LICENSE](LICENSE) and
 [LICENSE-CONTENT.md](LICENSE-CONTENT.md). The line in the page footer says so
-too, in all four languages, so a reader who wants to reuse a chart does not
+too, in all five languages, so a reader who wants to reuse a chart does not
 have to go looking for the repository first.
