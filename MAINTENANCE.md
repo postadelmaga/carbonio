@@ -384,6 +384,22 @@ Accept-Language, Cookie`, without which a cached 302 would outlive the choice.
 `lingua=en` has no `@scelta_en` block on purpose: the root is already English,
 so not matching is the whole job.
 
+**The browser cache hid the fix for an hour.** The root's `302` went out with
+`public, max-age=3600`, so a reader who had already been sorted to `/it/` kept
+being served that redirect by their own browser: the request never reached
+Caddy, and the new cookie changed nothing. In incognito it worked, which is the
+tell. Two repairs. In the Caddyfile, `header Cache-Control "public,
+max-age=3600"` with no matcher followed by `header @html … "no-cache"` never
+did what it read like — the one without a matcher always won, and even
+`/index.html` went out cacheable. They are now two mutually exclusive matchers,
+`@statici path /assets/*` (an hour) and `@pagine not path /assets/*`
+(`no-cache`), so pages and language redirects are always asked for. And because
+a poisoned cache survives the config change, the picker appends `?lingua=xx`
+when it links to **the root** — a different cache key, so the request goes out
+for real — and the head script reads it, saves it and wipes it from the address
+bar with `replaceState`. Only the root needs it: it is the one address the
+server may redirect.
+
 In the Caddyfile the first argument of `redir` is a **path matcher**, not the
 destination: `redir /es/ 302` does nothing, you need `redir * /es/ 302`. Two
 hours of diagnosis, written down so nobody repeats them.

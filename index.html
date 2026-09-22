@@ -62,6 +62,15 @@
     try{ document.cookie = "lingua=" + c + "; path=/; max-age=31536000; SameSite=Lax"; }catch(err){}
   }
   try{
+    /* ?lingua=xx: il selettore lo mette solo sui collegamenti alla radice.
+       Serve a scavalcare la cache del browser, che del rimando di prima puo'
+       avere ancora una copia e servirla senza chiedere niente al server. Letto
+       il parametro, l'indirizzo si ripulisce subito. */
+    var q = location.search.match(/[?&]lingua=([a-z]{2})/);
+    if(q){
+      ricorda(q[1]);
+      if(history.replaceState) history.replaceState(null, "", location.pathname + location.hash);
+    }
     var scelta = localStorage.getItem("lingua");
     /* chi aveva gia' scelto prima che esistesse il cookie */
     if(scelta && document.cookie.indexOf("lingua=") < 0) ricorda(scelta);
@@ -74,8 +83,12 @@
   document.addEventListener("click", function(e){
     var a = e.target.closest && e.target.closest("a[data-lang]");
     if(!a) return;
-    ricorda(a.getAttribute("data-lang"));
-    if(location.hash) a.setAttribute("href", a.getAttribute("data-href") + location.hash);
+    var c = a.getAttribute("data-lang"), d = a.getAttribute("data-href");
+    ricorda(c);
+    /* alla radice si aggiunge ?lingua=xx: e' l'unico indirizzo che il server
+       puo' rimandare altrove, quindi l'unico che il browser puo' avere in
+       cache come rimando. Le altre lingue hanno un indirizzo tutto loro. */
+    a.setAttribute("href", d + (d === "/" ? "?lingua=" + c : "") + location.hash);
   }, true);
 })();
 </script>
