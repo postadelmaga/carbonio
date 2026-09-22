@@ -53,8 +53,19 @@
    link condiviso porterebbe il destinatario in un'altra lingua. */
 (function(){
   var L = document.documentElement.getAttribute("data-lingua") || "it";
+  /* La scelta si scrive anche in un cookie, perche' al server serve saperla:
+     alla radice decide Caddy guardando Accept-Language, e la radice e'
+     l'inglese. Senza il cookie, chi ha il browser in italiano chiedeva
+     l'inglese e veniva rispedito su /it/ ogni volta. Non e' un tracciante:
+     dentro c'e' solo "it" o "en", e ci finisce se si tocca il selettore. */
+  function ricorda(c){
+    try{ localStorage.setItem("lingua", c); }catch(err){}
+    try{ document.cookie = "lingua=" + c + "; path=/; max-age=31536000; SameSite=Lax"; }catch(err){}
+  }
   try{
     var scelta = localStorage.getItem("lingua");
+    /* chi aveva gia' scelto prima che esistesse il cookie */
+    if(scelta && document.cookie.indexOf("lingua=") < 0) ricorda(scelta);
     var p = location.pathname.replace(/index\.html$/,"");
     if(scelta && scelta !== L && (p === "/" || p === "")){
       location.replace((scelta === "en" ? "/" : "/" + scelta + "/") + location.hash);
@@ -64,7 +75,7 @@
   document.addEventListener("click", function(e){
     var a = e.target.closest && e.target.closest("a[data-lang]");
     if(!a) return;
-    try{ localStorage.setItem("lingua", a.getAttribute("data-lang")); }catch(err){}
+    ricorda(a.getAttribute("data-lang"));
     if(location.hash) a.setAttribute("href", a.getAttribute("data-href") + location.hash);
   }, true);
 })();

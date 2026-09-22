@@ -43,7 +43,7 @@
 /* stesso tema della pagina principale, prima del primo paint */
 try{var t=localStorage.getItem("tema");if(t==="dark"||t==="light"){document.documentElement.setAttribute("data-theme",t);}
 else if(window.matchMedia&&window.matchMedia("(max-width:640px), (pointer:coarse)").matches){document.documentElement.setAttribute("data-theme","dark");}}catch(e){}
-document.addEventListener("click",function(e){var a=e.target.closest&&e.target.closest("a[data-lang]");if(!a)return;try{localStorage.setItem("lingua",a.getAttribute("data-lang"));}catch(err){}},true);
+document.addEventListener("click",function(e){var a=e.target.closest&&e.target.closest("a[data-lang]");if(!a)return;var c=a.getAttribute("data-lang");try{localStorage.setItem("lingua",c);}catch(err){}try{document.cookie="lingua="+c+"; path=/; max-age=31536000; SameSite=Lax";}catch(err){}},true);
 </script>
 </head>
 <body class="bac">

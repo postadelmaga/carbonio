@@ -288,8 +288,10 @@ only way to check the links between languages before publishing.
 3. the `for L in …` loop and the sitemap in `deploy.sh`;
 4. a `LINGUE` entry in `social.py`, then re-run it to draw the card;
 5. a new `i18n/<lang>.json`;
-6. an `@radice_<lang>` block in the server Caddyfile, or the new language is
-   reachable only from the picker.
+6. an `@radice_<lang>` and a `@scelta_<lang>` block in the server Caddyfile,
+   plus the new code in the cookie alternation of the four `not
+   header_regexp` lines, or the new language is reachable only from the
+   picker.
 
 French, added on 15 September 2026, needed 517 hand-written units: the other
 157 keys are pure numbers, and French uses the comma for decimals like Italian
@@ -367,6 +369,20 @@ that was the wrong default dressed up as a helpful one. An explicit address
 like `/es/` is never redirected. A manual choice from the selector is saved in
 `localStorage` and honoured by a script in the head, but **only when you land
 on the root**: otherwise a shared link would take the recipient somewhere else.
+
+**A manual choice beats `Accept-Language`,** and it has to reach the server to
+do so: `localStorage` never leaves the browser. The picker therefore also
+writes a `lingua` cookie (a year, `SameSite=Lax`, nothing but `it` or `en`
+inside), and the Caddyfile has a `@scelta_<lang>` block per language that
+redirects on the cookie, plus a `not header_regexp Cookie` line on each
+`@radice_<lang>` block so a reader who has chosen is never sorted by their
+browser again. Until 22 September 2026 English was simply **unreachable** from
+an Italian browser: English is the root, and it was the root itself that kept
+bouncing the reader to `/it/`. The other languages hid the bug — they have an
+explicit address, which is never redirected. The root also gained `Vary:
+Accept-Language, Cookie`, without which a cached 302 would outlive the choice.
+`lingua=en` has no `@scelta_en` block on purpose: the root is already English,
+so not matching is the whole job.
 
 In the Caddyfile the first argument of `redir` is a **path matcher**, not the
 destination: `redir /es/ 302` does nothing, you need `redir * /es/ 302`. Two
