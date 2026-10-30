@@ -1,3 +1,8 @@
 __pycache__/
 *.pyc
 .fonts-cache/
+
+# Ocean Earth: i dati generati dalla pipeline (GB) non vanno nel repository
+ocean-earth/data/
+.pytest_cache/
+.venv/

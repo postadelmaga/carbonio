@@ -1,0 +1,190 @@
+# Ocean Earth
+
+Interactive globe of **sea surface temperature** and **surface ocean currents**
+from January 1993 to the latest published data, built on Copernicus Marine
+Service products. It lives inside the CO₂·info site at
+**https://co2-info.duckdns.org/ocean-earth/**.
+
+> The text below is in English. Il resto del repository è in italiano; questa
+> cartella segue le stesse convenzioni (sito statico, niente build, deploy con
+> `publish.sh`).
+
+## What it shows
+
+| Layer | What | Unit |
+|---|---|---|
+| Temperature | sea surface temperature, configurable colour scale (3 palettes, min/max, intensity) | °C |
+| Anomaly | difference from the 1993–2020 monthly climatology, diverging scale | °C |
+| Speed | current speed as a colour field | m/s |
+| Particles | GPU particles advected by the current field (U, V), coloured by speed | m/s |
+| Arrows | a zoom-dependent grid of arrows, oriented along the current, colour and length by speed | m/s |
+| Hotspots | months above the 1993–2020 90th percentile of the same month (monthly time step only) | — |
+
+Time steps: **month** (1993 → last complete month), **day** (since 1 January
+2024) and **hour** (last 14 days). Click a point for its values, the monthly
+temperature history since 1993 (absolute or anomaly, with range selection by
+dragging) and a second point to compare. Drag a box for regional statistics
+(area-weighted mean, maximum, mean anomaly over time). "Compare two dates"
+splits the globe with a draggable divider.
+
+## Data
+
+All fields are re-gridded onto **one regular 0.25° grid** (1440 × 720, cell
+centres at ±179.875° / ±89.875°), the native grid of the current product. A
+coarse cell is ocean only if at least half of its area-weight is ocean in the
+native grid; otherwise it is land.
+
+| Time step | Variable | Dataset (Copernicus Marine) | Native | Kind | Coverage (catalogue, 30 Oct 2026) |
+|---|---|---|---|---|---|
+| month | SST | `cmems_mod_glo_phy_my_0.083deg_P1M-m` (GLOBAL_MULTIYEAR_PHY_001_030, GLORYS12) | 1/12°, monthly mean, `thetao` at 0.49 m | reanalysis | 1993-01 → 2026-08 |
+| month | SST | `cmems_mod_glo_phy-thetao_anfc_0.083deg_P1M-m` (GLOBAL_ANALYSISFORECAST_PHY_001_024) | 1/12°, monthly mean | operational analysis | after GLORYS12 ends |
+| month | U, V | `cmems_obs-mob_glo_phy-cur_my_0.25deg_P1M-m` (MULTIOBS_GLO_PHY_MYNRT_015_003) | 0.25°, monthly mean, surface | observation-based (altimetry + ERA5 Ekman + tides) | 1993-01 → 2026-03 |
+| month | U, V | `cmems_obs-mob_glo_phy-cur_nrt_0.25deg_P1M-m` (same product, NRT) | 0.25° | observation-based | after the multi-year part ends |
+| day | SST | `cmems_mod_glo_phy_my_0.083deg_P1D-m`, then `cmems_mod_glo_phy-thetao_anfc_0.083deg_P1D-m` | 1/12°, daily mean | reanalysis → analysis | 2024-01-01 → yesterday |
+| day | SST (option) | `METOFFICE-GLO-SST-L4-NRT-OBS-SST-V2` (SST_GLO_SST_L4_NRT_OBSERVATIONS_010_001, OSTIA) | 0.05°, daily, L4 | satellite observations | last 365 days |
+| day | U, V | `cmems_obs-mob_glo_phy-cur_my_0.25deg_P1D-m`, then `…_nrt_0.25deg_P1D-m` | 0.25°, daily mean | observation-based | 2024-01-01 → yesterday |
+| hour | SST | `cmems_mod_glo_phy_anfc_0.083deg_PT1H-m` | 1/12°, hourly mean | operational analysis | last 14 days |
+| hour | U, V | `cmems_obs-mob_glo_phy-cur_nrt_0.25deg_PT1H-i` | 0.25°, hourly instantaneous (with tides) | observation-based | last 14 days |
+
+Rules that keep the data honest:
+
+- **Forecasts are cut.** Operational products extend days into the future;
+  the pipeline publishes nothing later than the end of yesterday (UTC).
+- **Every frame records its dataset** (`data/manifest.json`), and the interface
+  always shows source, kind (model / observations), native time step and
+  resolution of what is on screen.
+- **No hourly data where none exists.** For the past, the finest step is the
+  day; the hourly step only covers the recent window.
+- **Interpolation is visual and declared.** During playback two consecutive
+  frames are blended linearly on the GPU. Whenever a blended state is on
+  screen the date and the source line say *interpolated*; when paused the
+  slider snaps to an original frame.
+- **Anomaly baseline: 1993–2020**, from the GLORYS12 monthly means (data start
+  in 1993, so 1991–2020 is not available from these products). Monthly frames
+  use their month; days and hours interpolate the climatology between month
+  centres. The anomaly always uses the model SST, consistent with its
+  climatology; with OSTIA selected the anomaly falls back to the model and
+  the interface says so.
+- **Hotspots are not marine heatwaves** in the Hobday et al. sense (daily
+  data, 90th percentile of a daily climatology, ≥ 5 days): they are months
+  above the monthly 90th percentile, and the layer is disabled outside the
+  monthly time step.
+- **Land never shows as sea.** Cells are classified from each product's own
+  mask (OSTIA lakes and rivers excluded); on screen a Natural Earth 1:50m
+  land mask is drawn on top.
+
+Licence and attribution: Copernicus Marine products are free and open
+(Copernicus licence); the page credits "E.U. Copernicus Marine Service
+Information" and lists each product with its DOI. Coastlines and land:
+Natural Earth, public domain.
+
+### Encoding
+
+Frames are lossless RGB PNGs (the server compresses them by itself; Caddy's
+`encode` does not compress raw binaries), decoded in Web Workers:
+
+- temperature: 16-bit code in R (high) and G (low), `°C = −5 + (code − 1) × 0.01`, code 0 = no data;
+- currents: two 12-bit codes, `R = u ≫ 4`, `G = v ≫ 4`, `B = (u & 15) ≪ 4 | (v & 15)`,
+  `m/s = (code − 2048) × 0.002`, both codes 0 = no data (range ±4.09 m/s).
+
+On the GPU, frames become half-float textures holding *value × mask* and
+*mask*: with linear filtering, *value × mask / mask* averages only ocean
+samples, so coastlines are never smeared with land zeros.
+
+## Architecture
+
+```
+ocean-earth/
+  index.html            the page (served at /ocean-earth/)
+  app/                  ES modules, no dependencies, no build step
+    main.js             wiring: data, time, globe, panels
+    globe.js            WebGL2 renderer
+    shaders.js          GLSL: ray-cast globe, particles, arrows, lines
+    geo.js              camera, matrices, picking
+    data.js             manifest, worker pool, LRU cache
+    decode-worker.js    PNG → codes + half floats (off the main thread)
+    timeline.js         time model, playback, climatology selection
+    chart.js            SVG line charts with range brushing
+    palettes.js         colour scales (LUT textures + CSS gradients)
+    i18n.js             Italian / English
+    style.css
+  pipeline/             Python: download, re-grid, encode, derive, validate
+  tests/                pytest (pipeline), node --test (app), validation report
+  data/                 generated, NOT in git (~3–4 GB), synced by deploy.sh
+```
+
+**Why no CesiumJS / MapLibre / deck.gl.** The data are global raster fields on
+a regular grid; a ray-cast sphere samples them directly in a fragment shader
+(exact at every zoom, no tiling, no reprojection), particles live in
+textures and are advected on the GPU, and the whole app is ~130 KB of code (~40 KB compressed)
+instead of several MB of library. Cesium would bring terrain, imagery
+providers and an access token for base maps we do not need, while its imagery
+layers expect colour images: colour scales, anomalies and frame blending
+would need custom primitives and shaders anyway. The site itself has no build step
+and no dependencies; Ocean Earth keeps that. Everything is plain WebGL2
+(supported by all current desktop and mobile browsers).
+
+Rendering per frame: (1) a full-screen triangle ray-casts the unit sphere,
+blends frames A/B, applies the colour scale or anomaly, hatches hotspots,
+draws Natural Earth land on top; (2) coastlines as GL lines with horizon
+culling; (3) instanced arrows whose lattice snaps to the grid and densifies
+with zoom; (4) particles: an update pass (state `RGBA32F`: lon, lat, age,
+speed) writes into a 10-layer ring buffer, a draw pass extrudes each trail
+segment into a screen-space quad. New particles are spawned uniformly in the
+visible spherical cap, so density and apparent speed stay constant across
+zoom levels (level of detail without tiles).
+
+Loading: the manifest lists every frame; frames are fetched and decoded by
+2–3 workers, kept in an LRU cache (24 frames desktop, 10 phone), and
+prefetched ahead of playback; playback waits for a frame rather than skipping
+it. Time series for the point chart and regional statistics are 5° tiles
+(20 × 20 cells × all months in one PNG), fetched only when needed.
+
+## Pipeline
+
+```
+cd ocean-earth
+copernicusmarine login                 # once; credentials stay in ~/.copernicusmarine
+./pipeline/update.sh                   # incremental: downloads only what is missing
+.venv/bin/python -m pytest tests       # unit tests
+node --test tests/                     # app tests
+.venv/bin/python pipeline/validate.py  # scientific validation → tests/validation-report.md
+cd .. && ./publish.sh && ./publish.sh --apply
+```
+
+`update.sh` runs three download queues in parallel (temperature, currents,
+OSTIA), then `derived.py` (land, coasts, climatology, 90th percentile, time
+series tiles) and `manifest.py`. Frame files are written atomically, the index
+after each block, so an interrupted run resumes where it stopped. The daily
+and hourly windows are set with `DAILY_START`, `HOURLY_DAYS`, `OSTIA_DAYS`.
+
+Throughput measured on the development machine (4 cores, ~40 MB/s): about
+6–7 s per global 1/12° frame, 2–3 s per 0.25° current frame.
+
+## Deploy
+
+`publish.sh` → `deploy.sh` copies `ocean-earth/index.html` and `app/` into the
+site build, then rsyncs `ocean-earth/data/` directly (frames first, manifest
+last, `index/` and `logs/` excluded). The main rsync excludes
+`/ocean-earth/data/`, so `--prune` on the site never deletes the data; with
+`--prune` the data sync also removes frames that left the rolling windows.
+No server configuration change is needed: Caddy already serves the folder
+statically (`no-cache` revalidation for everything outside `/assets/`).
+
+Rollback: the page is two static paths. `git revert` + `./publish.sh --apply
+--prune` restores the previous code; removing `/home/arch/carbonioweb/ocean-earth`
+on the server removes the app entirely without touching the rest of the site.
+
+## Known limits
+
+- 0.25° is the shared grid: GLORYS12 (1/12°) and OSTIA (0.05°) are averaged
+  down. A higher-resolution Mediterranean layer is not included yet; the
+  "Mediterranean" button is a camera preset.
+- Hourly coverage is a rolling 14-day window; daily coverage starts 2024-01-01
+  (set by `DAILY_START`, can be extended backwards at ~3.4 GB per decade).
+- The point chart uses monthly means only.
+- The current product's multi-year version 202411 is announced for retirement
+  on 2026-11-24; the pipeline uses the default (latest) version, so the next
+  update after the switch picks the new one automatically.
+- Particles need `EXT_color_buffer_float` (all desktop browsers, iOS ≥ 15);
+  without it the page says so and arrows remain.

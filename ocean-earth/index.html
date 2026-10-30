@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ocean Earth · CO₂·info</title>
+<meta name="description" content="Temperatura superficiale del mare e correnti oceaniche dal 1993 a oggi su un globo interattivo, con i dati Copernicus Marine. Sea surface temperature and ocean currents since 1993 on an interactive globe.">
+<link rel="canonical" href="__ROOT__/ocean-earth/">
+<meta property="og:title" content="Ocean Earth · CO₂·info">
+<meta property="og:description" content="Temperatura del mare e correnti dal 1993 a oggi, dati Copernicus Marine.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="__ROOT__/ocean-earth/">
+<meta name="theme-color" content="#06101a">
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..900&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="app/style.css">
+<link rel="modulepreload" href="app/main.js">
+<link rel="preload" href="data/manifest.json" as="fetch" crossorigin>
+<script defer src="https://cloud.umami.is/script.js" data-website-id="2cf64696-ed71-405e-9e22-b2b3e7b8bb6f"></script>
+<script>
+/* il tema salvato dal sito, prima del primo disegno */
+(function(){ var t=null; try{t=localStorage.getItem("tema");}catch(e){} if(t==="light"||t==="dark") document.documentElement.setAttribute("data-theme",t); })();
+</script>
+</head>
+<body>
+<canvas id="globe" aria-label="Globo interattivo"></canvas>
+<div id="mark-a" class="mark" hidden></div>
+<div id="mark-b" class="mark b" hidden></div>
+<div id="cmp-split" class="split" hidden><span id="cmp-label"></span></div>
+
+<header class="top">
+  <a id="back-link" class="back" href="/it/" data-i18n-title="back">
+    <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M10 3 5 8l5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <span class="mark-co2">CO₂·info</span>
+  </a>
+  <h1 class="brand">OCEAN EARTH</h1>
+  <div class="quick-mode" role="group">
+    <button type="button" data-mode="sst" data-i18n="mode_sst">Temperatura</button>
+    <button type="button" data-mode="anom" data-i18n="mode_anom">Anomalia</button>
+    <button type="button" data-mode="speed" data-i18n="mode_speed">Velocità</button>
+  </div>
+  <div class="top-r">
+    <button id="world-btn" type="button" class="ghost" data-i18n="world">Globo</button>
+    <button id="med-btn" type="button" class="ghost" data-i18n="med">Mediterraneo</button>
+    <button id="lang-btn" type="button" class="ghost mono" title="Italiano / English"><span data-lang-only="it">EN</span><span data-lang-only="en">IT</span></button>
+    <button id="about-btn" type="button" class="icon" data-i18n-title="about">i</button>
+    <button id="side-btn" type="button" class="icon side-toggle" data-i18n-title="layers">
+      <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 3 2 8l10 5 10-5-10-5Zm-10 9 10 5 10-5M2 16l10 5 10-5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+    </button>
+  </div>
+</header>
+
+<aside class="side" id="side">
+  <section>
+    <h2 data-i18n="layers">Livelli</h2>
+    <label class="radio"><input type="radio" name="mode" value="sst" checked> <span data-i18n="mode_sst">Temperatura</span></label>
+    <label class="radio"><input type="radio" name="mode" value="anom"> <span data-i18n="mode_anom">Anomalia</span></label>
+    <label class="radio"><input type="radio" name="mode" value="speed"> <span data-i18n="mode_speed">Velocità</span></label>
+    <label class="radio"><input type="radio" name="mode" value="none"> <span data-i18n="mode_none">Nessuno</span></label>
+    <hr>
+    <label class="chk"><input type="checkbox" id="particles" checked> <span data-i18n="particles">Particelle</span></label>
+    <label class="chk"><input type="checkbox" id="arrows"> <span data-i18n="arrows">Frecce</span></label>
+    <label class="chk"><input type="checkbox" id="coast" checked> <span data-i18n="coast">Coste</span></label>
+    <label class="chk"><input type="checkbox" id="hotspot"> <span data-i18n="hotspot">Hotspot</span></label>
+  </section>
+  <section id="src-row" hidden>
+    <h2 data-i18n="source">Fonte della temperatura</h2>
+    <label class="radio"><input type="radio" name="source" value="model" checked> <span data-i18n="src_model">Modello</span></label>
+    <label class="radio"><input type="radio" name="source" value="ostia"> <span data-i18n="src_ostia">OSTIA</span></label>
+  </section>
+  <section>
+    <h2 data-i18n="particles">Particelle</h2>
+    <label class="rng"><span data-i18n="density">Densità</span>
+      <select id="p-count"><option value="2000">2 000</option><option value="4000">4 000</option><option value="8000" selected>8 000</option><option value="16000">16 000</option><option value="32000">32 000</option></select></label>
+    <label class="rng"><span data-i18n="speed">Velocità</span><input type="range" id="p-speed" min="0.2" max="3" step="0.1" value="1"></label>
+    <label class="rng"><span data-i18n="width">Spessore</span><input type="range" id="p-width" min="0.6" max="4" step="0.1" value="1.6"></label>
+    <h2 data-i18n="arrows">Frecce</h2>
+    <label class="rng"><span data-i18n="density">Densità</span><input type="range" id="a-density" min="0.2" max="3" step="0.1" value="1"></label>
+    <p class="fine" data-i18n="particles_note"></p>
+  </section>
+  <section>
+    <h2 data-i18n="scale">Scala di colore</h2>
+    <label class="rng" id="palette-row"><span data-i18n="palette">Tavolozza</span>
+      <select id="palette"><option value="classic">Classica</option><option value="thermal">Thermal</option><option value="turbo">Turbo</option></select></label>
+    <div class="minmax"><label><span data-i18n="min">min</span> <input type="number" id="r-min" step="0.1"></label>
+      <label><span data-i18n="max">max</span> <input type="number" id="r-max" step="0.1"></label></div>
+    <label class="rng"><span data-i18n="opacity">Intensità</span><input type="range" id="opacity" min="0.15" max="1" step="0.05" value="1"></label>
+  </section>
+  <section>
+    <h2 data-i18n="tools">Strumenti</h2>
+    <button id="region-btn" type="button" class="wide" data-i18n="region">Statistiche di una regione</button>
+    <label class="chk"><input type="checkbox" id="cmp-chk"> <span data-i18n="compare_dates">Confronta due date</span></label>
+    <div id="cmp-row" hidden>
+      <label class="rng"><span data-i18n="compare_label">Data a destra</span><input type="range" id="cmp-slider" min="0" max="0" step="1" value="0"></label>
+    </div>
+  </section>
+</aside>
+
+<div id="legend" class="legend"></div>
+
+<section id="info" class="panel info" hidden>
+  <header><h2 data-i18n="coords">Coordinate</h2><button id="info-close" class="icon" type="button" data-i18n-title="close">×</button></header>
+  <div id="pt-values"></div>
+  <div class="ch-head"><b data-i18n="history">Storia</b>
+    <label class="chk small"><input type="checkbox" id="pt-anom"> <span data-i18n="show_anom">anomalia</span></label>
+  </div>
+  <div id="pt-chart" class="chart-host"></div>
+  <div class="ch-foot"><span class="muted"><span data-i18n="series_from">Periodo</span>: <span id="pt-range"></span></span>
+    <button id="pt-reset" type="button" class="link">↺</button>
+    <button id="pick-b" type="button" class="link" data-i18n="compare_point">Confronta con un altro punto</button></div>
+</section>
+
+<section id="region" class="panel region" hidden>
+  <header><h2 data-i18n="reg_title">Regione</h2><button id="reg-close" class="icon" type="button" data-i18n-title="close">×</button></header>
+  <div id="reg-box" class="muted"></div>
+  <div id="reg-values"></div>
+  <label class="chk small"><input type="checkbox" id="reg-anom"> <span data-i18n="show_anom">anomalia</span></label>
+  <div id="reg-chart" class="chart-host"></div>
+</section>
+
+<footer class="time">
+  <div class="time-row">
+    <select id="tier" aria-label="Passo temporale"></select>
+    <div class="transport">
+      <button id="first" type="button" class="icon" data-i18n-title="to_start"><svg viewBox="0 0 16 16" width="14" height="14"><path d="M4 3v10M13 3 6 8l7 5z" fill="currentColor" stroke="currentColor" stroke-width="1.2"/></svg></button>
+      <button id="back" type="button" class="icon" data-i18n-title="step_back"><svg viewBox="0 0 16 16" width="14" height="14"><path d="M11 3 5 8l6 5z" fill="currentColor"/></svg></button>
+      <button id="play" type="button" class="icon play" data-i18n-title="play"><svg class="i-play" viewBox="0 0 16 16" width="16" height="16"><path d="M4 2.5v11l9.5-5.5z" fill="currentColor"/></svg><svg class="i-pause" viewBox="0 0 16 16" width="16" height="16"><path d="M4 3h3v10H4zM9 3h3v10H9z" fill="currentColor"/></svg></button>
+      <button id="fwd" type="button" class="icon" data-i18n-title="step_fwd"><svg viewBox="0 0 16 16" width="14" height="14"><path d="M5 3l6 5-6 5z" fill="currentColor"/></svg></button>
+      <button id="last" type="button" class="icon" data-i18n-title="to_end"><svg viewBox="0 0 16 16" width="14" height="14"><path d="M12 3v10M3 3l7 5-7 5z" fill="currentColor" stroke="currentColor" stroke-width="1.2"/></svg></button>
+    </div>
+    <div id="now" class="now mono"></div>
+    <span id="buffering" class="buffering" hidden data-i18n="buffering">in caricamento</span>
+  </div>
+  <div class="slider-wrap">
+    <div id="loop-track" class="loop-track" hidden></div>
+    <input type="range" id="slider" min="0" max="0" step="any" value="0" aria-label="Timeline">
+  </div>
+  <div class="time-row opts">
+    <label><span data-i18n="year">Anno</span> <select id="year"></select></label>
+    <label><span data-i18n="date">Data</span> <input id="date" type="month"></label>
+    <label><select id="fps"><option value="1">1</option><option value="2">2</option><option value="4" selected>4</option><option value="8">8</option><option value="15">15</option><option value="30">30</option></select> <span data-i18n="fps">fotogrammi/s</span></label>
+    <label class="chk"><input type="checkbox" id="loop-chk"> <span data-i18n="loop">Ripeti</span></label>
+    <label><span data-i18n="from">da</span> <select id="loop-from"></select></label>
+    <label><span data-i18n="to">a</span> <select id="loop-to"></select></label>
+    <button id="loop-year" type="button" class="link" data-i18n="loop_year">Anno intero</button>
+  </div>
+  <div id="status" class="status"></div>
+</footer>
+
+<div id="loading" class="loading" data-i18n="loading">Carico i dati…</div>
+<div id="note" class="note" hidden></div>
+<p class="hint" data-i18n="drag"></p>
+
+<dialog id="about" class="about">
+  <header><h2>Ocean Earth</h2><button id="about-close" class="icon" type="button" data-i18n-title="close">×</button></header>
+  <div data-lang-only="it">
+    <p>Ocean Earth mostra la <b>temperatura superficiale del mare</b> e le <b>correnti superficiali</b> dal gennaio 1993 all’ultimo dato pubblicato, con i prodotti del <b>Copernicus Marine Service</b>. Tutti i campi sono riportati sulla stessa griglia regolare di 0,25° (circa 28 km all’equatore).</p>
+    <h3>Tre passi temporali</h3>
+    <ul>
+      <li><b>Mese</b> (dal 1993): medie mensili. Temperatura dalla rianalisi GLORYS12 (modello NEMO a 1/12° che assimila temperatura da satellite, altimetria e profili in situ) e, dopo la sua ultima data, dall’analisi operativa globale dello stesso sistema. Correnti dal prodotto osservativo Copernicus-GlobCurrent (altimetria da satellite per la parte geostrofica, vento ERA5 per la parte di Ekman, marea), in versione riprocessata e poi in tempo quasi reale.</li>
+      <li><b>Giorno</b>: medie giornaliere delle stesse fonti; per l’ultimo anno si può scegliere anche la temperatura <b>osservata da satellite</b> (OSTIA L4).</li>
+      <li><b>Ora</b>, per gli ultimi giorni: correnti istantanee orarie (GlobCurrent, con la marea) e temperatura in media oraria dall’analisi operativa. Dati orari non esistono per tutto il periodo: per gli anni passati il passo più fine disponibile qui è il giorno.</li>
+    </ul>
+    <h3>Interpolazione</h3>
+    <p>Durante la riproduzione, fra un fotogramma e il successivo i campi vengono <b>mescolati linearmente</b> per rendere fluido il movimento. È un’interpolazione visiva, non un dato: quando la si vede, la data nella barra e la riga delle fonti dicono <span class="interp">interpolato</span>. Da fermi si vede sempre il dato originale.</p>
+    <h3>Anomalie e hotspot</h3>
+    <p>L’anomalia è la differenza dalla <b>climatologia 1993–2020</b>, calcolata qui dalle medie mensili GLORYS12 (i dati cominciano nel 1993, per questo non 1991–2020). Per giorni e ore la climatologia si interpola fra i centri dei mesi. Gli <b>hotspot</b> segnano i mesi in cui la temperatura supera il 90° percentile 1993–2020 dello stesso mese: è un indicatore mensile, non la definizione di ondata di calore marina di Hobday et al. (che richiede dati giornalieri e almeno cinque giorni consecutivi).</p>
+    <h3>Particelle e frecce</h3>
+    <p>Le particelle seguono il campo di velocità dell’istante mostrato, accelerato per renderlo visibile: indicano la direzione e l’intensità della corrente, non il percorso reale di una massa d’acqua. Le frecce sono campionate su una griglia che si infittisce con lo zoom; colore e lunghezza crescono con la velocità.</p>
+  </div>
+  <div data-lang-only="en">
+    <p>Ocean Earth shows <b>sea surface temperature</b> and <b>surface currents</b> from January 1993 to the latest published data, using <b>Copernicus Marine Service</b> products. All fields are put on the same regular 0.25° grid (about 28 km at the equator).</p>
+    <h3>Three time steps</h3>
+    <ul>
+      <li><b>Month</b> (since 1993): monthly means. Temperature from the GLORYS12 reanalysis (the 1/12° NEMO model assimilating satellite temperature, altimetry and in-situ profiles) and, after its last date, from the operational global analysis of the same system. Currents from the observation-based Copernicus-GlobCurrent product (satellite altimetry for the geostrophic part, ERA5 wind for the Ekman part, tides), reprocessed and then near real time.</li>
+      <li><b>Day</b>: daily means from the same sources; for the last year the <b>satellite-observed</b> temperature (OSTIA L4) can be selected too.</li>
+      <li><b>Hour</b>, for the last few days: hourly instantaneous currents (GlobCurrent, with tides) and hourly-mean temperature from the operational analysis. Hourly data do not exist for the whole period: for past years the finest step here is the day.</li>
+    </ul>
+    <h3>Interpolation</h3>
+    <p>During playback the fields are <b>blended linearly</b> between one frame and the next to make motion smooth. This is a visual interpolation, not data: whenever it is on screen, the date and the source line say <span class="interp">interpolated</span>. When paused you always see the original data.</p>
+    <h3>Anomalies and hotspots</h3>
+    <p>The anomaly is the difference from the <b>1993–2020 climatology</b>, computed here from the GLORYS12 monthly means (the data start in 1993, hence not 1991–2020). For days and hours the climatology is interpolated between month centres. <b>Hotspots</b> mark months whose temperature exceeds the 1993–2020 90th percentile of the same month: a monthly indicator, not the Hobday et al. marine heatwave definition (which needs daily data and at least five consecutive days).</p>
+    <h3>Particles and arrows</h3>
+    <p>Particles follow the velocity field of the time shown, sped up to be visible: they show the direction and strength of the current, not the actual path of a water mass. Arrows are sampled on a grid that gets denser as you zoom; colour and length grow with speed.</p>
+  </div>
+  <h3>Copernicus Marine</h3>
+  <div id="about-sources" class="about-table"></div>
+  <ul id="about-tiers"></ul>
+  <p class="fine"><span data-lang-only="it">Generato usando informazioni del Copernicus Marine Service dell’Unione europea.</span><span data-lang-only="en">Generated using E.U. Copernicus Marine Service Information.</span> · Natural Earth (coste, pubblico dominio / public domain) · <span data-lang-only="it">aggiornato</span><span data-lang-only="en">updated</span> <span id="about-updated" class="mono"></span> · <a href="https://github.com/postadelmaga/carbonio/tree/main/ocean-earth" target="_blank" rel="noopener">GitHub</a></p>
+</dialog>
+
+<script type="module" src="app/main.js"></script>
+</body>
+</html>

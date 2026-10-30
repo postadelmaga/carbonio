@@ -81,6 +81,14 @@ fi
 for L in it es fr zh; do
   [ -d "$SRC_DIR/$L" ] && cp -R "$SRC_DIR/$L" "$BUILD_DIR/"
 done
+# Ocean Earth: nella build vanno solo la pagina e il codice (pochi KB). I dati
+# (GB di fotogrammi, generati da ocean-earth/pipeline e fuori dal repository)
+# si sincronizzano a parte, direttamente dalla loro cartella, piu' sotto.
+OE_DATA="$SRC_DIR/ocean-earth/data"
+if [ -f "$SRC_DIR/ocean-earth/index.html" ]; then
+  mkdir -p "$BUILD_DIR/ocean-earth"
+  cp -R "$SRC_DIR/ocean-earth/index.html" "$SRC_DIR/ocean-earth/app" "$BUILD_DIR/ocean-earth/"
+fi
 
 # I sorgenti tengono un placeholder perche' l'URL pubblico lo decide il deploy,
 # non il repository.
@@ -111,6 +119,12 @@ cat <<UNA
   </url>
 UNA
 done)
+  <url>
+    <loc>${PUBLIC_URL}/ocean-earth/</loc>
+    <lastmod>$(date -u +%Y-%m-%d)</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
 </urlset>
 SITEMAP
 
@@ -134,7 +148,24 @@ else
 fi
 
 info "Sincronizzo verso $SSH_HOST:$DEST"
-rsync "${RSYNC_OPTS[@]}" "$BUILD_DIR"/ "$SSH_HOST:$DEST/"
+# i dati di Ocean Earth non sono nella build: --delete non deve toccarli
+rsync "${RSYNC_OPTS[@]}" --exclude '/ocean-earth/data/' "$BUILD_DIR"/ "$SSH_HOST:$DEST/"
+
+# ── 4. Dati di Ocean Earth ──────────────────────────────────────────────────
+# Prima i fotogrammi, poi il manifest: chi apre la pagina durante il
+# trasferimento non trova mai un istante elencato e non ancora arrivato.
+# Indici e log della pipeline restano in locale.
+if [ -f "$OE_DATA/manifest.json" ]; then
+  info "Ocean Earth: sincronizzo i dati ($(du -sh "$OE_DATA" | cut -f1) in locale)"
+  [[ $APPLY -eq 1 ]] && ssh "$SSH_HOST" "mkdir -p '$DEST/ocean-earth/data'"
+  OE_OPTS=(-a --human-readable --omit-dir-times --no-perms --exclude '/index/' --exclude '/logs/')
+  [[ $PRUNE -eq 1 ]] && OE_OPTS+=(--delete)
+  [[ $APPLY -eq 1 ]] || OE_OPTS+=(--dry-run --stats)
+  rsync "${OE_OPTS[@]}" --exclude '/manifest.json' "$OE_DATA"/ "$SSH_HOST:$DEST/ocean-earth/data/" | tail -n 20
+  rsync "${OE_OPTS[@]}" "$OE_DATA/manifest.json" "$SSH_HOST:$DEST/ocean-earth/data/manifest.json"
+else
+  warn "Ocean Earth: nessun manifest in $OE_DATA, i dati non vengono pubblicati (lancia ocean-earth/pipeline/update.sh)"
+fi
 
 if [[ $APPLY -eq 1 ]]; then
   ok "Pubblicato"
