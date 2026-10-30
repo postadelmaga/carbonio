@@ -35,6 +35,10 @@ DATASETS = {
     'METOFFICE-GLO-SST-L4-NRT-OBS-SST-V2': dict(
         product='SST_GLO_SST_L4_NRT_OBSERVATIONS_010_001', name='OSTIA L4 satellite SST',
         kind='observation', res='0.05°', freq='P1D', var='analysed_sst,mask', depth=False),
+    # Mediterraneo ad alta risoluzione: osservazioni da satellite, griglia nativa
+    'SST_MED_SST_L4_NRT_OBSERVATIONS_010_004_a_V2': dict(
+        product='SST_MED_SST_L4_NRT_OBSERVATIONS_010_004', name='Mediterranean L4 satellite SST',
+        kind='observation', res='1/16°', freq='P1D', var='analysed_sst,mask', depth=False),
     # correnti: prodotto osservativo (altimetria + vento ERA5 + marea)
     'cmems_obs-mob_glo_phy-cur_my_0.25deg_P1M-m': dict(
         product='MULTIOBS_GLO_PHY_MYNRT_015_003', name='Copernicus-GlobCurrent (multi-year)',
@@ -60,6 +64,7 @@ CHAINS = {
     ('daily', 'sst'): ['cmems_mod_glo_phy_my_0.083deg_P1D-m', 'cmems_mod_glo_phy-thetao_anfc_0.083deg_P1D-m'],
     ('daily', 'cur'): ['cmems_obs-mob_glo_phy-cur_my_0.25deg_P1D-m', 'cmems_obs-mob_glo_phy-cur_nrt_0.25deg_P1D-m'],
     ('daily', 'ostia'): ['METOFFICE-GLO-SST-L4-NRT-OBS-SST-V2'],
+    ('daily', 'med'): ['SST_MED_SST_L4_NRT_OBSERVATIONS_010_004_a_V2'],
     ('hourly', 'sst'): ['cmems_mod_glo_phy_anfc_0.083deg_PT1H-m'],
     ('hourly', 'cur'): ['cmems_obs-mob_glo_phy-cur_nrt_0.25deg_PT1H-i'],
 }

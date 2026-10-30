@@ -40,6 +40,9 @@ uniform sampler2D uSstC, uSstD;      // confronto: la seconda data
 uniform sampler2DArray uClim;        // 12 mesi di climatologia
 uniform sampler2DArray uP90;         // 12 mesi di 90° percentile
 uniform sampler2D uLand;
+uniform sampler2D uMedA, uMedB;      // Mediterraneo 1/16° (griglia sua)
+uniform vec4 uMedBox;                // ovest, sud, est, nord (gradi, bordi esterni)
+uniform bool uMedOn;
 uniform sampler2D uLutSst, uLutAnom, uLutSpeed;
 uniform float uMix, uMixCmp;
 uniform vec4 uClimSel;               // mese a, mese b, peso di b, 0  (per l'istante principale)
@@ -100,6 +103,15 @@ void main() {
   } else if (uHaveData) {
     vec2 s = cmpSide ? sampleSst(uSstC, uSstD, uv, uMixCmp) : sampleSst(uSstA, uSstB, uv, uMix);
     vec4 sel = cmpSide ? uClimSelCmp : uClimSel;
+    if (uMedOn && !cmpSide && uMode == 0) {
+      // dentro il riquadro del prodotto regionale vince il dato a 1/16°
+      vec2 deg = degrees(ll);
+      vec2 muv = vec2((deg.x - uMedBox.x) / (uMedBox.z - uMedBox.x), (uMedBox.w - deg.y) / (uMedBox.w - uMedBox.y));
+      if (all(greaterThanEqual(muv, vec2(0.0))) && all(lessThanEqual(muv, vec2(1.0)))) {
+        vec2 m = sampleSst(uMedA, uMedB, muv, uMix);
+        if (m.y > 0.5) s = m;
+      }
+    }
     if (s.y > 0.5) {
       if (uMode == 0) {
         float t = (s.x - uRangeSst.x) / (uRangeSst.y - uRangeSst.x);

@@ -31,7 +31,7 @@ TIER_DIR = {'monthly': 'm', 'daily': 'd', 'hourly': 'h'}
 # quanti passi temporali per ogni download: abbastanza da ammortizzare la
 # richiesta, abbastanza pochi da non riempire la memoria (7 GB, 1/12° globale)
 CHUNK = {('monthly', 'sst'): 6, ('monthly', 'cur'): 24, ('daily', 'sst'): 8, ('daily', 'cur'): 31,
-         ('daily', 'ostia'): 2, ('hourly', 'sst'): 12, ('hourly', 'cur'): 48}
+         ('daily', 'ostia'): 2, ('daily', 'med'): 31, ('hourly', 'sst'): 12, ('hourly', 'cur'): 48}
 
 
 def stamp(tier, t):
@@ -141,12 +141,40 @@ def process(var, ds, i):
         m = np.nan_to_num(m, nan=2).astype(np.int64)
         sst[(m & 22) != 0] = np.nan
         return encode.encode_scalar(grid.from_twentieth(sst, ds.latitude.values, ds.longitude.values))
+    if var == 'med':
+        # griglia nativa 1/16°, solo girata con il nord in alto; la geometria
+        # finisce nel manifest (index/med-grid.json)
+        sst = ds['analysed_sst'].isel(time=i).values.astype(np.float64)
+        if np.nanmean(sst) > 200:
+            sst = sst - 273.15
+        if 'mask' in ds:
+            m = np.nan_to_num(ds['mask'].isel(time=i).values, nan=2).astype(np.int64)
+            sst[(m & 22) != 0] = np.nan
+        lat, lon = ds.latitude.values, ds.longitude.values
+        if lat[0] < lat[-1]:
+            sst = sst[::-1]
+        save_regional_grid('med', lat, lon)
+        return encode.encode_scalar(sst)
     if var == 'cur':
         u = _surface(ds['uo'].isel(time=i)).values
         v = _surface(ds['vo'].isel(time=i)).values
         lat, lon = ds.latitude.values, ds.longitude.values
         return encode.encode_vector(grid.from_quarter(u, lat, lon), grid.from_quarter(v, lat, lon))
     raise ValueError(var)
+
+
+def save_regional_grid(name, lat, lon):
+    """Bordi esterni e dimensioni della griglia regionale (per lo shader)."""
+    p = DATA / 'index' / f'{name}-grid.json'
+    if p.exists():
+        return
+    dlat = abs(float(lat[1] - lat[0]))
+    dlon = abs(float(lon[1] - lon[0]))
+    g = {'south': float(min(lat[0], lat[-1])) - dlat / 2, 'north': float(max(lat[0], lat[-1])) + dlat / 2,
+         'west': float(lon[0]) - dlon / 2, 'east': float(lon[-1]) + dlon / 2,
+         'nlat': int(lat.size), 'nlon': int(lon.size)}
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(json.dumps(g))
 
 
 def run(tier, var, start, end):
@@ -204,7 +232,7 @@ def prune(tier, var, start):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('tier', choices=['monthly', 'daily', 'hourly'])
-    ap.add_argument('var', choices=['sst', 'cur', 'ostia'])
+    ap.add_argument('var', choices=['sst', 'cur', 'ostia', 'med'])
     ap.add_argument('--start')
     ap.add_argument('--end')
     ap.add_argument('--days', type=int, help='finestra mobile che finisce ieri')

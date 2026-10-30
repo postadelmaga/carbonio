@@ -552,6 +552,28 @@ browser blocks the requests. Set `BACHECA_ORIGINE=http://127.0.0.1:8100` when
 starting the service, and `window.BACHECA_API` in the page. In production they
 share a domain and neither is needed.
 
+## Ocean Earth
+
+A separate page at `/ocean-earth/`, linked from the last item of the nav bar.
+Everything about it is in [`ocean-earth/README.md`](ocean-earth/README.md);
+what matters for the rest of the site:
+
+- the code is `ocean-earth/index.html` + `ocean-earth/app/`, plain ES modules,
+  no build, no dependencies; `deploy.sh` copies them into the build;
+- the data (`ocean-earth/data/`, several GB of PNG frames) are **not in git**.
+  They are produced by `ocean-earth/pipeline/update.sh` (Copernicus Marine
+  credentials in `~/.copernicusmarine`, never in the repository) and synced by
+  `deploy.sh` with a second rsync, frames first and `manifest.json` last;
+- the main rsync excludes `/ocean-earth/data/`, so `./publish.sh --apply --prune`
+  never deletes the data;
+- no Caddy change: the folder is served like any other page (`no-cache`, the
+  browser revalidates frames with a cheap 304);
+- the nav link text "Ocean Earth" is the same in every language and has its
+  own entry in each `i18n/*.json`.
+
+To refresh the data: `cd ocean-earth && ./pipeline/update.sh && .venv/bin/python
+pipeline/validate.py`, then `./publish.sh --apply` from the root.
+
 ## Licence
 
 Code MIT, text and charts CC BY 4.0: see [LICENSE](LICENSE) and

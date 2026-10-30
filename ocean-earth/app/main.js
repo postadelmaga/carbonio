@@ -14,6 +14,7 @@ const $$ = (s) => document.querySelectorAll(s);
 const ui = {
   mode: 'sst',                 // sst | anom | speed | none
   source: 'model',             // model | ostia (solo giornaliero)
+  med: true,                   // Mediterraneo a 1/16° sopra la griglia globale (solo giornaliero)
   point: null, pointB: null,   // punti selezionati {lat, lon}
   picking: null,               // null | 'second'
   regionMode: false, region: null,
@@ -85,7 +86,9 @@ function note(msg) {
 }
 
 async function loadStatic() {
-  store.get('static/land.png', 'gray').then((f) => globe.setLand(f.gray, f.w, f.h)).catch(() => {});
+  const big = globe.gl.getParameter(globe.gl.MAX_TEXTURE_SIZE) >= 8192 && !/Mobi|Android/i.test(navigator.userAgent);
+  store.decode(big ? 'static/land-8192.png' : 'static/land.png', 'gray')
+    .then((f) => globe.setLand(f.gray, f.w, f.h)).catch(() => {});
   fetch(store.url('static/coast.json')).then((r) => r.json()).then((l) => globe.setCoast(l)).catch(() => {});
   if (manifest.climatology.available) {
     const months = [...Array(12).keys()].map((m) => String(m + 1).padStart(2, '0'));
@@ -141,7 +144,12 @@ function isReady(i) {
   const okC = f.cur == null || resolved.has(keyFor(f, 'cur'));
   if (!okS) request(f, sv);
   if (!okC) request(f, 'cur');
-  return okS && okC;
+  let okM = true;
+  if (ui.med && timeline.tierName === 'daily' && f.med != null) {
+    okM = resolved.has(keyFor(f, 'med'));
+    if (!okM) request(f, 'med');
+  }
+  return okS && okC && okM;
 }
 
 function prefetch() {
@@ -161,7 +169,14 @@ async function applyFrames() {
   st.sstB = globe.frameTexture(keyFor(B, svB), sB, 'scalar') || st.sstA;
   st.curA = globe.frameTexture(keyFor(A, 'cur'), cA, 'vector');
   st.curB = globe.frameTexture(keyFor(B, 'cur'), cB, 'vector') || st.curA;
-  current = { A, B, sA, sB, cA, cB, svA, svB };
+  // Mediterraneo ad alta risoluzione, solo col passo giornaliero
+  const medOn = ui.med && timeline.tierName === 'daily' && manifest.regional && manifest.regional.med;
+  const [mA, mB] = medOn ? await Promise.all([request(A, 'med'), request(B, 'med')].map((p) => p ? p.catch(() => null) : null)) : [null, null];
+  if (token !== applyToken) return;
+  st.medA = globe.frameTexture(keyFor(A, 'med'), mA, 'scalar');
+  st.medB = globe.frameTexture(keyFor(B, 'med'), mB, 'scalar') || st.medA;
+  if (medOn) { const g = manifest.regional.med; st.medBox = [g.west, g.south, g.east, g.north]; }
+  current = { A, B, sA, sB, cA, cB, svA, svB, mA, mB };
   updateStatus();
   refreshPoint();
 }
@@ -398,12 +413,20 @@ const COMPASS = { it: ['N', 'NE', 'E', 'SE', 'S', 'SO', 'O', 'NO'], en: ['N', 'N
 function pointValues(p) {
   if (!current) return null;
   const c = store.cell(p.lat, p.lon);
-  const sst = valueAt(current.sA, current.sB, c.i, 'scalar');
+  let sst = valueAt(current.sA, current.sB, c.i, 'scalar');
+  let med = false;
+  const g = manifest.regional && manifest.regional.med;
+  if (current.mA && g && ui.mode === 'sst' && p.lat >= g.south && p.lat <= g.north && p.lon >= g.west && p.lon <= g.east) {
+    const r = Math.min(g.nlat - 1, Math.floor((g.north - p.lat) / (g.north - g.south) * g.nlat));
+    const cc = Math.min(g.nlon - 1, Math.floor((p.lon - g.west) / (g.east - g.west) * g.nlon));
+    const v = valueAt(current.mA, current.mB, r * g.nlon + cc, 'scalar');
+    if (Number.isFinite(v)) { sst = v; med = true; }
+  }
   const cl = climAt(c.i, globe.state.climSel, climFrames);
   const [u, v] = valueAt(current.cA, current.cB, c.i, 'vector');
   const speed = Math.hypot(u, v);
   const dirDeg = (Math.atan2(u, v) / DEG + 360) % 360;         // verso cui va, da nord in senso orario
-  return { c, sst, anom: sst - cl, u, v, speed, dirDeg };
+  return { c, sst, anom: (med ? valueAt(current.sA, current.sB, c.i, 'scalar') : sst) - cl, u, v, speed, dirDeg, med };
 }
 
 function fmtLat(lat) { return `${fmtNum(Math.abs(lat), 2)}° ${lat >= 0 ? 'N' : 'S'}`; }
@@ -416,11 +439,11 @@ function refreshPoint() {
     const v = pointValues(p);
     if (!v) return;
     const head = tag ? `<span class="tag ${tag}">${tag.toUpperCase()}</span> ` : '';
-    rows.push(`<div class="pt-head">${head}${fmtLat(p.lat)}, ${fmtLon(p.lon)} <span class="muted">· ${t('resolution')} 0,25° (${fmtLat(v.c.lat)}, ${fmtLon(v.c.lon)})</span></div>`);
+    rows.push(`<div class="pt-head">${head}${fmtLat(p.lat)}, ${fmtLon(p.lon)} <span class="muted">· ${t('resolution')} ${fmtNum(0.25, 2)}° (${fmtLat(v.c.lat)}, ${fmtLon(v.c.lon)})</span></div>`);
     if (!Number.isFinite(v.sst) && !Number.isFinite(v.speed)) { rows.push(`<div class="muted">${t('no_data')}</div>`); return; }
     const dir = COMPASS[LANG][Math.round(v.dirDeg / 45) % 8];
     rows.push(`<dl class="vals">
-      <dt>${t('temp')}</dt><dd>${Number.isFinite(v.sst) ? `<b>${fmtNum(v.sst, 2)} °C</b>` : '—'}</dd>
+      <dt>${t('temp')}</dt><dd>${Number.isFinite(v.sst) ? `<b>${fmtNum(v.sst, 2)} °C</b>` : '—'}${v.med ? ` <span class="muted">· ${store.source(current.A.med)?.name}, 1/16°</span>` : ''}</dd>
       <dt>${t('anom')}</dt><dd>${Number.isFinite(v.anom) ? `<b class="${v.anom >= 0 ? 'warm' : 'cold'}">${v.anom >= 0 ? '+' : ''}${fmtNum(v.anom, 2)} °C</b> <span class="muted">${t('clim_base')} ${manifest.climatology.years.join('–')}</span>` : '—'}</dd>
       <dt>${t('cur_speed')}</dt><dd>${Number.isFinite(v.speed) ? `<b>${fmtNum(v.speed, 3)} m/s</b> · ${t('towards')} ${dir} (${Math.round(v.dirDeg)}°) <span class="muted">u ${fmtNum(v.u, 3)} · v ${fmtNum(v.v, 3)}</span>` : '—'}</dd>
     </dl>`);
@@ -443,7 +466,7 @@ function freqLabel(s) {
 }
 
 function srcLine(s) {
-  return `<a href="https://data.marine.copernicus.eu/product/${s.product}/description" target="_blank" rel="noopener">${s.name}</a> <span class="muted">· ${t(s.kind)} · ${freqLabel(s)} · ${s.res}${s.res !== '0.25°' ? ' → 0,25°' : ''}</span>`;
+  return `<a href="https://data.marine.copernicus.eu/product/${s.product}/description" target="_blank" rel="noopener">${s.name}</a> <span class="muted">· ${t(s.kind)} · ${freqLabel(s)} · ${s.res}${s.res !== '0.25°' ? ` → ${fmtNum(0.25, 2)}°` : ''}</span>`;
 }
 
 function timeLabel() {
@@ -638,6 +661,10 @@ function updateStatus() {
   const parts = [];
   if (sS) parts.push(`<b>${t('temp')}</b> ${sS.name} <span class="muted">(${t(sS.kind)}, ${freqLabel(sS)}, ${sS.res})</span>`);
   if (sC) parts.push(`<b>${t('cur_speed')}</b> ${sC.name} <span class="muted">(${t(sC.kind)}, ${freqLabel(sC)}, ${sC.res})</span>`);
+  if (current.mA && ui.mode === 'sst') {
+    const m = store.source(current.A.med);
+    if (m) parts.push(`<b>${t('med_hi')}</b> ${m.name} <span class="muted">(${t(m.kind)}, ${freqLabel(m)}, ${m.res})</span>`);
+  }
   parts.push(timeline.interpolated ? `<span class="interp">${t('interpolated')}</span>` : `<span class="orig">${t('original')}</span>`);
   $('#status').innerHTML = parts.join(' · ') + (notes.length ? ` · <span class="warn">${notes.join(' · ')}</span>` : '');
 }
@@ -705,6 +732,7 @@ function bindControls() {
   $('#coast').addEventListener('change', (e) => { st.coast = e.target.checked; });
   $('#hotspot').addEventListener('change', (e) => { st.hotspot = e.target.checked; drawLegend(); });
   $$('input[name=source]').forEach((r) => r.addEventListener('change', () => { ui.source = r.value; onTime('source'); }));
+  $('#med-hi').addEventListener('change', (e) => { ui.med = e.target.checked; onTime('source'); });
   $('#p-count').addEventListener('change', (e) => { st.particleCount = +e.target.value; globe.resetParticles(); });
   $('#p-speed').addEventListener('input', (e) => { st.particleSpeed = +e.target.value; });
   $('#p-width').addEventListener('input', (e) => { st.particleWidth = +e.target.value; });
@@ -719,11 +747,13 @@ function bindControls() {
     else st.rangeSst = [lo, hi];
     drawLegend();
   };
+  $('#r-auto').addEventListener('click', autoRange);
   $('#r-min').addEventListener('change', ranges);
   $('#r-max').addEventListener('change', ranges);
 
   // strumenti
   $('#med-btn').addEventListener('click', () => flyTo(38.3, 17.5, 1.42));
+  $('#med-hi-row').hidden = !(manifest.regional && manifest.regional.med);
   $('#world-btn').addEventListener('click', () => flyTo(20, camera.lon, matchMedia('(max-width: 720px)').matches ? 2.7 : 3.2));
   $('#region-btn').addEventListener('click', () => {
     ui.regionMode = !ui.regionMode;
@@ -766,6 +796,39 @@ function bindControls() {
     buildTimeUI(); syncTimeUI(true); updateStatus(); refreshPoint(); drawLegend(); buildAbout(); loadSeries();
   });
   $('#back-link').href = LANG === 'it' ? '/it/' : '/';
+  syncModeButtons();
+  drawLegend();
+}
+
+// scala adattata a quello che si vede: 2° e 98° percentile dei valori
+// nella calotta inquadrata (temperatura, anomalia o velocita')
+function autoRange() {
+  if (!current) return;
+  const g = manifest.grid, st = globe.state;
+  const R = Math.min(90, camera.viewRadiusDeg);
+  const vals = [];
+  const stepDeg = Math.max(g.step, R / 60);
+  const medG = manifest.regional && manifest.regional.med;
+  for (let lat = Math.max(-89.9, camera.lat - R); lat <= Math.min(89.9, camera.lat + R); lat += stepDeg) {
+    const span = Math.min(180, R / Math.max(0.05, Math.cos(lat * DEG)));
+    for (let dl = -span; dl <= span; dl += stepDeg / Math.max(0.05, Math.cos(lat * DEG))) {
+      const lon = wrapLon(camera.lon + dl);
+      if (!camera.project(lat, lon)) continue;
+      const pv = pointValues({ lat, lon });
+      const v = ui.mode === 'anom' ? pv.anom : ui.mode === 'speed' ? pv.speed : pv.sst;
+      if (Number.isFinite(v)) vals.push(v);
+    }
+  }
+  if (vals.length < 10) return;
+  vals.sort((a, b) => a - b);
+  let lo = vals[Math.floor(vals.length * 0.02)], hi = vals[Math.ceil(vals.length * 0.98) - 1];
+  if (ui.mode === 'anom') { const m = Math.max(Math.abs(lo), Math.abs(hi)); lo = -m; hi = m; }
+  if (ui.mode === 'speed') lo = 0;
+  const r = (x) => Math.round(x * 10) / 10;
+  lo = r(lo); hi = Math.max(r(hi), lo + 0.1);
+  if (ui.mode === 'anom') st.rangeAnom = [lo, hi];
+  else if (ui.mode === 'speed') st.rangeSpeed = [lo, hi];
+  else st.rangeSst = [lo, hi];
   syncModeButtons();
   drawLegend();
 }

@@ -69,6 +69,7 @@
     <h2 data-i18n="source">Fonte della temperatura</h2>
     <label class="radio"><input type="radio" name="source" value="model" checked> <span data-i18n="src_model">Modello</span></label>
     <label class="radio"><input type="radio" name="source" value="ostia"> <span data-i18n="src_ostia">OSTIA</span></label>
+    <label class="chk" id="med-hi-row"><input type="checkbox" id="med-hi" checked> <span data-i18n="med_hi_long">Mediterraneo 1/16°</span></label>
   </section>
   <section>
     <h2 data-i18n="particles">Particelle</h2>
@@ -86,6 +87,7 @@
       <select id="palette"><option value="classic">Classica</option><option value="thermal">Thermal</option><option value="turbo">Turbo</option></select></label>
     <div class="minmax"><label><span data-i18n="min">min</span> <input type="number" id="r-min" step="0.1"></label>
       <label><span data-i18n="max">max</span> <input type="number" id="r-max" step="0.1"></label></div>
+    <button id="r-auto" type="button" class="wide" data-i18n="auto_range">Adatta alla vista</button>
     <label class="rng"><span data-i18n="opacity">Intensità</span><input type="range" id="opacity" min="0.15" max="1" step="0.05" value="1"></label>
   </section>
   <section>

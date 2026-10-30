@@ -52,6 +52,7 @@ export class Globe {
     this.coast = null; this.region = null;
     this.state = {
       sstA: null, sstB: null, curA: null, curB: null, mix: 0,
+      medA: null, medB: null, medBox: [0, 0, 1, 1],
       sstC: null, sstD: null, mixCmp: 0, compare: false, split: 0.5,
       climSel: [0, 0, 0, 0], climSelCmp: [0, 0, 0, 0],
       mode: 0, hotspot: false, opacity: 1,
@@ -292,6 +293,11 @@ export class Globe {
     this.bind(P, 'uLutSst', 9, this.luts.sst);
     this.bind(P, 'uLutAnom', 10, this.luts.anom);
     this.bind(P, 'uLutSpeed', 11, this.luts.speedField);
+    // texture del Mediterraneo: senza bordo che si ripete in longitudine
+    const medA = st.medA || this.blank2, medB = st.medB || medA;
+    this.bind(P, 'uMedA', 12, medA); this.bind(P, 'uMedB', 13, medB);
+    gl.uniform4fv(P.u.uMedBox, st.medBox);
+    gl.uniform1i(P.u.uMedOn, st.medA ? 1 : 0);
     gl.uniform1f(P.u.uMix, st.mix);
     gl.uniform1f(P.u.uMixCmp, st.mixCmp);
     gl.uniform4fv(P.u.uClimSel, st.climSel);
@@ -300,7 +306,7 @@ export class Globe {
     gl.uniform1i(P.u.uHasClim, this.hasClim ? 1 : 0);
     gl.uniform1i(P.u.uHotspot, st.hotspot ? 1 : 0);
     gl.uniform1i(P.u.uCompare, st.compare ? 1 : 0);
-    gl.uniform1i(P.u.uHaveData, st.sstA ? 1 : 0);
+    gl.uniform1i(P.u.uHaveData, st.sstA || st.medA ? 1 : 0);
     gl.uniform1f(P.u.uSplit, st.split * this.canvas.width);
     gl.uniform2fv(P.u.uRangeSst, st.rangeSst);
     gl.uniform2fv(P.u.uRangeAnom, st.rangeAnom);

@@ -25,7 +25,7 @@ f() { $PY pipeline/frames.py "$@" 2>&1 | grep -v -E '^(INFO|WARNING)' ; }
 # memoria (un campo 1/12° globale alla volta per processo) no
 ( f monthly sst; f daily sst --start "$DAILY_START" ) > "$LOG/temperatura.log" &
 ( f monthly cur; f daily cur --start "$DAILY_START"; f hourly cur --days "$HOURLY_DAYS"; f hourly sst --days "$HOURLY_DAYS" ) > "$LOG/correnti.log" &
-( f daily ostia --days "$OSTIA_DAYS" ) > "$LOG/ostia.log" &
+( f daily ostia --days "$OSTIA_DAYS"; f daily med --days "$OSTIA_DAYS" ) > "$LOG/ostia.log" &
 wait
 
 $PY pipeline/derived.py 2>&1 | tee "$LOG/derived.log"

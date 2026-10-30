@@ -21,7 +21,7 @@ import sources  # noqa: E402
 
 TIERS = {
     'monthly': dict(step='P1M', vars=['sst', 'cur']),
-    'daily': dict(step='P1D', vars=['sst', 'cur', 'ostia']),
+    'daily': dict(step='P1D', vars=['sst', 'cur', 'ostia', 'med']),
     'hourly': dict(step='PT1H', vars=['sst', 'cur']),
 }
 
@@ -77,6 +77,8 @@ def build():
                         'available': (frames.DATA / 'clim' / 'sst-01.png').exists()},
         'series': {'tile': derived.TILE,
                    'available': (frames.DATA / 'series' / 'sst.json').exists()},
+        'regional': {n: json.loads((frames.DATA / 'index' / f'{n}-grid.json').read_text())
+                     for n in ['med'] if (frames.DATA / 'index' / f'{n}-grid.json').exists()},
         'sources': [dict(id=d, **sources.DATASETS[d], **product_meta(sources.DATASETS[d]['product'])) for d in used],
         'tiers': tiers,
     }

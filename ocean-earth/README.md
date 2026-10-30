@@ -21,7 +21,8 @@ Service products. It lives inside the CO₂·info site at
 | Hotspots | months above the 1993–2020 90th percentile of the same month (monthly time step only) | — |
 
 Time steps: **month** (1993 → last complete month), **day** (since 1 January
-2024) and **hour** (last 14 days). Click a point for its values, the monthly
+2024) and **hour** (last 14 days). In the daily step, the Mediterranean is drawn from the 1/16° satellite
+product (about 7 km instead of 28) when the layer is on. Click a point for its values, the monthly
 temperature history since 1993 (absolute or anomaly, with range selection by
 dragging) and a second point to compare. Drag a box for regional statistics
 (area-weighted mean, maximum, mean anomaly over time). "Compare two dates"
@@ -43,6 +44,7 @@ native grid; otherwise it is land.
 | day | SST | `cmems_mod_glo_phy_my_0.083deg_P1D-m`, then `cmems_mod_glo_phy-thetao_anfc_0.083deg_P1D-m` | 1/12°, daily mean | reanalysis → analysis | 2024-01-01 → yesterday |
 | day | SST (option) | `METOFFICE-GLO-SST-L4-NRT-OBS-SST-V2` (SST_GLO_SST_L4_NRT_OBSERVATIONS_010_001, OSTIA) | 0.05°, daily, L4 | satellite observations | last 365 days |
 | day | U, V | `cmems_obs-mob_glo_phy-cur_my_0.25deg_P1D-m`, then `…_nrt_0.25deg_P1D-m` | 0.25°, daily mean | observation-based | 2024-01-01 → yesterday |
+| day | SST Mediterranean (overlay) | `SST_MED_SST_L4_NRT_OBSERVATIONS_010_004_a_V2` (SST_MED_SST_L4_NRT_OBSERVATIONS_010_004) | 1/16°, daily, L4, **kept on its native grid** | satellite observations | last 365 days |
 | hour | SST | `cmems_mod_glo_phy_anfc_0.083deg_PT1H-m` | 1/12°, hourly mean | operational analysis | last 14 days |
 | hour | U, V | `cmems_obs-mob_glo_phy-cur_nrt_0.25deg_PT1H-i` | 0.25°, hourly instantaneous (with tides) | observation-based | last 14 days |
 
@@ -177,9 +179,12 @@ on the server removes the app entirely without touching the rest of the site.
 
 ## Known limits
 
-- 0.25° is the shared grid: GLORYS12 (1/12°) and OSTIA (0.05°) are averaged
-  down. A higher-resolution Mediterranean layer is not included yet; the
-  "Mediterranean" button is a camera preset.
+- 0.25° is the shared global grid: GLORYS12 (1/12°) and OSTIA (0.05°) are
+  averaged down. Only the Mediterranean has a higher-resolution layer (1/16°,
+  daily, last 365 days, temperature only); there are no Mediterranean
+  currents at higher resolution, nor monthly Mediterranean means.
+- "Fit scale to view" sets the colour range to the 2nd–98th percentile of the
+  values on screen; the legend always shows the range in use.
 - Hourly coverage is a rolling 14-day window; daily coverage starts 2024-01-01
   (set by `DAILY_START`, can be extended backwards at ~3.4 GB per decade).
 - The point chart uses monthly means only.

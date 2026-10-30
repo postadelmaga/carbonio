@@ -55,19 +55,22 @@ def _rings(geom):
 def land_and_coast():
     out = DATA / 'static'
     out.mkdir(parents=True, exist_ok=True)
-    W, H = 4096, 2048
-    im = Image.new('L', (W, H), 0)
-    dr = ImageDraw.Draw(im)
     land = _ne('ne_50m_land.geojson')
-    for feat in land['features']:
-        g = feat['geometry']
-        polys = g['coordinates'] if g['type'] == 'MultiPolygon' else [g['coordinates']]
-        for poly in polys:
-            for k, ring in enumerate(poly):
-                pts = [((x + 180) / 360 * W, (90 - y) / 180 * H) for x, y in ring]
-                dr.polygon(pts, fill=255 if k == 0 else 0)
-    # ne_50m_land include i laghi nella terra: per il mare contano come terra
-    im.save(out / 'land.png', optimize=True)
+    # due risoluzioni: 8192 per le GPU che la reggono (coste nitide da vicino),
+    # 4096 per le altre. ne_50m_land include i laghi nella terra, ed e' giusto
+    # cosi': per il mare contano come terra.
+    for W, name in ((8192, 'land-8192.png'), (4096, 'land.png')):
+        H = W // 2
+        im = Image.new('L', (W, H), 0)
+        dr = ImageDraw.Draw(im)
+        for feat in land['features']:
+            g = feat['geometry']
+            polys = g['coordinates'] if g['type'] == 'MultiPolygon' else [g['coordinates']]
+            for poly in polys:
+                for k, ring in enumerate(poly):
+                    pts = [((x + 180) / 360 * W, (90 - y) / 180 * H) for x, y in ring]
+                    dr.polygon(pts, fill=255 if k == 0 else 0)
+        im.save(out / name, optimize=True)
 
     coast = _ne('ne_50m_coastline.geojson')
     lines = []
@@ -102,11 +105,12 @@ def climatology(stamps, stack):
         sel = np.where(base & (months == m))[0]
         assert len(sel) == CLIM_YEARS[1] - CLIM_YEARS[0] + 1, f'mese {m}: anni base mancanti'
         block = np.asarray(stack[sel])
-        with np.errstate(all='ignore'):
-            mean = np.nanmean(block, axis=0)
-            p90 = np.nanpercentile(block, 90, axis=0)
-        # una cella vale solo se e' mare in tutti gli anni della base
+        # una cella vale solo se e' mare in tutti gli anni della base: cosi'
+        # niente NaN nel calcolo, e il percentile ordinario (veloce) basta
         full = np.isfinite(block).all(axis=0)
+        filled = np.where(full, block, 0.0)
+        mean = filled.mean(axis=0)
+        p90 = np.percentile(filled, 90, axis=0)
         mean[~full] = np.nan
         p90[~full] = np.nan
         encode.save_png(encode.encode_scalar(mean), DATA / 'clim' / f'sst-{m:02d}.png')
@@ -134,6 +138,7 @@ def series(stamps, stack):
 def main():
     land_and_coast()
     stamps, stack = monthly_stack()
+    print(f'{len(stamps)} mesi decodificati', flush=True)
     climatology(stamps, stack)
     series(stamps, stack)
     (DATA / 'series' / 'sst.json').write_text(json.dumps({'tile': TILE, 'stamps': stamps}))
