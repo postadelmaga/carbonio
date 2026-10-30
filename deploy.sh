@@ -158,7 +158,7 @@ rsync "${RSYNC_OPTS[@]}" --exclude '/ocean-earth/data/' "$BUILD_DIR"/ "$SSH_HOST
 if [ -f "$OE_DATA/manifest.json" ]; then
   info "Ocean Earth: sincronizzo i dati ($(du -sh "$OE_DATA" | cut -f1) in locale)"
   [[ $APPLY -eq 1 ]] && ssh "$SSH_HOST" "mkdir -p '$DEST/ocean-earth/data'"
-  OE_OPTS=(-a --human-readable --omit-dir-times --no-perms --exclude '/index/' --exclude '/logs/')
+  OE_OPTS=(-a --human-readable --omit-dir-times --no-perms --exclude '/index/' --exclude '/logs/' --exclude '*.tmp.*')
   [[ $PRUNE -eq 1 ]] && OE_OPTS+=(--delete)
   [[ $APPLY -eq 1 ]] || OE_OPTS+=(--dry-run --stats)
   rsync "${OE_OPTS[@]}" --exclude '/manifest.json' "$OE_DATA"/ "$SSH_HOST:$DEST/ocean-earth/data/" | tail -n 20

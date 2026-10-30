@@ -89,6 +89,23 @@ Frames are lossless RGB PNGs (the server compresses them by itself; Caddy's
 - currents: two 12-bit codes, `R = u ≫ 4`, `G = v ≫ 4`, `B = (u & 15) ≪ 4 | (v & 15)`,
   `m/s = (code − 2048) × 0.002`, both codes 0 = no data (range ±4.09 m/s).
 
+**Playback previews** (`data/p/`, built by `pipeline/preview.py` from the
+exact frames). An exact instant weighs about 1.6 MB; at 4 frames/s that is
+6–7 MB/s, more than the server delivers (~2 MB/s measured), so playback
+stalled on "loading". While the timeline plays, the page reads lossless
+WebP previews of the same instants, about 0.33 MB each:
+
+- temperature: 8-bit grey, `°C = −2.5 + (code − 1) × 0.16`, same 0.25° grid;
+- currents: 0.5° grid (2×2 mean of ocean cells), R = u, G = v,
+  `m/s = sign × 4 × (|code − 128| / 127)²` (square-root spacing: 3 mm/s
+  steps near zero, ~4 % relative error at 1 m/s).
+
+Paused, on click, in charts and in comparisons the page always uses the
+exact frames; the point panel stays empty while playing. Previews are a
+display convenience, not data: the downloadable values are the PNGs.
+Playback buffers about three seconds ahead and, once it has had to wait,
+resumes only when 1.5 s of frames are in.
+
 On the GPU, frames become half-float textures holding *value × mask* and
 *mask*: with linear filtering, *value × mask / mask* averages only ocean
 samples, so coastlines are never smeared with land zeros.
@@ -170,7 +187,7 @@ and run `frames.py` once locally for the same range: it finds every frame,
 downloads nothing and fills the index. The web server `arch_php` (1 GB RAM)
 only serves files; never run the pipeline there.
 
-Sizes on 30 Oct 2026 (3.5 GB in total): monthly SST 228 MB, monthly currents
+Sizes on 30 Oct 2026 (3.5 GB of exact frames plus 0.7 GB of playback previews): monthly SST 228 MB, monthly currents
 417 MB, daily SST 664 MB, daily currents 1.1 GB, OSTIA 231 MB, Mediterranean
 36 MB, hourly SST 209 MB, hourly currents 354 MB, time-series tiles 240 MB,
 climatology and percentiles 12 MB, land and coasts 0.9 MB.

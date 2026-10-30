@@ -137,3 +137,29 @@ def test_stamps():
     assert frames.stamp('monthly', t) == '2026-10'
     assert frames.stamp('daily', t) == '2026-10-03'
     assert frames.stamp('hourly', t) == '2026-10-03T07'
+
+
+def test_preview_roundtrip():
+    import preview
+    t = np.array([[-2.0, 0.0, 15.3, 31.9, np.nan]])
+    back = preview.decode_sst8(preview.encode_sst8(t))
+    assert np.isnan(back[0, -1])
+    assert np.nanmax(np.abs(back - t)) <= preview.SST_STEP / 2 + 1e-9
+    u = np.array([[0.0, 0.01, -0.05, 0.3, -1.2, 2.5, np.nan]])
+    ub = preview.decode_cur8(preview.encode_cur8(u))
+    assert np.isnan(ub[0, -1])
+    assert ub[0, 0] == 0
+    # radice: errore piccolo vicino a zero, relativo sopra
+    assert abs(ub[0, 1] - 0.01) < 0.003
+    assert np.all(np.abs(ub[0, 3:6] - u[0, 3:6]) / np.abs(u[0, 3:6]) < 0.04)
+    assert np.all(np.sign(ub[0, 1:6]) == np.sign(u[0, 1:6]))
+
+
+def test_preview_half_grid_ignores_land():
+    import preview
+    a = np.full((4, 4), np.nan)
+    a[0, 0], a[0, 1], a[1, 0] = 1.0, 2.0, 3.0          # tre celle di mare
+    a[2, 2] = 5.0                                       # una sola: troppo poco
+    h = preview.half_grid(a)
+    assert h[0, 0] == 2.0
+    assert np.isnan(h[1, 1]) and np.isnan(h[0, 1])

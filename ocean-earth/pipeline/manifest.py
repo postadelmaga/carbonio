@@ -17,6 +17,7 @@ import derived  # noqa: E402
 import encode  # noqa: E402
 import frames  # noqa: E402
 import grid  # noqa: E402
+import preview  # noqa: E402
 import sources  # noqa: E402
 
 TIERS = {
@@ -73,6 +74,9 @@ def build():
                  'lat0': float(grid.LATS[0]), 'lon0': float(grid.LONS[0])},
         'encoding': {'scalar': {'offset': encode.SCALAR_OFFSET, 'step': encode.SCALAR_STEP},
                      'vector': {'step': encode.VECTOR_STEP, 'zero': encode.VECTOR_ZERO}},
+        # anteprime per la riproduzione (pipeline/preview.py): stessi istanti,
+        # meno bit; ci sono solo se la cartella p/ e' stata generata
+        'preview': dict(preview.META, available=(frames.DATA / 'p').exists()),
         'climatology': {'years': list(derived.CLIM_YEARS),
                         'available': (frames.DATA / 'clim' / 'sst-01.png').exists()},
         'series': {'tile': derived.TILE,

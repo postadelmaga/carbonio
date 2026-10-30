@@ -29,5 +29,6 @@ f() { $PY pipeline/frames.py "$@" 2>&1 | grep -v -E '^(INFO|WARNING)' ; }
 wait
 
 $PY pipeline/derived.py 2>&1 | tee "$LOG/derived.log"
+$PY pipeline/preview.py 2>&1 | tee "$LOG/preview.log"
 $PY pipeline/manifest.py 2>&1 | tee "$LOG/manifest.log"
 echo "aggiornamento finito: $(date -u +%FT%TZ)"

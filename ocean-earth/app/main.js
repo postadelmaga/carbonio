@@ -132,16 +132,26 @@ function sstVar(frame) {
   return 'sst';
 }
 
-function keyFor(frame, v) { return `${timeline.tierName}/${v}/${frame.t}`; }
+// durante la riproduzione si usano le anteprime leggere (pipeline/preview.py);
+// da fermi, al clic e nei grafici i dati esatti. Il Mediterraneo e' gia' leggero.
+function previewMode() {
+  return !!(timeline && timeline.playing && manifest.preview && manifest.preview.available);
+}
 
-function request(frame, v) {
+function keyFor(frame, v, prev = previewMode()) {
+  return `${prev && v !== 'med' ? 'p:' : ''}${timeline.tierName}/${v}/${frame.t}`;
+}
+
+function request(frame, v, prev = previewMode()) {
   if (!frame || frame[v] == null) return null;
-  const key = keyFor(frame, v);
+  const usePrev = prev && v !== 'med';
+  const key = keyFor(frame, v, prev);
   if (resolved.has(key)) return Promise.resolve(resolved.get(key));
-  const kind = v === 'cur' ? 'vector' : 'scalar';
-  return store.get(store.framePath(timeline.tierName, v, frame.t), kind).then((f) => {
+  const path = usePrev ? store.previewPath(timeline.tierName, v, frame.t) : store.framePath(timeline.tierName, v, frame.t);
+  const kind = usePrev ? (v === 'cur' ? 'pcur' : 'psst') : (v === 'cur' ? 'vector' : 'scalar');
+  return store.get(path, kind).then((f) => {
     resolved.set(key, f);
-    while (resolved.size > store.maxCache + 4) resolved.delete(resolved.keys().next().value);
+    while (resolved.size > store.maxCache + store.maxPrev + 4) resolved.delete(resolved.keys().next().value);
     return f;
   });
 }
@@ -149,22 +159,44 @@ function request(frame, v) {
 function isReady(i) {
   const f = timeline.frames[Math.max(0, Math.min(timeline.frames.length - 1, i))];
   if (!f) return true;
-  const sv = sstVar(f);
-  const okS = f[sv] == null || resolved.has(keyFor(f, sv));
-  const okC = f.cur == null || resolved.has(keyFor(f, 'cur'));
-  if (!okS) request(f, sv);
-  if (!okC) request(f, 'cur');
-  let okM = true;
-  if (ui.med && timeline.tierName === 'daily' && f.med != null) {
-    okM = resolved.has(keyFor(f, 'med'));
-    if (!okM) request(f, 'med');
+  const need = [sstVar(f), 'cur'];
+  if (ui.med && timeline.tierName === 'daily') need.push('med');
+  let ok = true;
+  for (const v of need) {
+    if (f[v] == null || resolved.has(keyFor(f, v))) continue;
+    ok = false;
+    request(f, v);
   }
-  return okS && okC && okM;
+  return ok;
+}
+
+// quanto avanti scaricare: tre secondi di riproduzione, senza superare la cache
+function aheadFrames() {
+  if (!timeline.playing) return 1;
+  const room = previewMode() ? store.maxPrev : store.maxCache;
+  return Math.max(4, Math.min(Math.floor(room / 3) - 1, Math.ceil(timeline.fps * 3)));
 }
 
 function prefetch() {
-  const ahead = timeline.playing ? 6 : 1;
-  for (let k = 0; k <= ahead; k++) isReady(timeline.index + k);
+  const n = aheadFrames();
+  const hi = timeline.loop ? timeline.loop[1] : timeline.frames.length - 1;
+  const lo = timeline.loop ? timeline.loop[0] : 0;
+  for (let k = 0; k <= n; k++) {
+    let i = timeline.index + k;
+    if (i > hi) i = lo + (i - hi - 1);          // in coda all'intervallo si riparte dall'inizio
+    isReady(i);
+  }
+}
+
+// Isteresi: se la riproduzione ha dovuto aspettare, riparte solo quando un
+// secondo e mezzo di fotogrammi e' gia' arrivato, invece di fermarsi a ogni
+// fotogramma con una rete lenta.
+function readyForPlayback(i) {
+  if (!timeline.waiting) return isReady(i);
+  const n = Math.max(2, Math.ceil(timeline.fps * 1.5));
+  let ok = true;
+  for (let k = 0; k < n && i + k < timeline.frames.length; k++) ok = isReady(i + k) && ok;
+  return ok;
 }
 
 let applyToken = 0;
@@ -186,7 +218,7 @@ async function applyFrames() {
   st.medA = globe.frameTexture(keyFor(A, 'med'), mA, 'scalar');
   st.medB = globe.frameTexture(keyFor(B, 'med'), mB, 'scalar') || st.medA;
   if (medOn) { const g = manifest.regional.med; st.medBox = [g.west, g.south, g.east, g.north]; }
-  current = { A, B, sA, sB, cA, cB, svA, svB, mA, mB };
+  current = { A, B, sA, sB, cA, cB, svA, svB, mA, mB, preview: previewMode() };
   updateStatus();
   refreshPoint();
 }
@@ -217,7 +249,7 @@ function onTime(why) {
     current = null;
     $('#status').innerHTML = `<span class="interp">${t('loading')}</span>`;
   }
-  if (!current || current.A !== A || current.B !== B) applyFrames();
+  if (!current || current.A !== A || current.B !== B || current.preview !== previewMode()) applyFrames();
   else updateStatus();
   if (why === 'tier' || why === 'loop') syncTimeUI(true);
   else syncTimeUI(false);
@@ -240,7 +272,7 @@ function loop(now) {
   if (now - fpsT0 > 1000) { window.__oeFps = (fpsN * 1000) / (now - fpsT0); fpsT0 = now; fpsN = 0; }
   inertia(dt);
   if (timeline) {
-    timeline.tick(dt, isReady);
+    timeline.tick(dt, readyForPlayback);
     prefetch();
     $('#buffering').hidden = !(timeline.playing && timeline.waiting);
   }
@@ -406,6 +438,9 @@ function selectPoint(lat, lon) {
 }
 
 function valueAt(frameA, frameB, i, kind) {
+  // le anteprime della riproduzione non portano i codici esatti: il pannello
+  // si riempie quando la timeline si ferma e tornano i dati originali
+  if ((frameA && frameA.preview) || (frameB && frameB.preview)) return kind === 'scalar' ? NaN : [NaN, NaN];
   const mix = globe.state.mix;
   if (kind === 'scalar') {
     const a = frameA ? store.scalarValue(frameA.codes, i) : NaN;
@@ -682,6 +717,7 @@ function updateStatus() {
     if (m) parts.push(`<b>${t('med_hi')}</b> ${m.name} <span class="muted">(${t(m.kind)}, ${freqLabel(m)}, ${m.res})</span>`);
   }
   parts.push(timeline.interpolated ? `<span class="interp">${t('interpolated')}</span>` : `<span class="orig">${t('original')}</span>`);
+  if (current.preview) parts.push(`<span class="muted">${t('preview_note')}</span>`);
   $('#status').innerHTML = parts.join(' · ') + (notes.length ? ` · <span class="warn">${notes.join(' · ')}</span>` : '');
 }
 

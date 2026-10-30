@@ -10,7 +10,12 @@ export class DataStore {
     this.seq = 0;
     this.next = 0;
     this.cache = new Map();             // chiave → Promise<risultato>, in ordine d'uso
-    this.maxCache = /Mobi|Android/i.test(navigator.userAgent) ? 10 : 24;
+    const mobile = /Mobi|Android/i.test(navigator.userAgent);
+    this.maxCache = mobile ? 10 : 24;
+    // le anteprime (circa 6 MB decodificate contro 18) hanno una cache a parte,
+    // piu' lunga: e' quella che fa da riserva durante la riproduzione
+    this.prevCache = new Map();
+    this.maxPrev = mobile ? 24 : 64;
   }
 
   async init() {
@@ -20,7 +25,7 @@ export class DataStore {
     const n = Math.min(3, Math.max(1, (navigator.hardwareConcurrency || 2) - 1));
     for (let i = 0; i < n; i++) {
       const w = new Worker(new URL('./decode-worker.js', import.meta.url));
-      w.postMessage({ type: 'init', encoding: this.manifest.encoding });
+      w.postMessage({ type: 'init', encoding: this.manifest.encoding, preview: this.manifest.preview });
       w.onmessage = (ev) => {
         const p = this.pending.get(ev.data.id);
         if (!p) return;
@@ -46,25 +51,30 @@ export class DataStore {
   // un file decodificato, con cache LRU
   get(path, kind) {
     const key = kind + ':' + path;
-    if (this.cache.has(key)) {
-      const v = this.cache.get(key);
-      this.cache.delete(key);
-      this.cache.set(key, v);
+    const prev = kind === 'psst' || kind === 'pcur';
+    const cache = prev ? this.prevCache : this.cache;
+    const max = prev ? this.maxPrev : this.maxCache;
+    if (cache.has(key)) {
+      const v = cache.get(key);
+      cache.delete(key);
+      cache.set(key, v);
       return v;
     }
     const p = this.decode(path, kind);
-    p.catch(() => this.cache.delete(key));
-    this.cache.set(key, p);
-    while (this.cache.size > this.maxCache) this.cache.delete(this.cache.keys().next().value);
+    p.catch(() => cache.delete(key));
+    cache.set(key, p);
+    while (cache.size > max) cache.delete(cache.keys().next().value);
     return p;
   }
-
-  has(path, kind) { return this.cache.has(kind + ':' + path); }
 
   tier(name) { return this.manifest.tiers[name]; }
 
   framePath(tierName, variable, stamp) {
     return `${this.tier(tierName).dir}/${variable}/${stamp}.png`;
+  }
+
+  previewPath(tierName, variable, stamp) {
+    return `p/${this.tier(tierName).dir}/${variable}/${stamp}.webp`;
   }
 
   source(i) { return i == null ? null : this.manifest.sources[i]; }
