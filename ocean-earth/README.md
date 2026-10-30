@@ -160,8 +160,20 @@ series tiles) and `manifest.py`. Frame files are written atomically, the index
 after each block, so an interrupted run resumes where it stopped. The daily
 and hourly windows are set with `DAILY_START`, `HOURLY_DAYS`, `OSTIA_DAYS`.
 
-Throughput measured on the development machine (4 cores, ~40 MB/s): about
-6–7 s per global 1/12° frame, 2–3 s per 0.25° current frame.
+Throughput: about 6–7 s per global 1/12° frame on a 4-core desktop on a
+home line, about 1.7 s on the ARM server `arm_php` (Oracle, 12 GB RAM,
+datacenter bandwidth). For long back-fills run the pipeline there
+(`~/ocean-earth`, its own venv via `uv`, credentials in
+`~/.copernicusmarine`), then pull the frames with
+`rsync -a --ignore-existing arm_php:ocean-earth/data/<tier>/<var>/ data/<tier>/<var>/`
+and run `frames.py` once locally for the same range: it finds every frame,
+downloads nothing and fills the index. The web server `arch_php` (1 GB RAM)
+only serves files; never run the pipeline there.
+
+Sizes on 30 Oct 2026 (3.5 GB in total): monthly SST 228 MB, monthly currents
+417 MB, daily SST 664 MB, daily currents 1.1 GB, OSTIA 231 MB, Mediterranean
+36 MB, hourly SST 209 MB, hourly currents 354 MB, time-series tiles 240 MB,
+climatology and percentiles 12 MB, land and coasts 0.9 MB.
 
 ## Deploy
 
@@ -191,5 +203,17 @@ on the server removes the app entirely without touching the rest of the site.
 - The current product's multi-year version 202411 is announced for retirement
   on 2026-11-24; the pipeline uses the default (latest) version, so the next
   update after the switch picks the new one automatically.
+- Values are published as Copernicus distributes them, including two known
+  source artefacts that `pipeline/validate.py` counts and locates:
+  GLORYS12 surface temperatures below the freezing point of sea water
+  (down to −2.96 °C) under sea ice and next to glacier fronts (Antarctic
+  coast, SE Greenland, Svalbard, and in winter the seasonal-ice seas: Okhotsk,
+  Hudson Bay, Labrador, Peter the Great Bay, the Antarctic pack edge;
+  0.018 % of daily cells, none equatorward of 43°), and monthly/daily currents above 3 m/s on the Amazon shelf near
+  the equator, where the geostrophic part of GlobCurrent breaks down
+  (e.g. 3.96 m/s in June 1993, matching the original). Hourly currents above
+  3 m/s are real tides in macrotidal bays (Gyeonggi Bay, King Sound, Ungava).
+  Components beyond ±4.09 m/s are clipped by the encoding (380 of 239 million
+  monthly cells).
 - Particles need `EXT_color_buffer_float` (all desktop browsers, iOS ≥ 15);
   without it the page says so and arrows remain.

@@ -48,7 +48,12 @@ def published(tier, var, stamp):
 
 def ocean_cells(field, n, seed):
     rng = random.Random(seed)
-    ok = np.argwhere(np.isfinite(field))
+    ok = np.isfinite(field)
+    # le due colonne a cavallo dell'antimeridiano usano anche la colonna di -180°
+    # della griglia fine: il ricalcolo qui sotto non la vede, quel caso lo copre
+    # test_twelfth_dateline_wraps in tests/test_pipeline.py
+    ok[:, [0, -1]] = False
+    ok = np.argwhere(ok)
     return [tuple(ok[rng.randrange(len(ok))]) for _ in range(n)]
 
 
@@ -70,7 +75,8 @@ def native_cell(ds_id, var, t, r, c):
     kw = dict(dataset_id=ds_id, variables=meta['var'].split(','),
               minimum_latitude=lat_s - 0.01, maximum_latitude=lat_n + 0.01,
               minimum_longitude=lon_w - 0.01, maximum_longitude=lon_e + 0.01,
-              start_datetime=t, end_datetime=t)
+              # come stringa: un datetime verrebbe letto come ora locale
+              start_datetime=t.strftime('%Y-%m-%dT%H:%M:%S'), end_datetime=t.strftime('%Y-%m-%dT%H:%M:%S'))
     if meta['depth']:
         kw.update(minimum_depth=0, maximum_depth=1)
     ds = cm.open_dataset(**kw)
@@ -153,26 +159,65 @@ def scan(tier, var):
         yield s, published(tier, var, s)
 
 
+# limiti fisici: l'acqua di mare in superficie gela intorno a -1,9 °C (-2,2 con
+# salinita' 40); le lagune del Golfo Persico toccano 36-37 °C. Le correnti oltre
+# 3 m/s esistono solo nelle maree dei bacini macrotidali.
+SST_PHYS = (-2.2, 37.5)
+SPEED_PHYS = 3.0
+
+
 def check_ranges():
     log('## 2. Intervalli fisici\n')
-    for tier, var in [('monthly', 'sst'), ('daily', 'sst'), ('daily', 'ostia'), ('hourly', 'sst')]:
-        lo, hi, n = np.inf, -np.inf, 0
+    log(f'Fuori dai limiti fisici si contano le celle e si dice dove stanno: i valori sono quelli '
+        f'pubblicati da Copernicus e non vengono ritoccati. Temperatura {SST_PHYS[0]}…{SST_PHYS[1]} °C, '
+        f'corrente fino a {SPEED_PHYS} m/s; la codifica taglia ogni componente a ±{2047 * encode.VECTOR_STEP:.2f} m/s.\n')
+    for tier, var in [('monthly', 'sst'), ('daily', 'sst'), ('daily', 'ostia'), ('daily', 'med'), ('hourly', 'sst')]:
+        lo, hi, n, out_n, tot, where = np.inf, -np.inf, 0, 0, 0, {}
         for s, f in scan(tier, var):
             lo = min(lo, np.nanmin(f))
             hi = max(hi, np.nanmax(f))
+            bad = (f < SST_PHYS[0]) | (f > SST_PHYS[1])
+            out_n += int(bad.sum())
+            tot += int(np.isfinite(f).sum())
+            if var != 'med':
+                for r, c in np.argwhere(bad)[:400]:
+                    key = f'{round(grid.LATS[r])},{round(grid.LONS[c])}'
+                    where[key] = where.get(key, 0) + 1
             n += 1
-        if n:
-            ok = lo >= -2.6 and hi <= 36.5
-            log(f'- {tier}/{var}: {n} fotogrammi, minimo {lo:.2f} °C, massimo {hi:.2f} °C → **{"OK" if ok else "FALLITO"}**')
-            summary[f'intervallo {tier}/{var}'] = ok
+        if not n:
+            continue
+        frac = out_n / max(tot, 1)
+        # sotto il punto di congelamento GLORYS12 va solo sotto il ghiaccio marino
+        # (anche stagionale: Okhotsk, baia di Hudson, Labrador, golfo di Pietro il
+        # Grande a 43° N, bordo del pack antartico) e davanti ai ghiacciai.
+        # Fallisce se succede dove il mare non gela mai, a meno di 40° di latitudine.
+        nonpolar = [k for k in where if abs(int(k.split(',')[0])) < 40]
+        ok = not nonpolar
+        top = ', '.join(f'{k} ({v})' for k, v in sorted(where.items(), key=lambda x: -x[1])[:6])
+        log(f'- {tier}/{var}: {n} fotogrammi, minimo {lo:.2f} °C, massimo {hi:.2f} °C; fuori limite '
+            f'{out_n} celle su {tot} ({frac:.2e}){"; dove: " + top if top else ""}'
+            f'{"; a meno di 40° di latitudine: " + ", ".join(nonpolar) if nonpolar else ("; tutte oltre i 40° di latitudine, nei mari con ghiaccio" if out_n else "")} → **{"OK" if ok else "FALLITO"}**')
+        summary[f'intervallo {tier}/{var}'] = ok
     for tier in ['monthly', 'daily', 'hourly']:
-        top, n = 0, 0
+        top, n, fast, clipped, tot, where = 0, 0, 0, 0, 0, {}
+        lim = 2047 * encode.VECTOR_STEP - 1e-9
         for s, (u, v) in scan(tier, 'cur'):
-            top = max(top, np.nanmax(np.hypot(u, v)))
+            sp = np.hypot(u, v)
+            top = max(top, np.nanmax(sp))
+            b = sp > SPEED_PHYS
+            fast += int(b.sum())
+            clipped += int(((np.abs(u) >= lim) | (np.abs(v) >= lim)).sum())
+            tot += int(np.isfinite(sp).sum())
+            for r, c in np.argwhere(b)[:20]:
+                key = f'{round(grid.LATS[r])},{round(grid.LONS[c])}'
+                where[key] = where.get(key, 0) + 1
             n += 1
         if n:
-            ok = top < 4.0
-            log(f'- {tier}/correnti: {n} fotogrammi, velocita\' massima {top:.2f} m/s → **{"OK" if ok else "FALLITO"}**')
+            frac = fast / max(tot, 1)
+            ok = frac < 1e-4
+            w = ', '.join(f'{k} ({v})' for k, v in sorted(where.items(), key=lambda x: -x[1])[:6])
+            log(f"- {tier}/correnti: {n} fotogrammi, massimo {top:.2f} m/s; oltre {SPEED_PHYS} m/s {fast} celle su {tot} "
+                f"({frac:.2e}), di cui {clipped} tagliate dalla codifica; dove: {w or 'nessuna'} → **{'OK' if ok else 'FALLITO'}**")
             summary[f'velocita {tier}'] = ok
     log('')
 

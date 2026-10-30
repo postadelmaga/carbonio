@@ -211,7 +211,13 @@ function onTime(why) {
   st.mix = timeline.interpolated ? timeline.frac : 0;
   st.climSel = mixClim(climSelection(timeline.frameA.t), climSelection(timeline.frameB.t), st.mix);
   const A = timeline.frameA, B = timeline.frameB;
-  if (!current || current.A !== A || current.B !== B || why === 'source' || why === 'tier') applyFrames();
+  // cambio di livello o di fonte: finche' i fotogrammi nuovi non arrivano la
+  // riga delle fonti non deve descrivere quelli di prima
+  if (why === 'tier' || why === 'source') {
+    current = null;
+    $('#status').innerHTML = `<span class="interp">${t('loading')}</span>`;
+  }
+  if (!current || current.A !== A || current.B !== B) applyFrames();
   else updateStatus();
   if (why === 'tier' || why === 'loop') syncTimeUI(true);
   else syncTimeUI(false);
