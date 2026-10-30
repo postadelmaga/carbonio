@@ -95,11 +95,21 @@ async function loadStatic() {
     try {
       climFrames = await Promise.all(months.map((m) => store.decode(`clim/sst-${m}.png`, 'scalar')));
       globe.setMonthly('clim', climFrames);
-      p90Frames = await Promise.all(months.map((m) => store.decode(`p90/sst-${m}.png`, 'scalar')));
-      globe.setMonthly('p90', p90Frames);
     } catch (e) { /* senza climatologia l'anomalia resta spenta */ }
     refreshPoint();
+    loadSeries();
   }
+}
+
+// il 90° percentile serve solo agli hotspot: arriva quando li si accende
+let p90Loading = null;
+function loadP90() {
+  if (p90Loading || !manifest.climatology.available) return p90Loading;
+  const months = [...Array(12).keys()].map((m) => String(m + 1).padStart(2, '0'));
+  p90Loading = Promise.all(months.map((m) => store.decode(`p90/sst-${m}.png`, 'scalar')))
+    .then((f) => { p90Frames = f; globe.setMonthly('p90', f); })
+    .catch(() => { p90Loading = null; });
+  return p90Loading;
 }
 
 // colori del tema (lo sfondo segue il tema chiaro/scuro del sito)
@@ -730,7 +740,7 @@ function bindControls() {
   $('#particles').addEventListener('change', (e) => { st.particles = e.target.checked; drawLegend(); });
   $('#arrows').addEventListener('change', (e) => { st.arrows = e.target.checked; drawLegend(); });
   $('#coast').addEventListener('change', (e) => { st.coast = e.target.checked; });
-  $('#hotspot').addEventListener('change', (e) => { st.hotspot = e.target.checked; drawLegend(); });
+  $('#hotspot').addEventListener('change', (e) => { st.hotspot = e.target.checked; if (st.hotspot) loadP90(); drawLegend(); });
   $$('input[name=source]').forEach((r) => r.addEventListener('change', () => { ui.source = r.value; onTime('source'); }));
   $('#med-hi').addEventListener('change', (e) => { ui.med = e.target.checked; onTime('source'); });
   $('#p-count').addEventListener('change', (e) => { st.particleCount = +e.target.value; globe.resetParticles(); });
