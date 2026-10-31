@@ -28,6 +28,10 @@ dragging) and a second point to compare. Drag a box for regional statistics
 (area-weighted mean, maximum, mean anomaly over time). "Compare two dates"
 splits the globe with a draggable divider.
 
+During playback the header and the time bar slide out of view and only a small
+pill with the date and a pause button stays at the bottom; pausing (pill, space
+bar) brings them back, and so does moving the mouse to the top edge.
+
 ## Data
 
 All fields are re-gridded onto **one regular 0.25° grid** (1440 × 720, cell

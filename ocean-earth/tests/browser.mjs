@@ -46,8 +46,14 @@ async function open(w, h, mobile, theme) {
   const during = await page.evaluate(() => ({ now: document.querySelector('#now').innerText, v: document.querySelector('#slider').value, fps: window.__oeFps, st: document.querySelector('#status').innerText }));
   check('riproduzione avanza', +during.v > 0, JSON.stringify(during));
   await page.screenshot({ path: `${outDir}/f-desktop-play.png` });
-  await page.click('#play');
-  await sleep(500);
+  // in play le barre escono dallo schermo e resta la pillola con data e pausa
+  const vis = (sel) => { const r = document.querySelector(sel).getBoundingClientRect(); return getComputedStyle(document.querySelector(sel)).opacity > 0.5 && r.bottom > 0 && r.top < innerHeight; };
+  const imm = await page.evaluate((f) => { const v = eval(f); return { top: v('.top'), time: v('.time'), mini: v('#mini'), now: document.querySelector('#mini-now').innerText }; }, vis.toString());
+  check('barre nascoste in play', !imm.top && !imm.time && imm.mini && imm.now.length > 0, JSON.stringify(imm));
+  await page.click('#mini-play');
+  await sleep(600);
+  const back = await page.evaluate((f) => { const v = eval(f); return { top: v('.top'), time: v('.time'), mini: v('#mini') }; }, vis.toString());
+  check('barre di nuovo visibili in pausa', back.top && back.time && !back.mini, JSON.stringify(back));
   const paused = await page.evaluate(() => ({ v: document.querySelector('#slider').value, now: document.querySelector('#now').innerText }));
   // anomalia: la climatologia usata deve essere quella del mese sul globo,
   // anche nell'attimo in cui il mese scelto non e' ancora arrivato

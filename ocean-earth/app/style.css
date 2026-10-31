@@ -87,7 +87,7 @@ button { cursor: pointer; }
 #globe.crosshair { cursor: crosshair; }
 
 /* pannelli */
-.top, .side, .panel, .time, .legend, .note, .loading {
+.top, .side, .panel, .time, .legend, .note, .loading, .mini {
   background: var(--surface);
   backdrop-filter: blur(10px) saturate(1.2);
   -webkit-backdrop-filter: blur(10px) saturate(1.2);
@@ -252,3 +252,23 @@ dialog.about p, dialog.about li { line-height: 1.5; }
   .time-row.opts { gap: 8px; }
   .time-row.opts label:nth-of-type(2) { display: none; }
 }
+
+/* riproduzione: le barre escono, resta la pillola con data e pausa */
+.top, .time { transition: transform .35s ease, opacity .35s ease; }
+.legend, .hint { transition: bottom .35s ease, opacity .35s ease; }
+body.immersive:not(.peek) .top { transform: translateY(calc(-100% - 16px)); opacity: 0; pointer-events: none; }
+body.immersive:not(.peek) .time { transform: translateY(calc(100% + 16px)); opacity: 0; pointer-events: none; }
+body.immersive:not(.peek) .legend { bottom: 64px; }
+body.immersive:not(.peek) .hint { opacity: 0; }
+.mini {
+  position: fixed; left: 50%; bottom: 12px; z-index: 6;
+  display: flex; align-items: center; gap: 10px; padding: 4px 14px 4px 4px; border-radius: 999px;
+  transform: translate(-50%, 24px); opacity: 0; pointer-events: none;
+  transition: transform .35s ease, opacity .35s ease;
+}
+body.immersive:not(.peek) .mini { transform: translate(-50%, 0); opacity: 1; pointer-events: auto; }
+.mini .play { width: 34px; height: 34px; border-radius: 50%; }
+#mini-now { font-size: 13px; font-weight: 600; white-space: nowrap; }
+.mini-wait { display: none; font-size: 11px; color: var(--ink-3); }
+.mini.wait .mini-wait { display: inline; }
+@media (prefers-reduced-motion: reduce) { .top, .time, .mini, .legend { transition: none; } }

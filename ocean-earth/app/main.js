@@ -337,6 +337,14 @@ function loop(now) {
     if (!stale()) staleSince = 0; else if (!staleSince) staleSince = now;
     const behind = staleSince && now - staleSince > 350;
     $('#buffering').hidden = !((timeline.playing && timeline.waiting) || behind);
+    // durante il play le barre escono dallo schermo: resta la pillola con data e pausa
+    const imm = timeline.playing;
+    if (imm !== document.body.classList.contains('immersive')) {
+      document.body.classList.toggle('immersive', imm);
+      $('#mini').setAttribute('aria-hidden', String(!imm));
+      if (!imm) document.body.classList.remove('peek');
+    }
+    $('#mini').classList.toggle('wait', !$('#buffering').hidden);
     if (behind !== lastBehind) { lastBehind = behind; syncTimeUI(false); }
   }
   globe.resize();
@@ -912,6 +920,7 @@ function syncTimeUI(full) {
   $('#play').classList.toggle('on', timeline.playing);
   $('#play').title = t(timeline.playing ? 'pause' : 'play');
   $('#play').setAttribute('aria-label', $('#play').title);
+  $('#mini-now').textContent = fmtStamp(A.t);
 }
 
 function updateStatus() {
@@ -946,6 +955,18 @@ function bindControls() {
     timeline.seek(Math.round(+e.target.value));
   });
   $('#play').addEventListener('click', () => (timeline.playing ? timeline.pause() : timeline.play()));
+  $('#mini-play').addEventListener('click', () => timeline.pause());
+  // col mouse sul bordo alto le barre tornano visibili anche in play (in basso
+  // c'e' gia' la pillola con la pausa: farla sparire sotto il mouse la renderebbe
+  // impossibile da cliccare)
+  let peekOff = 0;
+  window.addEventListener('pointermove', (e) => {
+    if (e.pointerType !== 'mouse' || !document.body.classList.contains('immersive')) return;
+    const near = e.clientY < 72 || (document.body.classList.contains('peek') && e.clientY < innerHeight - 8 && e.target.closest('.top, .time'));
+    clearTimeout(peekOff);
+    if (near) document.body.classList.add('peek');
+    else peekOff = setTimeout(() => document.body.classList.remove('peek'), 600);
+  });
   $('#dl').addEventListener('click', startDownload);
   window.addEventListener('resize', drawSaved);
   $('#back').addEventListener('click', () => { timeline.pause(); timeline.step(-1); });
