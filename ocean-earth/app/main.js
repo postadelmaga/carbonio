@@ -12,7 +12,7 @@ const $ = (s) => document.querySelector(s);
 const $$ = (s) => document.querySelectorAll(s);
 
 const ui = {
-  mode: 'sst',                 // sst | anom | speed | none
+  mode: 'sst',                 // livello principale (il piu' pesante): punto, scala, intervalli
   source: 'model',             // model | ostia (solo giornaliero)
   med: true,                   // Mediterraneo a 1/16° sopra la griglia globale (solo giornaliero)
   point: null, pointB: null,   // punti selezionati {lat, lon}
@@ -135,7 +135,7 @@ function readTheme() {
 
 // ── fotogrammi ─────────────────────────────────────────────────────────────
 function sstVar(frame) {
-  if (timeline.tierName === 'daily' && ui.source === 'ostia' && ui.mode !== 'anom' && frame.ostia != null) return 'ostia';
+  if (timeline.tierName === 'daily' && ui.source === 'ostia' && !(globe.state.layers.anom > 0) && frame.ostia != null) return 'ostia';
   return 'sst';
 }
 
@@ -169,7 +169,7 @@ function needed(f) {
 }
 
 function medOn() {
-  return ui.med && timeline.tierName === 'daily' && !!manifest.regional?.med;
+  return ui.med && globe.state.layers.sst > 0 && timeline.tierName === 'daily' && !!manifest.regional?.med;
 }
 
 // pronto se ogni file e' arrivato; un file che manca non blocca la riproduzione
@@ -929,15 +929,15 @@ function updateStatus() {
   const sC = store.source(current.A.cur);
   const notes = [];
   if (current.missing) notes.push(t('frame_missing'));
-  if ((ui.mode === 'anom' || globe.state.hotspot) && globe.state.biasW > 0) notes.push(t('bias_note'));
+  if ((globe.state.layers.anom > 0 || globe.state.hotspot) && globe.state.biasW > 0) notes.push(t('bias_note'));
   if (timeline.tierName === 'daily' && ui.source === 'ostia') {
-    if (ui.mode === 'anom') notes.push(t('anom_uses_model'));
+    if (globe.state.layers.anom > 0) notes.push(t('anom_uses_model'));
     else if (current.svA !== 'ostia') notes.push(t('ostia_missing'));
   }
   const parts = [];
   if (sS) parts.push(`<b>${t('temp')}</b> ${sS.name} <span class="muted">(${t(sS.kind)}, ${freqLabel(sS)}, ${sS.res})</span>`);
   if (sC) parts.push(`<b>${t('cur_speed')}</b> ${sC.name} <span class="muted">(${t(sC.kind)}, ${freqLabel(sC)}, ${sC.res})</span>`);
-  if (current.mA && ui.mode === 'sst') {
+  if (current.mA && globe.state.layers.sst > 0) {
     const m = store.source(current.A.med);
     if (m) parts.push(`<b>${t('med_hi')}</b> ${m.name} <span class="muted">(${t(m.kind)}, ${freqLabel(m)}, ${m.res})</span>`);
   }
@@ -1002,6 +1002,11 @@ function bindControls() {
 
   // livelli
   $$('.quick-mode button').forEach((b) => b.addEventListener('click', () => setMode(b.dataset.mode)));
+  bindMixer();
+  try {
+    const saved = JSON.parse(localStorage.getItem('oe-layers') || 'null');
+    if (saved && LAYERS.every((k) => typeof saved[k] === 'number' && saved[k] >= 0 && saved[k] <= 1)) setLayers(saved);
+  } catch (e) { /* niente */ }
   $('#particles').addEventListener('change', (e) => { st.particles = e.target.checked; drawLegend(); });
   $('#arrows').addEventListener('change', (e) => { st.arrows = e.target.checked; drawLegend(); });
   $('#coast').addEventListener('change', (e) => { st.coast = e.target.checked; });
@@ -1123,23 +1128,40 @@ function autoRange() {
   drawLegend();
 }
 
-function setMode(mode) {
-  if (mode === ui.mode) return;
-  ui.mode = mode;
-  globe.state.mode = { sst: 0, anom: 1, speed: 2 }[mode];
-  if (mode === 'anom' && !globe.hasClim) { note(t('loading')); loadClim(); }
+// I tre livelli si sommano con un peso ciascuno (legenda = mixer). I pulsanti
+// in alto sono scorciatoie: un livello solo, oppure "Mix" con tutti e tre.
+const PRESETS = {
+  sst: { sst: 1, anom: 0, speed: 0 }, anom: { sst: 0, anom: 1, speed: 0 },
+  speed: { sst: 0, anom: 0, speed: 1 }, mix: { sst: 1, anom: 0.7, speed: 0.6 },
+};
+const LAYERS = ['sst', 'anom', 'speed'];
+function setMode(mode) { setLayers(PRESETS[mode]); drawLegend(); }
+
+function setLayers(w) {
+  const st = globe.state, before = { ...st.layers };
+  st.layers = { ...st.layers, ...w };
+  // livello principale: il piu' pesante (a parita' temperatura, poi anomalia)
+  const top = LAYERS.reduce((a, k) => (st.layers[k] > st.layers[a] ? k : a), 'sst');
+  const changedMain = top !== ui.mode;
+  ui.mode = top;
+  if (st.layers.anom > 0 && !globe.hasClim) { note(t('loading')); loadClim(); }
+  try { localStorage.setItem('oe-layers', JSON.stringify(st.layers)); } catch (e) { /* niente */ }
   syncModeButtons();
-  drawLegend();
-  onTime('source');
+  // quale file serve (OSTIA, Mediterraneo) dipende da quali livelli sono accesi
+  const on = (o) => LAYERS.map((k) => o[k] > 0).join();
+  if (!current) return;               // all'avvio: i fotogrammi non ci sono ancora
+  if (on(before) !== on(st.layers)) onTime('source');
+  else if (changedMain) refreshPoint();
 }
 
 function syncModeButtons() {
-  $$('.quick-mode button').forEach((b) => b.classList.toggle('on', b.dataset.mode === ui.mode));
+  const L = globe.state.layers, n = LAYERS.filter((k) => L[k] > 0).length;
+  $$('.quick-mode button').forEach((b) => b.classList.toggle('on', b.dataset.mode === 'mix' ? n > 1 : n === 1 && L[b.dataset.mode] > 0));
   const st = globe.state;
   const r = ui.mode === 'anom' ? st.rangeAnom : ui.mode === 'speed' ? st.rangeSpeed : st.rangeSst;
   $('#r-min').value = r[0];
   $('#r-max').value = r[1];
-  $('#palette-row').hidden = ui.mode !== 'sst';
+  $('#palette-row').hidden = !(st.layers.sst > 0);
 }
 
 function buildCompareUI() {
@@ -1164,16 +1186,37 @@ function bindSplit() {
 function drawLegend() {
   const st = globe.state;
   const L = [];
-  const bar = (title, pal, lo, hi, unit, digits) => {
+  const scale = (pal, lo, hi, digits) => {
     const ticks = [0, 0.25, 0.5, 0.75, 1].map((f) => `<span style="left:${f * 100}%">${fmtNum(lo + (hi - lo) * f, digits)}</span>`).join('');
-    L.push(`<div class="lg"><div class="lg-t">${title}</div><div class="lg-bar" style="background:${cssGradient(pal)}"></div><div class="lg-ticks">${ticks}</div></div>`);
+    return `<div class="lg-bar" style="background:${cssGradient(pal)}"></div><div class="lg-ticks">${ticks}</div>`;
   };
-  if (ui.mode === 'sst') bar(t('sst_label'), st.paletteSst, st.rangeSst[0], st.rangeSst[1], '°C', 0);
-  if (ui.mode === 'anom') bar(`${t('anom_label')} ${manifest ? manifest.climatology.years.join('–') : '1993–2020'}`, 'anomaly', st.rangeAnom[0], st.rangeAnom[1], '°C', 1);
-  if (ui.mode === 'speed') bar(t('speed_label'), 'speedField', st.rangeSpeed[0], st.rangeSpeed[1], 'm/s', 1);
-  if ((st.particles || st.arrows) && ui.mode !== 'speed') bar(t('speed_label'), 'speed', st.rangeSpeed[0], st.rangeSpeed[1], 'm/s', 1);
+  // ogni scala ha il suo cursore: la legenda e' anche il mixer dei livelli
+  const row = (k, title, pal, lo, hi, digits) => {
+    const w = Math.round(st.layers[k] * 100);
+    L.push(`<div class="lg mx${w ? '' : ' off'}" data-layer="${k}">
+      <label class="mx-head"><span class="lg-t">${title}</span><input type="range" min="0" max="100" step="5" value="${w}" aria-label="${title}"><output>${w}%</output></label>
+      <div class="mx-scale">${scale(pal, lo, hi, digits)}</div></div>`);
+  };
+  row('sst', t('sst_label'), st.paletteSst, st.rangeSst[0], st.rangeSst[1], 0);
+  row('anom', `${t('anom_label')} ${manifest ? manifest.climatology.years.join('–') : '1993–2020'}`, 'anomaly', st.rangeAnom[0], st.rangeAnom[1], 1);
+  row('speed', t('speed_label'), 'speedField', st.rangeSpeed[0], st.rangeSpeed[1], 1);
+  if ((st.particles || st.arrows) && !(st.layers.speed > 0)) L.push(`<div class="lg"><div class="lg-t">${t('particles')} · ${t('speed_label')}</div>${scale('speed', st.rangeSpeed[0], st.rangeSpeed[1], 1)}</div>`);
   if (st.hotspot) L.push(`<div class="lg"><span class="hatch"></span> ${t('hotspot')}</div>`);
   $('#legend').innerHTML = L.join('');
+}
+
+function bindMixer() {
+  // la legenda si ridisegna spesso: un solo ascoltatore sul contenitore
+  $('#legend').addEventListener('input', (e) => {
+    const r = e.target.closest('.mx input[type=range]');
+    if (!r) return;
+    const row = r.closest('.mx'), k = row.dataset.layer, v = +r.value / 100;
+    row.classList.toggle('off', v === 0);
+    row.querySelector('output').textContent = `${r.value}%`;
+    setLayers({ [k]: v });
+  });
+  // a cursore rilasciato la legenda si aggiorna (scala delle particelle, ecc.)
+  $('#legend').addEventListener('change', (e) => { if (e.target.closest('.mx')) drawLegend(); });
 }
 
 function buildAbout() {

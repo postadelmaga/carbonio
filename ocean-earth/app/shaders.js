@@ -49,7 +49,7 @@ uniform sampler2D uLutSst, uLutAnom, uLutSpeed;
 uniform float uMix, uMixCmp;
 uniform vec4 uClimSel;               // mese a, mese b, peso di b, 0  (per l'istante principale)
 uniform vec4 uClimSelCmp;            // idem per la data di confronto
-uniform int uMode;                   // 0 temperatura, 1 anomalia, 2 velocita' corrente, 3 niente
+uniform vec3 uLayers;                // pesi 0…1 dei livelli: temperatura, anomalia, velocita'
 uniform bool uHasClim, uHotspot, uCompare, uHaveData;
 uniform float uSplit;                // confronto: x (pixel) della linea di separazione
 uniform vec2 uRangeSst, uRangeAnom, uRangeSpeed;
@@ -94,36 +94,44 @@ void main() {
   float shade = mix(0.72, 1.0, pow(max(dot(normalize(uEye - p), p), 0.0), 0.35));
 
   bool cmpSide = uCompare && gl_FragCoord.x > uSplit;
+  // Tre livelli uno sopra l'altro, ognuno col suo peso (uLayers):
+  //   temperatura   la base;
+  //   anomalia      sopra la temperatura conta soprattutto dove e' forte, cosi'
+  //                 le zone nella norma lasciano vedere la temperatura sotto;
+  //   velocita'     sopra gli altri due si vede soprattutto dove la corrente e'
+  //                 veloce: i grandi flussi come fiumi sopra il mare.
+  // Un livello da solo (peso 1, gli altri 0) e' identico alla vecchia modalita'.
+  float wT = uLayers.x, wA = uLayers.y, wS = uLayers.z;
   vec3 col = uNoData;
-  if (uMode == 2) {
-    // velocita' della corrente: non dipende dalla temperatura
-    vec3 cu = mix(texture(uCurA, uv).rgb, texture(uCurB, uv).rgb, uMix);
-    if (cu.b > 0.5) {
-      float sp = length(cu.rg / cu.b);
-      float t = (sp - uRangeSpeed.x) / (uRangeSpeed.y - uRangeSpeed.x);
-      col = mix(uNoData, texture(uLutSpeed, vec2(clamp(t, 0.0, 1.0), 0.5)).rgb, uOpacity);
-    }
-  } else if (uHaveData) {
+  bool sea = false;
+  if (uHaveData && (wT > 0.0 || wA > 0.0)) {
     vec2 s = cmpSide ? sampleSst(uSstC, uSstD, uv, uMixCmp) : sampleSst(uSstA, uSstB, uv, uMix);
     vec4 sel = cmpSide ? uClimSelCmp : uClimSel;
-    if (uMedOn && !cmpSide && uMode == 0) {
+    vec2 sT = s;                       // la temperatura puo' usare il dato regionale, l'anomalia no
+    if (uMedOn && !cmpSide && wT > 0.0) {
       // dentro il riquadro del prodotto regionale vince il dato a 1/16°
       vec2 deg = degrees(ll);
       vec2 muv = vec2((deg.x - uMedBox.x) / (uMedBox.z - uMedBox.x), (uMedBox.w - deg.y) / (uMedBox.w - uMedBox.y));
       if (all(greaterThanEqual(muv, vec2(0.0))) && all(lessThanEqual(muv, vec2(1.0)))) {
         vec2 m = sampleSst(uMedA, uMedB, muv, uMix);
-        if (m.y > 0.5) s = m;
+        if (m.y > 0.5) sT = m;
       }
     }
+    if (sT.y > 0.5 && wT > 0.0) {
+      sea = true;
+      float t = (sT.x - uRangeSst.x) / (uRangeSst.y - uRangeSst.x);
+      col = mix(col, texture(uLutSst, vec2(clamp(t, 0.0, 1.0), 0.5)).rgb, wT);
+    }
     if (s.y > 0.5) {
-      if (uMode == 0) {
-        float t = (s.x - uRangeSst.x) / (uRangeSst.y - uRangeSst.x);
-        col = mix(uNoData, texture(uLutSst, vec2(clamp(t, 0.0, 1.0), 0.5)).rgb, uOpacity);
-      } else if (uMode == 1) {
+      if (wA > 0.0 && uHasClim) {
         float cl = base(uClim, uv, sel, cmpSide ? uBiasWCmp : uBiasW);
-        if (uHasClim && cl < 1e8) {
-          float t = (s.x - cl - uRangeAnom.x) / (uRangeAnom.y - uRangeAnom.x);
-          col = mix(uNoData, texture(uLutAnom, vec2(clamp(t, 0.0, 1.0), 0.5)).rgb, uOpacity);
+        if (cl < 1e8) {
+          sea = true;
+          float an = s.x - cl;
+          float t = (an - uRangeAnom.x) / (uRangeAnom.y - uRangeAnom.x);
+          float span = max(abs(uRangeAnom.x), abs(uRangeAnom.y));
+          float strong = smoothstep(0.08, 0.7, abs(an) / max(span, 1e-3));
+          col = mix(col, texture(uLutAnom, vec2(clamp(t, 0.0, 1.0), 0.5)).rgb, wA * mix(1.0, strong, wT));
         }
       }
       if (uHotspot && uHasClim) {
@@ -136,6 +144,17 @@ void main() {
       }
     }
   }
+  if (wS > 0.0) {
+    vec3 cu = mix(texture(uCurA, uv).rgb, texture(uCurB, uv).rgb, uMix);
+    if (cu.b > 0.5) {
+      float sp = length(cu.rg / cu.b);
+      float t = clamp((sp - uRangeSpeed.x) / (uRangeSpeed.y - uRangeSpeed.x), 0.0, 1.0);
+      float under = sea ? max(wT, wA) : 0.0;
+      col = mix(col, texture(uLutSpeed, vec2(t, 0.5)).rgb, wS * mix(1.0, pow(smoothstep(0.1, 0.7, t), 1.5), under));
+      sea = true;
+    }
+  }
+  if (sea) col = mix(uNoData, col, uOpacity);
   float land = texture(uLand, uv).r;
   col = mix(col, uLandCol, smoothstep(0.35, 0.65, land));
   outColor = vec4(col * shade, 1.0);

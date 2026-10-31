@@ -56,7 +56,7 @@ export class Globe {
       medA: null, medB: null, medBox: [0, 0, 1, 1],
       sstC: null, sstD: null, mixCmp: 0, compare: false, split: 0.5,
       climSel: [0, 0, 0, 0], climSelCmp: [0, 0, 0, 0], biasW: 0, biasWCmp: 0,
-      mode: 0, hotspot: false, opacity: 1,
+      layers: { sst: 1, anom: 0, speed: 0 }, hotspot: false, opacity: 1,
       paletteSst: 'classic', rangeSst: [-2, 32], rangeAnom: [-3, 3], rangeSpeed: [0, 1.2],
       particles: true, particleCount: 8000, particleSpeed: 1, particleWidth: 1.6,
       arrows: false, arrowDensity: 1, coast: true,
@@ -310,7 +310,7 @@ export class Globe {
     gl.uniform1f(P.u.uMixCmp, st.mixCmp);
     gl.uniform4fv(P.u.uClimSel, st.climSel);
     gl.uniform4fv(P.u.uClimSelCmp, st.climSelCmp);
-    gl.uniform1i(P.u.uMode, st.mode);
+    gl.uniform3fv(P.u.uLayers, [st.layers.sst, st.layers.anom, st.layers.speed]);
     gl.uniform1i(P.u.uHasClim, this.hasClim ? 1 : 0);
     gl.uniform1i(P.u.uHotspot, st.hotspot ? 1 : 0);
     gl.uniform1i(P.u.uCompare, st.compare ? 1 : 0);

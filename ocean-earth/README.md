@@ -28,6 +28,16 @@ dragging) and a second point to compare. Drag a box for regional statistics
 (area-weighted mean, maximum, mean anomaly over time). "Compare two dates"
 splits the globe with a draggable divider.
 
+**Layers mix.** Temperature, anomaly and current speed are three layers drawn
+one over the other, each with its own weight: the legend is the mixer, with a
+slider next to each colour scale. Over the temperature the anomaly shows mostly
+where it is strong (normal areas let the temperature through), and the current
+speed mostly where the current is fast. A single layer at 100% is exactly the
+old single mode. The buttons in the header are shortcuts: one layer only, or
+"Mix" (temperature 100%, anomaly 70%, speed 60%). The weights are remembered in
+the browser (`localStorage` `oe-layers`). The point panel, the range fields and
+"auto range" follow the heaviest layer.
+
 During playback the header and the time bar slide out of view and only a small
 pill with the date and a pause button stays at the bottom; pausing (pill, space
 bar) brings them back, and so does moving the mouse to the top edge.

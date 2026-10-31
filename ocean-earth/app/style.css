@@ -272,3 +272,17 @@ body.immersive:not(.peek) .mini { transform: translate(-50%, 0); opacity: 1; poi
 .mini-wait { display: none; font-size: 11px; color: var(--ink-3); }
 .mini.wait .mini-wait { display: inline; }
 @media (prefers-reduced-motion: reduce) { .top, .time, .mini, .legend { transition: none; } }
+
+/* legenda = mixer dei livelli */
+.lg.mx .mx-head { display: grid; grid-template-columns: 1fr 92px 34px; align-items: center; gap: 8px; cursor: pointer; }
+.lg.mx .lg-t { margin: 0; }
+.lg.mx input[type=range] { width: 100%; margin: 0; accent-color: var(--accent); }
+.lg.mx output { font: 600 10px "IBM Plex Mono", monospace; color: var(--ink-3); text-align: right; }
+.lg.mx .mx-scale { margin-top: 4px; transition: opacity .2s; }
+.lg.mx.off .mx-scale { display: none; }
+.lg.mx.off .lg-t { color: var(--ink-3); }
+.lg.mx + .lg.mx { margin-top: 6px; }
+.legend { min-width: 300px; }
+@media (max-width: 480px) { .legend { min-width: 0; width: min(300px, calc(100vw - 16px)); } .lg.mx .mx-head { grid-template-columns: 1fr 70px 30px; } }
+.quick-mode .s { display: none; }
+@media (max-width: 480px) { .quick-mode .l { display: none; } .quick-mode .s { display: inline; } }

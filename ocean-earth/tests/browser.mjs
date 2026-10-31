@@ -146,14 +146,15 @@ for (const [lang, word] of [['en', 'Anomaly'], ['it', 'Anomalia'], ['es', 'Anoma
     const top = document.querySelector('.top');
     return {
       htmlLang: document.documentElement.lang,
-      mode: document.querySelector('.quick-mode button[data-mode=anom]').textContent,
+      mode: document.querySelector('.quick-mode button[data-mode=anom] .l').textContent,
+      qfit: (() => { const q = document.querySelector('.quick-mode'); return q.scrollWidth <= q.clientWidth + 1; })(),
       status: document.querySelector('#status').innerText,
       fits: top.scrollWidth <= top.clientWidth + 1 && document.documentElement.scrollWidth <= window.innerWidth,
       back: document.querySelector('#back-link').getAttribute('href'),
     };
   });
   const home = lang === 'en' ? '/' : `/${lang}/`;
-  check(`lingua ${lang}`, errors.length === 0 && r.htmlLang === lang && r.mode === word && r.fits && r.back === home && !/_[a-z]+\b/.test(r.status),
+  check(`lingua ${lang}`, errors.length === 0 && r.htmlLang === lang && r.mode === word && r.fits && r.qfit && r.back === home && !/_[a-z]+\b/.test(r.status),
     JSON.stringify({ ...r, status: r.status.slice(0, 60), errors }));
   await page.close();
 }

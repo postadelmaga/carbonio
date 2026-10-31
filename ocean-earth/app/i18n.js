@@ -6,7 +6,7 @@
 export const TEXTS = {
   it: {
     back: 'Torna a CO₂·info', about: 'Informazioni', layers: 'Livelli', mode_sst: 'Temperatura',
-    mode_anom: 'Anomalia', mode_speed: 'Velocità', particles: 'Particelle',
+    mode_anom: 'Anomalia', mode_speed: 'Velocità', mode_sst_s: 'Temp.', mode_anom_s: 'Anom.', mode_speed_s: 'Vel.', mode_mix: 'Mix', mix_title: 'Temperatura, anomalia e correnti insieme: i cursori nella legenda dosano ogni livello', particles: 'Particelle',
     advanced: 'Regolazioni', p_density: 'Particelle', p_speed: 'Velocità delle particelle', p_width: 'Spessore delle particelle', a_density: 'Densità delle frecce', pal_classic: 'Classica',
     arrows: 'Frecce', coast: 'Coste', hotspot: 'Hotspot (sopra il 90° percentile)',
     source: 'Fonte della temperatura', src_model: 'Rianalisi / analisi (GLORYS12, NEMO 1/12°)',
@@ -47,7 +47,7 @@ export const TEXTS = {
   },
   en: {
     back: 'Back to CO₂·info', about: 'About', layers: 'Layers', mode_sst: 'Temperature',
-    mode_anom: 'Anomaly', mode_speed: 'Speed', particles: 'Particles',
+    mode_anom: 'Anomaly', mode_speed: 'Speed', mode_sst_s: 'Temp', mode_anom_s: 'Anom', mode_speed_s: 'Speed', mode_mix: 'Mix', mix_title: 'Temperature, anomaly and currents together: the sliders in the legend set each layer', particles: 'Particles',
     advanced: 'Settings', p_density: 'Particles', p_speed: 'Particle speed', p_width: 'Particle width', a_density: 'Arrow density', pal_classic: 'Classic',
     arrows: 'Arrows', coast: 'Coastlines', hotspot: 'Hotspots (above 90th percentile)',
     source: 'Temperature source', src_model: 'Reanalysis / analysis (GLORYS12, NEMO 1/12°)',
@@ -88,7 +88,7 @@ export const TEXTS = {
   },
   es: {
     back: 'Volver a CO₂·info', about: 'Información', layers: 'Capas', mode_sst: 'Temperatura',
-    mode_anom: 'Anomalía', mode_speed: 'Velocidad', particles: 'Partículas',
+    mode_anom: 'Anomalía', mode_speed: 'Velocidad', mode_sst_s: 'Temp.', mode_anom_s: 'Anom.', mode_speed_s: 'Vel.', mode_mix: 'Mezcla', mix_title: 'Temperatura, anomalía y corrientes juntas: los controles de la leyenda dosifican cada capa', particles: 'Partículas',
     advanced: 'Ajustes', p_density: 'Partículas', p_speed: 'Velocidad de las partículas', p_width: 'Grosor de las partículas', a_density: 'Densidad de las flechas', pal_classic: 'Clásica',
     arrows: 'Flechas', coast: 'Costas', hotspot: 'Puntos calientes (sobre el percentil 90)',
     source: 'Fuente de la temperatura', src_model: 'Reanálisis / análisis (GLORYS12, NEMO 1/12°)',
@@ -129,7 +129,7 @@ export const TEXTS = {
   },
   fr: {
     back: 'Retour à CO₂·info', about: 'À propos', layers: 'Calques', mode_sst: 'Température',
-    mode_anom: 'Anomalie', mode_speed: 'Vitesse', particles: 'Particules',
+    mode_anom: 'Anomalie', mode_speed: 'Vitesse', mode_sst_s: 'Temp.', mode_anom_s: 'Anom.', mode_speed_s: 'Vit.', mode_mix: 'Mix', mix_title: 'Température, anomalie et courants ensemble : les curseurs de la légende dosent chaque calque', particles: 'Particules',
     advanced: 'Réglages', p_density: 'Particules', p_speed: 'Vitesse des particules', p_width: 'Épaisseur des particules', a_density: 'Densité des flèches', pal_classic: 'Classique',
     arrows: 'Flèches', coast: 'Côtes', hotspot: 'Points chauds (au-dessus du 90e centile)',
     source: 'Source de la température', src_model: 'Réanalyse / analyse (GLORYS12, NEMO 1/12°)',
@@ -170,7 +170,7 @@ export const TEXTS = {
   },
   zh: {
     back: '返回 CO₂·info', about: '关于', layers: '图层', mode_sst: '温度',
-    mode_anom: '距平', mode_speed: '流速', particles: '粒子',
+    mode_anom: '距平', mode_speed: '流速', mode_sst_s: '温度', mode_anom_s: '距平', mode_speed_s: '流速', mode_mix: '叠加', mix_title: '温度、距平和洋流叠加显示：用图例中的滑块调节每个图层', particles: '粒子',
     advanced: '设置', p_density: '粒子', p_speed: '粒子速度', p_width: '粒子粗细', a_density: '箭头密度', pal_classic: '经典',
     arrows: '箭头', coast: '海岸线', hotspot: '热点（高于第 90 百分位）',
     source: '温度数据源', src_model: '再分析 / 分析（GLORYS12，NEMO 1/12°）',
