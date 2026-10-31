@@ -89,16 +89,8 @@ p{margin:0 0 1em}
   padding:12px 20px;border-radius:999px;border:1px solid var(--rule);background:var(--surface);transition:transform .15s,box-shadow .15s}
 .btn:hover{transform:translateY(-1px);box-shadow:var(--shadow)}
 .btn.primary{background:var(--ink);color:var(--ground);border-color:var(--ink)}
-.art{width:100%;height:auto;display:block;max-height:460px;filter:drop-shadow(0 18px 30px rgba(20,33,28,.12))}
-
-/* animazioni dell'illustrazione */
-.flow{stroke-dasharray:6 10;animation:flow 1.6s linear infinite}
-@keyframes flow{to{stroke-dashoffset:-32}}
-.ray{transform-origin:110px 92px;animation:spin 40s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-.pulse{animation:pulse 2.4s ease-in-out infinite}
-@keyframes pulse{50%{opacity:.35}}
-@media (prefers-reduced-motion:reduce){.flow,.ray,.pulse{animation:none}}
+.art{width:100%;height:auto;aspect-ratio:800/620;display:block;border-radius:24px;cursor:ew-resize;
+  box-shadow:0 30px 60px -30px rgba(20,33,28,.45),0 0 0 1px var(--rule);background:#18224a}
 
 /* sezioni */
 section.blk{padding:72px 0;border-top:1px solid var(--rule)}
