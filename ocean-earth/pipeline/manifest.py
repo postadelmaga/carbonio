@@ -6,6 +6,7 @@ l'indice, cosi' il file resta piccolo anche con migliaia di istanti.
 """
 import datetime as dt
 import functools
+import hashlib
 import json
 import pathlib
 import sys
@@ -39,6 +40,11 @@ def product_meta(product_id):
         return {}
 
 
+# da alzare se si rigenerano fotogrammi gia' pubblicati (nuova codifica,
+# correzione): i browser buttano quelli salvati e li riscaricano
+CACHE_FRAMES = 1
+
+
 def build():
     used = []
 
@@ -68,6 +74,25 @@ def build():
             'first': stamps[0], 'last': stamps[-1], 'frames': rows,
         }
 
+    # peso medio delle anteprime per livello e variabile: la pagina lo usa per
+    # dire quanto pesa scaricare una serie prima di guardarla
+    prev_bytes = {}
+    for tier, conf in tiers.items():
+        for v in conf['vars']:
+            d = frames.DATA / 'p' / conf['dir'] / v
+            files = list(d.glob('*.webp')) if d.exists() else []
+            if not files:                    # il Mediterraneo non ha anteprime: e' gia' leggero
+                d = frames.DATA / conf['dir'] / v
+                files = list(d.glob('*.png')) if d.exists() else []
+            if files:
+                prev_bytes.setdefault(tier, {})[v] = round(sum(f.stat().st_size for f in files) / len(files))
+    # versione dei file fissi (terra, coste, climatologia, percentili) per la
+    # cache del browser: cambia solo se cambia uno di quei file
+    h = hashlib.sha1()
+    for d in ['static', 'clim', 'p90']:
+        for f in sorted((frames.DATA / d).glob('*')):
+            h.update(f'{f.name}:{f.stat().st_size}:{int(f.stat().st_mtime)}'.encode())
+
     out = {
         'generated': dt.datetime.now(dt.timezone.utc).strftime('%Y-%m-%dT%H:%MZ'),
         'grid': {'nlat': grid.NLAT, 'nlon': grid.NLON, 'step': grid.STEP,
@@ -76,7 +101,11 @@ def build():
                      'vector': {'step': encode.VECTOR_STEP, 'zero': encode.VECTOR_ZERO}},
         # anteprime per la riproduzione (pipeline/preview.py): stessi istanti,
         # meno bit; ci sono solo se la cartella p/ e' stata generata
-        'preview': dict(preview.META, available=(frames.DATA / 'p').exists()),
+        'preview': dict(preview.META, available=(frames.DATA / 'p').exists(), bytes=prev_bytes),
+        # cache del browser (app/decode-worker.js): i fotogrammi non cambiano mai
+        # una volta scritti (frames.py crea solo quelli mancanti), quindi restano
+        # validi finche' non si alza 'frames'; i file fissi seguono 'static'
+        'cache': {'frames': CACHE_FRAMES, 'static': h.hexdigest()[:12]},
         'climatology': {'years': list(derived.CLIM_YEARS),
                         'available': (frames.DATA / 'clim' / 'sst-01.png').exists()},
         'series': {'tile': derived.TILE,

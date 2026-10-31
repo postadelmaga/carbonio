@@ -67,6 +67,32 @@ async function open(w, h, mobile, theme) {
   await sleep(5000);
   await page.screenshot({ path: `${outDir}/f-desktop-med-speed.png` });
   check('errori dopo le interazioni', errors.length === 0, errors.join(' | '));
+  // cache del browser: un intervallo breve si scarica col pulsante e, ricaricata
+  // la pagina, si rilegge dal disco senza chiedere nulla al server
+  await page.evaluate(() => {
+    const s = document.querySelector('#tier'); s.value = 'monthly'; s.dispatchEvent(new Event('change'));
+    __oe.timeline.setLoop([200, 205]);         // mesi mai visti prima in questo test
+  });
+  await sleep(1500);
+  const dlBefore = await page.evaluate(() => ({ btn: document.querySelector('#dl').textContent, hidden: document.querySelector('#dl').hidden }));
+  await page.evaluate(() => document.querySelector('#dl').click());
+  for (let k = 0; k < 60; k++) {
+    await sleep(1000);
+    if (await page.evaluate(() => document.querySelector('#dl').hidden)) break;
+  }
+  const done = await page.evaluate(() => document.querySelector('#dl-info').textContent);
+  check('scaricamento di un intervallo', !dlBefore.hidden && /MB/.test(dlBefore.btn) && /salvato|saved/.test(done), `${dlBefore.btn} → ${done}`);
+  await page.reload({ waitUntil: 'networkidle0' });
+  await sleep(2500);
+  const saved = await page.evaluate(async () => {
+    __oe.store.net = null;
+    const s = document.querySelector('#tier'); s.value = 'monthly'; s.dispatchEvent(new Event('change'));
+    __oe.timeline.fps = 4; __oe.timeline.seek(200); __oe.timeline.play();
+    await new Promise((r) => setTimeout(r, 1500));
+    __oe.timeline.pause();
+    return { saved: __oe.store.saved.size, net: __oe.store.net };
+  });
+  check('dopo la ricarica letti dal disco', saved.saved >= 12 && saved.net && saved.net.stored > 0, JSON.stringify(saved));
   await page.close();
 }
 // telefono

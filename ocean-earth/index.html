@@ -138,6 +138,7 @@
   <div class="slider-wrap">
     <div id="loop-track" class="loop-track" hidden></div>
     <input type="range" id="slider" min="0" max="0" step="any" value="0" aria-label="Timeline">
+    <canvas id="saved-bar" class="saved-bar" aria-hidden="true"></canvas>
   </div>
   <div class="time-row opts">
     <label><span data-i18n="year">Anno</span> <select id="year"></select></label>
@@ -147,6 +148,7 @@
     <label><span data-i18n="from">da</span> <select id="loop-from"></select></label>
     <label><span data-i18n="to">a</span> <select id="loop-to"></select></label>
     <button id="loop-year" type="button" class="link" data-i18n="loop_year">Anno intero</button>
+    <span class="dl-wrap"><button id="dl" type="button" class="link" hidden></button> <span id="dl-info" class="dl-info mono"></span></span>
   </div>
   <div id="status" class="status"></div>
 </footer>

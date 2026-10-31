@@ -106,6 +106,34 @@ display convenience, not data: the downloadable values are the PNGs.
 Playback buffers about three seconds ahead and, once it has had to wait,
 resumes only when 1.5 s of frames are in.
 
+**Browser cache.** The web server sends `Cache-Control: no-cache`, so the
+HTTP cache revalidates every file (one round trip per frame, on every
+visit). Frames never change once published (`frames.py` only writes missing
+instants), so the decode worker keeps them in Cache Storage
+(`oe-frames-<n>`) and reads them back from disk without asking the server;
+land, coasts, climatology and percentiles go to `oe-static-<hash>`, which
+follows the files' sizes and dates. On start the page drops older cache
+versions and instants that have left the rolling windows. Raise
+`CACHE_FRAMES` in `pipeline/manifest.py` if published frames are ever
+regenerated. The button under the timeline downloads the chosen range
+(whole series or the Loop range) before playing, showing its size from the
+average preview weights in the manifest; a thin bar under the slider marks
+the instants already saved. `window.__oe.store.net` counts files read from
+disk, downloaded or revalidated.
+
+Measured with a local server that mimics production (no-cache + ETag,
+shared bandwidth, latency; scripts in `tests/player/`):
+
+| | before | after |
+|---|---|---|
+| same range again, same page | 250 of 264 files asked to the server (304) | 19 of 266 |
+| after reloading the page | 260 of 260 asked | 0 |
+| whole monthly series on a 0.7 MB/s line | 12 of 80 frames in 20 s | download 128 MB in 191 s, then 405 frames with no wait |
+
+Climatology (5 MB) now loads after the first frame, or at once when the
+anomaly is chosen. Decoding uses code → half-float lookup tables: at 15
+frames/s from disk, 271 of 300 frames instead of 209.
+
 On the GPU, frames become half-float textures holding *value × mask* and
 *mask*: with linear filtering, *value × mask / mask* averages only ocean
 samples, so coastlines are never smeared with land zeros.

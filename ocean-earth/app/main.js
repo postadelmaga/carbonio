@@ -59,6 +59,8 @@ async function start() {
     return;
   }
   loadStatic();
+  store.onSaved = () => drawSaved();
+  store.scanSaved();
   timeline = new Timeline(manifest);
   timeline.on(onTime);
   buildTimeUI();
@@ -89,16 +91,20 @@ async function loadStatic() {
   const big = globe.gl.getParameter(globe.gl.MAX_TEXTURE_SIZE) >= 8192 && !/Mobi|Android/i.test(navigator.userAgent);
   store.decode(big ? 'static/land-8192.png' : 'static/land.png', 'gray')
     .then((f) => globe.setLand(f.gray, f.w, f.h)).catch(() => {});
-  fetch(store.url('static/coast.json')).then((r) => r.json()).then((l) => globe.setCoast(l)).catch(() => {});
-  if (manifest.climatology.available) {
-    const months = [...Array(12).keys()].map((m) => String(m + 1).padStart(2, '0'));
-    try {
-      climFrames = await Promise.all(months.map((m) => store.decode(`clim/sst-${m}.png`, 'scalar')));
-      globe.setMonthly('clim', climFrames);
-    } catch (e) { /* senza climatologia l'anomalia resta spenta */ }
-    refreshPoint();
-    loadSeries();
-  }
+  store.decode('static/coast.json', 'json').then((r) => globe.setCoast(r.json)).catch(() => {});
+}
+
+// La climatologia (12 file, 5 MB) serve all'anomalia e al pannello del punto:
+// parte dopo il primo fotogramma, per non rallentare l'apertura, o subito se
+// la si chiede prima.
+let climLoading = null;
+function loadClim() {
+  if (climLoading || !manifest.climatology.available) return climLoading;
+  const months = [...Array(12).keys()].map((m) => String(m + 1).padStart(2, '0'));
+  climLoading = Promise.all(months.map((m) => store.decode(`clim/sst-${m}.png`, 'scalar')))
+    .then((f) => { climFrames = f; globe.setMonthly('clim', f); refreshPoint(); loadSeries(); })
+    .catch(() => { climLoading = null; });  // senza climatologia l'anomalia resta spenta
+  return climLoading;
 }
 
 // il 90° percentile serve solo agli hotspot: arriva quando li si accende
@@ -219,6 +225,7 @@ async function applyFrames() {
   st.medB = globe.frameTexture(keyFor(B, 'med'), mB, 'scalar') || st.medA;
   if (medOn) { const g = manifest.regional.med; st.medBox = [g.west, g.south, g.east, g.north]; }
   current = { A, B, sA, sB, cA, cB, svA, svB, mA, mB, preview: previewMode() };
+  if (!climLoading) loadClim();
   updateStatus();
   refreshPoint();
 }
@@ -251,6 +258,7 @@ function onTime(why) {
   }
   if (!current || current.A !== A || current.B !== B || current.preview !== previewMode()) applyFrames();
   else updateStatus();
+  if (why === 'tier' || why === 'loop' || why === 'source') drawSaved();
   if (why === 'tier' || why === 'loop') syncTimeUI(true);
   else syncTimeUI(false);
   if (why === 'tier') {
@@ -648,6 +656,119 @@ function drawRegionChart() {
 }
 
 // ── barra del tempo ────────────────────────────────────────────────────────
+// ── serie salvata nel browser ─────────────────────────────────────────────
+// I file che servono alla riproduzione di un istante: anteprime di temperatura
+// e correnti, piu' il Mediterraneo (gia' leggero) col passo giornaliero.
+function playFiles(f) {
+  const tier = timeline.tierName, out = [];
+  const usePrev = manifest.preview && manifest.preview.available;
+  for (const v of [sstVar(f), 'cur']) {
+    if (f[v] != null) out.push([v, usePrev ? store.previewPath(tier, v, f.t) : store.framePath(tier, v, f.t)]);
+  }
+  if (ui.med && tier === 'daily' && f.med != null) out.push(['med', store.framePath(tier, 'med', f.t)]);
+  return out;
+}
+
+function playRange() {
+  return timeline.loop ? timeline.loop : [0, timeline.frames.length - 1];
+}
+
+// quanto manca da scaricare per vedere l'intervallo senza attese
+function missing() {
+  const [i0, i1] = playRange();
+  const sizes = (manifest.preview.bytes || {})[timeline.tierName] || {};
+  const files = [];
+  let bytes = 0;
+  for (let i = i0; i <= i1; i++) {
+    for (const [v, path] of playFiles(timeline.frames[i])) {
+      if (store.saved.has(path)) continue;
+      files.push(path);
+      bytes += sizes[v] || 300e3;
+    }
+  }
+  return { files, bytes, frames: i1 - i0 + 1 };
+}
+
+const fmtMB = (b) => b >= 1e9 ? (b / 1e9).toFixed(1).replace('.', LANG === 'it' ? ',' : '.') + ' GB' : Math.max(1, Math.round(b / 1e6)) + ' MB';
+
+let dl = null;                           // scaricamento in corso
+function syncDownload() {
+  const btn = $('#dl');
+  if (!btn || !timeline) return;
+  if (!store.cacheNames) { btn.hidden = true; return; }
+  if (dl) {
+    btn.textContent = t('dl_stop');
+    $('#dl-info').textContent = `${dl.done}/${dl.total} · ${fmtMB(dl.bytes)}`;
+    return;
+  }
+  const m = missing();
+  btn.hidden = m.files.length === 0;
+  btn.textContent = `${t('dl_btn')} (${fmtMB(m.bytes)})`;
+  btn.title = t('dl_title');
+  $('#dl-info').textContent = m.files.length === 0 ? t('dl_done') : '';
+}
+
+async function startDownload() {
+  if (dl) { dl.stop = true; return; }
+  const m = missing();
+  if (!m.files.length) return;
+  // spazio: se non basta lo si dice prima di cominciare
+  try {
+    const est = await navigator.storage.estimate();
+    if (est.quota && est.quota - est.usage < m.bytes * 1.1) { note(t('dl_quota').replace('{n}', fmtMB(est.quota - est.usage))); return; }
+    // chiedere di non cancellare i dati alla prima pulizia del browser
+    if (navigator.storage.persist) navigator.storage.persist().catch(() => {});
+  } catch (e) { /* senza stima si prova lo stesso */ }
+  const job = dl = { done: 0, total: m.files.length, bytes: 0, stop: false };
+  const queue = m.files.slice();
+  // si comincia da dove si e' adesso, poi il resto dell'intervallo
+  const here = playFiles(timeline.frameA).map((x) => x[1]);
+  queue.sort((a, b) => here.includes(b) - here.includes(a));
+  const sizes = (manifest.preview.bytes || {})[timeline.tierName] || {};
+  let failed = 0;
+  const worker = async () => {
+    while (queue.length && !job.stop) {
+      const path = queue.shift();
+      try { await store.store(path); } catch (e) { failed++; }
+      job.done++;
+      job.bytes += sizes[path.split('/').at(-2)] || 0;
+      syncDownload();
+    }
+  };
+  syncDownload();
+  await Promise.all([1, 2, 3, 4].map(worker));
+  dl = null;
+  if (failed) note(t('dl_failed').replace('{n}', failed));
+  syncDownload();
+  drawSaved();
+}
+
+// barra sotto la timeline: quali istanti sono gia' nel browser
+let savedRaf = 0;
+function drawSaved() {
+  if (savedRaf) return;
+  savedRaf = requestAnimationFrame(() => {
+    savedRaf = 0;
+    const cv = $('#saved-bar');
+    if (!cv || !timeline || !timeline.frames.length) return;
+    const dpr = window.devicePixelRatio || 1;
+    const w = Math.max(1, Math.round(cv.clientWidth * dpr)), h = Math.max(1, Math.round(cv.clientHeight * dpr));
+    if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; }
+    const ctx = cv.getContext('2d');
+    ctx.clearRect(0, 0, w, h);
+    ctx.fillStyle = getComputedStyle(cv).color;
+    const n = timeline.frames.length;
+    const cw = w / n;
+    let run = -1;
+    for (let i = 0; i <= n; i++) {
+      const ok = i < n && playFiles(timeline.frames[i]).every(([, p]) => store.saved.has(p));
+      if (ok && run < 0) run = i;
+      if (!ok && run >= 0) { ctx.fillRect(Math.floor(run * cw), 0, Math.max(1, Math.ceil((i - run) * cw)), h); run = -1; }
+    }
+    if (!dl) syncDownload();
+  });
+}
+
 function buildTimeUI() {
   const tierSel = $('#tier');
   tierSel.replaceChildren(...timeline.tiers.map((k) => {
@@ -730,6 +851,8 @@ function bindControls() {
     timeline.seek(Math.round(+e.target.value));
   });
   $('#play').addEventListener('click', () => (timeline.playing ? timeline.pause() : timeline.play()));
+  $('#dl').addEventListener('click', startDownload);
+  window.addEventListener('resize', drawSaved);
   $('#back').addEventListener('click', () => { timeline.pause(); timeline.step(-1); });
   $('#fwd').addEventListener('click', () => { timeline.pause(); timeline.step(1); });
   $('#first').addEventListener('click', () => { timeline.pause(); timeline.seek(timeline.loop ? timeline.loop[0] : 0); });
@@ -769,7 +892,7 @@ function bindControls() {
   $$('input[name=mode]').forEach((r) => r.addEventListener('change', () => {
     ui.mode = r.value;
     st.mode = { sst: 0, anom: 1, speed: 2, none: 3 }[ui.mode];
-    if (ui.mode === 'anom' && !globe.hasClim) note(t('loading'));
+    if (ui.mode === 'anom' && !globe.hasClim) { note(t('loading')); loadClim(); }
     syncModeButtons();
     drawLegend();
     onTime('source');

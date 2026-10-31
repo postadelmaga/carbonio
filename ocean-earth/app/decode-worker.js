@@ -24,10 +24,61 @@ function toHalf(v) {
 }
 const HALF_ONE = toHalf(1);
 
-async function pixels(url) {
+// tabelle codice → mezzo-float, calcolate una volta: la conversione per pixel
+// era il grosso del tempo di decodifica
+const LUT = {};
+function lut(name, n, fn) {
+  if (!LUT[name]) {
+    const t = new Uint16Array(n);
+    for (let c = 1; c < n; c++) t[c] = toHalf(fn(c));
+    LUT[name] = t;
+  }
+  return LUT[name];
+}
+
+// misura di rete per ogni file: byte arrivati e millisecondi (Resource Timing)
+function netInfo(url, t0) {
+  const e = performance.getEntriesByName(url).pop();
+  performance.clearResourceTimings();
+  return { ms: performance.now() - t0, transfer: e ? e.transferSize : -1, size: e ? e.decodedBodySize : -1 };
+}
+
+// Cache del browser (Cache Storage): i fotogrammi non cambiano mai una volta
+// pubblicati, quindi una volta scaricati si rileggono dal disco senza chiedere
+// nulla al server, anche alle visite successive. I file fissi (terra, coste,
+// climatologia) seguono la versione del manifest. Il resto passa dalla rete.
+let CACHES = null;
+const FRAME_RE = /\/data\/(p\/)?[mdh]\/[a-z]+\/[^/]+\.(png|webp)$/;
+const STATIC_RE = /\/data\/(static|clim|p90)\//;
+
+function cacheFor(url) {
+  if (!CACHES) return null;
+  if (FRAME_RE.test(url)) return CACHES.frames;
+  if (STATIC_RE.test(url)) return CACHES.static;
+  return null;
+}
+
+// restituisce il contenuto (Blob) e com'e' arrivato
+async function load(url) {
+  const t0 = performance.now();
+  const cp = cacheFor(url);
+  const cache = cp && await cp.catch(() => null);
+  if (cache) {
+    const hit = await cache.match(url).catch(() => null);
+    if (hit) return { blob: await hit.blob(), net: { ms: performance.now() - t0, transfer: 0, stored: true } };
+  }
   const res = await fetch(url);
   if (!res.ok) throw new Error(`${res.status} ${url}`);
   const blob = await res.blob();
+  const net = netInfo(url, t0);
+  if (cache) {
+    // se lo spazio e' finito si va avanti senza salvare
+    net.stored = await cache.put(url, new Response(blob, { headers: { 'Content-Type': blob.type } })).then(() => true, () => false);
+  }
+  return { blob, net };
+}
+
+async function pixels(blob) {
   const bmp = await createImageBitmap(blob, { premultiplyAlpha: 'none', colorSpaceConversion: 'none' });
   const cv = new OffscreenCanvas(bmp.width, bmp.height);
   const ctx = cv.getContext('2d', { willReadFrequently: true });
@@ -38,7 +89,16 @@ async function pixels(url) {
 }
 
 async function decode({ url, kind }) {
-  const img = await pixels(url);
+  const { blob, net } = await load(url);
+  if (kind === 'store') return { net };       // solo scaricare e salvare
+  const out = await decodeBlob(blob, kind);
+  out.net = net;
+  return out;
+}
+
+async function decodeBlob(blob, kind) {
+  if (kind === 'json') return { json: JSON.parse(await blob.text()) };
+  const img = await pixels(blob);
   const { width: w, height: h, data } = img;
   const n = w * h;
   if (kind === 'gray') {
@@ -51,39 +111,40 @@ async function decode({ url, kind }) {
     const codes = new Uint16Array(n);
     for (let i = 0; i < n; i++) codes[i] = (data[i * 4] << 8) | data[i * 4 + 1];
     if (kind === 'series') return { w, h, codes };
+    const L = lut('scalar', 65536, (c) => offset + (c - 1) * step);
     const gpu = new Uint16Array(n * 2);
     for (let i = 0; i < n; i++) {
       const c = codes[i];
-      if (c) { gpu[i * 2] = toHalf(offset + (c - 1) * step); gpu[i * 2 + 1] = HALF_ONE; }
+      if (c) { gpu[i * 2] = L[c]; gpu[i * 2 + 1] = HALF_ONE; }
     }
     return { w, h, codes, gpu };
   }
   // anteprime per la riproduzione (pipeline/preview.py): 8 bit
   if (kind === 'psst') {
     const { offset, step } = PREV.sst;
+    const L = lut('psst', 256, (c) => offset + (c - 1) * step);
     const gpu = new Uint16Array(n * 2);
     for (let i = 0; i < n; i++) {
       const c = data[i * 4];
-      if (c) { gpu[i * 2] = toHalf(offset + (c - 1) * step); gpu[i * 2 + 1] = HALF_ONE; }
+      if (c) { gpu[i * 2] = L[c]; gpu[i * 2 + 1] = HALF_ONE; }
     }
     return { w, h, gpu, preview: true };
   }
   if (kind === 'pcur') {
     const { max, zero, scale } = PREV.cur;
     const gpu = new Uint16Array(n * 4);
-    const lut = new Uint16Array(256);
-    for (let c = 1; c < 256; c++) {
-      const d = c - zero;
-      lut[c] = toHalf(Math.sign(d) * max * Math.pow(Math.abs(d) / scale, 2));
-    }
+    const L = lut('pcur', 256, (c) => Math.sign(c - zero) * max * Math.pow(Math.abs(c - zero) / scale, 2));
     for (let i = 0; i < n; i++) {
       const a = data[i * 4], b = data[i * 4 + 1];
-      if (a && b) { gpu[i * 4] = lut[a]; gpu[i * 4 + 1] = lut[b]; gpu[i * 4 + 2] = HALF_ONE; }
+      if (a && b) { gpu[i * 4] = L[a]; gpu[i * 4 + 1] = L[b]; gpu[i * 4 + 2] = HALF_ONE; }
     }
     return { w, h, gpu, preview: true };
   }
   if (kind === 'vector') {
     const { step, zero } = ENC.vector;
+    // il codice 0 vale -4,096 m/s quando l'altra componente c'e'
+    const L = lut('vector', 4096, (c) => (c - zero) * step);
+    L[0] = toHalf(-zero * step);
     const cu = new Uint16Array(n), cv = new Uint16Array(n);
     const gpu = new Uint16Array(n * 4);
     for (let i = 0; i < n; i++) {
@@ -91,8 +152,8 @@ async function decode({ url, kind }) {
       const a = (r << 4) | (b >> 4), c = (g << 4) | (b & 15);
       cu[i] = a; cv[i] = c;
       if (a || c) {
-        gpu[i * 4] = toHalf((a - zero) * step);
-        gpu[i * 4 + 1] = toHalf((c - zero) * step);
+        gpu[i * 4] = L[a];
+        gpu[i * 4 + 1] = L[c];
         gpu[i * 4 + 2] = HALF_ONE;
       }
     }
@@ -103,9 +164,17 @@ async function decode({ url, kind }) {
 
 self.onmessage = async (ev) => {
   const msg = ev.data;
-  if (msg.type === 'init') { ENC = msg.encoding; PREV = msg.preview; return; }
+  if (msg.type === 'init') {
+    ENC = msg.encoding; PREV = msg.preview;
+    if (msg.cache && self.caches) {
+      CACHES = { frames: caches.open(msg.cache.frames), static: caches.open(msg.cache.static) };
+    }
+    return;
+  }
   try {
+    const t0 = performance.now();
     const out = await decode(msg);
+    out.net.total = performance.now() - t0;
     const transfer = Object.values(out).filter((v) => v && v.buffer).map((v) => v.buffer);
     self.postMessage({ id: msg.id, ok: true, out }, transfer);
   } catch (e) {

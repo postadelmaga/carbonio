@@ -16,25 +16,84 @@ export class DataStore {
     // piu' lunga: e' quella che fa da riserva durante la riproduzione
     this.prevCache = new Map();
     this.maxPrev = mobile ? 24 : 64;
+    this.saved = new Set();               // percorsi gia' nella cache del browser
+    this.onSaved = null;
   }
 
   async init() {
     const res = await fetch(new URL('manifest.json', BASE), { cache: 'no-cache' });
     if (!res.ok) throw new Error('manifest ' + res.status);
     this.manifest = await res.json();
+    const c = this.manifest.cache;
+    this.cacheNames = c && self.caches ? { frames: `oe-frames-${c.frames}`, static: `oe-static-${c.static}` } : null;
     const n = Math.min(3, Math.max(1, (navigator.hardwareConcurrency || 2) - 1));
     for (let i = 0; i < n; i++) {
       const w = new Worker(new URL('./decode-worker.js', import.meta.url));
-      w.postMessage({ type: 'init', encoding: this.manifest.encoding, preview: this.manifest.preview });
+      w.postMessage({ type: 'init', encoding: this.manifest.encoding, preview: this.manifest.preview, cache: this.cacheNames });
       w.onmessage = (ev) => {
         const p = this.pending.get(ev.data.id);
         if (!p) return;
         this.pending.delete(ev.data.id);
+        if (ev.data.ok && ev.data.out.net) {
+          this.countNet(ev.data.out.net);
+          if (ev.data.out.net.stored) this.markSaved(p.path);
+        }
         ev.data.ok ? p.resolve(ev.data.out) : p.reject(new Error(ev.data.error));
       };
       this.workers.push(w);
     }
     return this.manifest;
+  }
+
+  // ── cache del browser ──
+  // quali file sono gia' su disco: serve alla barra sotto la timeline e a non
+  // riscaricare quello che c'e'. Si legge all'avvio e si aggiorna a ogni arrivo.
+  markSaved(path) {
+    this.saved.add(path);
+    if (this.onSaved) this.onSaved(path);
+  }
+
+  async scanSaved() {
+    if (!this.cacheNames) return;
+    try {
+      // le versioni vecchie (fotogrammi rigenerati, climatologia rifatta) si buttano
+      for (const k of await caches.keys()) {
+        if (k.startsWith('oe-') && !Object.values(this.cacheNames).includes(k)) await caches.delete(k);
+      }
+      const cache = await caches.open(this.cacheNames.frames);
+      const base = this.url('');
+      const known = new Set();
+      for (const [name, t] of Object.entries(this.manifest.tiers)) {
+        for (const f of t.frames) known.add(`${t.dir}/${f.t}`);
+      }
+      const keys = await cache.keys();
+      for (const req of keys) {
+        const path = req.url.startsWith(base) ? req.url.slice(base.length) : null;
+        const m = path && path.match(/^(?:p\/)?([mdh])\/[a-z]+\/([^/]+)\.(?:png|webp)$/);
+        // istanti usciti dalle finestre mobili (giorni, ore): non torneranno
+        if (!m || !known.has(`${m[1]}/${m[2]}`)) { await cache.delete(req); continue; }
+        this.saved.add(path);
+      }
+      if (this.onSaved) this.onSaved(null);
+    } catch (e) { /* senza Cache Storage si lavora solo con la rete */ }
+  }
+
+  // scarica e salva senza decodificare (per la riproduzione senza attese)
+  store(path) {
+    if (this.saved.has(path)) return Promise.resolve();
+    return this.decode(path, 'store');
+  }
+
+  // statistiche di rete per la diagnosi (window.__oe.store.net)
+  countNet(n) {
+    const s = this.net || (this.net = { files: 0, bytes: 0, cached: 0, revalidated: 0, ms: 0, decodeMs: 0 });
+    s.files++;
+    s.ms += n.ms;
+    s.decodeMs += n.total - n.ms;
+    if (n.stored && n.transfer === 0) s.stored = (s.stored || 0) + 1;
+    else if (n.transfer === 0) s.cached++;
+    else if (n.transfer > 0 && n.transfer < 2000) s.revalidated++;
+    else s.bytes += Math.max(0, n.transfer);
   }
 
   url(path) { return new URL(path, BASE).href; }
@@ -43,7 +102,7 @@ export class DataStore {
     const id = ++this.seq;
     const w = this.workers[this.next++ % this.workers.length];
     return new Promise((resolve, reject) => {
-      this.pending.set(id, { resolve, reject });
+      this.pending.set(id, { resolve, reject, path });
       w.postMessage({ id, url: this.url(path), kind });
     });
   }
