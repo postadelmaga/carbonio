@@ -69,7 +69,7 @@ async function start() {
   timeline.setTier(manifest.tiers.monthly ? 'monthly' : Object.keys(manifest.tiers)[0], false);
   $('#loading').hidden = true;
   // per i test automatici e per chi vuole curiosare dalla console
-  window.__oe = { camera, timeline, globe, store, ui };
+  window.__oe = { camera, timeline, globe, store, ui, shown: () => current };
 }
 
 function fatal(msg) {
@@ -225,6 +225,8 @@ async function applyFrames() {
   st.medB = globe.frameTexture(keyFor(B, 'med'), mB, 'scalar') || st.medA;
   if (medOn) { const g = manifest.regional.med; st.medBox = [g.west, g.south, g.east, g.north]; }
   current = { A, B, sA, sB, cA, cB, svA, svB, mA, mB, preview: previewMode() };
+  syncShown();
+  syncTimeUI(false);
   if (!climLoading) loadClim();
   updateStatus();
   refreshPoint();
@@ -245,10 +247,30 @@ async function applyCompare() {
   $('#cmp-label').textContent = `${fmtStamp(C.t)} · ${t('cmp_sst_only')}`;
 }
 
-function onTime(why) {
+// Interpolazione e climatologia devono riferirsi ai fotogrammi che sono
+// davvero sul globo. Finche' quelli richiesti non arrivano, restano quelli
+// mostrati: prima si sottraeva gia' la climatologia del mese nuovo alla
+// temperatura del mese vecchio (gennaio meno settembre: tutto il nord a +3 °C).
+function syncShown() {
+  if (!current) return;
   const st = globe.state;
-  st.mix = timeline.interpolated ? timeline.frac : 0;
-  st.climSel = mixClim(climSelection(timeline.frameA.t), climSelection(timeline.frameB.t), st.mix);
+  const A = timeline.frameA, B = timeline.frameB;
+  if (current.A === A && current.B === B) {
+    st.mix = timeline.interpolated ? timeline.frac : 0;
+  } else if (current.B === A && current.A !== A) {
+    st.mix = 1;                            // avanzati di uno: si tiene il B gia' mostrato
+  } else if (current.A === A) {
+    st.mix = 0;
+  }
+  st.climSel = mixClim(climSelection(current.A.t), climSelection(current.B.t), st.mix);
+}
+
+// il globo mostra ancora altri istanti (si sta caricando quello scelto)
+function stale() {
+  return !!current && (current.A !== timeline.frameA || (timeline.interpolated && current.B !== timeline.frameB));
+}
+
+function onTime(why) {
   const A = timeline.frameA, B = timeline.frameB;
   // cambio di livello o di fonte: finche' i fotogrammi nuovi non arrivano la
   // riga delle fonti non deve descrivere quelli di prima
@@ -258,6 +280,7 @@ function onTime(why) {
   }
   if (!current || current.A !== A || current.B !== B || current.preview !== previewMode()) applyFrames();
   else updateStatus();
+  syncShown();
   if (why === 'tier' || why === 'loop' || why === 'source') drawSaved();
   if (why === 'tier' || why === 'loop') syncTimeUI(true);
   else syncTimeUI(false);
@@ -272,6 +295,7 @@ function onTime(why) {
 }
 
 // ── ciclo di disegno ───────────────────────────────────────────────────────
+let staleSince = 0, lastBehind = false;
 let last = performance.now(), fpsT0 = performance.now(), fpsN = 0;
 function loop(now) {
   const dt = Math.min(0.1, (now - last) / 1000);
@@ -282,7 +306,12 @@ function loop(now) {
   if (timeline) {
     timeline.tick(dt, readyForPlayback);
     prefetch();
-    $('#buffering').hidden = !(timeline.playing && timeline.waiting);
+    // il cambio di fotogramma durante il play dura un istante: l'avviso
+    // compare solo se il globo resta indietro per piu' di un terzo di secondo
+    if (!stale()) staleSince = 0; else if (!staleSince) staleSince = now;
+    const behind = staleSince && now - staleSince > 350;
+    $('#buffering').hidden = !((timeline.playing && timeline.waiting) || behind);
+    if (behind !== lastBehind) { lastBehind = behind; syncTimeUI(false); }
   }
   globe.resize();
   camera.update();
@@ -528,10 +557,12 @@ function srcLine(s) {
   return `<a href="https://data.marine.copernicus.eu/product/${s.product}/description" target="_blank" rel="noopener">${s.name}</a> <span class="muted">· ${t(s.kind)} · ${freqLabel(s)} · ${s.res}${s.res !== '0.25°' ? ` → ${fmtNum(0.25, 2)}°` : ''}</span>`;
 }
 
+// l'istante dei valori del pannello: quello sul globo, non quello richiesto
 function timeLabel() {
-  const A = timeline.frameA, B = timeline.frameB;
-  if (timeline.interpolated) return `${fmtStamp(A.t)} → ${fmtStamp(B.t)} <span class="interp">${t('interpolated')} ${Math.round(timeline.frac * 100)}%</span>`;
-  return `${fmtStamp(A.t)} <span class="orig">${t('original')}</span>`;
+  const A = current ? current.A : timeline.frameA, B = current ? current.B : timeline.frameB;
+  const mix = current ? globe.state.mix : timeline.frac;
+  if (mix > 1e-3 && mix < 1 - 1e-3 && A !== B) return `${fmtStamp(A.t)} → ${fmtStamp(B.t)} <span class="interp">${t('interpolated')} ${Math.round(mix * 100)}%</span>`;
+  return `${fmtStamp((mix >= 1 - 1e-3 ? B : A).t)} <span class="orig">${t('original')}</span>`;
 }
 
 async function getSeries(p) {
@@ -810,6 +841,9 @@ function syncTimeUI(full) {
   }
   slider.value = timeline.pos;
   const A = timeline.frameA;
+  const behind = lastBehind && current;
+  $('#now').classList.toggle('pending', !!behind);
+  $('#now').title = behind ? `${t('on_globe')}: ${fmtStamp(current.A.t)}` : '';
   $('#now').innerHTML = timeline.interpolated
     ? `${fmtStamp(A.t)} <span class="interp" title="${t('interpolated')}">→ ${fmtStamp(timeline.frameB.t)}</span>`
     : fmtStamp(A.t);

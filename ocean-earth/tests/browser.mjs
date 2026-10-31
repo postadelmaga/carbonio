@@ -49,6 +49,22 @@ async function open(w, h, mobile, theme) {
   await page.click('#play');
   await sleep(500);
   const paused = await page.evaluate(() => ({ v: document.querySelector('#slider').value, now: document.querySelector('#now').innerText }));
+  // anomalia: la climatologia usata deve essere quella del mese sul globo,
+  // anche nell'attimo in cui il mese scelto non e' ancora arrivato
+  const clim = await page.evaluate(async () => {
+    const tl = __oe.timeline;
+    document.querySelector('.quick-mode button[data-mode=anom]').click();
+    tl.pause();
+    for (let k = 0; k < 40 && !__oe.shown(); k++) await new Promise((r) => setTimeout(r, 250));
+    tl.seek(tl.findStamp('2001-07'));            // mai caricato prima, mese diverso
+    const during = { shown: __oe.shown().A.t, sel: __oe.globe.state.climSel[0] };
+    await new Promise((r) => setTimeout(r, 6000));
+    const after = { shown: __oe.shown().A.t, sel: __oe.globe.state.climSel[0] };
+    document.querySelector('.quick-mode button[data-mode=sst]').click();
+    return { during, after };
+  });
+  const mon = (t) => +t.slice(5, 7) - 1;
+  check('anomalia col mese mostrato', clim.during.sel === mon(clim.during.shown) && clim.during.shown !== '2001-07' && clim.after.shown === '2001-07' && clim.after.sel === 6, JSON.stringify(clim));
   check('pausa su dato originale', Number.isInteger(+paused.v), JSON.stringify(paused));
   // giornaliero
   await page.select('#tier', 'daily');

@@ -20,6 +20,12 @@ export function stampToYear(s) {
   return y + (Date.UTC(y, m - 1, d, h) - start) / (end - start);
 }
 
+export function niceStep(raw) {
+  const p = 10 ** Math.floor(Math.log10(raw));
+  const f = raw / p;
+  return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 2.5 ? 2.5 : f <= 5 ? 5 : 10) * p;
+}
+
 export class LineChart {
   constructor(host, { unit = '°C', height = 170 } = {}) {
     this.host = host;
@@ -79,11 +85,14 @@ export class LineChart {
     this.geom = { e, sx, sy, m, W, H };
 
     const grid = el('g', { class: 'grid' }, this.svg);
-    const ny = 4;
-    for (let k = 0; k <= ny; k++) {
-      const v = e.y0 + (k / ny) * (e.y1 - e.y0);
-      el('line', { x1: m.l, x2: W - m.r, y1: sy(v), y2: sy(v) }, grid);
-      el('text', { x: m.l - 4, y: sy(v) + 3, 'text-anchor': 'end' }, grid).textContent = fmtNum(v, Math.abs(e.y1 - e.y0) < 4 ? 1 : 0);
+    // linee su valori tondi (1, 2, 2,5, 5 × 10ⁿ): con linee a intervalli
+    // qualsiasi le etichette arrotondate non erano equidistanti
+    const step = niceStep((e.y1 - e.y0) / 4);
+    const decimals = (String(+step.toPrecision(3)).split('.')[1] || '').length;
+    for (let v = Math.ceil(e.y0 / step) * step; v <= e.y1 + 1e-9; v += step) {
+      const vv = Math.abs(v) < step * 1e-6 ? 0 : v;
+      el('line', { x1: m.l, x2: W - m.r, y1: sy(vv), y2: sy(vv) }, grid);
+      el('text', { x: m.l - 4, y: sy(vv) + 3, 'text-anchor': 'end' }, grid).textContent = fmtNum(vv, decimals);
     }
     const span = e.x1 - e.x0;
     const stepYears = span > 20 ? 5 : span > 8 ? 2 : span > 2 ? 1 : 0.25;

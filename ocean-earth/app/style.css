@@ -200,6 +200,7 @@ svg.chart .brush { fill: var(--accent); opacity: .15; }
 .slider-wrap { position: relative; margin: 4px 0 2px; }
 .slider-wrap input { width: 100%; margin: 0; height: 22px; }
 /* istanti gia' salvati nel browser: riga sottile sotto il cursore */
+.now.pending { opacity: .55; }
 .saved-bar { position: absolute; left: 0; right: 0; bottom: 1px; width: 100%; height: 3px; color: var(--accent); opacity: .55; pointer-events: none; }
 .dl-wrap { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; }
 .dl-info { color: var(--ink-3, var(--ink-2)); font-size: 11px; }
