@@ -102,6 +102,7 @@ h1,h2,h3,.ui{font-family:Archivo,"Helvetica Neue",Arial,sans-serif;}
 .nav-links::-webkit-scrollbar{display:none}
 /* il collegamento all'esploratore degli oceani: non e' una sezione, si distingue */
 .nav-links a.nav-oe{color:var(--ocean);font-weight:700}
+.nav-links a.nav-cer{color:var(--bim);font-weight:700}
 .menu-btn{display:none}
 .nav-mark{
   font-family:Archivo,sans-serif;font-weight:900;font-stretch:112%;

@@ -53,8 +53,8 @@ GitHub 账号，也可以在[留言板](https://co2-info.duckdns.org/feedback.ht
 │                        en/ 发布在根地址，而不是 /en/
 ├── i18n/               每种语言一个词典 + 抽取出来的键
 ├── build.py            从意大利文原文生成译文页面
-├── publish.sh          已填好目标路径和公开网址的 deploy.sh
-├── deploy.sh           通过 rsync/ssh 发布
+├── ../publish.sh        已填好目标路径和公开网址的 deploy.sh
+├── ../deploy.sh         通过 rsync/ssh 发布
 ├── 404.html  robots.txt
 └── assets/
     ├── style.css       明暗主题变量、版式、打印样式
@@ -67,7 +67,7 @@ GitHub 账号，也可以在[留言板](https://co2-info.duckdns.org/feedback.ht
 ```bash
 python3 -m http.server 8100     # 然后打开 http://localhost:8100
 ./build.py                      # 重新生成 it/、en/、es/、fr/、zh/
-./publish.sh --apply            # 发布
+../publish.sh --apply           # 发布
 ```
 
 更多细节——每个数字从哪里来、翻译流程如何运作、服务器如何选择语言、测试过又被

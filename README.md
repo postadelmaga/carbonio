@@ -1,115 +1,28 @@
-# The carbon that stays
+# Comunità Energetica Rinnovabile · CO₂·info · Ocean Earth
 
-**English** · [Italiano](README.it.md) · [Español](README.es.md) ·
-[Français](README.fr.md) · [中文](README.zh.md)
+Static website published at **https://co2-info.duckdns.org/**. One repository, one
+folder per project, one deploy for all of them.
 
-A single-page site about the global carbon budget: how much CO₂ we emit, how
-much the oceans and vegetation absorb, and why the Mauna Loa curve shows only
-half of it.
+| Folder | Public URL | What it is |
+|---|---|---|
+| [`cer/`](cer/) | [/cer/](https://co2-info.duckdns.org/cer/) | The Renewable Energy Community (CER): what it is, its social purpose, its projects, and the [statute](https://co2-info.duckdns.org/cer/statuto/) (draft). Italian. |
+| [`co2-info/`](co2-info/) | [/](https://co2-info.duckdns.org/) · [/it/](https://co2-info.duckdns.org/it/) · /es/ · /fr/ · /zh/ | *Il carbonio che resta*: the global carbon budget, in five languages. Docs: [README](co2-info/README.md), [MAINTENANCE](co2-info/MAINTENANCE.md). |
+| [`ocean-earth/`](ocean-earth/) | [/ocean-earth/](https://co2-info.duckdns.org/ocean-earth/) | Interactive globe of sea surface temperature and currents since 1993 (Copernicus Marine). Docs: [README](ocean-earth/README.md). |
+| [`server/`](server/) | /api/ | The small message board service used by CO₂·info. |
 
-**→ [co2-info.duckdns.org](https://co2-info.duckdns.org/)** — English at the root,
-and also in [Italian](https://co2-info.duckdns.org/it/),
-[Spanish](https://co2-info.duckdns.org/es/),
-[French](https://co2-info.duckdns.org/fr/) and
-[Chinese](https://co2-info.duckdns.org/zh/)
-
-It was born to fact-check an existing slide deck and ended up replacing it.
-Every number carries its source and its uncertainty.
-
-## What is unusual about it
-
-- **It reads its own data.** The CO₂ curve, the growth rate, the temperature
-  series and the heat stored in the oceans are fetched from NOAA at every load. If the network is
-  down the page shows values baked into the HTML and says so with a coloured
-  dot, instead of pretending.
-- **Every figure declares what kind of number it is**: `observed`,
-  `observed and estimated`, `estimate`, `preliminary estimate`. A measurement
-  and a model are not the same thing, and the page does not blur them.
-- **It corrects itself in public.** The revision log at the bottom lists what
-  changed and why, including the times the page itself was wrong.
-- **No build to serve it, no cookies, no third-party requests** beyond the
-  fonts and the visit counter. Sixteen screens, fifteen sections, nine
-  charts drawn as inline SVG.
-
-## Contributing
-
-This is the useful part. If you find:
-
-- **a wrong number** — the most valuable report of all. The revision log is
-  made of these;
-- **a better source**, or a more recent edition of one already used;
-- **a sentence that claims more than the data support** — the page tries hard
-  to avoid this and does not always succeed;
-- a translation that reads badly in your language;
-
-please [open an issue](https://github.com/postadelmaga/carbonio/issues), or
-write on the [board](https://co2-info.duckdns.org/feedback.html) if you would
-rather not have a GitHub account. Every section also carries a two-question
-row, "was it useful?" and "is it clear?", which is the cheapest way to tell me
-where the page is failing.
-Pull requests are welcome too. Two rules: never transcribe a figure from an
-article, go to the primary source; and if you change the Italian text,
-regenerate the translations (`./build.py --extract`, translate, `./build.py`).
-
-## How it is built
-
-Plain HTML, CSS and JavaScript. No framework, no dependencies, nothing to
-compile in order to serve it.
-
-```
-.
-├── index.html          the source, in Italian: the only hand-written copy
-├── it/ en/ es/ fr/ zh/     generated pages: do not edit by hand.
-│                        en/ is published at the site root, not at /en/
-├── i18n/               one dictionary per language + the extracted keys
-├── build.py            generates the translated pages from the Italian source
-├── publish.sh          deploy.sh with destination and public URL filled in
-├── deploy.sh           publishing over rsync/ssh
-├── 404.html  robots.txt
-└── assets/
-    ├── style.css       light/dark tokens, layout, print
-    ├── charts.js       the nine SVG charts + the embedded fallback data
-    ├── slides.js       slide navigation: on-screen arrows, keyboard, touch
-    ├── live.js         live reading from NOAA, with fallback
-    └── favicon.svg
-```
+## Publishing
 
 ```bash
-python3 -m http.server 8100     # then open http://localhost:8100
-./build.py                      # regenerate it/, en/, es/, fr/, zh/
-./publish.sh --apply            # publish
+./publish.sh                 # dry run: shows what would change
+./publish.sh --apply         # publishes all three projects
+./deploy.sh --dest x --url https://co2-info.duckdns.org --out /tmp/build   # build locally only
 ```
 
-The details — where each number comes from, how the translation pipeline
-works, how the server chooses the language, what was measured and rejected —
-are in **[MAINTENANCE.md](MAINTENANCE.md)**.
+`deploy.sh` assembles the public tree: the English CO₂·info page at the root,
+the other languages in their folders, `cer/` and `ocean-earth/` as they are.
+Ocean Earth's data (GB of frames, outside git) is synced separately, frames
+first and manifest last.
 
-## Sources
+## Licences
 
-- **Global Carbon Budget 2025** (Global Carbon Project, COP30, 13 November 2025) — sources and sinks, 2015–2024 averages
-- **NOAA Global Monitoring Laboratory** — Mauna Loa since 1958 and the global mean, read live
-- **NOAA Paleoclimatology** — Bereiter et al. 2015, 800,000 years of CO₂ from Antarctic ice cores
-- **IPCC AR6** — palaeoclimate reference periods; pre-industrial levels of the greenhouse gases
-- **Our World in Data** — emissions by country, per person and cumulative
-- **UNEP Emissions Gap Report 2025** — world total of all greenhouse gases
-- On military and war emissions: SGR and CEOBS; the Initiative on GHG
-  Accounting of War; Neimark et al. in One Earth; the Climate and Community
-  Institute
-
-Conversion used throughout: `1 ppm = 2.124 GtC = 7.78 GtCO₂`,
-`1 GtC = 3.664 GtCO₂`.
-
-## Licence
-
-- **Code** — [MIT](LICENSE): `assets/*.js`, `style.css`, `build.py`, the
-  deploy scripts, the HTML structure.
-- **Text, charts and translations** — [CC BY 4.0][cc]: reuse them, adapt them,
-  sell them if you like, as long as you say where they come from and whether
-  you changed anything.
-- **The data are not ours.** They belong to NOAA, the Global Carbon Project,
-  Our World in Data, the IPCC, UNEP and the research groups cited on the page.
-  Cite the primary source, not this repository.
-
-Details in [LICENSE-CONTENT.md](LICENSE-CONTENT.md).
-
-[cc]: https://creativecommons.org/licenses/by/4.0/
+Code MIT ([LICENSE](LICENSE)); texts and charts CC BY 4.0 ([LICENSE-CONTENT.md](LICENSE-CONTENT.md)).

@@ -4,6 +4,13 @@ Everything you need to change a number, add a section, translate it or put it
 online. English only: it is the language of whoever ends up running this.
 The reader-facing README is in [five languages](README.md).
 
+> **Repository layout (since 31 October 2026).** This site lives in `co2-info/`
+> of the repository, next to `cer/` (the Renewable Energy Community page and its
+> statute, served at `/cer/`) and `ocean-earth/`. `publish.sh` and `deploy.sh`
+> stay at the repository root and publish all three; the public URLs did not
+> change. `../deploy.sh --dest x --url https://co2-info.duckdns.org --out DIR`
+> writes the build to DIR without touching the server, to inspect it.
+
 ## Running it
 
 ```bash
@@ -16,9 +23,9 @@ No build step is needed to *serve* the site. A build step is needed to
 ## Publishing
 
 ```bash
-./publish.sh            # dry run: shows what would change, writes nothing
-./publish.sh --apply    # publishes
-./publish.sh --apply --prune   # also deletes orphan files on the server
+../publish.sh           # dry run: shows what would change, writes nothing
+../publish.sh --apply   # publishes
+../publish.sh --apply --prune  # also deletes orphan files on the server
 ```
 
 `publish.sh` wraps `deploy.sh` with the destination and public URL already

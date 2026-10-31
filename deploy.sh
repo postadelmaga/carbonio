@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ##############################################################################
-# deploy.sh — pubblica il sito statico "Il carbonio che resta" su arch_php
+# deploy.sh — pubblica su arch_php il sito statico: CO2·info, la CER, Ocean Earth
 #
 # Va lanciato dalla macchina locale: usa l'alias SSH "arch_php" definito in
 # ~/.ssh/config.
@@ -21,6 +21,7 @@ set -euo pipefail
 #   --host NAME   alias SSH di destinazione (default: arch_php)
 #   --apply       esegue davvero il trasferimento
 #   --prune       aggiunge --delete: cancella sul remoto i file non piu presenti
+#   --out DIR     prepara solo la build in DIR, senza collegarsi al server
 ##############################################################################
 
 SSH_HOST="arch_php"
@@ -28,6 +29,7 @@ DEST=""
 PUBLIC_URL=""
 APPLY=0
 PRUNE=0
+OUT=""
 
 SRC_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
@@ -43,7 +45,8 @@ while [[ $# -gt 0 ]]; do
     --host)  SSH_HOST="${2:-}";   shift 2 ;;
     --apply) APPLY=1;  shift ;;
     --prune) PRUNE=1;  shift ;;
-    -h|--help) sed -n '3,26p' "${BASH_SOURCE[0]}"; exit 0 ;;
+    --out)   OUT="${2:-}"; shift 2 ;;
+    -h|--help) sed -n '3,27p' "${BASH_SOURCE[0]}"; exit 0 ;;
     *) err "Opzione sconosciuta: $1"; exit 2 ;;
   esac
 done
@@ -52,35 +55,44 @@ done
 [[ -n "$PUBLIC_URL" ]] || { err "Manca --url (URL pubblico del sito)."; exit 2; }
 PUBLIC_URL="${PUBLIC_URL%/}"
 
-# ── 1. Verifica che l'host risponda ─────────────────────────────────────────
-info "Verifico l'accesso a $SSH_HOST"
-if ! ssh -o BatchMode=yes -o ConnectTimeout=10 "$SSH_HOST" true 2>/dev/null; then
-  err "Non riesco a connettermi a '$SSH_HOST' senza password."
-  err "Controlla ~/.ssh/config e che la chiave sia caricata (ssh-add -l)."
-  exit 1
+# ── 1. Verifica che l'host risponda (non serve per --out) ───────────────────
+if [[ -z "$OUT" ]]; then
+  info "Verifico l'accesso a $SSH_HOST"
+  if ! ssh -o BatchMode=yes -o ConnectTimeout=10 "$SSH_HOST" true 2>/dev/null; then
+    err "Non riesco a connettermi a '$SSH_HOST' senza password."
+    err "Controlla ~/.ssh/config e che la chiave sia caricata (ssh-add -l)."
+    exit 1
+  fi
+  ok "Host raggiungibile"
 fi
-ok "Host raggiungibile"
 
 # ── 2. Build: copia con i placeholder risolti ───────────────────────────────
 BUILD_DIR="$(mktemp -d)"
 trap 'rm -rf "$BUILD_DIR"' EXIT
 
 info "Preparo la build in $BUILD_DIR"
-cp -R "$SRC_DIR/404.html" "$SRC_DIR/robots.txt" "$SRC_DIR/assets" "$BUILD_DIR/"
+# Il repository ha una cartella per progetto; sul server convivono cosi':
+#   co2-info/     → /            "Il carbonio che resta" (radice inglese, it/ es/ fr/ zh/)
+#   cer/          → /cer/        la Comunita' Energetica Rinnovabile e il suo statuto
+#   ocean-earth/  → /ocean-earth/
+CO2="$SRC_DIR/co2-info"
+cp -R "$CO2/404.html" "$CO2/robots.txt" "$CO2/assets" "$BUILD_DIR/"
 # La radice del sito e' l'inglese. build.py lo genera dentro en/, ma con
 # canonical e collegamenti interni gia' nella forma della radice: qui il
 # contenuto di quella cartella sale di un livello, e en/ non viene pubblicata.
 # L'italiano, che nel repository e' il sorgente scritto a mano, viene
 # pubblicato come tutte le altre lingue, in it/.
-if [ -f "$SRC_DIR/en/index.html" ]; then
-  cp "$SRC_DIR/en/index.html" "$SRC_DIR/en/feedback.html" "$BUILD_DIR/"
+if [ -f "$CO2/en/index.html" ]; then
+  cp "$CO2/en/index.html" "$CO2/en/feedback.html" "$BUILD_DIR/"
 else
-  err "manca en/index.html: lancia ./build.py prima di pubblicare"
+  err "manca co2-info/en/index.html: lancia co2-info/build.py prima di pubblicare"
   exit 1
 fi
 for L in it es fr zh; do
-  [ -d "$SRC_DIR/$L" ] && cp -R "$SRC_DIR/$L" "$BUILD_DIR/"
+  [ -d "$CO2/$L" ] && cp -R "$CO2/$L" "$BUILD_DIR/"
 done
+# La CER: pagine statiche, si copiano cosi' come sono.
+cp -R "$SRC_DIR/cer" "$BUILD_DIR/cer"
 # Ocean Earth: nella build vanno solo la pagina e il codice (pochi KB). I dati
 # (GB di fotogrammi, generati da ocean-earth/pipeline e fuori dal repository)
 # si sincronizzano a parte, direttamente dalla loro cartella, piu' sotto.
@@ -125,6 +137,16 @@ done)
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
+$(for P in cer/ cer/statuto/; do
+cat <<UNA
+  <url>
+    <loc>${PUBLIC_URL}/${P}</loc>
+    <lastmod>$(date -u +%Y-%m-%d)</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+UNA
+done)
 </urlset>
 SITEMAP
 
@@ -134,6 +156,7 @@ if grep -rq '__ROOT__' "$BUILD_DIR"; then
   exit 1
 fi
 ok "Build pronta ($(du -sh "$BUILD_DIR" | cut -f1))"
+if [[ -n "$OUT" ]]; then rm -rf "$OUT"; cp -R "$BUILD_DIR" "$OUT"; ok "Build copiata in $OUT"; exit 0; fi
 
 # ── 3. Trasferimento ────────────────────────────────────────────────────────
 RSYNC_OPTS=(-az --human-readable --itemize-changes --omit-dir-times --no-perms)

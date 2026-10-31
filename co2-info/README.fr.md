@@ -66,8 +66,8 @@ rien à compiler pour l'héberger.
 │                    en/ est publiée à la racine, pas sur /en/
 ├── i18n/               un dictionnaire par langue + les clés extraites
 ├── build.py            génère les pages traduites depuis la source italienne
-├── publish.sh          deploy.sh avec la destination et l'URL publique intégrées
-├── deploy.sh           publication par rsync/ssh
+├── ../publish.sh        deploy.sh avec la destination et l'URL publique intégrées
+├── ../deploy.sh         publication par rsync/ssh
 ├── 404.html  robots.txt
 └── assets/
     ├── style.css       jetons de thème clair/sombre, mise en page, impression
@@ -80,7 +80,7 @@ rien à compiler pour l'héberger.
 ```bash
 python3 -m http.server 8100     # puis ouvrez http://localhost:8100
 ./build.py                      # régénère it/, en/, es/, fr/, zh/
-./publish.sh --apply            # publie
+../publish.sh --apply           # publie
 ```
 
 Le détail — d'où vient chaque chiffre, comment fonctionne la chaîne de

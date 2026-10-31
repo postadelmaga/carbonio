@@ -5,8 +5,9 @@ same kind of work.
 
 ## Code — MIT
 
-Everything that runs: `assets/*.js`, `assets/style.css`, `build.py`,
-`deploy.sh`, `publish.sh`, and the HTML structure. See [LICENSE](LICENSE).
+Everything that runs: `co2-info/assets/*.js`, `co2-info/assets/style.css`,
+`co2-info/build.py`, `ocean-earth/app/`, `ocean-earth/pipeline/`, `cer/cer.css`,
+`cer/cer.js`, `deploy.sh`, `publish.sh`, and the HTML structure. See [LICENSE](LICENSE).
 
 ## Text, charts and translations — CC BY 4.0
 

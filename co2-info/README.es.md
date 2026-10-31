@@ -63,8 +63,8 @@ que compilar para servirlo.
 │                        en/ se publica en la raíz, no en /en/
 ├── i18n/               un diccionario por idioma + las claves extraídas
 ├── build.py            genera las páginas traducidas desde el original italiano
-├── publish.sh          deploy.sh con destino y URL pública ya incorporados
-├── deploy.sh           publicación por rsync/ssh
+├── ../publish.sh        deploy.sh con destino y URL pública ya incorporados
+├── ../deploy.sh         publicación por rsync/ssh
 ├── 404.html  robots.txt
 └── assets/
     ├── style.css       tokens de tema claro/oscuro, maquetación, impresión
@@ -77,7 +77,7 @@ que compilar para servirlo.
 ```bash
 python3 -m http.server 8100     # luego abre http://localhost:8100
 ./build.py                      # regenera it/, en/, es/, fr/, zh/
-./publish.sh --apply            # publica
+../publish.sh --apply           # publica
 ```
 
 El detalle — de dónde sale cada número, cómo funciona la cadena de
