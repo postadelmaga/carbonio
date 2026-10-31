@@ -163,3 +163,22 @@ def test_preview_half_grid_ignores_land():
     h = preview.half_grid(a)
     assert h[0, 0] == 2.0
     assert np.isnan(h[1, 1]) and np.isnan(h[0, 1])
+
+
+def test_contiguous_blocks_never_span_gaps():
+    import frames
+    wanted = list(range(20))
+    blocks = frames.contiguous_blocks([2, 3, 4, 10, 18, 19], wanted, 2)
+    assert blocks == [[2, 3], [4], [10], [18, 19]]
+
+
+def test_bias_smooth_keeps_mask_and_wraps():
+    import bias
+    a = np.full((10, 12), np.nan)
+    a[4:7, :] = 1.0
+    a[5, 0] = 4.0                      # vicino al bordo: la media usa anche l'ultima colonna
+    s = bias.smooth(a, 3)
+    assert np.isnan(s[0, 0]) and np.isnan(s[8, 3])          # dove non c'e' dato resta vuoto
+    assert abs(s[5, 0] - (1 * 8 + 4) / 9) < 1e-12
+    assert abs(s[5, 11] - (1 * 8 + 4) / 9) < 1e-12           # la colonna 0 e' vicina della 11
+    assert abs(s[5, 5] - 1.0) < 1e-12

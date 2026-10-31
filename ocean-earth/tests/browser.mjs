@@ -71,6 +71,10 @@ async function open(w, h, mobile, theme) {
   await sleep(3000);
   const daily = await page.evaluate(() => ({ now: document.querySelector('#now').innerText, src: !document.querySelector('#src-row').hidden, st: document.querySelector('#status').innerText }));
   check('livello giornaliero', /\d{1,2} \w+ 20\d\d/.test(daily.now) && daily.src, JSON.stringify(daily));
+  // il pannello laterale parte chiuso: lo si apre come farebbe chi usa la pagina
+  check('pannello laterale chiuso all\'avvio', await page.evaluate(() => !document.body.classList.contains('side-open')));
+  await page.click('#side-btn');
+  await sleep(400);
   await page.click('input[name=source][value=ostia]');
   await sleep(2500);
   const ost = await page.evaluate(() => document.querySelector('#status').innerText);

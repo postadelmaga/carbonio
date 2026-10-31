@@ -17,6 +17,7 @@ export class DataStore {
     this.prevCache = new Map();
     this.maxPrev = mobile ? 24 : 64;
     this.saved = new Set();               // percorsi gia' nella cache del browser
+    this.failed = new Map();              // chiave → quando e' fallito
     this.onSaved = null;
   }
 
@@ -107,23 +108,39 @@ export class DataStore {
     });
   }
 
-  // un file decodificato, con cache LRU
+  // Un file decodificato, con cache LRU (l'unica: la pagina non tiene altre
+  // copie, cosi' la memoria resta entro maxCache + maxPrev fotogrammi).
+  // Ogni voce e' { p: Promise, v: valore quando arriva }: peek() dice in modo
+  // sincrono se un file e' pronto, per la riproduzione.
   get(path, kind) {
     const key = kind + ':' + path;
-    const prev = kind === 'psst' || kind === 'pcur';
-    const cache = prev ? this.prevCache : this.cache;
-    const max = prev ? this.maxPrev : this.maxCache;
-    if (cache.has(key)) {
-      const v = cache.get(key);
+    const cache = this.cacheFor(kind);
+    const hit = cache.get(key);
+    if (hit) {
       cache.delete(key);
-      cache.set(key, v);
-      return v;
+      cache.set(key, hit);
+      return hit.p;
     }
-    const p = this.decode(path, kind);
-    p.catch(() => cache.delete(key));
-    cache.set(key, p);
+    // un file che non arriva si riprova dopo un po', non a ogni fotogramma
+    if (this.peek(path, kind) === 'failed') return Promise.reject(new Error('non disponibile'));
+    const e = { p: this.decode(path, kind), v: null };
+    e.p.then((v) => { e.v = v; this.failed.delete(key); },
+      () => { cache.delete(key); this.failed.set(key, performance.now()); });
+    cache.set(key, e);
+    const max = cache === this.prevCache ? this.maxPrev : this.maxCache;
     while (cache.size > max) cache.delete(cache.keys().next().value);
-    return p;
+    return e.p;
+  }
+
+  cacheFor(kind) { return kind === 'psst' || kind === 'pcur' ? this.prevCache : this.cache; }
+
+  // il valore se e' gia' arrivato; 'failed' se il file manca da poco; altrimenti null
+  peek(path, kind) {
+    const key = kind + ':' + path;
+    const e = this.cacheFor(kind).get(key);
+    if (e) return e.v;
+    const f = this.failed.get(key);
+    return f && performance.now() - f < 30000 ? 'failed' : null;
   }
 
   tier(name) { return this.manifest.tiers[name]; }

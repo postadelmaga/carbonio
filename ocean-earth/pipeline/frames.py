@@ -148,8 +148,9 @@ def process(var, ds, i):
         if np.nanmean(sst) > 200:
             sst = sst - 273.15
         if 'mask' in ds:
+            # qui la maschera e' un elenco (1 mare, 2 terra, 3 lago, 4 ghiaccio), non bit
             m = np.nan_to_num(ds['mask'].isel(time=i).values, nan=2).astype(np.int64)
-            sst[(m & 22) != 0] = np.nan
+            sst[m != 1] = np.nan
         lat, lon = ds.latitude.values, ds.longitude.values
         if lat[0] < lat[-1]:
             sst = sst[::-1]
@@ -166,15 +167,27 @@ def process(var, ds, i):
 def save_regional_grid(name, lat, lon):
     """Bordi esterni e dimensioni della griglia regionale (per lo shader)."""
     p = DATA / 'index' / f'{name}-grid.json'
-    if p.exists():
-        return
     dlat = abs(float(lat[1] - lat[0]))
     dlon = abs(float(lon[1] - lon[0]))
     g = {'south': float(min(lat[0], lat[-1])) - dlat / 2, 'north': float(max(lat[0], lat[-1])) + dlat / 2,
          'west': float(lon[0]) - dlon / 2, 'east': float(lon[-1]) + dlon / 2,
          'nlat': int(lat.size), 'nlon': int(lon.size)}
     p.parent.mkdir(parents=True, exist_ok=True)
-    p.write_text(json.dumps(g))
+    if not p.exists() or json.loads(p.read_text()) != g:
+        p.write_text(json.dumps(g))
+
+
+def contiguous_blocks(missing, wanted, n):
+    """Blocchi di al massimo n istanti consecutivi in 'wanted': con due buchi
+    lontani (1995 e 2026) un blocco unico scaricherebbe trent'anni di campi."""
+    pos = {t: j for j, t in enumerate(wanted)}
+    blocks = []
+    for t in sorted(missing):
+        if blocks and len(blocks[-1]) < n and pos[t] == pos[blocks[-1][-1]] + 1:
+            blocks[-1].append(t)
+        else:
+            blocks.append([t])
+    return blocks
 
 
 def run(tier, var, start, end):
@@ -183,17 +196,26 @@ def run(tier, var, start, end):
     for ds_id, lo, hi in sources.plan(tier, var, start, end):
         wanted = steps(tier, lo, hi)
         missing = [t for t in wanted if not frame_path(tier, var, stamp(tier, t)).exists()]
-        # un fotogramma gia' fatto con un'altra sorgente resta, ma l'indice si allinea
+        # un fotogramma presente ma assente dall'indice (interruzione fra il
+        # salvataggio e l'indice) viene dalla prima fonte che copriva l'istante:
+        # la catena si sceglie sempre allo stesso modo, ma se nel frattempo una
+        # fonte nuova lo copre non si puo' sapere quale l'ha prodotto. In quel
+        # caso si rifa' (il file sbagliato si toglie e torna fra i mancanti).
         for t in wanted:
             s = stamp(tier, t)
             if frame_path(tier, var, s).exists() and s not in idx:
-                idx[s] = ds_id
+                if ds_id != sources.CHAINS[(tier, var)][-1]:
+                    frame_path(tier, var, s).unlink()
+                    missing.append(t)
+                    print(f'  {s}: fonte incerta, lo rifaccio: alza CACHE_FRAMES in manifest.py '
+                          f'(i browser hanno salvato la versione di prima)', flush=True)
+                else:
+                    idx[s] = ds_id
+        missing.sort()
         print(f'{tier}/{var}: {ds_id} {lo:%Y-%m-%d %H} → {hi:%Y-%m-%d %H}: '
               f'{len(wanted)} attesi, {len(missing)} da fare', flush=True)
         todo_total += len(missing)
-        n = CHUNK[(tier, var)]
-        for k in range(0, len(missing), n):
-            block = missing[k:k + n]
+        for block in contiguous_blocks(missing, wanted, CHUNK[(tier, var)]):
             b_lo = block[0]
             b_hi = block[-1]
             if tier == 'monthly':
@@ -210,6 +232,7 @@ def run(tier, var, start, end):
                         rgb = process(var, ds, i)
                         encode.save_png(rgb, frame_path(tier, var, s))
                         idx[s] = ds_id
+                        save_index(tier, var, idx)   # subito: file e fonte restano allineati
             finally:
                 nc.unlink(missing_ok=True)
             save_index(tier, var, idx)

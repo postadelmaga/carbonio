@@ -67,6 +67,22 @@ Rules that keep the data honest:
   centres. The anomaly always uses the model SST, consistent with its
   climatology; with OSTIA selected the anomaly falls back to the model and
   the interface says so.
+- **Operational data are measured with the GLORYS yardstick.** The newest
+  instants (last month, days from late September 2026, all hours) come from
+  the operational analysis (anfc), a different system: about 0.1 °C colder
+  than GLORYS12 globally (−0.07 to −0.15 °C depending on the month) and up
+  to ±0.5 °C regionally. Subtracting the GLORYS climatology from anfc would
+  put that model difference into the anomaly. `pipeline/bias.py` measures
+  anfc − GLORYS on the 51 months both exist (June 2022 → August 2026), per
+  calendar month, smoothed over ~5°; the page adds it to the baseline (and to
+  the 90th percentile) only for anfc frames and says so in the source line.
+  August 2023 is excluded: that anfc monthly mean is 0.6 °C colder than its
+  own July and September (a defective field; the published frame for that
+  month is GLORYS). Checked on a held-out year (`validate.py`, section 7):
+  for 2026-08 the mean anfc − GLORYS anomaly difference goes from −0.089 to
+  −0.019 °C and the local RMS from 0.41 to 0.35 °C. The ~0.35 °C left is the
+  difference of that single year (eddies, fronts) that no average removes:
+  it is the local uncertainty of recent anomalies.
 - **Hotspots are not marine heatwaves** in the Hobday et al. sense (daily
   data, 90th percentile of a daily climatology, ≥ 5 days): they are months
   above the monthly 90th percentile, and the layer is disabled outside the
@@ -201,8 +217,11 @@ cd .. && ./publish.sh && ./publish.sh --apply
 
 `update.sh` runs three download queues in parallel (temperature, currents,
 OSTIA), then `derived.py` (land, coasts, climatology, 90th percentile, time
-series tiles) and `manifest.py`. Frame files are written atomically, the index
-after each block, so an interrupted run resumes where it stopped. The daily
+series tiles), `bias.py` (anfc − GLORYS baseline shift), `preview.py` and
+`manifest.py`; if any download queue fails it stops before publishing derived
+files. Downloads go in blocks of consecutive missing instants only. Frame
+files are written atomically and the index after each frame, so an
+interrupted run resumes where it stopped. The daily
 and hourly windows are set with `DAILY_START`, `HOURLY_DAYS`, `OSTIA_DAYS`.
 
 Throughput: about 6–7 s per global 1/12° frame on a 4-core desktop on a
@@ -260,5 +279,13 @@ on the server removes the app entirely without touching the rest of the site.
   3 m/s are real tides in macrotidal bays (Gyeonggi Bay, King Sound, Ungava).
   Components beyond ±4.09 m/s are clipped by the encoding (380 of 239 million
   monthly cells).
+- Recent operational and near-real-time frames are written once. Mercator
+  re-runs recent days with a weekly hindcast and NRT currents are
+  reprocessed, so the last few days on the page can differ slightly from what
+  Copernicus serves a week later; frames are never rewritten in place (the
+  browser cache relies on it), so refreshing them would need a new
+  `CACHE_FRAMES`.
+- Hourly SST is the mean over [HH:00, HH+1:00) while hourly currents are
+  instantaneous at HH:00: the two layers are half an hour apart.
 - Particles need `EXT_color_buffer_float` (all desktop browsers, iOS ≥ 15);
   without it the page says so and arrows remain.

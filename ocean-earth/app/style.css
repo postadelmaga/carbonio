@@ -125,7 +125,10 @@ body.side-open .side { transform: none; }
 body.side-open .side-toggle { background: var(--accent); color: #fff; border-color: var(--accent); }
 .side h2 { font-size: 11px; text-transform: uppercase; letter-spacing: .1em; color: var(--ink-3); margin: 12px 0 6px; font-weight: 700; }
 .side section + section { border-top: 1px solid var(--rule); margin-top: 8px; }
-.side hr { border: 0; border-top: 1px dashed var(--rule); margin: 6px 0; }
+.side details.adv { border-top: 1px solid var(--rule); margin-top: 8px; padding-top: 4px; }
+.side details.adv summary { cursor: pointer; font-size: 11px; text-transform: uppercase; letter-spacing: .1em; color: var(--ink-3); font-weight: 700; padding: 8px 0 6px; }
+.loop-range { display: inline-flex; gap: 12px; }
+.loop-range[hidden] { display: none; }
 label.radio, label.chk { display: flex; align-items: center; gap: 7px; padding: 3px 0; cursor: pointer; }
 label.chk.small { font-size: 12px; padding: 0; }
 label.rng { display: grid; grid-template-columns: 78px 1fr; align-items: center; gap: 8px; padding: 3px 0; }

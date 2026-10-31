@@ -1,6 +1,6 @@
 # Ocean Earth: validazione dei dati
 
-Eseguita il 2026-10-30 21:36 UTC con `pipeline/validate.py`.
+Eseguita il 2026-10-31 07:12 UTC con `pipeline/validate.py`.
 
 ## 6. Continuita' temporale
 
@@ -43,7 +43,8 @@ Nel disegno la maschera di Natural Earth copre comunque la terra: queste celle n
 ## 7. Anomalie
 
 - media delle anomalie mensili 1993–2020, cella per cella: massimo |0.0035| °C → **OK**
-- anomalia media globale (60°S–60°N escluse le celle senza dato) di 2026-09: +0.641 °C
+- 2026-08, anomalia da anfc meno anomalia da GLORYS (stesso mese, la correzione stimata senza quell'anno, da 3 anni): senza correzione media -0.089 °C, scarto quadratico 0.410 °C; con la correzione media -0.019 °C, scarto 0.350 °C → **OK**
+- anomalia media globale (60°S–60°N escluse le celle senza dato) di 2026-09: +0.762 °C
 
 ## 1. Valori pubblicati contro gli originali Copernicus
 
@@ -179,6 +180,7 @@ Una media vicina a zero vuol dire che al cambio di fonte non c'e' un salto siste
 - ✅ verso Equatoriale del Sud
 - ✅ verso Somala (estate)
 - ✅ anomalia a media nulla
+- ✅ correzione anfc − GLORYS
 - ✅ punti monthly/sst
 - ✅ punti monthly/cur
 - ✅ punti daily/sst

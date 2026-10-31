@@ -40,6 +40,14 @@ def product_meta(product_id):
         return {}
 
 
+def bias_meta():
+    p = frames.DATA / 'bias' / 'stats.json'
+    if not p.exists():
+        return {'available': False}
+    st = json.loads(p.read_text())
+    return {'available': True, 'from': st['from'], 'to': st['to'], 'smooth_deg': st['smooth_deg']}
+
+
 # da alzare se si rigenerano fotogrammi gia' pubblicati (nuova codifica,
 # correzione): i browser buttano quelli salvati e li riscaricano
 CACHE_FRAMES = 1
@@ -87,11 +95,14 @@ def build():
             if files:
                 prev_bytes.setdefault(tier, {})[v] = round(sum(f.stat().st_size for f in files) / len(files))
     # versione dei file fissi (terra, coste, climatologia, percentili) per la
-    # cache del browser: cambia solo se cambia uno di quei file
+    # cache del browser: dal contenuto, perche' derived.py li riscrive a ogni
+    # aggiornamento anche quando sono identici
     h = hashlib.sha1()
-    for d in ['static', 'clim', 'p90']:
+    for d in ['static', 'clim', 'p90', 'bias']:
         for f in sorted((frames.DATA / d).glob('*')):
-            h.update(f'{f.name}:{f.stat().st_size}:{int(f.stat().st_mtime)}'.encode())
+            h.update(f.name.encode() + hashlib.sha1(f.read_bytes()).digest())
+    # i fotogrammi non cambiano mai; le anteprime dipendono anche dalla codifica
+    frames_v = f'{CACHE_FRAMES}-' + hashlib.sha1(json.dumps(preview.META, sort_keys=True).encode()).hexdigest()[:6]
 
     out = {
         'generated': dt.datetime.now(dt.timezone.utc).strftime('%Y-%m-%dT%H:%MZ'),
@@ -105,9 +116,12 @@ def build():
         # cache del browser (app/decode-worker.js): i fotogrammi non cambiano mai
         # una volta scritti (frames.py crea solo quelli mancanti), quindi restano
         # validi finche' non si alza 'frames'; i file fissi seguono 'static'
-        'cache': {'frames': CACHE_FRAMES, 'static': h.hexdigest()[:12]},
+        'cache': {'frames': frames_v, 'static': h.hexdigest()[:12]},
         'climatology': {'years': list(derived.CLIM_YEARS),
-                        'available': (frames.DATA / 'clim' / 'sst-01.png').exists()},
+                        'available': (frames.DATA / 'clim' / 'sst-01.png').exists(),
+                        # differenza anfc − GLORYS per mese (pipeline/bias.py): si somma
+                        # alla climatologia quando la temperatura viene da anfc
+                        'bias': bias_meta()},
         'series': {'tile': derived.TILE,
                    'available': (frames.DATA / 'series' / 'sst.json').exists()},
         'regional': {n: json.loads((frames.DATA / 'index' / f'{n}-grid.json').read_text())

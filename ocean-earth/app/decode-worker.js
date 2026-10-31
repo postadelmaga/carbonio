@@ -19,8 +19,8 @@ function toHalf(v) {
     return sign | ((m + 0x1000) >>> 13);
   }
   if (e >= 31) return sign | 0x7c00;
-  const h = sign | (e << 10) | ((m + 0x1000) >>> 13);
-  return h;
+  // somma, non OR: se l'arrotondamento della mantissa riporta, sale l'esponente
+  return sign | ((e << 10) + ((m + 0x1000) >>> 13));
 }
 const HALF_ONE = toHalf(1);
 
@@ -49,7 +49,7 @@ function netInfo(url, t0) {
 // climatologia) seguono la versione del manifest. Il resto passa dalla rete.
 let CACHES = null;
 const FRAME_RE = /\/data\/(p\/)?[mdh]\/[a-z]+\/[^/]+\.(png|webp)$/;
-const STATIC_RE = /\/data\/(static|clim|p90)\//;
+const STATIC_RE = /\/data\/(static|clim|p90|bias)\//;
 
 function cacheFor(url) {
   if (!CACHES) return null;

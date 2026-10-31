@@ -48,13 +48,14 @@ export class Globe {
     this.land = this.makeTex(1, 1, gl.R8, gl.RED, gl.UNSIGNED_BYTE, new Uint8Array([0]));
     this.luts = {};
     this.frameTex = new Map();          // chiave del fotogramma → texture (piccola LRU)
-    this.clim = this.blankArr; this.p90 = this.blankArr; this.hasClim = false;
+    this.pinned = new Set();
+    this.clim = this.blankArr; this.p90 = this.blankArr; this.bias = this.blankArr; this.hasClim = false;
     this.coast = null; this.region = null;
     this.state = {
       sstA: null, sstB: null, curA: null, curB: null, mix: 0,
       medA: null, medB: null, medBox: [0, 0, 1, 1],
       sstC: null, sstD: null, mixCmp: 0, compare: false, split: 0.5,
-      climSel: [0, 0, 0, 0], climSelCmp: [0, 0, 0, 0],
+      climSel: [0, 0, 0, 0], climSelCmp: [0, 0, 0, 0], biasW: 0, biasWCmp: 0,
       mode: 0, hotspot: false, opacity: 1,
       paletteSst: 'classic', rangeSst: [-2, 32], rangeAnom: [-3, 3], rangeSpeed: [0, 1.2],
       particles: true, particleCount: 8000, particleSpeed: 1, particleWidth: 1.6,
@@ -68,7 +69,7 @@ export class Globe {
     this.setPalette('speedField', 'speedField');
   }
 
-  makeTex(w, h, ifmt, fmt, type, data, filter) {
+  makeTex(w, h, ifmt, fmt, type, data, filter, clampS = false) {
     const gl = this.gl;
     const t = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, t);
@@ -77,7 +78,8 @@ export class Globe {
     const f = filter || gl.LINEAR;
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, f);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, f);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+    // la griglia globale si chiude in longitudine; una regionale (Mediterraneo) no
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, clampS ? gl.CLAMP_TO_EDGE : gl.REPEAT);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     return t;
   }
@@ -105,7 +107,9 @@ export class Globe {
   setColors(c) { Object.assign(this.colors, c); }
 
   // texture di un fotogramma decodificato (scalar → RG16F, vector → RGBA16F)
-  frameTexture(key, frame, kind) {
+  // regional: griglia che non fa il giro del globo; le chiavi in this.pinned
+  // (la data di confronto) non escono dalla cache finche' restano li'
+  frameTexture(key, frame, kind, regional = false) {
     if (!frame) return null;
     const gl = this.gl;
     let t = this.frameTex.get(key);
@@ -116,10 +120,11 @@ export class Globe {
     }
     t = kind === 'vector'
       ? this.makeTex(frame.w, frame.h, gl.RGBA16F, gl.RGBA, gl.HALF_FLOAT, frame.gpu)
-      : this.makeTex(frame.w, frame.h, gl.RG16F, gl.RG, gl.HALF_FLOAT, frame.gpu);
+      : this.makeTex(frame.w, frame.h, gl.RG16F, gl.RG, gl.HALF_FLOAT, frame.gpu, null, regional);
     this.frameTex.set(key, t);
-    while (this.frameTex.size > 12) {
-      const k = this.frameTex.keys().next().value;
+    for (const k of this.frameTex.keys()) {
+      if (this.frameTex.size <= 12) break;
+      if (this.pinned.has(k)) continue;
       gl.deleteTexture(this.frameTex.get(k));
       this.frameTex.delete(k);
     }
@@ -139,7 +144,7 @@ export class Globe {
     const all = new Uint16Array(w * h * 2 * 12);
     frames.forEach((f, k) => all.set(f.gpu, k * w * h * 2));
     const t = this.makeArray(w, h, 12, all);
-    if (which === 'clim') { this.clim = t; this.hasClim = true; } else this.p90 = t;
+    if (which === 'clim') { this.clim = t; this.hasClim = true; } else this[which] = t;
   }
 
   setCoast(lines) {
@@ -296,6 +301,9 @@ export class Globe {
     // texture del Mediterraneo: senza bordo che si ripete in longitudine
     const medA = st.medA || this.blank2, medB = st.medB || medA;
     this.bind(P, 'uMedA', 12, medA); this.bind(P, 'uMedB', 13, medB);
+    this.bind(P, 'uBias', 14, this.bias, gl.TEXTURE_2D_ARRAY);
+    gl.uniform1f(P.u.uBiasW, st.biasW);
+    gl.uniform1f(P.u.uBiasWCmp, st.biasWCmp);
     gl.uniform4fv(P.u.uMedBox, st.medBox);
     gl.uniform1i(P.u.uMedOn, st.medA ? 1 : 0);
     gl.uniform1f(P.u.uMix, st.mix);

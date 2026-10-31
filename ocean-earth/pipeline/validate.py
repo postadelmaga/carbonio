@@ -24,6 +24,7 @@ from PIL import Image
 HERE = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 import copernicusmarine as cm  # noqa: E402
+import bias  # noqa: E402
 import derived  # noqa: E402
 import encode  # noqa: E402
 import frames  # noqa: E402
@@ -358,12 +359,47 @@ def check_anomaly():
     log(f'- media delle anomalie mensili {derived.CLIM_YEARS[0]}–{derived.CLIM_YEARS[1]}, cella per cella: '
         f'massimo |{worst:.4f}| °C → **{"OK" if ok else "FALLITO"}**')
     summary['anomalia a media nulla'] = ok
+    check_bias(idx, clim)
     last = idx[-1]
     f = published('monthly', 'sst', last) - clim[int(last[5:7])]
+    if 'anfc' in frames.load_index('monthly', 'sst')[last]:
+        f = f - encode.decode_scalar(encode.load_png(DATA / 'bias' / f'sst-{last[5:7]}.png'))
     w = grid.area_weights()[:, None] * np.isfinite(f)
     log(f'- anomalia media globale (60°S–60°N escluse le celle senza dato) di {last}: '
         f'{np.nansum(np.where(np.abs(grid.LATS)[:, None] < 60, f * w, 0)) / np.sum(np.where(np.abs(grid.LATS)[:, None] < 60, w, 0)):+.3f} °C')
     log('')
+
+
+def check_bias(idx, clim):
+    """La correzione anfc − GLORYS (bias.py) su un mese che esiste in entrambi i
+    sistemi: le due anomalie dovrebbero coincidere. Per non giudicarla sui dati
+    con cui e' stata calcolata, la differenza si ricalcola senza quell'anno."""
+    if not (DATA / 'bias' / 'stats.json').exists():
+        log('- correzione anfc − GLORYS: non calcolata (pipeline/bias.py)')
+        return
+    excluded = set(json.loads((DATA / 'bias' / 'stats.json').read_text()).get('excluded', []))
+    common = sorted(f.stem for f in bias.CACHE.glob('*.png') if f.stem in idx and f.stem not in excluded)
+    if not common:
+        return
+    s = common[-1]
+    m = int(s[5:7])
+    others = [x for x in common if int(x[5:7]) == m and x != s]
+    diffs = [encode.decode_scalar(encode.load_png(bias.CACHE / f'{x}.png')) - published('monthly', 'sst', x) for x in others]
+    with np.errstate(all='ignore'):
+        b = bias.smooth(np.nanmean(np.stack(diffs), axis=0))
+    g = published('monthly', 'sst', s) - clim[m]
+    a = encode.decode_scalar(encode.load_png(bias.CACHE / f'{s}.png')) - clim[m]
+    w = grid.area_weights()[:, None] * np.ones((1, grid.NLON))
+    def stats(x):
+        ok = np.isfinite(x)
+        return (x[ok] * w[ok]).sum() / w[ok].sum(), np.sqrt((x[ok] ** 2 * w[ok]).sum() / w[ok].sum())
+    m0, r0 = stats(a - g)
+    m1, r1 = stats(a - np.nan_to_num(b) - g)
+    ok = abs(m1) < abs(m0) and r1 < r0
+    log(f'- {s}, anomalia da anfc meno anomalia da GLORYS (stesso mese, la correzione stimata senza '
+        f'quell\'anno, da {len(others)} anni): senza correzione media {m0:+.3f} °C, scarto quadratico {r0:.3f} °C; '
+        f'con la correzione media {m1:+.3f} °C, scarto {r1:.3f} °C → **{"OK" if ok else "FALLITO"}**')
+    summary['correzione anfc − GLORYS'] = ok
 
 
 def main():

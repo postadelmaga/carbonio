@@ -39,6 +39,8 @@ uniform sampler2D uCurA, uCurB;
 uniform sampler2D uSstC, uSstD;      // confronto: la seconda data
 uniform sampler2DArray uClim;        // 12 mesi di climatologia
 uniform sampler2DArray uP90;         // 12 mesi di 90° percentile
+uniform sampler2DArray uBias;        // 12 mesi di differenza anfc − GLORYS (pipeline/bias.py)
+uniform float uBiasW, uBiasWCmp;     // quanto del dato mostrato viene da anfc (0…1)
 uniform sampler2D uLand;
 uniform sampler2D uMedA, uMedB;      // Mediterraneo 1/16° (griglia sua)
 uniform vec4 uMedBox;                // ovest, sud, est, nord (gradi, bordi esterni)
@@ -58,15 +60,16 @@ vec2 sampleSst(sampler2D a, sampler2D b, vec2 uv, float m) {
   vec2 x = mix(texture(a, uv).rg, texture(b, uv).rg, m);
   return vec2(x.g > 0.5 ? x.r / x.g : 0.0, x.g);
 }
-float clim(vec2 uv, vec4 sel) {
-  vec2 a = texture(uClim, vec3(uv, sel.x)).rg;
-  vec2 b = texture(uClim, vec3(uv, sel.y)).rg;
-  vec2 x = mix(a, b, sel.z);
-  return x.g > 0.5 ? x.r / x.g : 1e9;
+// Climatologia e 90° percentile sono di GLORYS12. Per un dato anfc la base
+// si sposta della differenza media fra i due sistemi in quel mese, cosi'
+// l'anomalia non contiene la differenza fra i modelli.
+float monthly(sampler2DArray t, vec2 uv, vec4 sel, float missing) {
+  vec2 x = mix(texture(t, vec3(uv, sel.x)).rg, texture(t, vec3(uv, sel.y)).rg, sel.z);
+  return x.g > 0.5 ? x.r / x.g : missing;
 }
-float p90(vec2 uv, vec4 sel) {
-  vec2 x = mix(texture(uP90, vec3(uv, sel.x)).rg, texture(uP90, vec3(uv, sel.y)).rg, sel.z);
-  return x.g > 0.5 ? x.r / x.g : 1e9;
+float base(sampler2DArray t, vec2 uv, vec4 sel, float w) {
+  float b = monthly(t, uv, sel, 1e9);
+  return b < 1e8 && w > 0.0 ? b + w * monthly(uBias, uv, sel, 0.0) : b;
 }
 
 void main() {
@@ -117,14 +120,14 @@ void main() {
         float t = (s.x - uRangeSst.x) / (uRangeSst.y - uRangeSst.x);
         col = mix(uNoData, texture(uLutSst, vec2(clamp(t, 0.0, 1.0), 0.5)).rgb, uOpacity);
       } else if (uMode == 1) {
-        float cl = clim(uv, sel);
+        float cl = base(uClim, uv, sel, cmpSide ? uBiasWCmp : uBiasW);
         if (uHasClim && cl < 1e8) {
           float t = (s.x - cl - uRangeAnom.x) / (uRangeAnom.y - uRangeAnom.x);
           col = mix(uNoData, texture(uLutAnom, vec2(clamp(t, 0.0, 1.0), 0.5)).rgb, uOpacity);
         }
       }
       if (uHotspot && uHasClim) {
-        float th = p90(uv, sel);
+        float th = base(uP90, uv, sel, cmpSide ? uBiasWCmp : uBiasW);
         if (th < 1e8 && s.x > th) {
           // tratteggio diagonale sopra le celle oltre il 90° percentile
           float h = fract((gl_FragCoord.x + gl_FragCoord.y) / 7.0);

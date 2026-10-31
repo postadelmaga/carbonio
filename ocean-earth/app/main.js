@@ -24,8 +24,7 @@ const ui = {
 const camera = new Camera();
 const store = new DataStore();
 let globe, timeline, manifest;
-const resolved = new Map();     // chiave → fotogramma decodificato
-let climFrames = null, p90Frames = null;
+let climFrames = null, biasFrames = null;
 
 // ── avvio ──────────────────────────────────────────────────────────────────
 async function start() {
@@ -39,7 +38,6 @@ async function start() {
   }
   if (!globe.floatTargets) note(t('particles_fail'));
   readTheme();
-  if (matchMedia('(min-width: 1100px)').matches) document.body.classList.add('side-open');
   // l'altezza vera della barra del tempo (cambia con la larghezza): i pannelli
   // e la legenda si appoggiano sopra
   new ResizeObserver(([e]) => document.documentElement.style.setProperty('--time-h', Math.ceil(e.target.getBoundingClientRect().height) + 'px')).observe($('.time'));
@@ -94,28 +92,31 @@ async function loadStatic() {
   store.decode('static/coast.json', 'json').then((r) => globe.setCoast(r.json)).catch(() => {});
 }
 
-// La climatologia (12 file, 5 MB) serve all'anomalia e al pannello del punto:
+// Campi mensili (12 file ciascuno): la climatologia GLORYS 1993–2020, la
+// differenza anfc − GLORYS che sposta la base per i dati operativi
+// (pipeline/bias.py) e il 90° percentile per gli hotspot. La climatologia
 // parte dopo il primo fotogramma, per non rallentare l'apertura, o subito se
-// la si chiede prima.
-let climLoading = null;
-function loadClim() {
-  if (climLoading || !manifest.climatology.available) return climLoading;
+// la si chiede prima; il percentile solo quando si accendono gli hotspot.
+const monthlyFields = {};
+function loadMonthly(kind) {
+  const avail = kind === 'bias' ? manifest.climatology.bias?.available : manifest.climatology.available;
+  if (monthlyFields[kind] || !avail) return monthlyFields[kind];
   const months = [...Array(12).keys()].map((m) => String(m + 1).padStart(2, '0'));
-  climLoading = Promise.all(months.map((m) => store.decode(`clim/sst-${m}.png`, 'scalar')))
-    .then((f) => { climFrames = f; globe.setMonthly('clim', f); refreshPoint(); loadSeries(); })
-    .catch(() => { climLoading = null; });  // senza climatologia l'anomalia resta spenta
-  return climLoading;
+  monthlyFields[kind] = Promise.all(months.map((m) => store.decode(`${kind}/sst-${m}.png`, 'scalar')))
+    .then((f) => {
+      globe.setMonthly(kind, f);
+      if (kind === 'clim') climFrames = f; else if (kind === 'bias') biasFrames = f;
+      if (kind !== 'p90') { refreshPoint(); loadSeries(); }
+    })
+    .catch(() => { monthlyFields[kind] = null; });   // senza, l'anomalia resta spenta
+  return monthlyFields[kind];
 }
+function loadClim() { loadMonthly('bias'); return loadMonthly('clim'); }
 
-// il 90° percentile serve solo agli hotspot: arriva quando li si accende
-let p90Loading = null;
-function loadP90() {
-  if (p90Loading || !manifest.climatology.available) return p90Loading;
-  const months = [...Array(12).keys()].map((m) => String(m + 1).padStart(2, '0'));
-  p90Loading = Promise.all(months.map((m) => store.decode(`p90/sst-${m}.png`, 'scalar')))
-    .then((f) => { p90Frames = f; globe.setMonthly('p90', f); })
-    .catch(() => { p90Loading = null; });
-  return p90Loading;
+// quanto della temperatura mostrata viene dall'analisi operativa (anfc)
+function anfcShare(frameA, frameB, sv, mix) {
+  const is = (f) => (store.source(f && f[sv])?.id || '').includes('anfc') ? 1 : 0;
+  return (1 - mix) * is(frameA) + mix * is(frameB);
 }
 
 // colori del tema (lo sfondo segue il tema chiaro/scuro del sito)
@@ -148,30 +149,39 @@ function keyFor(frame, v, prev = previewMode()) {
   return `${prev && v !== 'med' ? 'p:' : ''}${timeline.tierName}/${v}/${frame.t}`;
 }
 
-function request(frame, v, prev = previewMode()) {
-  if (!frame || frame[v] == null) return null;
-  const usePrev = prev && v !== 'med';
-  const key = keyFor(frame, v, prev);
-  if (resolved.has(key)) return Promise.resolve(resolved.get(key));
-  const path = usePrev ? store.previewPath(timeline.tierName, v, frame.t) : store.framePath(timeline.tierName, v, frame.t);
-  const kind = usePrev ? (v === 'cur' ? 'pcur' : 'psst') : (v === 'cur' ? 'vector' : 'scalar');
-  return store.get(path, kind).then((f) => {
-    resolved.set(key, f);
-    while (resolved.size > store.maxCache + store.maxPrev + 4) resolved.delete(resolved.keys().next().value);
-    return f;
-  });
+// percorso e tipo di decodifica di un file (anteprima durante il play)
+function fileOf(frame, v, prev) {
+  const tier = timeline.tierName;
+  if (prev && v !== 'med') return [store.previewPath(tier, v, frame.t), v === 'cur' ? 'pcur' : 'psst'];
+  return [store.framePath(tier, v, frame.t), v === 'cur' ? 'vector' : 'scalar'];
 }
 
+function request(frame, v, prev = previewMode()) {
+  if (!frame || frame[v] == null) return null;
+  return store.get(...fileOf(frame, v, prev));
+}
+
+// le variabili da mostrare per un istante
+function needed(f) {
+  const need = [sstVar(f), 'cur'];
+  if (medOn()) need.push('med');
+  return need.filter((v) => f[v] != null);
+}
+
+function medOn() {
+  return ui.med && timeline.tierName === 'daily' && !!manifest.regional?.med;
+}
+
+// pronto se ogni file e' arrivato; un file che manca non blocca la riproduzione
 function isReady(i) {
   const f = timeline.frames[Math.max(0, Math.min(timeline.frames.length - 1, i))];
   if (!f) return true;
-  const need = [sstVar(f), 'cur'];
-  if (ui.med && timeline.tierName === 'daily') need.push('med');
   let ok = true;
-  for (const v of need) {
-    if (f[v] == null || resolved.has(keyFor(f, v))) continue;
+  for (const v of needed(f)) {
+    const file = fileOf(f, v, previewMode());
+    if (store.peek(...file)) continue;
     ok = false;
-    request(f, v);
+    store.get(...file).catch(() => {});
   }
   return ok;
 }
@@ -180,28 +190,30 @@ function isReady(i) {
 function aheadFrames() {
   if (!timeline.playing) return 1;
   const room = previewMode() ? store.maxPrev : store.maxCache;
-  return Math.max(4, Math.min(Math.floor(room / 3) - 1, Math.ceil(timeline.fps * 3)));
+  return Math.max(2, Math.min(Math.floor(room / (medOn() ? 3 : 2)) - 2, Math.ceil(timeline.fps * 3)));
+}
+
+// l'istante k passi dopo quello mostrato, dentro l'intervallo che si ripete
+function aheadIndex(k) {
+  const [lo, hi] = playRange();
+  let i = timeline.index + k;
+  if (i > hi) i = lo + ((i - hi - 1) % (hi - lo + 1));
+  return i;
 }
 
 function prefetch() {
   const n = aheadFrames();
-  const hi = timeline.loop ? timeline.loop[1] : timeline.frames.length - 1;
-  const lo = timeline.loop ? timeline.loop[0] : 0;
-  for (let k = 0; k <= n; k++) {
-    let i = timeline.index + k;
-    if (i > hi) i = lo + (i - hi - 1);          // in coda all'intervallo si riparte dall'inizio
-    isReady(i);
-  }
+  for (let k = 0; k <= n; k++) isReady(aheadIndex(k));
 }
 
 // Isteresi: se la riproduzione ha dovuto aspettare, riparte solo quando un
-// secondo e mezzo di fotogrammi e' gia' arrivato, invece di fermarsi a ogni
-// fotogramma con una rete lenta.
+// secondo e mezzo di fotogrammi e' arrivato (non piu' di quanto stia in
+// cache), invece di fermarsi a ogni fotogramma con una rete lenta.
 function readyForPlayback(i) {
   if (!timeline.waiting) return isReady(i);
-  const n = Math.max(2, Math.ceil(timeline.fps * 1.5));
+  const n = Math.min(Math.max(2, Math.ceil(timeline.fps * 1.5)), aheadFrames());
   let ok = true;
-  for (let k = 0; k < n && i + k < timeline.frames.length; k++) ok = isReady(i + k) && ok;
+  for (let k = 0; k < n; k++) ok = isReady(aheadIndex(i - timeline.index + k)) && ok;
   return ok;
 }
 
@@ -210,40 +222,51 @@ async function applyFrames() {
   const token = ++applyToken;
   const A = timeline.frameA, B = timeline.frameB;
   const svA = sstVar(A), svB = sstVar(B);
-  const [sA, sB, cA, cB] = await Promise.all([request(A, svA), request(B, svB), request(A, 'cur'), request(B, 'cur')].map((p) => p ? p.catch(() => null) : null));
+  const med = medOn();
+  const got = (p) => (p ? p.catch(() => null) : null);
+  // tutti i file prima di toccare il globo: temperatura, correnti e
+  // Mediterraneo cambiano insieme, con l'interpolazione e la climatologia
+  const [sA, sB, cA, cB, mA, mB] = await Promise.all([
+    request(A, svA), request(B, svB), request(A, 'cur'), request(B, 'cur'),
+    med ? request(A, 'med') : null, med ? request(B, 'med') : null,
+  ].map(got));
   if (token !== applyToken) return;
   const st = globe.state;
   st.sstA = globe.frameTexture(keyFor(A, svA), sA, 'scalar');
   st.sstB = globe.frameTexture(keyFor(B, svB), sB, 'scalar') || st.sstA;
   st.curA = globe.frameTexture(keyFor(A, 'cur'), cA, 'vector');
   st.curB = globe.frameTexture(keyFor(B, 'cur'), cB, 'vector') || st.curA;
-  // Mediterraneo ad alta risoluzione, solo col passo giornaliero
-  const medOn = ui.med && timeline.tierName === 'daily' && manifest.regional && manifest.regional.med;
-  const [mA, mB] = medOn ? await Promise.all([request(A, 'med'), request(B, 'med')].map((p) => p ? p.catch(() => null) : null)) : [null, null];
-  if (token !== applyToken) return;
-  st.medA = globe.frameTexture(keyFor(A, 'med'), mA, 'scalar');
-  st.medB = globe.frameTexture(keyFor(B, 'med'), mB, 'scalar') || st.medA;
-  if (medOn) { const g = manifest.regional.med; st.medBox = [g.west, g.south, g.east, g.north]; }
-  current = { A, B, sA, sB, cA, cB, svA, svB, mA, mB, preview: previewMode() };
+  st.medA = globe.frameTexture(keyFor(A, 'med'), mA, 'scalar', true);
+  st.medB = globe.frameTexture(keyFor(B, 'med'), mB, 'scalar', true) || st.medA;
+  if (med) { const g = manifest.regional.med; st.medBox = [g.west, g.south, g.east, g.north]; }
+  current = { A, B, sA, sB, cA, cB, svA, svB, mA, mB, preview: previewMode(), missing: !sA && A[svA] != null };
   syncShown();
   syncTimeUI(false);
-  if (!climLoading) loadClim();
+  loadClim();
   updateStatus();
   refreshPoint();
 }
 let current = null;
 
+// La data di confronto (meta' destra): sempre dati esatti, mai anteprime;
+// l'ultima richiesta vince anche se le risposte arrivano in disordine.
+let compareToken = 0;
 async function applyCompare() {
-  if (!ui.compare) { globe.state.compare = false; return; }
-  const i = ui.compareIndex ?? 0;
-  const C = timeline.frames[i];
+  const st = globe.state;
+  const token = ++compareToken;
+  if (!ui.compare) { st.compare = false; globe.pinned.clear(); return; }
+  const C = timeline.frames[ui.compareIndex ?? 0];
   const sv = sstVar(C);
-  const f = await request(C, sv).catch(() => null);
-  globe.state.sstC = globe.frameTexture(keyFor(C, sv), f, 'scalar');
-  globe.state.sstD = globe.state.sstC;
-  globe.state.mixCmp = 0;
-  globe.state.climSelCmp = climSelection(C.t);
-  globe.state.compare = true;
+  const f = await request(C, sv, false)?.catch(() => null);
+  if (token !== compareToken) return;
+  const key = keyFor(C, sv, false);
+  globe.pinned.clear();
+  globe.pinned.add(key);
+  st.sstC = st.sstD = globe.frameTexture(key, f, 'scalar');
+  st.mixCmp = 0;
+  st.climSelCmp = climSelection(C.t);
+  st.biasWCmp = anfcShare(C, C, sv, 0);
+  st.compare = true;
   $('#cmp-label').textContent = `${fmtStamp(C.t)} · ${t('cmp_sst_only')}`;
 }
 
@@ -263,6 +286,7 @@ function syncShown() {
     st.mix = 0;
   }
   st.climSel = mixClim(climSelection(current.A.t), climSelection(current.B.t), st.mix);
+  st.biasW = anfcShare(current.A, current.B, current.svA, st.mix);
 }
 
 // il globo mostra ancora altri istanti (si sta caricando quello scelto)
@@ -284,11 +308,13 @@ function onTime(why) {
   if (why === 'tier' || why === 'loop' || why === 'source') drawSaved();
   if (why === 'tier' || why === 'loop') syncTimeUI(true);
   else syncTimeUI(false);
+  // la meta' di confronto segue fonte e modalita' (OSTIA non entra nell'anomalia)
+  if (ui.compare && why === 'source') applyCompare();
   if (why === 'tier') {
     if (ui.compare) { ui.compareIndex = Math.max(0, timeline.frames.length - 1); buildCompareUI(); applyCompare(); }
     $('#src-row').hidden = timeline.tierName !== 'daily';
     $('#hotspot').disabled = timeline.tierName !== 'monthly';
-    if (timeline.tierName !== 'monthly') { globe.state.hotspot = false; $('#hotspot').checked = false; }
+    if (timeline.tierName !== 'monthly') { globe.state.hotspot = false; $('#hotspot').checked = false; drawLegend(); }
   }
   if (pointChart) pointChart.setMarker(timeline.year);
   if (regionChart) regionChart.setMarker(timeline.year);
@@ -391,7 +417,13 @@ function bindInput(canvas) {
   });
   const up = (ev) => {
     pointers.delete(ev.pointerId);
-    if (pointers.size < 2) pinch = null;
+    if (pinch) {
+      // finito il pizzico, il dito rimasto riprende a ruotare (senza contare come clic)
+      pinch = null;
+      const [p] = pointers.values();
+      down = p ? { x: p.x, y: p.y, moved: true, region: null } : null;
+      return;
+    }
     if (!down) return;
     if (down.region) {
       const q = camera.pick(...local(ev));
@@ -421,7 +453,8 @@ function bindInput(canvas) {
     if (q) flyTo(q[0], q[1], 1 + (camera.dist - 1) * 0.4);
   });
   window.addEventListener('keydown', (ev) => {
-    if (ev.target.closest('input, select, textarea')) return;
+    // su un pulsante lo spazio lo preme gia': gestirlo anche qui lo annullerebbe
+    if (ev.target.closest('input, select, textarea, summary') || (ev.key === ' ' && ev.target.closest('button'))) return;
     const k = degPerPixel() * 40;
     if (ev.key === 'ArrowLeft') camera.lon -= k;
     else if (ev.key === 'ArrowRight') camera.lon += k;
@@ -466,6 +499,7 @@ function selectPoint(lat, lon) {
     ui.pointB = { lat, lon };
     ui.picking = null;
     $('#pick-b').classList.remove('on');
+    $('#pick-b').textContent = t('remove');
   } else {
     ui.point = { lat, lon };
   }
@@ -490,10 +524,25 @@ function valueAt(frameA, frameB, i, kind) {
   return a;
 }
 
-function climAt(i, sel, frames) {
-  if (!frames) return NaN;
+function monthlyAt(frames, i, sel) {
   const a = store.scalarValue(frames[sel[0]].codes, i), b = store.scalarValue(frames[sel[1]].codes, i);
   return a + (b - a) * sel[2];
+}
+
+// la base dell'anomalia in una cella: climatologia GLORYS, spostata della
+// differenza anfc − GLORYS per la parte di dato che viene da anfc (w)
+function baseAt(i, sel, w) {
+  if (!climFrames) return NaN;
+  const b = w > 0 && biasFrames ? monthlyAt(biasFrames, i, sel) : 0;
+  return monthlyAt(climFrames, i, sel) + w * (Number.isFinite(b) ? b : 0);
+}
+
+// istanti mensili della serie storica che vengono da anfc
+let anfcMonths = null;
+function monthlyBase(stamp, i) {
+  if (!anfcMonths) anfcMonths = new Set(manifest.tiers.monthly.frames.filter((f) => anfcShare(f, f, 'sst', 0)).map((f) => f.t));
+  const m = +stamp.slice(5, 7) - 1;
+  return baseAt(i, [m, m, 0, 0], anfcMonths.has(stamp) ? 1 : 0);
 }
 
 const COMPASS = { it: ['N', 'NE', 'E', 'SE', 'S', 'SO', 'O', 'NO'], en: ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'] };
@@ -510,11 +559,13 @@ function pointValues(p) {
     const v = valueAt(current.mA, current.mB, r * g.nlon + cc, 'scalar');
     if (Number.isFinite(v)) { sst = v; med = true; }
   }
-  const cl = climAt(c.i, globe.state.climSel, climFrames);
+  const cl = baseAt(c.i, globe.state.climSel, globe.state.biasW);
   const [u, v] = valueAt(current.cA, current.cB, c.i, 'vector');
   const speed = Math.hypot(u, v);
   const dirDeg = (Math.atan2(u, v) / DEG + 360) % 360;         // verso cui va, da nord in senso orario
-  return { c, sst, anom: (med ? valueAt(current.sA, current.sB, c.i, 'scalar') : sst) - cl, u, v, speed, dirDeg, med };
+  // l'anomalia e' sempre sul modello, come la climatologia: con OSTIA non c'e'
+  const model = current.svA === 'sst' ? valueAt(current.sA, current.sB, c.i, 'scalar') : NaN;
+  return { c, sst, anom: model - cl, u, v, speed, dirDeg, med };
 }
 
 function fmtLat(lat) { return `${fmtNum(Math.abs(lat), 2)}° ${lat >= 0 ? 'N' : 'S'}`; }
@@ -532,7 +583,7 @@ function refreshPoint() {
     const dir = COMPASS[LANG][Math.round(v.dirDeg / 45) % 8];
     rows.push(`<dl class="vals">
       <dt>${t('temp')}</dt><dd>${Number.isFinite(v.sst) ? `<b>${fmtNum(v.sst, 2)} °C</b>` : '—'}${v.med ? ` <span class="muted">· ${store.source(current.A.med)?.name}, 1/16°</span>` : ''}</dd>
-      <dt>${t('anom')}</dt><dd>${Number.isFinite(v.anom) ? `<b class="${v.anom >= 0 ? 'warm' : 'cold'}">${v.anom >= 0 ? '+' : ''}${fmtNum(v.anom, 2)} °C</b> <span class="muted">${t('clim_base')} ${manifest.climatology.years.join('–')}</span>` : '—'}</dd>
+      <dt>${t('anom')}</dt><dd>${Number.isFinite(v.anom) ? `<b class="${v.anom >= 0 ? 'warm' : 'cold'}">${v.anom >= 0 ? '+' : ''}${fmtNum(v.anom, 2)} °C</b> <span class="muted">${t('clim_base')} ${manifest.climatology.years.join('–')}</span>` : current.svA === 'ostia' ? `— <span class="muted">${t('anom_model_only')}</span>` : '—'}</dd>
       <dt>${t('cur_speed')}</dt><dd>${Number.isFinite(v.speed) ? `<b>${fmtNum(v.speed, 3)} m/s</b> · ${t('towards')} ${dir} (${Math.round(v.dirDeg)}°) <span class="muted">u ${fmtNum(v.u, 3)} · v ${fmtNum(v.v, 3)}</span>` : '—'}</dd>
     </dl>`);
   };
@@ -588,7 +639,7 @@ async function loadSeries() {
     let y = s.values;
     if (showAnomSeries && climFrames) {
       const c = store.cell(pts[k].lat, pts[k].lon);
-      y = y.map((v, i) => v - store.scalarValue(climFrames[+s.stamps[i].slice(5, 7) - 1].codes, c.i));
+      y = y.map((v, i) => v - monthlyBase(s.stamps[i], c.i));
     }
     series.push({ label: pts.length > 1 ? (k ? 'B' : 'A') : (showAnomSeries ? t('anom') : t('temp')), color: colors[k], x, y });
   });
@@ -611,14 +662,25 @@ function setRegion(a, b, final) {
   if (final) regionStats();
 }
 
+let regionToken = 0;
 async function regionStats() {
+  const token = ++regionToken;
+  try {
+    await regionStatsInner(token);
+  } catch (err) {
+    if (token === regionToken) $('#reg-values').textContent = t('frame_missing');
+  }
+}
+
+async function regionStatsInner(token) {
   const [s, w, n, e] = ui.region;
   const panel = $('#region');
   panel.hidden = false;
   $('#reg-box').textContent = `${fmtLat(s)} – ${fmtLat(n)}, ${fmtLon(wrapLon(w))} – ${fmtLon(wrapLon(e))}`;
   $('#reg-values').textContent = t('loading');
+  await loadClim();                       // l'anomalia della regione ne ha bisogno
   const g = manifest.grid;
-  const meta = await fetch(store.url('series/sst.json')).then((r) => r.json());
+  const meta = await fetch(store.url('series/sst.json')).then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); });
   const T = meta.tile, nm = meta.stamps.length;
   const r0 = Math.floor((90 - n) / g.step), r1 = Math.floor((90 - s) / g.step);
   const c0 = Math.floor((w + 180) / g.step), c1 = Math.floor((e + 180) / g.step);
@@ -629,7 +691,6 @@ async function regionStats() {
   for (let tr = Math.floor(r0 / T); tr <= Math.floor(r1 / T); tr++) {
     for (let tc = Math.floor(c0 / T); tc <= Math.floor(c1 / T); tc++) tiles.push([tr, tc]);
   }
-  const months = meta.stamps.map((st) => +st.slice(5, 7) - 1);
   await Promise.all(tiles.map(async ([tr, tcRaw]) => {
     const tc = ((tcRaw % (g.nlon / T)) + g.nlon / T) % (g.nlon / T);
     let tile;
@@ -651,7 +712,7 @@ async function regionStats() {
           sum[k] += v * wt; wsum[k] += wt;
           if (v > max[k]) max[k] = v;
           if (climFrames) {
-            const cl = store.scalarValue(climFrames[months[k]].codes, gi);
+            const cl = monthlyBase(meta.stamps[k], gi);
             if (Number.isFinite(cl)) { asum[k] += (v - cl) * wt; awsum[k] += wt; }
           }
         }
@@ -659,6 +720,7 @@ async function regionStats() {
       }
     }
   }));
+  if (token !== regionToken) return;       // nel frattempo si e' scelta un'altra regione
   const x = new Float64Array(meta.stamps.map(stampToYear));
   const mean = Float32Array.from(sum, (v, k) => (wsum[k] ? v / wsum[k] : NaN));
   const mx = Float32Array.from(max, (v) => (Number.isFinite(v) ? v : NaN));
@@ -818,7 +880,7 @@ function syncTimeUI(full) {
     $('#tier').value = timeline.tierName;
     slider.max = n - 1;
     const years = [...new Set(timeline.frames.map((f) => f.t.slice(0, 4)))];
-    for (const id of ['#year', '#loop-from', '#loop-to']) {
+    for (const id of ['#loop-from', '#loop-to']) {
       const sel = $(id);
       sel.replaceChildren(...years.map((y) => { const o = document.createElement('option'); o.value = o.textContent = y; return o; }));
     }
@@ -832,6 +894,7 @@ function syncTimeUI(full) {
     di.max = conv(timeline.frames[n - 1].t);
     di.step = tier === 'hourly' ? 3600 : 1;
     $('#loop-chk').checked = !!timeline.loop;
+    $('#loop-range').hidden = !timeline.loop;
     const track = $('#loop-track');
     if (timeline.loop) {
       track.hidden = false;
@@ -847,7 +910,6 @@ function syncTimeUI(full) {
   $('#now').innerHTML = timeline.interpolated
     ? `${fmtStamp(A.t)} <span class="interp" title="${t('interpolated')}">→ ${fmtStamp(timeline.frameB.t)}</span>`
     : fmtStamp(A.t);
-  $('#year').value = A.t.slice(0, 4);
   const di = $('#date');
   if (document.activeElement !== di) di.value = timeline.tierName === 'hourly' ? A.t.slice(0, 13) + ':00' : A.t;
   $('#play').classList.toggle('on', timeline.playing);
@@ -860,6 +922,8 @@ function updateStatus() {
   const sS = store.source(current.A[current.svA]);
   const sC = store.source(current.A.cur);
   const notes = [];
+  if (current.missing) notes.push(t('frame_missing'));
+  if ((ui.mode === 'anom' || globe.state.hotspot) && globe.state.biasW > 0) notes.push(t('bias_note'));
   if (timeline.tierName === 'daily' && ui.source === 'ostia') {
     if (ui.mode === 'anom') notes.push(t('anom_uses_model'));
     else if (current.svA !== 'ostia') notes.push(t('ostia_missing'));
@@ -892,10 +956,6 @@ function bindControls() {
   $('#first').addEventListener('click', () => { timeline.pause(); timeline.seek(timeline.loop ? timeline.loop[0] : 0); });
   $('#last').addEventListener('click', () => { timeline.pause(); timeline.seek(timeline.loop ? timeline.loop[1] : timeline.frames.length - 1); });
   $('#fps').addEventListener('change', (e) => { timeline.fps = +e.target.value; });
-  $('#year').addEventListener('change', (e) => {
-    const i = timeline.findStamp(e.target.value);
-    if (i >= 0) { timeline.pause(); timeline.seek(i); }
-  });
   $('#date').addEventListener('change', (e) => {
     const v = e.target.value;
     if (!v) return;
@@ -923,23 +983,11 @@ function bindControls() {
   });
 
   // livelli
-  $$('input[name=mode]').forEach((r) => r.addEventListener('change', () => {
-    ui.mode = r.value;
-    st.mode = { sst: 0, anom: 1, speed: 2, none: 3 }[ui.mode];
-    if (ui.mode === 'anom' && !globe.hasClim) { note(t('loading')); loadClim(); }
-    syncModeButtons();
-    drawLegend();
-    onTime('source');
-  }));
-  $$('.quick-mode button').forEach((b) => b.addEventListener('click', () => {
-    const r = document.querySelector(`input[name=mode][value=${b.dataset.mode}]`);
-    r.checked = true;
-    r.dispatchEvent(new Event('change'));
-  }));
+  $$('.quick-mode button').forEach((b) => b.addEventListener('click', () => setMode(b.dataset.mode)));
   $('#particles').addEventListener('change', (e) => { st.particles = e.target.checked; drawLegend(); });
   $('#arrows').addEventListener('change', (e) => { st.arrows = e.target.checked; drawLegend(); });
   $('#coast').addEventListener('change', (e) => { st.coast = e.target.checked; });
-  $('#hotspot').addEventListener('change', (e) => { st.hotspot = e.target.checked; if (st.hotspot) loadP90(); drawLegend(); });
+  $('#hotspot').addEventListener('change', (e) => { st.hotspot = e.target.checked; if (st.hotspot) loadMonthly('p90'); drawLegend(); });
   $$('input[name=source]').forEach((r) => r.addEventListener('change', () => { ui.source = r.value; onTime('source'); }));
   $('#med-hi').addEventListener('change', (e) => { ui.med = e.target.checked; onTime('source'); });
   $('#p-count').addEventListener('change', (e) => { st.particleCount = +e.target.value; globe.resetParticles(); });
@@ -984,14 +1032,20 @@ function bindControls() {
   bindSplit();
 
   // pannello del punto
-  $('#info-close').addEventListener('click', () => { $('#info').hidden = true; ui.point = ui.pointB = null; });
+  $('#info-close').addEventListener('click', () => {
+    $('#info').hidden = true;
+    ui.point = ui.pointB = null;
+    ui.picking = null;
+    $('#pick-b').classList.remove('on');
+    $('#pick-b').textContent = t('compare_point');
+  });
   $('#pick-b').addEventListener('click', () => {
     if (ui.pointB) { ui.pointB = null; $('#pick-b').textContent = t('compare_point'); refreshPoint(); loadSeries(); return; }
     ui.picking = 'second';
     $('#pick-b').classList.add('on');
     note(t('pick_second'));
   });
-  $('#pt-anom').addEventListener('change', (e) => { showAnomSeries = e.target.checked; loadSeries(); });
+  $('#pt-anom').addEventListener('change', (e) => { showAnomSeries = e.target.checked; loadClim(); loadSeries(); });
   $('#pt-reset').addEventListener('click', () => pointChart && pointChart.setRange(null));
 
   // barra in alto
@@ -1003,6 +1057,8 @@ function bindControls() {
     try { localStorage.setItem('lingua', LANG); } catch (e) { /* niente */ }
     $('#back-link').href = LANG === 'it' ? '/it/' : '/';
     buildTimeUI(); syncTimeUI(true); updateStatus(); refreshPoint(); drawLegend(); buildAbout(); loadSeries();
+    if (ui.region && !$('#region').hidden) regionStats();
+    if (ui.compare) applyCompare();
   });
   $('#back-link').href = LANG === 'it' ? '/it/' : '/';
   syncModeButtons();
@@ -1040,6 +1096,16 @@ function autoRange() {
   else st.rangeSst = [lo, hi];
   syncModeButtons();
   drawLegend();
+}
+
+function setMode(mode) {
+  if (mode === ui.mode) return;
+  ui.mode = mode;
+  globe.state.mode = { sst: 0, anom: 1, speed: 2 }[mode];
+  if (mode === 'anom' && !globe.hasClim) { note(t('loading')); loadClim(); }
+  syncModeButtons();
+  drawLegend();
+  onTime('source');
 }
 
 function syncModeButtons() {

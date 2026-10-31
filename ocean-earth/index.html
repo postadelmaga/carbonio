@@ -25,7 +25,7 @@
 </script>
 </head>
 <body>
-<canvas id="globe" aria-label="Globo interattivo"></canvas>
+<canvas id="globe" aria-label="Globo interattivo" data-i18n-aria="globe_aria"></canvas>
 <div id="mark-a" class="mark" hidden></div>
 <div id="mark-b" class="mark b" hidden></div>
 <div id="cmp-split" class="split" hidden><span id="cmp-label"></span></div>
@@ -55,11 +55,6 @@
 <aside class="side" id="side">
   <section>
     <h2 data-i18n="layers">Livelli</h2>
-    <label class="radio"><input type="radio" name="mode" value="sst" checked> <span data-i18n="mode_sst">Temperatura</span></label>
-    <label class="radio"><input type="radio" name="mode" value="anom"> <span data-i18n="mode_anom">Anomalia</span></label>
-    <label class="radio"><input type="radio" name="mode" value="speed"> <span data-i18n="mode_speed">Velocità</span></label>
-    <label class="radio"><input type="radio" name="mode" value="none"> <span data-i18n="mode_none">Nessuno</span></label>
-    <hr>
     <label class="chk"><input type="checkbox" id="particles" checked> <span data-i18n="particles">Particelle</span></label>
     <label class="chk"><input type="checkbox" id="arrows"> <span data-i18n="arrows">Frecce</span></label>
     <label class="chk"><input type="checkbox" id="coast" checked> <span data-i18n="coast">Coste</span></label>
@@ -72,24 +67,23 @@
     <label class="chk" id="med-hi-row"><input type="checkbox" id="med-hi" checked> <span data-i18n="med_hi_long">Mediterraneo 1/16°</span></label>
   </section>
   <section>
-    <h2 data-i18n="particles">Particelle</h2>
-    <label class="rng"><span data-i18n="density">Densità</span>
-      <select id="p-count"><option value="2000">2 000</option><option value="4000">4 000</option><option value="8000" selected>8 000</option><option value="16000">16 000</option><option value="32000">32 000</option></select></label>
-    <label class="rng"><span data-i18n="speed">Velocità</span><input type="range" id="p-speed" min="0.2" max="3" step="0.1" value="1"></label>
-    <label class="rng"><span data-i18n="width">Spessore</span><input type="range" id="p-width" min="0.6" max="4" step="0.1" value="1.6"></label>
-    <h2 data-i18n="arrows">Frecce</h2>
-    <label class="rng"><span data-i18n="density">Densità</span><input type="range" id="a-density" min="0.2" max="3" step="0.1" value="1"></label>
-    <p class="fine" data-i18n="particles_note"></p>
-  </section>
-  <section>
     <h2 data-i18n="scale">Scala di colore</h2>
-    <label class="rng" id="palette-row"><span data-i18n="palette">Tavolozza</span>
-      <select id="palette"><option value="classic">Classica</option><option value="thermal">Thermal</option><option value="turbo">Turbo</option></select></label>
     <div class="minmax"><label><span data-i18n="min">min</span> <input type="number" id="r-min" step="0.1"></label>
       <label><span data-i18n="max">max</span> <input type="number" id="r-max" step="0.1"></label></div>
     <button id="r-auto" type="button" class="wide" data-i18n="auto_range">Adatta alla vista</button>
-    <label class="rng"><span data-i18n="opacity">Intensità</span><input type="range" id="opacity" min="0.15" max="1" step="0.05" value="1"></label>
   </section>
+  <details class="adv">
+    <summary data-i18n="advanced">Regolazioni</summary>
+    <label class="rng"><span data-i18n="p_density">Particelle</span>
+      <select id="p-count"><option value="2000">2 000</option><option value="4000">4 000</option><option value="8000" selected>8 000</option><option value="16000">16 000</option><option value="32000">32 000</option></select></label>
+    <label class="rng"><span data-i18n="p_speed">Velocità delle particelle</span><input type="range" id="p-speed" min="0.2" max="3" step="0.1" value="1"></label>
+    <label class="rng"><span data-i18n="p_width">Spessore delle particelle</span><input type="range" id="p-width" min="0.6" max="4" step="0.1" value="1.6"></label>
+    <label class="rng"><span data-i18n="a_density">Densità delle frecce</span><input type="range" id="a-density" min="0.2" max="3" step="0.1" value="1"></label>
+    <label class="rng" id="palette-row"><span data-i18n="palette">Tavolozza</span>
+      <select id="palette"><option value="classic" data-i18n="pal_classic">Classica</option><option value="thermal">Thermal</option><option value="turbo">Turbo</option></select></label>
+    <label class="rng"><span data-i18n="opacity">Intensità</span><input type="range" id="opacity" min="0.15" max="1" step="0.05" value="1"></label>
+    <p class="fine" data-i18n="particles_note"></p>
+  </details>
   <section>
     <h2 data-i18n="tools">Strumenti</h2>
     <button id="region-btn" type="button" class="wide" data-i18n="region">Statistiche di una regione</button>
@@ -124,7 +118,7 @@
 
 <footer class="time">
   <div class="time-row">
-    <select id="tier" aria-label="Passo temporale"></select>
+    <select id="tier" aria-label="Passo temporale" data-i18n-aria="tier_aria"></select>
     <div class="transport">
       <button id="first" type="button" class="icon" data-i18n-title="to_start"><svg viewBox="0 0 16 16" width="14" height="14"><path d="M4 3v10M13 3 6 8l7 5z" fill="currentColor" stroke="currentColor" stroke-width="1.2"/></svg></button>
       <button id="back" type="button" class="icon" data-i18n-title="step_back"><svg viewBox="0 0 16 16" width="14" height="14"><path d="M11 3 5 8l6 5z" fill="currentColor"/></svg></button>
@@ -141,12 +135,13 @@
     <canvas id="saved-bar" class="saved-bar" aria-hidden="true"></canvas>
   </div>
   <div class="time-row opts">
-    <label><span data-i18n="year">Anno</span> <select id="year"></select></label>
     <label><span data-i18n="date">Data</span> <input id="date" type="month"></label>
     <label><select id="fps"><option value="1">1</option><option value="2">2</option><option value="4" selected>4</option><option value="8">8</option><option value="15">15</option><option value="30">30</option></select> <span data-i18n="fps">fotogrammi/s</span></label>
     <label class="chk"><input type="checkbox" id="loop-chk"> <span data-i18n="loop">Ripeti</span></label>
-    <label><span data-i18n="from">da</span> <select id="loop-from"></select></label>
-    <label><span data-i18n="to">a</span> <select id="loop-to"></select></label>
+    <span id="loop-range" class="loop-range" hidden>
+      <label><span data-i18n="from">da</span> <select id="loop-from"></select></label>
+      <label><span data-i18n="to">a</span> <select id="loop-to"></select></label>
+    </span>
     <button id="loop-year" type="button" class="link" data-i18n="loop_year">Anno intero</button>
     <span class="dl-wrap"><button id="dl" type="button" class="link" hidden></button> <span id="dl-info" class="dl-info mono"></span></span>
   </div>
