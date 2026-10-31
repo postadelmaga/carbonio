@@ -149,7 +149,9 @@ void main() {
     if (cu.b > 0.5) {
       float sp = length(cu.rg / cu.b);
       float t = clamp((sp - uRangeSpeed.x) / (uRangeSpeed.y - uRangeSpeed.x), 0.0, 1.0);
-      float under = sea ? max(wT, wA) : 0.0;
+      // anche dove manca la temperatura (laghi, coste) la corrente resta un
+      // livello sopra gli altri: se sono accesi, si vede solo dove e' veloce
+      float under = max(wT, wA);
       col = mix(col, texture(uLutSpeed, vec2(t, 0.5)).rgb, wS * mix(1.0, pow(smoothstep(0.1, 0.7, t), 1.5), under));
       sea = true;
     }
