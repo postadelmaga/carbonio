@@ -108,7 +108,9 @@ button { cursor: pointer; }
 .quick-mode button.on { background: var(--accent); color: #fff; }
 .top-r { display: flex; align-items: center; gap: 6px; }
 button.ghost { border: 1px solid var(--rule); background: transparent; border-radius: 7px; padding: 5px 9px; font-size: 12px; font-weight: 600; color: var(--ink-2); }
-button.ghost:hover, button.icon:hover { color: var(--ink); border-color: var(--ink-3); }
+button.ghost:hover, button.icon:hover, .lang-sel:hover { color: var(--ink); border-color: var(--ink-3); }
+.lang-sel { border: 1px solid var(--rule); background: transparent; border-radius: 7px; padding: 5px 6px; font-size: 12px; font-weight: 600; color: var(--ink-2); height: 30px; }
+.lang-sel option { color: initial; }
 button.icon { border: 1px solid var(--rule); background: transparent; border-radius: 7px; width: 30px; height: 30px; display: inline-grid; place-items: center; font-weight: 700; color: var(--ink-2); padding: 0; }
 button.link { border: 0; background: none; color: var(--accent); padding: 2px 4px; font-size: 12px; font-weight: 600; }
 button.wide { width: 100%; border: 1px solid var(--rule); background: transparent; border-radius: 7px; padding: 7px; font-weight: 600; margin-bottom: 8px; }

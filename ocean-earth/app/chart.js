@@ -1,7 +1,7 @@
 // Grafico a linee in SVG per le serie storiche: piu' serie, linea dell'istante
 // corrente, valore sotto il puntatore e selezione di un intervallo trascinando.
 
-import { LANG, fmtNum } from './i18n.js';
+import { fmtNum, fmtMonthYear } from './i18n.js';
 
 const NS = 'http://www.w3.org/2000/svg';
 const el = (name, attrs = {}, parent) => {
@@ -170,7 +170,7 @@ export class LineChart {
       if (s === this.series[0] && best >= 0) {
         const y = s.x[best];
         const yr = Math.floor(y), mo = Math.min(11, Math.floor((y - yr) * 12));
-        lines.unshift(new Date(Date.UTC(yr, mo, 1)).toLocaleDateString(LANG === 'it' ? 'it-IT' : 'en-GB', { month: 'short', year: 'numeric', timeZone: 'UTC' }));
+        lines.unshift(fmtMonthYear(yr, mo));
       }
     }
     this.tip.innerHTML = lines.join('<br>');

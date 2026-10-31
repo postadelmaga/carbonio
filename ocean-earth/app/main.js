@@ -6,7 +6,7 @@ import { DataStore } from './data.js';
 import { Timeline, climSelection, mixClim } from './timeline.js';
 import { LineChart, stampToYear } from './chart.js';
 import { cssGradient } from './palettes.js';
-import { t, LANG, setLang, applyStatic, fmtStamp, fmtNum } from './i18n.js';
+import { t, LANG, LANGS, LANG_NAMES, setLang, siteHome, applyStatic, fmtStamp, fmtNum, fmtLat, fmtLon, compass } from './i18n.js';
 
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => document.querySelectorAll(s);
@@ -545,7 +545,6 @@ function monthlyBase(stamp, i) {
   return baseAt(i, [m, m, 0, 0], anfcMonths.has(stamp) ? 1 : 0);
 }
 
-const COMPASS = { it: ['N', 'NE', 'E', 'SE', 'S', 'SO', 'O', 'NO'], en: ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'] };
 
 function pointValues(p) {
   if (!current) return null;
@@ -568,8 +567,6 @@ function pointValues(p) {
   return { c, sst, anom: model - cl, u, v, speed, dirDeg, med };
 }
 
-function fmtLat(lat) { return `${fmtNum(Math.abs(lat), 2)}° ${lat >= 0 ? 'N' : 'S'}`; }
-function fmtLon(lon) { return `${fmtNum(Math.abs(lon), 2)}° ${lon >= 0 ? 'E' : (LANG === 'it' ? 'O' : 'W')}`; }
 
 function refreshPoint() {
   if (!ui.point || !current) return;
@@ -580,7 +577,7 @@ function refreshPoint() {
     const head = tag ? `<span class="tag ${tag}">${tag.toUpperCase()}</span> ` : '';
     rows.push(`<div class="pt-head">${head}${fmtLat(p.lat)}, ${fmtLon(p.lon)} <span class="muted">· ${t('resolution')} ${fmtNum(0.25, 2)}° (${fmtLat(v.c.lat)}, ${fmtLon(v.c.lon)})</span></div>`);
     if (!Number.isFinite(v.sst) && !Number.isFinite(v.speed)) { rows.push(`<div class="muted">${t('no_data')}</div>`); return; }
-    const dir = COMPASS[LANG][Math.round(v.dirDeg / 45) % 8];
+    const dir = compass(v.dirDeg);
     rows.push(`<dl class="vals">
       <dt>${t('temp')}</dt><dd>${Number.isFinite(v.sst) ? `<b>${fmtNum(v.sst, 2)} °C</b>` : '—'}${v.med ? ` <span class="muted">· ${store.source(current.A.med)?.name}, 1/16°</span>` : ''}</dd>
       <dt>${t('anom')}</dt><dd>${Number.isFinite(v.anom) ? `<b class="${v.anom >= 0 ? 'warm' : 'cold'}">${v.anom >= 0 ? '+' : ''}${fmtNum(v.anom, 2)} °C</b> <span class="muted">${t('clim_base')} ${manifest.climatology.years.join('–')}</span>` : current.svA === 'ostia' ? `— <span class="muted">${t('anom_model_only')}</span>` : '—'}</dd>
@@ -782,7 +779,7 @@ function missing() {
   return { files, bytes, frames: i1 - i0 + 1 };
 }
 
-const fmtMB = (b) => b >= 1e9 ? (b / 1e9).toFixed(1).replace('.', LANG === 'it' ? ',' : '.') + ' GB' : Math.max(1, Math.round(b / 1e6)) + ' MB';
+const fmtMB = (b) => b >= 1e9 ? fmtNum(b / 1e9, 1) + ' GB' : Math.max(1, Math.round(b / 1e6)) + ' MB';
 
 let dl = null;                           // scaricamento in corso
 function syncDownload() {
@@ -1052,15 +1049,22 @@ function bindControls() {
   $('#about-btn').addEventListener('click', () => $('#about').showModal());
   $('#about-close').addEventListener('click', () => $('#about').close());
   $('#side-btn').addEventListener('click', () => document.body.classList.toggle('side-open'));
-  $('#lang-btn').addEventListener('click', () => {
-    setLang(LANG === 'it' ? 'en' : 'it');
+  const langSel = $('#lang-sel');
+  // codici brevi come nel selettore del sito: sul telefono il nome intero
+  // spingeva fuori i pulsanti delle modalita'
+  langSel.replaceChildren(...LANGS.map((l) => Object.assign(new Option(l === 'zh' ? '中文' : l.toUpperCase(), l), { title: LANG_NAMES[l] })));
+  langSel.value = LANG;
+  langSel.addEventListener('change', () => {
+    setLang(langSel.value);
+    // la stessa scelta vale per il sito: stessa chiave e stesso cookie della home
     try { localStorage.setItem('lingua', LANG); } catch (e) { /* niente */ }
-    $('#back-link').href = LANG === 'it' ? '/it/' : '/';
+    try { document.cookie = `lingua=${LANG}; path=/; max-age=31536000; SameSite=Lax`; } catch (e) { /* niente */ }
+    $('#back-link').href = siteHome();
     buildTimeUI(); syncTimeUI(true); updateStatus(); refreshPoint(); drawLegend(); buildAbout(); loadSeries();
     if (ui.region && !$('#region').hidden) regionStats();
     if (ui.compare) applyCompare();
   });
-  $('#back-link').href = LANG === 'it' ? '/it/' : '/';
+  $('#back-link').href = siteHome();
   syncModeButtons();
   drawLegend();
 }

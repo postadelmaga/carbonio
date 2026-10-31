@@ -169,7 +169,7 @@ ocean-earth/
     timeline.js         time model, playback, climatology selection
     chart.js            SVG line charts with range brushing
     palettes.js         colour scales (LUT textures + CSS gradients)
-    i18n.js             Italian / English
+    i18n.js             the site's five languages (en, it, es, fr, zh); dates and numbers via Intl
     style.css
   pipeline/             Python: download, re-grid, encode, derive, validate
   tests/                pytest (pipeline), node --test (app), validation report
@@ -252,6 +252,18 @@ statically (`no-cache` revalidation for everything outside `/assets/`).
 Rollback: the page is two static paths. `git revert` + `./publish.sh --apply
 --prune` restores the previous code; removing `/home/arch/carbonioweb/ocean-earth`
 on the server removes the app entirely without touching the rest of the site.
+
+## Languages
+
+The page speaks the site's five languages: English, Italian, Spanish, French
+and Chinese. It picks `?lang=`, then the choice saved by the site
+(`localStorage` and cookie `lingua`, shared with the home page), then the
+language of the site page the reader came from, then the browser's. Changing
+it on the page saves the choice for the whole site, and "back" leads to the
+home page in that language. Dataset names stay as Copernicus publishes them.
+`tests/app.test.mjs` fails if a language misses a key, a placeholder differs
+or the page uses a key that does not exist; `tests/browser.mjs` opens the
+page in each language on a phone-sized screen.
 
 ## Known limits
 

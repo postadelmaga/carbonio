@@ -127,6 +127,30 @@ async function open(w, h, mobile, theme) {
   check('niente scorrimento orizzontale', !overflow);
   await page.close();
 }
+// le cinque lingue del sito, sul telefono: niente errori, niente che esce
+// dallo schermo, testi tradotti (non le chiavi e non l'inglese)
+for (const [lang, word] of [['en', 'Anomaly'], ['it', 'Anomalia'], ['es', 'Anomalía'], ['fr', 'Anomalie'], ['zh', '距平']]) {
+  const page = await browser.newPage();
+  await page.setViewport({ width: 390, height: 844, isMobile: true, hasTouch: true, deviceScaleFactor: 1 });
+  const errors = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+  await page.goto(base + (base.includes('?') ? '&' : '?') + 'lang=' + lang, { waitUntil: 'networkidle0', timeout: 90000 });
+  await sleep(2500);
+  const r = await page.evaluate(() => {
+    const top = document.querySelector('.top');
+    return {
+      htmlLang: document.documentElement.lang,
+      mode: document.querySelector('.quick-mode button[data-mode=anom]').textContent,
+      status: document.querySelector('#status').innerText,
+      fits: top.scrollWidth <= top.clientWidth + 1 && document.documentElement.scrollWidth <= window.innerWidth,
+      back: document.querySelector('#back-link').getAttribute('href'),
+    };
+  });
+  const home = lang === 'en' ? '/' : `/${lang}/`;
+  check(`lingua ${lang}`, errors.length === 0 && r.htmlLang === lang && r.mode === word && r.fits && r.back === home && !/_[a-z]+\b/.test(r.status),
+    JSON.stringify({ ...r, status: r.status.slice(0, 60), errors }));
+  await page.close();
+}
 await browser.close();
 for (const r of results) console.log(`${r.ok ? 'PASS' : 'FAIL'}  ${r.name}${r.extra ? '  — ' + r.extra : ''}`);
 process.exit(results.every((r) => r.ok) ? 0 : 1);

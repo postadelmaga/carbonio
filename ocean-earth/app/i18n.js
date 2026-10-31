@@ -1,7 +1,9 @@
-// Testi dell'interfaccia: italiano e inglese. Le altre lingue del sito
-// ricadono sull'inglese.
+// Testi dell'interfaccia nelle cinque lingue del sito (inglese alla radice,
+// italiano, spagnolo, francese e cinese su /it/ /es/ /fr/ /zh/). Una chiave
+// che manca in una lingua ricade sull'inglese; tests/app.test.mjs controlla
+// che non ne manchi nessuna.
 
-const T = {
+export const TEXTS = {
   it: {
     back: 'Torna a CO₂·info', about: 'Informazioni', layers: 'Livelli', mode_sst: 'Temperatura',
     mode_anom: 'Anomalia', mode_speed: 'Velocità', particles: 'Particelle',
@@ -41,7 +43,7 @@ const T = {
     webgl_fail: 'Questo browser non supporta WebGL2: Ocean Earth non può funzionare qui.',
     particles_fail: 'Il browser non può calcolare le particelle sulla GPU: restano le frecce.',
     particles_note: 'Le particelle mostrano il campo di velocità, non il percorso reale di masse d’acqua.',
-    km: 'km', alt: 'quota', data_until: 'dati fino al', buffering: 'in caricamento',
+    km: 'km', alt: 'quota', data_until: 'dati fino al', updated: 'aggiornato', buffering: 'in caricamento',
   },
   en: {
     back: 'Back to CO₂·info', about: 'About', layers: 'Layers', mode_sst: 'Temperature',
@@ -82,28 +84,159 @@ const T = {
     webgl_fail: 'This browser does not support WebGL2: Ocean Earth cannot run here.',
     particles_fail: 'This browser cannot compute particles on the GPU: arrows remain available.',
     particles_note: 'Particles show the velocity field, not the actual path of water masses.',
-    km: 'km', alt: 'altitude', data_until: 'data until', buffering: 'loading',
+    km: 'km', alt: 'altitude', data_until: 'data until', updated: 'updated', buffering: 'loading',
+  },
+  es: {
+    back: 'Volver a CO₂·info', about: 'Información', layers: 'Capas', mode_sst: 'Temperatura',
+    mode_anom: 'Anomalía', mode_speed: 'Velocidad', particles: 'Partículas',
+    advanced: 'Ajustes', p_density: 'Partículas', p_speed: 'Velocidad de las partículas', p_width: 'Grosor de las partículas', a_density: 'Densidad de las flechas', pal_classic: 'Clásica',
+    arrows: 'Flechas', coast: 'Costas', hotspot: 'Puntos calientes (sobre el percentil 90)',
+    source: 'Fuente de la temperatura', src_model: 'Reanálisis / análisis (GLORYS12, NEMO 1/12°)',
+    src_ostia: 'Observaciones por satélite (OSTIA L4)', med_hi: 'Mediterráneo 1/16°', med_hi_long: 'Mediterráneo de alta resolución (1/16°, satélite)', scale: 'Escala de color', palette: 'Paleta', min: 'mín', max: 'máx',
+    opacity: 'Intensidad', auto_range: 'Ajustar a la vista', tools: 'Herramientas', compare_dates: 'Comparar dos fechas',
+    region: 'Estadísticas de una región', region_hint: 'Arrastra un recuadro sobre el globo',
+    med: 'Mediterráneo', world: 'Globo', tier_monthly: 'Mes', tier_daily: 'Día', tier_hourly: 'Hora',
+    play: 'Reproducir', pause: 'Pausa', step_back: 'Atrás', step_fwd: 'Adelante', to_start: 'Al inicio',
+    to_end: 'Al final', fps: 'fotogramas/s', loop: 'Repetir', loop_year: 'Año completo', loop_all: 'Todo',
+    from: 'de', to: 'a', date: 'Fecha',
+    interpolated: 'interpolado', original: 'dato original', loading: 'Cargando datos…',
+    dl_btn: 'Descargar para verlo sin esperas', dl_stop: 'Detener la descarga', dl_done: 'intervalo guardado en el navegador',
+    dl_title: 'Guarda en el navegador los fotogramas del intervalo elegido (toda la serie o el de Repetir): la reproducción los lee del disco y en las visitas siguientes no se vuelven a descargar',
+    dl_quota: 'Espacio insuficiente en el navegador: quedan {n}. Elige un intervalo más corto con Repetir.',
+    dl_failed: '{n} archivos no descargados: inténtalo más tarde',
+    on_globe: 'en el globo hasta que llegue',
+    preview_note: 'en reproducción: vista previa de 8 bits (0,16 °C; corrientes a 0,5°), los datos exactos vuelven en pausa',
+    temp: 'Temperatura', anom: 'Anomalía', cur_speed: 'Corriente', direction: 'dirección',
+    towards: 'hacia', coords: 'Coordenadas', datum: 'Fecha', dataset: 'Conjunto de datos', resolution: 'Resolución',
+    no_data: 'sin datos (tierra o hielo)', history: 'Historia de la temperatura (medias mensuales)',
+    show_anom: 'anomalía', show_abs: 'absoluta', compare_point: 'Comparar con otro punto',
+    pick_second: 'Haz clic en un segundo punto del globo', remove: 'Quitar el segundo punto', globe_aria: 'Globo interactivo', tier_aria: 'Paso temporal',
+    frame_missing: 'archivo no disponible para este instante',
+    bias_note: 'dato operativo: base GLORYS corregida por la diferencia media entre los dos sistemas (queda una incertidumbre local de unos 0,35 °C)', anom_model_only: 'la anomalía se calcula sobre el modelo: cambia la fuente a Modelo', close: 'Cerrar',
+    reg_mean: 'media', reg_max: 'máximo', reg_anom: 'anomalía media', reg_title: 'Región',
+    reg_cells: 'celdas de mar', series_from: 'Periodo', clim_base: 'climatología',
+    monthly_mean: 'media mensual', daily_mean: 'media diaria', hourly: 'horario',
+    hourly_inst: 'instantáneo horario', hourly_mean: 'media horaria', model: 'modelo', observation: 'observaciones',
+    sst_label: 'Temperatura superficial del mar (°C)', anom_label: 'Anomalía (°C) respecto a',
+    speed_label: 'Velocidad de la corriente (m/s)', hotspot_note: 'Puntos calientes solo con medias mensuales',
+    anom_uses_model: 'la anomalía usa siempre el modelo, coherente con la climatología',
+    ostia_missing: 'OSTIA no disponible para esta fecha: se muestra el modelo',
+    compare_label: 'Fecha de la derecha', cmp_sst_only: 'solo temperatura; corrientes de la fecha de la izquierda', drag: 'Arrastra para girar · rueda o pellizco para el zoom · clic en un punto',
+    webgl_fail: 'Este navegador no admite WebGL2: Ocean Earth no puede funcionar aquí.',
+    particles_fail: 'Este navegador no puede calcular las partículas en la GPU: las flechas siguen disponibles.',
+    particles_note: 'Las partículas muestran el campo de velocidad, no el recorrido real de las masas de agua.',
+    km: 'km', alt: 'altitud', data_until: 'datos hasta', updated: 'actualizado', buffering: 'cargando',
+  },
+  fr: {
+    back: 'Retour à CO₂·info', about: 'À propos', layers: 'Calques', mode_sst: 'Température',
+    mode_anom: 'Anomalie', mode_speed: 'Vitesse', particles: 'Particules',
+    advanced: 'Réglages', p_density: 'Particules', p_speed: 'Vitesse des particules', p_width: 'Épaisseur des particules', a_density: 'Densité des flèches', pal_classic: 'Classique',
+    arrows: 'Flèches', coast: 'Côtes', hotspot: 'Points chauds (au-dessus du 90e centile)',
+    source: 'Source de la température', src_model: 'Réanalyse / analyse (GLORYS12, NEMO 1/12°)',
+    src_ostia: 'Observations satellitaires (OSTIA L4)', med_hi: 'Méditerranée 1/16°', med_hi_long: 'Méditerranée haute résolution (1/16°, satellite)', scale: 'Échelle de couleurs', palette: 'Palette', min: 'min', max: 'max',
+    opacity: 'Intensité', auto_range: 'Adapter à la vue', tools: 'Outils', compare_dates: 'Comparer deux dates',
+    region: 'Statistiques d’une région', region_hint: 'Tracez un rectangle sur le globe',
+    med: 'Méditerranée', world: 'Globe', tier_monthly: 'Mois', tier_daily: 'Jour', tier_hourly: 'Heure',
+    play: 'Lecture', pause: 'Pause', step_back: 'Reculer', step_fwd: 'Avancer', to_start: 'Au début',
+    to_end: 'À la fin', fps: 'images/s', loop: 'Répéter', loop_year: 'Année entière', loop_all: 'Tout',
+    from: 'de', to: 'à', date: 'Date',
+    interpolated: 'interpolé', original: 'donnée originale', loading: 'Chargement des données…',
+    dl_btn: 'Télécharger pour regarder sans attente', dl_stop: 'Arrêter le téléchargement', dl_done: 'intervalle enregistré dans le navigateur',
+    dl_title: 'Enregistre dans le navigateur les images de l’intervalle choisi (toute la série ou celui de Répéter) : la lecture les lit sur le disque et les visites suivantes ne les téléchargent plus',
+    dl_quota: 'Espace insuffisant dans le navigateur : il reste {n}. Choisissez un intervalle plus court avec Répéter.',
+    dl_failed: '{n} fichiers non téléchargés : réessayez plus tard',
+    on_globe: 'sur le globe en attendant',
+    preview_note: 'en lecture : aperçu 8 bits (0,16 °C ; courants à 0,5°), les données exactes reviennent en pause',
+    temp: 'Température', anom: 'Anomalie', cur_speed: 'Courant', direction: 'direction',
+    towards: 'vers', coords: 'Coordonnées', datum: 'Date', dataset: 'Jeu de données', resolution: 'Résolution',
+    no_data: 'pas de données (terre ou glace)', history: 'Historique de la température (moyennes mensuelles)',
+    show_anom: 'anomalie', show_abs: 'absolue', compare_point: 'Comparer avec un autre point',
+    pick_second: 'Cliquez sur un second point du globe', remove: 'Retirer le second point', globe_aria: 'Globe interactif', tier_aria: 'Pas de temps',
+    frame_missing: 'fichier non disponible pour cet instant',
+    bias_note: 'donnée opérationnelle : base GLORYS corrigée de l’écart moyen entre les deux systèmes (il reste une incertitude locale d’environ 0,35 °C)', anom_model_only: 'l’anomalie se calcule sur le modèle : passez la source sur Modèle', close: 'Fermer',
+    reg_mean: 'moyenne', reg_max: 'maximum', reg_anom: 'anomalie moyenne', reg_title: 'Région',
+    reg_cells: 'cellules océaniques', series_from: 'Période', clim_base: 'climatologie',
+    monthly_mean: 'moyenne mensuelle', daily_mean: 'moyenne journalière', hourly: 'horaire',
+    hourly_inst: 'instantané horaire', hourly_mean: 'moyenne horaire', model: 'modèle', observation: 'observations',
+    sst_label: 'Température de surface de la mer (°C)', anom_label: 'Anomalie (°C) par rapport à',
+    speed_label: 'Vitesse du courant (m/s)', hotspot_note: 'Points chauds uniquement avec les moyennes mensuelles',
+    anom_uses_model: 'l’anomalie utilise toujours le modèle, cohérent avec la climatologie',
+    ostia_missing: 'OSTIA indisponible pour cette date : affichage du modèle',
+    compare_label: 'Date de droite', cmp_sst_only: 'température seulement ; courants de la date de gauche', drag: 'Glisser pour tourner · molette ou pincement pour zoomer · cliquer sur un point',
+    webgl_fail: 'Ce navigateur ne prend pas en charge WebGL2 : Ocean Earth ne peut pas fonctionner ici.',
+    particles_fail: 'Ce navigateur ne peut pas calculer les particules sur le GPU : les flèches restent disponibles.',
+    particles_note: 'Les particules montrent le champ de vitesse, pas le trajet réel des masses d’eau.',
+    km: 'km', alt: 'altitude', data_until: 'données jusqu’au', updated: 'mis à jour', buffering: 'chargement',
+  },
+  zh: {
+    back: '返回 CO₂·info', about: '关于', layers: '图层', mode_sst: '温度',
+    mode_anom: '距平', mode_speed: '流速', particles: '粒子',
+    advanced: '设置', p_density: '粒子', p_speed: '粒子速度', p_width: '粒子粗细', a_density: '箭头密度', pal_classic: '经典',
+    arrows: '箭头', coast: '海岸线', hotspot: '热点（高于第 90 百分位）',
+    source: '温度数据源', src_model: '再分析 / 分析（GLORYS12，NEMO 1/12°）',
+    src_ostia: '卫星观测（OSTIA L4）', med_hi: '地中海 1/16°', med_hi_long: '地中海高分辨率（1/16°，卫星）', scale: '色标', palette: '配色', min: '最小', max: '最大',
+    opacity: '强度', auto_range: '按视图调整', tools: '工具', compare_dates: '比较两个日期',
+    region: '区域统计', region_hint: '在地球上拖出一个方框',
+    med: '地中海', world: '全球', tier_monthly: '月', tier_daily: '日', tier_hourly: '小时',
+    play: '播放', pause: '暂停', step_back: '后退', step_fwd: '前进', to_start: '回到开头',
+    to_end: '跳到结尾', fps: '帧/秒', loop: '循环', loop_year: '整年', loop_all: '全部',
+    from: '从', to: '到', date: '日期',
+    interpolated: '插值', original: '原始数据', loading: '正在加载数据…',
+    dl_btn: '下载后流畅播放', dl_stop: '停止下载', dl_done: '该时段已保存在浏览器中',
+    dl_title: '把所选时段（整个序列或“循环”时段）的帧保存在浏览器中：播放时从磁盘读取，以后访问不再重新下载',
+    dl_quota: '浏览器存储空间不足：仅剩 {n}。请用“循环”选择更短的时段。',
+    dl_failed: '{n} 个文件未能下载：请稍后再试',
+    on_globe: '新数据到达前地球上显示的是',
+    preview_note: '播放中：8 位预览（0.16 °C；洋流 0.5°），暂停后恢复精确数据',
+    temp: '温度', anom: '距平', cur_speed: '洋流', direction: '方向',
+    towards: '流向', coords: '坐标', datum: '时间', dataset: '数据集', resolution: '分辨率',
+    no_data: '无数据（陆地或冰）', history: '温度历史（月平均）',
+    show_anom: '距平', show_abs: '绝对值', compare_point: '与另一个点比较',
+    pick_second: '在地球上点击第二个点', remove: '移除第二个点', globe_aria: '交互式地球', tier_aria: '时间步长',
+    frame_missing: '该时刻的文件不可用',
+    bias_note: '业务化数据：GLORYS 基准已按两个系统的平均差异校正（仍有约 0.35 °C 的局地不确定性）', anom_model_only: '距平基于模式计算：请把数据源切换为模式', close: '关闭',
+    reg_mean: '平均', reg_max: '最大值', reg_anom: '平均距平', reg_title: '区域',
+    reg_cells: '海洋网格数', series_from: '时段', clim_base: '气候态',
+    monthly_mean: '月平均', daily_mean: '日平均', hourly: '逐时',
+    hourly_inst: '逐时瞬时值', hourly_mean: '逐时平均', model: '模式', observation: '观测',
+    sst_label: '海表温度（°C）', anom_label: '距平（°C），相对于',
+    speed_label: '洋流速度（m/s）', hotspot_note: '热点仅适用于月平均',
+    anom_uses_model: '距平始终使用模式数据，与气候态一致',
+    ostia_missing: '该日期没有 OSTIA 数据：显示模式数据',
+    compare_label: '右侧日期', cmp_sst_only: '仅温度；洋流为左侧日期', drag: '拖动旋转 · 滚轮或双指缩放 · 点击查看某点',
+    webgl_fail: '此浏览器不支持 WebGL2：Ocean Earth 无法在此运行。',
+    particles_fail: '此浏览器无法在 GPU 上计算粒子：箭头仍可使用。',
+    particles_note: '粒子显示的是速度场，而不是水团的实际路径。',
+    km: '公里', alt: '高度', data_until: '数据截至', updated: '更新于', buffering: '加载中',
   },
 };
 
+export const LANGS = ['en', 'it', 'es', 'fr', 'zh'];
+export const LANG_NAMES = { en: 'English', it: 'Italiano', es: 'Español', fr: 'Français', zh: '中文' };
+const LOCALE = { en: 'en-GB', it: 'it-IT', es: 'es-ES', fr: 'fr-FR', zh: 'zh-CN' };
+const valid = (l) => (LANGS.includes(l) ? l : null);
+
+// ?lang=, poi la scelta salvata dal sito ('lingua', la stessa chiave), poi la
+// pagina del sito da cui si arriva, poi la lingua del browser
 function pick() {
   let l = null;
-  try { l = new URLSearchParams(location.search).get('lang'); } catch (e) { /* niente */ }
-  try { l = l || localStorage.getItem('lingua'); } catch (e) { /* niente */ }
-  // chi arriva dalla pagina italiana del sito senza aver mai scelto la lingua
+  try { l = valid(new URLSearchParams(location.search).get('lang')); } catch (e) { /* niente */ }
+  try { l = l || valid(localStorage.getItem('lingua')); } catch (e) { /* niente */ }
   try {
     const r = document.referrer && new URL(document.referrer);
-    if (!l && r && r.host === location.host) l = /^\/it(\/|$)/.test(r.pathname) ? 'it' : 'en';
+    if (!l && r && r.host === location.host) l = (r.pathname.match(/^\/(it|es|fr|zh)(\/|$)/) || [, 'en'])[1];
   } catch (e) { /* niente */ }
-  l = l || (navigator.language || 'en').slice(0, 2);
-  return l === 'it' ? 'it' : 'en';
+  return l || valid((navigator.language || 'en').slice(0, 2)) || 'en';
 }
 
 export let LANG = pick();
-export function t(k) { return (T[LANG] && T[LANG][k]) || T.en[k] || k; }
-export function setLang(l) { LANG = l === 'it' ? 'it' : 'en'; applyStatic(); }
+export function t(k) { return (TEXTS[LANG] && TEXTS[LANG][k]) || TEXTS.en[k] || k; }
+export function setLang(l) { LANG = valid(l) || 'en'; applyStatic(); }
+// la pagina del sito nella lingua scelta
+export function siteHome() { return LANG === 'en' ? '/' : `/${LANG}/`; }
 
-export function applyStatic(root = document) {
+export function applyStatic(root = globalThis.document) {
+  if (!root) return;                       // fuori dal browser (test)
   document.documentElement.lang = LANG;
   root.querySelectorAll('[data-i18n]').forEach((el) => { el.textContent = t(el.dataset.i18n); });
   root.querySelectorAll('[data-i18n-title]').forEach((el) => { el.title = t(el.dataset.i18nTitle); el.setAttribute('aria-label', el.title); });
@@ -111,23 +244,32 @@ export function applyStatic(root = document) {
   root.querySelectorAll('[data-lang-only]').forEach((el) => { el.hidden = el.dataset.langOnly !== LANG; });
 }
 
-const MONTHS = {
-  it: ['gen', 'feb', 'mar', 'apr', 'mag', 'giu', 'lug', 'ago', 'set', 'ott', 'nov', 'dic'],
-  en: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-};
-
 // "2024-07" → "lug 2024"; "2024-07-03" → "3 lug 2024"; "2024-07-03T05" → "3 lug 2024 05:00 UTC"
+// (nel formato di ogni lingua: in cinese "2024年7月3日")
 export function fmtStamp(s) {
-  const m = MONTHS[LANG];
-  const y = s.slice(0, 4), mo = m[+s.slice(5, 7) - 1];
-  if (s.length === 7) return `${mo} ${y}`;
-  const d = +s.slice(8, 10);
-  const base = LANG === 'it' ? `${d} ${mo} ${y}` : `${d} ${mo} ${y}`;
-  if (s.length === 10) return base;
-  return `${base} ${s.slice(11, 13)}:00 UTC`;
+  const y = +s.slice(0, 4), mo = +s.slice(5, 7) - 1;
+  const d = s.length > 7 ? +s.slice(8, 10) : 1;
+  const opt = s.length === 7 ? { year: 'numeric', month: 'short' } : { year: 'numeric', month: 'short', day: 'numeric' };
+  const base = new Date(Date.UTC(y, mo, d)).toLocaleDateString(LOCALE[LANG], { ...opt, timeZone: 'UTC' });
+  return s.length > 10 ? `${base} ${s.slice(11, 13)}:00 UTC` : base;
 }
 
 export function fmtNum(v, digits = 2) {
   if (!Number.isFinite(v)) return '—';
-  return v.toLocaleString(LANG === 'it' ? 'it-IT' : 'en-GB', { minimumFractionDigits: digits, maximumFractionDigits: digits });
+  return v.toLocaleString(LOCALE[LANG], { minimumFractionDigits: digits, maximumFractionDigits: digits });
+}
+
+// punti cardinali: ovest e' O in italiano, spagnolo e francese
+const COMPASS = {
+  en: ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'],
+  it: ['N', 'NE', 'E', 'SE', 'S', 'SO', 'O', 'NO'],
+  es: ['N', 'NE', 'E', 'SE', 'S', 'SO', 'O', 'NO'],
+  fr: ['N', 'NE', 'E', 'SE', 'S', 'SO', 'O', 'NO'],
+  zh: ['北', '东北', '东', '东南', '南', '西南', '西', '西北'],
+};
+export function compass(deg) { return COMPASS[LANG][Math.round(deg / 45) % 8]; }
+export function fmtLat(lat) { return `${fmtNum(Math.abs(lat), 2)}° ${lat >= 0 ? 'N' : 'S'}`; }
+export function fmtLon(lon) { return `${fmtNum(Math.abs(lon), 2)}° ${lon >= 0 ? 'E' : (['it', 'es', 'fr'].includes(LANG) ? 'O' : 'W')}`; }
+export function fmtMonthYear(y, mo) {
+  return new Date(Date.UTC(y, mo, 1)).toLocaleDateString(LOCALE[LANG], { month: 'short', year: 'numeric', timeZone: 'UTC' });
 }

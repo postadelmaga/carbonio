@@ -80,3 +80,43 @@ test('tavolozze: estremi esatti', () => {
   const a = lut('anomaly', 257);
   assert.deepEqual([...a.slice(128 * 4, 128 * 4 + 3)], [0xf7, 0xf7, 0xf7]);   // zero = bianco
 });
+
+test('traduzioni: ogni lingua del sito ha tutti i testi', async () => {
+  const fs = await import('node:fs');
+  const { TEXTS, LANGS } = await import('../app/i18n.js');
+  assert.deepEqual(Object.keys(TEXTS).sort(), [...LANGS].sort());
+  const en = Object.keys(TEXTS.en);
+  for (const l of LANGS) {
+    const missing = en.filter((k) => !TEXTS[l][k]);
+    const extra = Object.keys(TEXTS[l]).filter((k) => !(k in TEXTS.en));
+    assert.deepEqual(missing, [], `${l}: mancano ${missing}`);
+    assert.deepEqual(extra, [], `${l}: chiavi che l'inglese non ha ${extra}`);
+    // segnaposto come {n} uguali in tutte le lingue
+    for (const k of en) assert.deepEqual(TEXTS[l][k].match(/\{\w+\}/g), TEXTS.en[k].match(/\{\w+\}/g), `${l}.${k}`);
+  }
+  // ogni chiave usata nella pagina e nel codice esiste
+  const html = fs.readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+  const js = fs.readFileSync(new URL('../app/main.js', import.meta.url), 'utf8');
+  const used = new Set([
+    ...[...html.matchAll(/data-i18n(?:-title|-aria)?="([a-z_]+)"/g)].map((m) => m[1]),
+    ...[...js.matchAll(/\bt\('([a-z_]+)'\)/g)].map((m) => m[1]),
+  ]);
+  for (const k of used) assert.ok(TEXTS.en[k], `chiave usata ma non definita: ${k}`);
+  // la finestra informativa ha un testo per ogni lingua
+  for (const l of LANGS) assert.ok(html.includes(`<div data-lang-only="${l}">`), `informazioni senza ${l}`);
+});
+
+test('date e numeri nel formato di ogni lingua', async () => {
+  const i18n = await import('../app/i18n.js');
+  const out = {};
+  for (const l of i18n.LANGS) {
+    i18n.setLang(l);
+    out[l] = [i18n.fmtStamp('2024-07'), i18n.fmtStamp('2024-07-03T05'), i18n.fmtNum(1234.5, 1), i18n.fmtLon(-12)];
+  }
+  i18n.setLang('en');
+  assert.match(out.it[0], /lug.*2024/);
+  assert.match(out.zh[0], /2024年7月/);
+  assert.match(out.fr[1], /3 juil\.? 2024 05:00 UTC/);
+  assert.ok(out.it[2].includes('234,5') && out.en[2].includes('234.5'), JSON.stringify(out));
+  assert.ok(out.es[3].endsWith('O') && out.en[3].endsWith('W'));
+});

@@ -31,7 +31,7 @@
 <div id="cmp-split" class="split" hidden><span id="cmp-label"></span></div>
 
 <header class="top">
-  <a id="back-link" class="back" href="/it/" data-i18n-title="back">
+  <a id="back-link" class="back" href="/" data-i18n-title="back">
     <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M10 3 5 8l5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
     <span class="mark-co2">CO₂·info</span>
   </a>
@@ -44,7 +44,7 @@
   <div class="top-r">
     <button id="world-btn" type="button" class="ghost" data-i18n="world">Globo</button>
     <button id="med-btn" type="button" class="ghost" data-i18n="med">Mediterraneo</button>
-    <button id="lang-btn" type="button" class="ghost mono" title="Italiano / English"><span data-lang-only="it">EN</span><span data-lang-only="en">IT</span></button>
+    <select id="lang-sel" class="lang-sel" aria-label="Lingua · Language · Idioma · Langue · 语言"></select>
     <button id="about-btn" type="button" class="icon" data-i18n-title="about">i</button>
     <button id="side-btn" type="button" class="icon side-toggle" data-i18n-title="layers">
       <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 3 2 8l10 5 10-5-10-5Zm-10 9 10 5 10-5M2 16l10 5 10-5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
@@ -166,6 +166,7 @@
     <p>Durante la riproduzione, fra un fotogramma e il successivo i campi vengono <b>mescolati linearmente</b> per rendere fluido il movimento. È un’interpolazione visiva, non un dato: quando la si vede, la data nella barra e la riga delle fonti dicono <span class="interp">interpolato</span>. Da fermi si vede sempre il dato originale.</p>
     <h3>Anomalie e hotspot</h3>
     <p>L’anomalia è la differenza dalla <b>climatologia 1993–2020</b>, calcolata qui dalle medie mensili GLORYS12 (i dati cominciano nel 1993, per questo non 1991–2020). Per giorni e ore la climatologia si interpola fra i centri dei mesi. Gli <b>hotspot</b> segnano i mesi in cui la temperatura supera il 90° percentile 1993–2020 dello stesso mese: è un indicatore mensile, non la definizione di ondata di calore marina di Hobday et al. (che richiede dati giornalieri e almeno cinque giorni consecutivi).</p>
+    <p>Gli istanti più recenti (l’ultimo mese, i giorni da fine settembre 2026, tutte le ore) vengono dall’analisi operativa, un sistema diverso da GLORYS12 e in media circa 0,1 °C più freddo. Per non scambiare questa differenza per clima, la loro anomalia si calcola su una base GLORYS corretta per la differenza media fra i due sistemi, misurata sui mesi in cui esistono entrambi (da giugno 2022). Resta un’incertezza locale di circa 0,35 °C.</p>
     <h3>Particelle e frecce</h3>
     <p>Le particelle seguono il campo di velocità dell’istante mostrato, accelerato per renderlo visibile: indicano la direzione e l’intensità della corrente, non il percorso reale di una massa d’acqua. Le frecce sono campionate su una griglia che si infittisce con lo zoom; colore e lunghezza crescono con la velocità.</p>
   </div>
@@ -181,13 +182,62 @@
     <p>During playback the fields are <b>blended linearly</b> between one frame and the next to make motion smooth. This is a visual interpolation, not data: whenever it is on screen, the date and the source line say <span class="interp">interpolated</span>. When paused you always see the original data.</p>
     <h3>Anomalies and hotspots</h3>
     <p>The anomaly is the difference from the <b>1993–2020 climatology</b>, computed here from the GLORYS12 monthly means (the data start in 1993, hence not 1991–2020). For days and hours the climatology is interpolated between month centres. <b>Hotspots</b> mark months whose temperature exceeds the 1993–2020 90th percentile of the same month: a monthly indicator, not the Hobday et al. marine heatwave definition (which needs daily data and at least five consecutive days).</p>
+    <p>The most recent instants (the last month, days from late September 2026, all hours) come from the operational analysis, a different system from GLORYS12 and about 0.1 °C colder on average. So that this difference is not mistaken for climate, their anomaly uses a GLORYS baseline corrected for the mean difference between the two systems, measured over the months when both exist (since June 2022). About 0.35 °C of local uncertainty remains.</p>
     <h3>Particles and arrows</h3>
     <p>Particles follow the velocity field of the time shown, sped up to be visible: they show the direction and strength of the current, not the actual path of a water mass. Arrows are sampled on a grid that gets denser as you zoom; colour and length grow with speed.</p>
+  </div>
+  <div data-lang-only="es">
+    <p>Ocean Earth muestra la <b>temperatura superficial del mar</b> y las <b>corrientes superficiales</b> desde enero de 1993 hasta el último dato publicado, con los productos del <b>Copernicus Marine Service</b>. Todos los campos se llevan a la misma malla regular de 0,25° (unos 28 km en el ecuador).</p>
+    <h3>Tres pasos temporales</h3>
+    <ul>
+      <li><b>Mes</b> (desde 1993): medias mensuales. Temperatura del reanálisis GLORYS12 (el modelo NEMO a 1/12° que asimila temperatura por satélite, altimetría y perfiles in situ) y, después de su última fecha, del análisis operativo global del mismo sistema. Corrientes del producto observacional Copernicus-GlobCurrent (altimetría por satélite para la parte geostrófica, viento ERA5 para la parte de Ekman, marea), reprocesado y luego en tiempo casi real.</li>
+      <li><b>Día</b>: medias diarias de las mismas fuentes; para el último año también se puede elegir la temperatura <b>observada por satélite</b> (OSTIA L4).</li>
+      <li><b>Hora</b>, para los últimos días: corrientes instantáneas horarias (GlobCurrent, con la marea) y temperatura en media horaria del análisis operativo. No hay datos horarios para todo el periodo: para los años pasados el paso más fino aquí es el día.</li>
+    </ul>
+    <h3>Interpolación</h3>
+    <p>Durante la reproducción, entre un fotograma y el siguiente los campos se <b>mezclan linealmente</b> para que el movimiento sea fluido. Es una interpolación visual, no un dato: cuando se ve, la fecha en la barra y la línea de fuentes dicen <span class="interp">interpolado</span>. En pausa se ve siempre el dato original.</p>
+    <h3>Anomalías y puntos calientes</h3>
+    <p>La anomalía es la diferencia respecto a la <b>climatología 1993–2020</b>, calculada aquí con las medias mensuales de GLORYS12 (los datos empiezan en 1993, por eso no 1991–2020). Para días y horas la climatología se interpola entre los centros de los meses. Los <b>puntos calientes</b> marcan los meses en que la temperatura supera el percentil 90 de 1993–2020 del mismo mes: es un indicador mensual, no la definición de ola de calor marina de Hobday et al. (que requiere datos diarios y al menos cinco días consecutivos).</p>
+    <p>Los instantes más recientes (el último mes, los días desde finales de septiembre de 2026, todas las horas) vienen del análisis operativo, un sistema distinto de GLORYS12 y en promedio unos 0,1 °C más frío. Para no confundir esa diferencia con el clima, su anomalía se calcula sobre una base GLORYS corregida por la diferencia media entre los dos sistemas, medida en los meses en que existen ambos (desde junio de 2022). Queda una incertidumbre local de unos 0,35 °C.</p>
+    <h3>Partículas y flechas</h3>
+    <p>Las partículas siguen el campo de velocidad del instante mostrado, acelerado para hacerlo visible: indican la dirección y la intensidad de la corriente, no el recorrido real de una masa de agua. Las flechas se muestrean en una malla que se densifica con el zoom; color y longitud crecen con la velocidad.</p>
+  </div>
+  <div data-lang-only="fr">
+    <p>Ocean Earth montre la <b>température de surface de la mer</b> et les <b>courants de surface</b> de janvier 1993 jusqu’à la dernière donnée publiée, avec les produits du <b>Copernicus Marine Service</b>. Tous les champs sont ramenés sur la même grille régulière de 0,25° (environ 28 km à l’équateur).</p>
+    <h3>Trois pas de temps</h3>
+    <ul>
+      <li><b>Mois</b> (depuis 1993) : moyennes mensuelles. Température de la réanalyse GLORYS12 (le modèle NEMO au 1/12° qui assimile la température satellitaire, l’altimétrie et les profils in situ) puis, après sa dernière date, de l’analyse opérationnelle globale du même système. Courants du produit d’observation Copernicus-GlobCurrent (altimétrie satellitaire pour la partie géostrophique, vent ERA5 pour la partie d’Ekman, marée), retraité puis en temps quasi réel.</li>
+      <li><b>Jour</b> : moyennes journalières des mêmes sources ; pour la dernière année on peut aussi choisir la température <b>observée par satellite</b> (OSTIA L4).</li>
+      <li><b>Heure</b>, pour les derniers jours : courants instantanés horaires (GlobCurrent, avec la marée) et température en moyenne horaire de l’analyse opérationnelle. Il n’existe pas de données horaires pour toute la période : pour les années passées, le pas le plus fin ici est le jour.</li>
+    </ul>
+    <h3>Interpolation</h3>
+    <p>Pendant la lecture, les champs sont <b>mélangés linéairement</b> entre une image et la suivante pour rendre le mouvement fluide. C’est une interpolation visuelle, pas une donnée : quand elle est à l’écran, la date dans la barre et la ligne des sources indiquent <span class="interp">interpolé</span>. En pause, on voit toujours la donnée originale.</p>
+    <h3>Anomalies et points chauds</h3>
+    <p>L’anomalie est l’écart à la <b>climatologie 1993–2020</b>, calculée ici à partir des moyennes mensuelles GLORYS12 (les données commencent en 1993, d’où l’absence de 1991–2020). Pour les jours et les heures, la climatologie est interpolée entre les centres des mois. Les <b>points chauds</b> signalent les mois où la température dépasse le 90e centile 1993–2020 du même mois : c’est un indicateur mensuel, pas la définition de vague de chaleur marine de Hobday et al. (qui exige des données journalières et au moins cinq jours consécutifs).</p>
+    <p>Les instants les plus récents (le dernier mois, les jours depuis fin septembre 2026, toutes les heures) proviennent de l’analyse opérationnelle, un système différent de GLORYS12 et en moyenne environ 0,1 °C plus froid. Pour ne pas confondre cet écart avec le climat, leur anomalie se calcule sur une base GLORYS corrigée de l’écart moyen entre les deux systèmes, mesuré sur les mois où les deux existent (depuis juin 2022). Il reste une incertitude locale d’environ 0,35 °C.</p>
+    <h3>Particules et flèches</h3>
+    <p>Les particules suivent le champ de vitesse de l’instant affiché, accéléré pour être visible : elles indiquent la direction et l’intensité du courant, pas le trajet réel d’une masse d’eau. Les flèches sont échantillonnées sur une grille qui se densifie avec le zoom ; couleur et longueur augmentent avec la vitesse.</p>
+  </div>
+  <div data-lang-only="zh">
+    <p>Ocean Earth 利用<b>哥白尼海洋服务</b>（Copernicus Marine Service）的产品，展示 1993 年 1 月至最新发布数据的<b>海表温度</b>和<b>表层洋流</b>。所有场都统一到同一个 0.25° 规则网格上（赤道处约 28 公里）。</p>
+    <h3>三种时间步长</h3>
+    <ul>
+      <li><b>月</b>（1993 年起）：月平均。温度来自 GLORYS12 再分析（同化卫星温度、测高和现场剖面的 1/12° NEMO 模式），其最后日期之后来自同一系统的全球业务化分析。洋流来自基于观测的 Copernicus-GlobCurrent 产品（地转部分用卫星测高，埃克曼部分用 ERA5 风场，另含潮汐），先是再处理版本，之后为近实时版本。</li>
+      <li><b>日</b>：同样来源的日平均；最近一年还可以选择<b>卫星观测</b>的温度（OSTIA L4）。</li>
+      <li><b>小时</b>，仅限最近几天：逐时瞬时洋流（GlobCurrent，含潮汐）和业务化分析的逐时平均温度。并非整个时段都有逐时数据：过去年份这里最细的步长是日。</li>
+    </ul>
+    <h3>插值</h3>
+    <p>播放时，相邻两帧之间的场会被<b>线性混合</b>，使运动更流畅。这是视觉上的插值，不是数据：出现插值时，时间栏中的日期和数据源一行会标注<span class="interp">插值</span>。暂停时显示的始终是原始数据。</p>
+    <h3>距平与热点</h3>
+    <p>距平是相对于 <b>1993–2020 年气候态</b>的差值，这里由 GLORYS12 月平均计算（数据始于 1993 年，因此不是 1991–2020 年）。对日和小时数据，气候态在各月中点之间插值。<b>热点</b>标出温度超过同月 1993–2020 年第 90 百分位的月份：这是一个月尺度指标，不是 Hobday 等人的海洋热浪定义（后者需要日数据且至少连续五天）。</p>
+    <p>最新的时刻（最近一个月、2026 年 9 月下旬以来的逐日数据、全部逐时数据）来自业务化分析，它与 GLORYS12 是不同的系统，平均约偏冷 0.1 °C。为了不把这一差异误当作气候信号，这些数据的距平以 GLORYS 为基准，并按两个系统在共同月份（2022 年 6 月起）测得的平均差异进行校正。局地仍有约 0.35 °C 的不确定性。</p>
+    <h3>粒子与箭头</h3>
+    <p>粒子沿当前时刻的速度场运动，并经过加速以便看清：它们表示洋流的方向和强弱，而不是某个水团的实际路径。箭头在随缩放加密的网格上取样；颜色和长度随流速增加。</p>
   </div>
   <h3>Copernicus Marine</h3>
   <div id="about-sources" class="about-table"></div>
   <ul id="about-tiers"></ul>
-  <p class="fine"><span data-lang-only="it">Generato usando informazioni del Copernicus Marine Service dell’Unione europea.</span><span data-lang-only="en">Generated using E.U. Copernicus Marine Service Information.</span> · Natural Earth (coste, pubblico dominio / public domain) · <span data-lang-only="it">aggiornato</span><span data-lang-only="en">updated</span> <span id="about-updated" class="mono"></span> · <a href="https://github.com/postadelmaga/carbonio/tree/main/ocean-earth" target="_blank" rel="noopener">GitHub</a></p>
+  <p class="fine">Generated using E.U. Copernicus Marine Service Information<span data-lang-only="it"> (informazioni del Copernicus Marine Service dell’Unione europea)</span><span data-lang-only="es"> (información del Copernicus Marine Service de la Unión Europea)</span><span data-lang-only="fr"> (informations du Copernicus Marine Service de l’Union européenne)</span><span data-lang-only="zh">（使用欧盟哥白尼海洋服务信息生成）</span>. · Natural Earth (public domain) · <span data-i18n="updated">updated</span> <span id="about-updated" class="mono"></span> · <a href="https://github.com/postadelmaga/carbonio/tree/main/ocean-earth" target="_blank" rel="noopener">GitHub</a></p>
 </dialog>
 
 <script type="module" src="app/main.js"></script>
