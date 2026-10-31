@@ -1,0 +1,12 @@
+[Unit]
+Description=Ocean Earth: scarica, valida e pubblica i nuovi dati Copernicus
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=ubuntu
+WorkingDirectory=/home/ubuntu/ocean-earth
+ExecStart=/home/ubuntu/ocean-earth/pipeline/auto.sh
+Nice=10
+TimeoutStartSec=6h

@@ -22,6 +22,9 @@ set -euo pipefail
 #   --apply       esegue davvero il trasferimento
 #   --prune       aggiunge --delete: cancella sul remoto i file non piu presenti
 #   --out DIR     prepara solo la build in DIR, senza collegarsi al server
+#   --oe-data     sincronizza anche i dati di Ocean Earth dalla copia locale.
+#                 Di norma NON serve: li pubblica ogni giorno arm_php
+#                 (ocean-earth/pipeline/auto.sh) e la copia locale e' piu' vecchia.
 ##############################################################################
 
 SSH_HOST="arch_php"
@@ -30,6 +33,7 @@ PUBLIC_URL=""
 APPLY=0
 PRUNE=0
 OUT=""
+OE_DATA_SYNC=0
 
 SRC_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
@@ -46,7 +50,8 @@ while [[ $# -gt 0 ]]; do
     --apply) APPLY=1;  shift ;;
     --prune) PRUNE=1;  shift ;;
     --out)   OUT="${2:-}"; shift 2 ;;
-    -h|--help) sed -n '3,27p' "${BASH_SOURCE[0]}"; exit 0 ;;
+    --oe-data) OE_DATA_SYNC=1; shift ;;
+    -h|--help) sed -n '3,30p' "${BASH_SOURCE[0]}"; exit 0 ;;
     *) err "Opzione sconosciuta: $1"; exit 2 ;;
   esac
 done
@@ -178,7 +183,9 @@ rsync "${RSYNC_OPTS[@]}" --exclude '/ocean-earth/data/' "$BUILD_DIR"/ "$SSH_HOST
 # Prima i fotogrammi, poi il manifest: chi apre la pagina durante il
 # trasferimento non trova mai un istante elencato e non ancora arrivato.
 # Indici e log della pipeline restano in locale.
-if [ -f "$OE_DATA/manifest.json" ]; then
+if [[ $OE_DATA_SYNC -eq 0 ]]; then
+  info "Ocean Earth: i dati li pubblica arm_php ogni giorno, qui non si toccano (--oe-data per forzare)"
+elif [ -f "$OE_DATA/manifest.json" ]; then
   info "Ocean Earth: sincronizzo i dati ($(du -sh "$OE_DATA" | cut -f1) in locale)"
   [[ $APPLY -eq 1 ]] && ssh "$SSH_HOST" "mkdir -p '$DEST/ocean-earth/data'"
   OE_OPTS=(-a --human-readable --omit-dir-times --no-perms --exclude '/index/' --exclude '/logs/' --exclude '*.tmp.*')

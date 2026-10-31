@@ -245,11 +245,27 @@ climatology and percentiles 12 MB, land and coasts 0.9 MB.
 
 ## Deploy
 
-`publish.sh` → `deploy.sh` copies `ocean-earth/index.html` and `app/` into the
-site build, then rsyncs `ocean-earth/data/` directly (frames first, manifest
-last, `index/` and `logs/` excluded). The main rsync excludes
-`/ocean-earth/data/`, so `--prune` on the site never deletes the data; with
-`--prune` the data sync also removes frames that left the rolling windows.
+**Code** (`index.html`, `app/`): `publish.sh` → `deploy.sh` from the repository
+root, like the rest of the site. The main rsync excludes `/ocean-earth/data/`,
+so `--prune` on the site never deletes the data.
+
+**Data**: published every day by **arm_php**, not from the local copy.
+`pipeline/auto.sh`, started by the systemd timer in `pipeline/systemd/`
+(06:30 UTC), runs `update.sh`, then `validate.py`; only if validation passes
+it rsyncs `data/` to the server, frames first and `manifest.json` last, with
+`--delete --max-delete=400` so that frames leaving the rolling windows go away
+but a mistake cannot empty the server. The key `~/.ssh/oe_to_arch` on arm_php
+is authorized on the server only for `rrsync` inside
+`/home/arch/carbonioweb/ocean-earth/data`, only from arm_php's address.
+Log: `~/ocean-earth/data/logs/auto.log` on arm_php. `deploy.sh --oe-data`
+still pushes the local copy, for emergencies only: it is normally older than
+the server's.
+
+First setup on arm_php (once): pipeline code and `data/index/` copied from
+the repository, `./pipeline/auto.sh --pull` to take the published series from
+the server, then the two unit files into `/etc/systemd/system/` and
+`systemctl enable --now ocean-earth.timer`.
+
 No server configuration change is needed: Caddy already serves the folder
 statically (`no-cache` revalidation for everything outside `/assets/`).
 
