@@ -75,6 +75,8 @@ async function open(w, h, mobile, theme) {
   // terraferma (ERA5): umidita' del suolo dell'estate 2022, siccita' in Europa
   const land = await page.evaluate(async () => {
     const tl = __oe.timeline;
+    // la scelta della variabile della terraferma sta nel mixer
+    document.querySelector('.mix-btn').click();
     const row = document.querySelector('.mx[data-layer=land]');
     if (!row) return { row: false };
     const sel = row.querySelector('select');
@@ -90,6 +92,7 @@ async function open(w, h, mobile, theme) {
     const r = document.querySelector('.mx[data-layer=land] input[type=range]');
     r.value = 0; r.dispatchEvent(new Event('input', { bubbles: true }));
     out.off = __oe.globe.state.layers.land === 0;
+    document.querySelector('.quick-mode button[data-mode=sst]').click();
     return out;
   });
   check('terraferma: umidita\' del suolo', land.row && land.lv === 'soil' && land.t === '2022-07' && land.po > 0 && land.po < 100 && land.status && land.off, JSON.stringify(land));
@@ -121,21 +124,41 @@ async function open(w, h, mobile, theme) {
     return out;
   });
   check('viste livello del mare e ghiaccio', views.tier === 'monthly' && Math.abs(views.sla) < 60 && views.icePole > 50 && !(views.iceEq > 0) && views.status, JSON.stringify(views));
-  // schede Mare / Terra / Aria e vista nell'indirizzo
+  // menu Mare / Terra / Aria, Mix per ultimo, vista nell'indirizzo; ogni vista
+  // ha solo la sua legenda e scarica solo i suoi file
   const nav = await page.evaluate(async () => {
+    const wait = async (ok) => { for (let k = 0; k < 60 && !ok(); k++) await new Promise((r) => setTimeout(r, 250)); };
     const out = {};
-    document.querySelector('.domains button[data-domain=land]').click();
-    await new Promise((r) => setTimeout(r, 800));
-    out.land = { view: __oe.ui.view, hash: location.hash, shown: [...document.querySelectorAll('.quick-mode button')].filter((b) => b.offsetParent).map((b) => b.dataset.mode) };
-    document.querySelector('.domains button[data-domain=sea]').click();
-    await new Promise((r) => setTimeout(r, 800));
+    const dd = document.querySelector('.dd[data-domain=land]');
+    dd.querySelector('.dd-btn').click();
+    out.open = !dd.querySelector('.dd-menu').hidden;
+    out.items = [...dd.querySelectorAll('.dd-menu button[data-mode]')].filter((b) => b.offsetParent).map((b) => b.dataset.mode).join();
+    dd.querySelector('button[data-mode=rain]').click();
+    out.closed = dd.querySelector('.dd-menu').hidden;
+    await wait(() => __oe.shown()?.lA && __oe.shown().lv === 'precip');
+    const c = __oe.shown();
+    out.view = __oe.ui.view; out.hash = location.hash; out.on = dd.classList.contains('on');
+    out.rows = [...document.querySelectorAll('#legend .mx')].map((r) => r.dataset.layer).join();
+    out.sliders = document.querySelectorAll('#legend input[type=range]').length;
+    out.onlyOwn = !c.sA && !c.cA && !!c.lA;
+    out.last = document.querySelector('.views').lastElementChild.dataset.mode;
+    document.querySelector('.mix-btn').click();
+    await new Promise((r) => setTimeout(r, 500));
+    out.mix = { view: __oe.ui.view, sliders: document.querySelectorAll('#legend input[type=range]').length, on: document.querySelector('.mix-btn').classList.contains('on') };
+    document.querySelector('.quick-mode button[data-mode=sst]').click();
     out.sea = __oe.ui.view;
     out.cap = !!document.querySelector('#legend .lg-cap b');
+    document.querySelector('#legend-btn').click();
+    out.hidden = getComputedStyle(document.querySelector('#legend')).display === 'none';
+    document.querySelector('#legend-btn').click();
+    out.shownAgain = getComputedStyle(document.querySelector('#legend')).display !== 'none';
     __oe.timeline.setTier('daily');
     await new Promise((r) => setTimeout(r, 1500));
     return out;
   });
-  check('schede e indirizzo', nav.land.view === 'rain' && nav.land.hash.startsWith('#pioggia/') && nav.land.shown.join() === 'rain,drought' && nav.sea === 'sst' && nav.cap, JSON.stringify(nav));
+  check('menu delle viste e indirizzo', nav.open && nav.closed && nav.items === 'rain,drought' && nav.view === 'rain' && nav.on && nav.hash.startsWith('#pioggia/') && nav.last === 'mix' && nav.sea === 'sst' && nav.cap, JSON.stringify(nav));
+  check('ogni vista: solo la sua legenda e i suoi dati', nav.rows === 'land' && nav.sliders === 0 && nav.onlyOwn && nav.mix.view === 'mix' && nav.mix.on && nav.mix.sliders >= 5, JSON.stringify(nav));
+  check('pulsante della legenda', nav.hidden && nav.shownAgain, JSON.stringify(nav));
   // aria (CAMS, 1°): CO₂ e flussi di giugno 1994 (presenti anche con la serie parziale)
   const airv = await page.evaluate(async () => {
     const wait = async (ok) => { for (let k = 0; k < 60 && !ok(); k++) await new Promise((r) => setTimeout(r, 250)); };
@@ -172,6 +195,7 @@ async function open(w, h, mobile, theme) {
   check('fonte OSTIA', /OSTIA/.test(ost), ost);
   await page.screenshot({ path: `${outDir}/f-desktop-ostia.png` });
   // velocita' + frecce, zoom nel Mediterraneo
+  await page.click('.dd[data-domain=sea] .dd-btn');
   await page.click('.quick-mode button[data-mode=speed]');
   await page.click('#arrows');
   await page.click('#med-btn');

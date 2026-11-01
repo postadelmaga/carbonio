@@ -5,6 +5,13 @@
 const META_BASE = globalThis.document?.querySelector('meta[name=data-base]')?.content;
 const BASE = META_BASE ? new URL(META_BASE, globalThis.document.baseURI) : new URL('../data/', import.meta.url);
 
+// byte occupati da un fotogramma decodificato (gli array che contiene)
+function sizeOf(v) {
+  let n = 0;
+  if (v) for (const x of Object.values(v)) if (x && ArrayBuffer.isView(x)) n += x.byteLength;
+  return Math.max(n, 1024);
+}
+
 export class DataStore {
   constructor() {
     this.manifest = null;
@@ -19,6 +26,11 @@ export class DataStore {
     // piu' lunga: e' quella che fa da riserva durante la riproduzione
     this.prevCache = new Map();
     this.maxPrev = mobile ? 24 : 64;
+    // Il limite vero e' in byte (la stessa memoria di prima: maxCache file di
+    // temperatura esatta, maxPrev anteprime): un mese di CO₂ a 1° pesa 0,3 MB
+    // decodificato contro i 18 della temperatura, e cosi' ne restano molti di piu'.
+    this.budget = { exact: (mobile ? 10 : 24) * 18e6, prev: (mobile ? 24 : 64) * 6e6 };
+    this.maxCount = mobile ? 120 : 400;
     this.saved = new Set();               // percorsi gia' nella cache del browser
     this.failed = new Map();              // chiave → quando e' fallito
     this.onSaved = null;
@@ -73,7 +85,7 @@ export class DataStore {
       const keys = await cache.keys();
       for (const req of keys) {
         const path = req.url.startsWith(base) ? req.url.slice(base.length) : null;
-        const m = path && path.match(/^(?:p\/)?([mdh])\/[a-z]+\/([^/]+)\.(?:png|webp)$/);
+        const m = path && path.match(/^(?:p\/)?([mdh])\/[a-z0-9]+\/([^/]+)\.(?:png|webp)$/);
         // istanti usciti dalle finestre mobili (giorni, ore): non torneranno
         if (!m || !known.has(`${m[1]}/${m[2]}`)) { await cache.delete(req); continue; }
         this.saved.add(path);
@@ -126,13 +138,24 @@ export class DataStore {
     }
     // un file che non arriva si riprova dopo un po', non a ogni fotogramma
     if (this.peek(path, kind) === 'failed') return Promise.reject(new Error('non disponibile'));
-    const e = { p: this.decode(path, kind), v: null };
-    e.p.then((v) => { e.v = v; this.failed.delete(key); },
+    const e = { p: this.decode(path, kind), v: null, bytes: 4e6 };
+    e.p.then((v) => { e.v = v; e.bytes = sizeOf(v); this.failed.delete(key); this.trim(cache); },
       () => { cache.delete(key); this.failed.set(key, performance.now()); });
     cache.set(key, e);
-    const max = cache === this.prevCache ? this.maxPrev : this.maxCache;
-    while (cache.size > max) cache.delete(cache.keys().next().value);
+    this.trim(cache);
     return e.p;
+  }
+
+  // toglie i meno usati finche' la cache sta nel suo budget (l'ultimo resta)
+  trim(cache) {
+    const budget = cache === this.prevCache ? this.budget.prev : this.budget.exact;
+    let total = 0;
+    for (const e of cache.values()) total += e.bytes;
+    while (cache.size > 1 && (total > budget || cache.size > this.maxCount)) {
+      const k = cache.keys().next().value;
+      total -= cache.get(k).bytes;
+      cache.delete(k);
+    }
   }
 
   cacheFor(kind) { return kind === 'psst' || kind === 'pcur' ? this.prevCache : this.cache; }

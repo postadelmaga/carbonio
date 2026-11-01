@@ -25,14 +25,17 @@ const ui = {
   regionMode: false, region: null,
   compare: false, compareIndex: null,
   landVar: 'precip',           // terraferma: precip | soil (solo serie mensile)
-  domain: 'sea',               // scheda: sea | land | air
-  view: 'sst',                 // vista scelta (null se il mixer ha fatto una combinazione sua)
+  domain: 'sea',               // menu della vista: sea | land | air | mix
+  view: 'sst',                 // vista scelta; 'mix' e' quella che si compone col mixer
+  // scelte del pannello: valgono nelle viste a cui appartengono (particelle e
+  // frecce sono le correnti, gli hotspot la temperatura), sempre nel mix
+  particles: true, arrows: false, hotspot: false,
   open: new Set(),             // gruppi del mixer aperti a mano
   airMode: 1,                  // CO₂: 0 ppm, 1 rispetto alla media globale del mese
   fluxMode: 0,                 // flussi: 0 totale, 1 fossili, 2 naturali
   reelPreview: false,          // editor dei reel: anteprime leggere mentre si suona
-  // legenda ridotta: solo le scale dei livelli accesi (di base sui telefoni)
-  legendMini: (() => { try { const v = localStorage.getItem('oe-legend-mini'); if (v != null) return v === '1'; } catch (e) { /* niente */ } return matchMedia('(max-width: 720px)').matches; })(),
+  // legenda visibile (pulsante nella barra del tempo; sui telefoni parte chiusa)
+  legendOn: (() => { try { const v = localStorage.getItem('oe-legend'); if (v != null) return v === '1'; } catch (e) { /* niente */ } return !matchMedia('(max-width: 720px)').matches; })(),
 };
 
 const camera = new Camera();
@@ -79,7 +82,7 @@ async function start() {
   bindControls();
   buildAbout();
   timeline.setTier(manifest.tiers.monthly ? 'monthly' : Object.keys(manifest.tiers)[0], false);
-  if (REEL || !readHash()) { syncModeButtons(); setDomain(ui.view ? DOMAIN[ui.view] : ui.domain); }
+  if (REEL || !readHash()) setMode(!REEL && ui.view && viewAvailable(ui.view) ? ui.view : 'sst');
   hashReady = true;
   $('#loading').hidden = true;
   // per i test automatici e per chi vuole curiosare dalla console
@@ -184,13 +187,24 @@ function request(frame, v, prev = previewMode()) {
 }
 
 // le variabili da mostrare per un istante
+// Solo i file dei livelli accesi: la temperatura serve a temperatura,
+// anomalia e hotspot, le correnti a velocita', particelle e frecce. Una vista
+// dell'aria o della terraferma scarica cosi' 30-200 kB a mese invece di 1,7 MB.
+function needSst() { const st = globe.state; return st.layers.sst > 0 || st.layers.anom > 0 || st.hotspot; }
+function needCur() { const st = globe.state; return st.layers.speed > 0 || st.particles || st.arrows; }
 function needed(f) {
-  const need = [sstVar(f), 'cur'];
+  const need = [];
+  if (needSst()) need.push(sstVar(f));
+  if (needCur()) need.push('cur');
   if (medOn()) need.push('med');
   if (landOn()) need.push(ui.landVar);
   need.push(...oceanVars(), ...airVars());
   return need.filter((v) => f[v] != null);
 }
+
+// quali file chiede la combinazione accesa (se cambia, si ricarica)
+function needKey() { return [needSst(), needCur(), medOn(), landOn() && ui.landVar, ...oceanVars(), ...airVars()].join(); }
+function needsChanged() { if (current && current.nk !== needKey()) onTime('source'); }
 
 // aria (CO₂ a 1°): solo serie mensile, fino all'ultimo anno pubblicato da CAMS
 function airVars() {
@@ -265,7 +279,9 @@ function hasFrame(i) {
 function aheadFrames() {
   if (!timeline.playing) return 1;
   const room = previewMode() ? store.maxPrev : store.maxCache;
-  return Math.max(2, Math.min(Math.floor(room / (medOn() ? 3 : 2)) - 2, Math.ceil(timeline.fps * 3)));
+  // i file che servono per istante: con meno livelli si scarica piu' avanti
+  const per = Math.max(1, needed(timeline.frameA || timeline.frames[0]).filter((v) => !NO_PREVIEW.has(v) || !previewMode()).length);
+  return Math.max(2, Math.min(Math.floor(room / per) - 2, Math.ceil(timeline.fps * 3)));
 }
 
 // l'istante k passi dopo quello mostrato, dentro l'intervallo che si ripete
@@ -300,11 +316,12 @@ async function applyFrames() {
   const med = medOn(), lv = landOn() ? ui.landVar : null, ov = oceanVars();
   const slaOn = ov.includes('sla'), iceOn = ov.includes('ice');
   const av = airVars();
+  const nS = needSst(), nC = needCur(), nk = needKey();
   const got = (p) => (p ? p.catch(() => null) : null);
   // tutti i file prima di toccare il globo: temperatura, correnti e
   // Mediterraneo cambiano insieme, con l'interpolazione e la climatologia
   const [sA, sB, cA, cB, mA, mB, lA, lB, ...rest] = await Promise.all([
-    request(A, svA), request(B, svB), request(A, 'cur'), request(B, 'cur'),
+    nS ? request(A, svA) : null, nS ? request(B, svB) : null, nC ? request(A, 'cur') : null, nC ? request(B, 'cur') : null,
     med ? request(A, 'med') : null, med ? request(B, 'med') : null,
     lv ? request(A, lv) : null, lv ? request(B, lv) : null,
     slaOn ? request(A, 'sla') : null, slaOn ? request(B, 'sla') : null,
@@ -332,7 +349,7 @@ async function applyFrames() {
   st.landB = lv ? globe.frameTexture(keyFor(B, lv), lB, 'scalar') || st.landA : null;
   globe.setAir(airF, airK);
   st.air = av.some((v) => airF[v][0]);
-  current = { A, B, sA, sB, cA, cB, svA, svB, mA, mB, lA, lB, lv, qA, qB, gA, gB, ov, av, airF, preview: previewMode(), missing: !sA && A[svA] != null };
+  current = { A, B, sA, sB, cA, cB, svA, svB, mA, mB, lA, lB, lv, qA, qB, gA, gB, ov, av, airF, nk, preview: previewMode(), missing: nS && !sA && A[svA] != null };
   syncShown();
   syncTimeUI(false);
   loadClim();
@@ -388,6 +405,7 @@ function syncShown() {
 // editor dei reel: sul globo ci sono esattamente gli istanti chiesti, con i
 // file del tipo giusto (anteprime o esatti) e la climatologia per l'anomalia
 function reelReady() {
+  if (current && current.nk !== needKey()) { onTime('source'); return false; }
   if (!current || current.A !== timeline.frameA || current.B !== timeline.frameB) return false;
   if (current.preview !== previewMode()) return false;
   return !(globe.state.layers.anom > 0 && !globe.hasClim);
@@ -408,7 +426,7 @@ function onTime(why) {
     current = null;
     $('#status').innerHTML = `<span class="interp">${t('loading')}</span>`;
   }
-  if (!current || current.A !== A || current.B !== B || current.preview !== previewMode()) applyFrames();
+  if (!current || current.A !== A || current.B !== B || current.preview !== previewMode() || current.nk !== needKey()) applyFrames();
   else updateStatus();
   syncShown();
   if (why === 'tier' || why === 'loop' || why === 'source') drawSaved();
@@ -421,7 +439,7 @@ function onTime(why) {
     if (ui.compare) { ui.compareIndex = Math.max(0, timeline.frames.length - 1); buildCompareUI(); applyCompare(); }
     $('#src-row').hidden = timeline.tierName !== 'daily';
     $('#hotspot').disabled = timeline.tierName !== 'monthly';
-    if (timeline.tierName !== 'monthly') { globe.state.hotspot = false; $('#hotspot').checked = false; drawLegend(); }
+    if (timeline.tierName !== 'monthly') { ui.hotspot = false; $('#hotspot').checked = false; applyOverlays(); }
   }
   if (pointChart) pointChart.setMarker(timeline.year);
   if (regionChart) regionChart.setMarker(timeline.year);
@@ -887,10 +905,7 @@ function drawRegionChart() {
 function playFiles(f) {
   const tier = timeline.tierName, out = [];
   const usePrev = manifest.preview && manifest.preview.available;
-  for (const v of [sstVar(f), 'cur']) {
-    if (f[v] != null) out.push([v, usePrev ? store.previewPath(tier, v, f.t) : store.framePath(tier, v, f.t)]);
-  }
-  if (ui.med && tier === 'daily' && f.med != null) out.push(['med', store.framePath(tier, 'med', f.t)]);
+  for (const v of needed(f)) out.push([v, usePrev && !NO_PREVIEW.has(v) ? store.previewPath(tier, v, f.t) : store.framePath(tier, v, f.t)]);
   return out;
 }
 
@@ -908,7 +923,7 @@ function missing() {
     for (const [v, path] of playFiles(timeline.frames[i])) {
       if (store.saved.has(path)) continue;
       files.push(path);
-      bytes += sizes[v] || 300e3;
+      bytes += sizes[v] || (NO_PREVIEW.has(v) ? 60e3 : 300e3);
     }
   }
   return { files, bytes, frames: i1 - i0 + 1 };
@@ -1052,8 +1067,8 @@ function syncTimeUI(full) {
 
 function updateStatus() {
   if (!current) return;
-  const sS = store.source(current.A[current.svA]);
-  const sC = store.source(current.A.cur);
+  const sS = current.sA ? store.source(current.A[current.svA]) : null;
+  const sC = current.cA ? store.source(current.A.cur) : null;
   const notes = [];
   if (current.missing) notes.push(t('frame_missing'));
   if ((globe.state.layers.anom > 0 || globe.state.hotspot) && globe.state.biasW > 0) notes.push(t('bias_note'));
@@ -1144,28 +1159,25 @@ function bindControls() {
   // viste i cui dati non sono ancora pubblicati (manifest): nascoste
   const mv = manifest.tiers.monthly?.vars || [];
   const NEEDS = { sla: ['sla'], ice: ['ice'], drought: ['soil'], co2: ['co2'], emis: ['co2foss', 'co2nat'] };
-  $$('.quick-mode button').forEach((b) => { b.hidden = !(NEEDS[b.dataset.mode] || []).every((v) => mv.includes(v)); });
-  $$('.quick-mode button').forEach((b) => b.addEventListener('click', () => setMode(b.dataset.mode)));
-  // una scheda senza viste con dati non si mostra
-  $$('.domains button').forEach((b) => {
-    b.hidden = !Object.keys(DOMAIN).some((m) => DOMAIN[m] === b.dataset.domain && viewAvailable(m));
-    b.addEventListener('click', () => pickDomain(b.dataset.domain));
-  });
+  $$('.quick-mode button[data-mode]').forEach((b) => { b.hidden = !(NEEDS[b.dataset.mode] || []).every((v) => mv.includes(v)); });
+  $$('.quick-mode button[data-mode]').forEach((b) => b.addEventListener('click', () => { closeMenus(); setMode(b.dataset.mode); }));
+  bindMenus();
   addEventListener('hashchange', () => readHash());
   bindMixer();
   if (!REEL) try {
-    const saved = JSON.parse(localStorage.getItem('oe-layers') || 'null');
     const air = JSON.parse(localStorage.getItem('oe-air') || 'null');
     if (Array.isArray(air) && [0, 1].includes(air[0]) && [0, 1, 2].includes(air[1])) [ui.airMode, ui.fluxMode] = air;
     const lv = localStorage.getItem('oe-land');
     if (lv === 'precip' || lv === 'soil') ui.landVar = lv;
-    for (const k of MONTHLY_ONLY) if (saved && !(typeof saved[k] === 'number' && saved[k] >= 0 && saved[k] <= 1)) saved[k] = 0;
-    if (saved && LAYERS.every((k) => typeof saved[k] === 'number' && saved[k] >= 0 && saved[k] <= 1)) setLayers(saved);
+    const v = localStorage.getItem('oe-view');
+    if (v && PRESETS[v]) ui.view = v;
+    localStorage.removeItem('oe-layers');   // sostituito da oe-view e oe-mix
+    localStorage.removeItem('oe-legend-mini');
   } catch (e) { /* niente */ }
-  $('#particles').addEventListener('change', (e) => { st.particles = e.target.checked; drawLegend(); });
-  $('#arrows').addEventListener('change', (e) => { st.arrows = e.target.checked; drawLegend(); });
+  $('#particles').addEventListener('change', (e) => { ui.particles = e.target.checked; applyOverlays(); });
+  $('#arrows').addEventListener('change', (e) => { ui.arrows = e.target.checked; applyOverlays(); });
   $('#coast').addEventListener('change', (e) => { st.coast = e.target.checked; });
-  $('#hotspot').addEventListener('change', (e) => { st.hotspot = e.target.checked; if (st.hotspot) loadMonthly('p90'); drawLegend(); });
+  $('#hotspot').addEventListener('change', (e) => { ui.hotspot = e.target.checked; applyOverlays(); });
   $$('input[name=source]').forEach((r) => r.addEventListener('change', () => { ui.source = r.value; onTime('source'); }));
   $('#med-hi').addEventListener('change', (e) => { ui.med = e.target.checked; onTime('source'); });
   $('#p-count').addEventListener('change', (e) => { st.particleCount = +e.target.value; globe.resetParticles(); });
@@ -1290,9 +1302,9 @@ function autoRange() {
 const OFF = { sst: 0, anom: 0, speed: 0, land: 0, sla: 0, ice: 0, co2: 0, flux: 0 };
 const PRESETS = {
   sst: { ...OFF, sst: 1 }, anom: { ...OFF, anom: 1 }, speed: { ...OFF, speed: 1 },
-  sla: { ...OFF, sla: 1 }, ice: { ...OFF, anom: 1, ice: 1 },
-  rain: { ...OFF, anom: 0.6, land: 1, landVar: 'precip' },
-  drought: { ...OFF, anom: 1, land: 1, landVar: 'soil' },
+  sla: { ...OFF, sla: 1 }, ice: { ...OFF, ice: 1 },
+  rain: { ...OFF, land: 1, landVar: 'precip' },
+  drought: { ...OFF, land: 1, landVar: 'soil' },
   co2: { ...OFF, co2: 1, airMode: 1 }, emis: { ...OFF, flux: 1, fluxMode: 0 },
   mix: { ...OFF, sst: 1, anom: 0.7, speed: 0.6 },
 };
@@ -1301,22 +1313,62 @@ const ALL_LAYERS = [...LAYERS, 'sla', 'ice', 'land', 'co2', 'flux'];
 const MONTHLY_ONLY = ['sla', 'ice', 'land', 'co2', 'flux'];
 function saveAir() { keep('oe-air', JSON.stringify([ui.airMode, ui.fluxMode])); }
 // schede e viste: la scheda raggruppa le viste, la vista fissa i livelli
-const DOMAIN = { sst: 'sea', anom: 'sea', speed: 'sea', sla: 'sea', ice: 'sea', mix: 'sea', rain: 'land', drought: 'land', co2: 'air', emis: 'air' };
+const DOMAIN = { sst: 'sea', anom: 'sea', speed: 'sea', sla: 'sea', ice: 'sea', mix: 'mix', rain: 'land', drought: 'land', co2: 'air', emis: 'air' };
 const CAPTION = { sst: 'cap_sst', anom: 'cap_anom', speed: 'cap_speed', sla: 'sla_title', ice: 'ice_title', mix: 'mix_title', rain: 'rain_title', drought: 'drought_title', co2: 'co2_title', emis: 'emis_title' };
 // nell'indirizzo: nomi stabili, uguali in tutte le lingue
 const SLUG = { sst: 'temperatura', anom: 'anomalia', speed: 'correnti', sla: 'livello-mare', ice: 'ghiaccio', mix: 'mix', rain: 'pioggia', drought: 'siccita', co2: 'co2', emis: 'emissioni' };
 const viewAvailable = (m) => { const b = $(`.quick-mode button[data-mode=${m}]`); return b && !b.hidden; };
+const viewName = (m) => $(`.quick-mode button[data-mode=${m}] .l`)?.textContent.trim() || '';
 
+// il menu della vista scelta si accende e ne mostra il nome
 function setDomain(d) {
   ui.domain = d;
   $('.quick-mode').dataset.domain = d;
-  $$('.domains button').forEach((b) => { b.classList.toggle('on', b.dataset.domain === d); b.setAttribute('aria-selected', b.dataset.domain === d); });
+  $$('.dd').forEach((el) => {
+    const on = el.dataset.domain === d;
+    el.classList.toggle('on', on);
+    el.querySelector('.dd-cur').textContent = on && ui.view ? viewName(ui.view) : '';
+  });
+  $('.mix-btn')?.classList.toggle('on', d === 'mix');
 }
-function pickDomain(d) {
-  setDomain(d);
-  if (ui.view && DOMAIN[ui.view] === d) return;
-  const first = Object.keys(DOMAIN).find((m) => DOMAIN[m] === d && viewAvailable(m));
-  if (first) setMode(first);
+
+// menu a tendina: uno aperto alla volta, si chiudono fuori, con Esc o scegliendo
+function closeMenus() {
+  $$('.dd-menu').forEach((m) => { m.hidden = true; });
+  $$('.dd-btn').forEach((b) => b.setAttribute('aria-expanded', 'false'));
+}
+function bindMenus() {
+  // un menu senza viste con dati non si mostra
+  $$('.dd').forEach((el) => { el.hidden = ![...el.querySelectorAll('button[data-mode]')].some((b) => !b.hidden); });
+  $$('.dd-btn').forEach((b) => b.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const menu = b.nextElementSibling, open = menu.hidden;
+    closeMenus();
+    if (!open) return;
+    menu.hidden = false;
+    b.setAttribute('aria-expanded', 'true');
+    (menu.querySelector('button.on') || menu.querySelector('button:not([hidden])'))?.focus();
+  }));
+  document.addEventListener('click', (e) => { if (!e.target.closest('.dd')) closeMenus(); });
+  document.addEventListener('keydown', (e) => {
+    const menu = e.target.closest?.('.dd-menu');
+    if (e.key === 'Escape' && $$('.dd-menu:not([hidden])').length) { const b = $('.dd-btn[aria-expanded=true]'); closeMenus(); b?.focus(); return; }
+    if (!menu || !['ArrowDown', 'ArrowUp'].includes(e.key)) return;
+    e.preventDefault();
+    const items = [...menu.querySelectorAll('button:not([hidden])')];
+    const i = items.indexOf(e.target) + (e.key === 'ArrowDown' ? 1 : -1);
+    items[(i + items.length) % items.length].focus();
+  });
+}
+
+// particelle, frecce e hotspot: solo nelle viste a cui appartengono
+const OVERLAY_VIEWS = { particles: ['speed', 'mix'], arrows: ['speed', 'mix'], hotspot: ['sst', 'anom', 'mix'] };
+function applyOverlays() {
+  const st = globe.state;
+  for (const k of Object.keys(OVERLAY_VIEWS)) st[k] = !!ui[k] && OVERLAY_VIEWS[k].includes(ui.view);
+  if (st.hotspot) loadMonthly('p90');
+  needsChanged();
+  drawLegend();
 }
 
 // vista e data nell'indirizzo (#anomalia/2022-09): un link mostra la stessa mappa
@@ -1342,8 +1394,14 @@ function readHash() {
 
 function setMode(mode) {
   ui.view = mode;
+  keep('oe-view', mode);
   setDomain(DOMAIN[mode]);
-  const { landVar, airMode, fluxMode, ...w } = PRESETS[mode];
+  let { landVar, airMode, fluxMode, ...w } = PRESETS[mode];
+  // il mix riprende la combinazione lasciata l'ultima volta
+  if (mode === 'mix' && !REEL) try {
+    const m = JSON.parse(localStorage.getItem('oe-mix') || 'null');
+    if (m && ALL_LAYERS.every((k) => m[k] == null || (typeof m[k] === 'number' && m[k] >= 0 && m[k] <= 1))) w = { ...OFF, ...m };
+  } catch (e) { /* niente */ }
   if (airMode != null) ui.airMode = airMode;
   if (fluxMode != null) ui.fluxMode = fluxMode;
   if (airMode != null || fluxMode != null) saveAir();
@@ -1352,7 +1410,7 @@ function setMode(mode) {
   setLayers(w);
   if (needMonthly) { timeline.setTier('monthly'); note(t('to_monthly')); }
   else if (landVar && current) onTime('source');
-  drawLegend();
+  applyOverlays();
   writeHash();
 }
 
@@ -1364,7 +1422,7 @@ function setLayers(w) {
   const changedMain = top !== ui.mode;
   ui.mode = top;
   if (st.layers.anom > 0 && !globe.hasClim) { note(t('loading')); loadClim(); }
-  keep('oe-layers', JSON.stringify(st.layers));
+  if (ui.view === 'mix') keep('oe-mix', JSON.stringify(st.layers));
   syncModeButtons();
   // quale file serve (OSTIA, Mediterraneo) dipende da quali livelli sono accesi
   const on = (o) => ALL_LAYERS.map((k) => o[k] > 0).join();
@@ -1374,15 +1432,7 @@ function setLayers(w) {
 }
 
 function syncModeButtons() {
-  const L = globe.state.layers;
-  const same = (p) => ALL_LAYERS.every((k) => Math.abs((L[k] || 0) - (p[k] || 0)) < 1e-6) && (!p.landVar || p.landVar === ui.landVar)
-    && (p.airMode == null || p.airMode === ui.airMode) && (p.fluxMode == null || p.fluxMode === ui.fluxMode);
-  $$('.quick-mode button').forEach((b) => b.classList.toggle('on', same(PRESETS[b.dataset.mode])));
-  // la vista corrente: quella che corrisponde ai pesi (prima nella scheda aperta),
-  // altrimenti nessuna: e' una combinazione fatta col mixer
-  const match = Object.keys(PRESETS).filter((m) => same(PRESETS[m]));
-  ui.view = match.find((m) => DOMAIN[m] === ui.domain) || match[0] || null;
-  if (ui.view && DOMAIN[ui.view] !== ui.domain) setDomain(DOMAIN[ui.view]);
+  $$('.quick-mode button[data-mode]').forEach((b) => { const on = b.dataset.mode === ui.view; b.classList.toggle('on', on); if (b.closest('.dd-menu')) b.setAttribute('aria-checked', on); });
   const st = globe.state;
   const r = ui.mode === 'anom' ? st.rangeAnom : ui.mode === 'speed' ? st.rangeSpeed : st.rangeSst;
   $('#r-min').value = r[0];
@@ -1417,24 +1467,31 @@ function drawLegend() {
     return `<div class="lg-bar" style="background:${cssGradient(pal)}"></div><div class="lg-ticks">${ticks}</div>`;
   };
   const vars = manifest ? manifest.tiers.monthly?.vars || [] : [];
-  // ogni scala ha il suo cursore: la legenda e' anche il mixer dei livelli.
-  // Le righe spente mostrano solo nome e cursore; quelle che in questa serie
-  // non esistono (solo mensili) restano visibili ma dicono perche'.
+  // Una vista mostra solo le scale dei suoi livelli. Nel mix ogni scala ha il
+  // suo cursore e la legenda e' il mixer: le righe spente mostrano solo nome e
+  // cursore; quelle che in questa serie non esistono (solo mensili) restano
+  // visibili ma dicono perche'.
+  const mix = ui.view === 'mix';
   const row = (k, title, body, extra = '') => {
     const w = Math.round((st.layers[k] || 0) * 100);
+    if (!mix && !w) return;
     const na = MONTHLY_ONLY.includes(k) && timeline && timeline.tierName !== 'monthly';
-    L.push(`<div class="lg mx${w ? '' : ' off'}${na ? ' na' : ''}" data-layer="${k}">
-      <label class="mx-head"><span class="lg-t">${title}</span><input type="range" min="0" max="100" step="5" value="${w}" aria-label="${title}"><output>${w}%</output></label>
-      ${extra}${na ? `<div class="mx-na muted">${t('monthly_only')}</div>` : ''}<div class="mx-scale">${body}</div></div>`);
+    const head = mix ? `<label class="mx-head"><span class="lg-t">${title}</span><input type="range" min="0" max="100" step="5" value="${w}" aria-label="${title}"><output>${w}%</output></label>`
+      : `<div class="mx-head"><span class="lg-t">${title}</span></div>`;
+    L.push(`<div class="lg mx${mix ? '' : ' fixed'}${w ? '' : ' off'}${na ? ' na' : ''}" data-layer="${k}">
+      ${head}${extra}${na ? `<div class="mx-na muted">${t('monthly_only')}</div>` : ''}<div class="mx-scale">${body}</div></div>`);
   };
   // in cima: cosa si sta guardando
-  const minBtn = `<button type="button" class="lg-min" aria-expanded="${!ui.legendMini}" title="${t(ui.legendMini ? 'legend_more' : 'legend_less')}" aria-label="${t(ui.legendMini ? 'legend_more' : 'legend_less')}">${ui.legendMini ? '+' : '−'}</button>`;
-  L.push(`<div class="lg-cap">${minBtn}${ui.view ? `<b>${$(`.quick-mode button[data-mode=${ui.view}] .l`)?.textContent || ''}</b><span>${t(CAPTION[ui.view])}</span>` : `<b>${t('custom_mix')}</b>`}</div>`);
-  // gruppi: aperto quello della scheda, quelli con un livello acceso e quelli aperti a mano
+  if (ui.view) L.push(`<div class="lg-cap"><b>${viewName(ui.view)}</b><span>${t(CAPTION[ui.view])}</span></div>`);
+  // mix: gruppi Mare / Terra / Aria; aperti quelli con un livello acceso e quelli aperti a mano
   const GROUP_LAYERS = { sea: ['sst', 'anom', 'speed', 'sla', 'ice'], land: ['land'], air: ['co2', 'flux'] };
+  let inGroup = false;
   const group = (g) => {
-    const open = g === ui.domain || ui.open.has(g) || GROUP_LAYERS[g].some((k) => st.layers[k] > 0);
+    if (!mix) return;
+    if (inGroup) L.push('</div>');
+    const open = ui.open.has(g) || GROUP_LAYERS[g].some((k) => st.layers[k] > 0);
     L.push(`<button type="button" class="lg-group${open ? ' open' : ''}" data-g="${g}" aria-expanded="${open}">${t('group_' + g)}</button><div class="lg-sec"${open ? '' : ' hidden'}>`);
+    inGroup = true;
   };
   group('sea');
   row('sst', t('sst_label'), scale(st.paletteSst, st.rangeSst[0], st.rangeSst[1], 0));
@@ -1443,16 +1500,18 @@ function drawLegend() {
   if (vars.includes('sla')) row('sla', t('sla_label'), scale('sla', st.rangeSla[0], st.rangeSla[1], 0, ' cm') + `<div class="lg-ends"><span>${t('lower')}</span><span>${t('higher')}</span></div>`);
   if (vars.includes('ice')) row('ice', t('ice_label'), `<div class="lg-bar" style="background:linear-gradient(90deg,rgba(184,214,237,.35),#b8d6ed 15%,#f7fcff)"></div><div class="lg-ticks"><span style="left:0">0</span><span style="left:15%">15</span><span style="left:100%">100%</span></div>`);
   if (vars.some((v) => v === 'precip' || v === 'soil')) {
-    L.push('</div>'); group('land');
+    group('land');
     // terraferma: scala logaritmica, la stessa dello shader
     const span = LAND_SPAN[ui.landVar];
     const ticks = [-1, -0.5, 0, 0.5, 1].map((f, i) => `<span style="left:${i * 25}%">${Math.round(100 * 2 ** (f * span))}%</span>`).join('');
     const opt = (v) => `<option value="${v}"${ui.landVar === v ? ' selected' : ''}>${t(v + '_short')}</option>`;
-    row('land', `${t('land_label')}<span class="lg-sub"> · ${t(ui.landVar + '_short')}</span>`, `<div class="lg-bar" style="background:${cssGradient('precip')}"></div><div class="lg-ticks">${ticks}</div><div class="lg-ends"><span>${t('drier')}</span><span>${t('wetter')}</span></div>`,
-      `<div class="mx-var"><select id="land-var" aria-label="${t('land_label')}">${opt('precip')}${opt('soil')}</select> <span class="muted">% ${t('of_normal')} ${manifest.land?.clim_years.join('–') || '1993–2020'}</span></div>`);
+    // nelle viste Pioggia e Siccita' la variabile e' la vista stessa
+    const of = `<span class="muted">% ${t('of_normal')} ${manifest.land?.clim_years.join('–') || '1993–2020'}</span>`;
+    row('land', mix ? t('land_label') : `${t('land_label')} · ${t(ui.landVar + '_short')}`, `<div class="lg-bar" style="background:${cssGradient('precip')}"></div><div class="lg-ticks">${ticks}</div><div class="lg-ends"><span>${t('drier')}</span><span>${t('wetter')}</span></div>`,
+      `<div class="mx-var">${mix ? `<select id="land-var" aria-label="${t('land_label')}">${opt('precip')}${opt('soil')}</select> ` : ''}${of}</div>`);
   }
   if (vars.includes('co2')) {
-    L.push('</div>'); group('air');
+    group('air');
     const sel = (id, cur, opts) => `<select id="${id}">${opts.map(([v, k]) => `<option value="${v}"${cur === v ? ' selected' : ''}>${t(k)}</option>`).join('')}</select>`;
     const r = ui.airMode ? st.rangeCo2Rel : st.rangeCo2;
     row('co2', `${t('co2_label')} · ppm`, scale(ui.airMode ? 'anomaly' : 'co2', r[0], r[1], 0),
@@ -1462,10 +1521,11 @@ function drawLegend() {
     row('flux', t('flux_label'), `<div class="lg-bar" style="background:${cssGradient('flux')}"></div><div class="lg-ticks">${ft}</div><div class="lg-ends"><span>${t('absorbs')}</span><span>${t('emits')}</span></div>`,
       `<div class="mx-var">${sel('flux-mode', ui.fluxMode, [[0, 'flux_total'], [1, 'flux_foss'], [2, 'flux_nat']])} <span class="muted">g C/m² ${t('per_day')}</span></div>`);
   }
-  L.push('</div>');
+  if (inGroup) L.push('</div>');
   if ((st.particles || st.arrows) && !(st.layers.speed > 0)) L.push(`<div class="lg"><div class="lg-t">${t('particles')} · ${t('speed_label')}</div>${scale('speed', st.rangeSpeed[0], st.rangeSpeed[1], 1)}</div>`);
   if (st.hotspot) L.push(`<div class="lg"><span class="hatch"></span> ${t('hotspot')}</div>`);
   $('#legend').innerHTML = L.join('');
+  $('#legend').classList.toggle('off', !ui.legendOn && !REEL);
 }
 
 function bindMixer() {
@@ -1478,16 +1538,13 @@ function bindMixer() {
     row.querySelector('output').textContent = `${r.value}%`;
     setLayers({ [k]: v });
   });
+  // la legenda si mostra e si nasconde dalla barra del tempo
+  const lb = $('#legend-btn');
+  const syncLb = () => { lb.setAttribute('aria-pressed', ui.legendOn); lb.title = t(ui.legendOn ? 'legend_hide' : 'legend_show'); $('#legend').classList.toggle('off', !ui.legendOn); };
+  syncLb();
+  lb.addEventListener('click', () => { ui.legendOn = !ui.legendOn; keep('oe-legend', ui.legendOn ? '1' : '0'); syncLb(); });
   // i titoli dei gruppi aprono e chiudono la loro sezione
-  $('#legend').classList.toggle('lg-small', ui.legendMini);
   $('#legend').addEventListener('click', (e) => {
-    if (e.target.closest('.lg-min')) {
-      ui.legendMini = !ui.legendMini;
-      keep('oe-legend-mini', ui.legendMini ? '1' : '0');
-      $('#legend').classList.toggle('lg-small', ui.legendMini);
-      drawLegend();
-      return;
-    }
     const g = e.target.closest('.lg-group');
     if (!g) return;
     const open = !g.classList.contains('open');

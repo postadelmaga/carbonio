@@ -13,7 +13,7 @@ export const DOMAIN = { sst: 'sea', anom: 'sea', speed: 'sea', sla: 'sea', ice: 
 // dati che servono a ogni vista (per sapere da quando a quando esistono)
 export const NEEDS = { sst: ['sst'], anom: ['sst'], speed: ['cur'], sla: ['sla'], ice: ['ice'], mix: ['sst', 'cur'], rain: ['precip', 'sst'], drought: ['soil', 'sst'], co2: ['co2'], emis: ['co2foss', 'co2nat'] };
 // righe della legenda nel video
-export const LEGEND = { sst: ['sst'], anom: ['anom'], speed: ['speed'], sla: ['sla'], ice: ['ice'], mix: ['anom'], rain: ['land', 'anom'], drought: ['land', 'anom'], co2: ['co2'], emis: ['flux'] };
+export const LEGEND = { sst: ['sst'], anom: ['anom'], speed: ['speed'], sla: ['sla'], ice: ['ice'], mix: ['anom'], rain: ['land'], drought: ['land'], co2: ['co2'], emis: ['flux'] };
 // colori delle clip nella timeline (le scale dell'atlante)
 export const PALETTE_OF = { sst: 'thermal', anom: 'anomaly', speed: 'speedField', sla: 'sla', ice: null, mix: 'anomaly', rain: 'precip', drought: 'precip', co2: 'co2', emis: 'flux' };
 export const SEA_PARTICLES = ['sst', 'anom', 'speed', 'mix', 'sla', 'ice'];
