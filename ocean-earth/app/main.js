@@ -83,7 +83,7 @@ async function start() {
   hashReady = true;
   $('#loading').hidden = true;
   // per i test automatici e per chi vuole curiosare dalla console
-  window.__oe = { camera, timeline, globe, store, ui, shown: () => current, setMode, ready: reelReady, want: isReady,
+  window.__oe = { camera, timeline, globe, store, ui, shown: () => current, setMode, ready: reelReady, want: isReady, has: hasFrame,
     preview(on) { if (ui.reelPreview === on) return; ui.reelPreview = on; if (current) onTime('source'); },
     setAir(a, f) { if (a != null) ui.airMode = a; if (f != null) ui.fluxMode = f; syncShown(); drawLegend(); } };
 }
@@ -251,6 +251,14 @@ function isReady(i) {
     store.get(...file).catch(() => {});
   }
   return ok;
+}
+
+// come isReady, ma senza chiedere niente: l'editor dei reel sceglie fra i
+// mesi gia' arrivati senza riempire la coda di download
+function hasFrame(i) {
+  const f = timeline.frames[Math.max(0, Math.min(timeline.frames.length - 1, i))];
+  if (!f) return true;
+  return needed(f).every((v) => !!store.peek(...fileOf(f, v, previewMode())));
 }
 
 // quanto avanti scaricare: tre secondi di riproduzione, senza superare la cache

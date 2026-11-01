@@ -7,7 +7,7 @@ import {
   S, W, H, VIEWS, DOMAIN, SEA_PARTICLES, newClip, defaultProject, newAudio, migrate, total, clipStart, clipAt,
   audioEnd, srcBeats, isBarIdx, tlBeats, camAt, progressIn, wrapLon, remember, undo, redo, canUndo, canRedo,
 } from './model.js';
-import { A, bootAtlas, applyAt, peekPos, clipRange } from './atlas.js';
+import { A, bootAtlas, applyAt, feed, clipRange } from './atlas.js';
 import { compose, LOCALE } from './render.js';
 import { initTimeline, renderTimeline, movePlayhead, setZoom, scrollToT, viewGradient } from './timeline.js';
 import { pickCodecs, exportMp4, scheduleSong } from './export.js';
@@ -49,7 +49,7 @@ const TX = {
     song_local: 'The song stays in your browser, it is not uploaded anywhere. To publish the reel you need the rights to the music.', safe: 'areas covered by Instagram',
     split: 'Split', del: 'Delete', on_bars: 'Clips on the bars', fill: 'To the end of the song', zoom: 'Zoom', track_v: 'Globe', track_a: 'Music',
     tl_help: 'Drag edges to stretch or trim (they snap to bars) · drag a clip to move it · Alt + drag the song to choose which part plays · space play · S split · Ctrl+Z undo · Ctrl+wheel zoom',
-    exporting: 'Export', cancel: 'Cancel', download: 'Download the video',
+    exporting: 'Export', cancel: 'Cancel', download: 'Download the video', wait: 'loading data…',
     undo: 'Undo (Ctrl+Z)', redo: 'Redo (Ctrl+Shift+Z)', go_start: 'Start (Home)', go_prev: 'Previous bar (Shift+←)', go_next: 'Next bar (Shift+→)', go_end: 'End (End)',
     snap_t: 'Snap', split_t: 'Split the clip at the playhead (S)', del_t: 'Delete (Del)', bars_t: 'Move every clip boundary to the nearest bar', fill_t: 'Stretch the clips to the end of the song', mute: 'mute',
     project: 'Project', texts: 'Texts', format: 'Format', title: 'Title', lang: 'Text language', o_date: 'date', o_legend: 'legend', o_caption: 'title and caption', o_credits: 'data sources',
@@ -550,6 +550,7 @@ function play() {
   playT0 = when - S.t;
   S.playing = true;
   A.oe.preview(true);
+  A.asked.clear();
   $('#play').textContent = '❚❚';
 }
 function pause() {
@@ -576,7 +577,7 @@ initTimeline({
   text: (k) => t(k),
 });
 
-let lastNow = performance.now();
+let lastNow = performance.now(), lateSince = 0;
 function fmtTC(s) { const m = Math.floor(s / 60), r = s - m * 60; return `${String(m).padStart(2, '0')}:${r.toFixed(2).padStart(5, '0')}`; }
 function frame(now) {
   const dt = Math.min(100, now - lastNow);
@@ -585,15 +586,18 @@ function frame(now) {
     if (S.playing) {
       S.t = Math.max(0, audioCtx().currentTime - playT0);
       if (S.t >= total()) { S.t = total(); pause(); }
-      lastInfo = applyAt(S.t);
-      // i prossimi due secondi: scaricati in anticipo
-      for (let k = 1; k <= 8; k++) { const f = peekPos(S.t + k * 0.25); if (f != null) { A.oe.want(Math.floor(f)); A.oe.want(Math.floor(f) + 1); } }
+      feed(S.t);
+      lastInfo = applyAt(S.t, true, true);
     } else if (need || !lastInfo) {
       lastInfo = applyAt(S.t, camNeed);
       need = false; camNeed = false;
     }
     A.clock.step(dt);
     compose(ctx, lastInfo, S.t);
+    // da fermi: il mese scelto non e' ancora sul globo (file in arrivo)
+    const late = !S.playing && lastInfo && !A.oe.ready();
+    if (!late) lateSince = 0; else if (!lateSince) lateSince = now;
+    $('#wait').hidden = !((S.playing && lastInfo?.waiting) || (late && now - lateSince > 400));
     movePlayhead();
     $('#clock').textContent = fmtTC(S.t);
     const bs = tlBeats().filter((b) => b.t <= S.t + 1e-3);

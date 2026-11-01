@@ -4,7 +4,7 @@
 
 import { S, W, H, VIEWS, NEEDS, LEGEND, clipAt, progressIn, camAt } from './model.js';
 
-export const A = { oe: null, clock: null, frame: null, frames: [], views: {}, viewKey: '', legend: {} };
+export const A = { oe: null, clock: null, frame: null, frames: [], views: {}, viewKey: '', legend: {}, lastPos: null, lastKey: '', asked: new Map() };
 
 // didascalie delle varianti che l'atlante non ha come vista propria
 const VCAP = {
@@ -113,7 +113,7 @@ function legendRow(doc, k) {
   let title = el.querySelector('.lg-t')?.textContent.trim() || '';
   const opt = el.querySelector('.mx-var select option:checked')?.textContent.trim();
   const unit = el.querySelector('.mx-var .muted')?.textContent.trim();
-  if (opt && k !== 'co2' && !title.includes(opt)) title += ` · ${opt}`;
+  if (opt && !title.includes(opt)) title += ` · ${opt}`;
   if (unit && !title.includes(unit)) title += ` (${unit})`;
   const ticks = [...el.querySelectorAll('.mx-scale .lg-ticks span')].map((s) => ({ text: s.textContent.trim(), at: s.style.left.endsWith('%') ? parseFloat(s.style.left) / 100 : 0 }));
   const ends = [...el.querySelectorAll('.mx-scale .lg-ends span')].map((s) => s.textContent.trim());
@@ -161,8 +161,12 @@ export function clipRange(c) {
   return [a, b];
 }
 
-// porta l'atlante all'istante t del reel
-export function applyAt(t, withCam = true) {
+// porta l'atlante all'istante t del reel.
+// gated (anteprima in play): si passa a un mese solo se i suoi file sono gia'
+// pronti, altrimenti si resta sull'ultimo mostrato. Senza, ogni mese nuovo
+// annullava il caricamento del precedente e il globo restava vuoto mentre la
+// data andava avanti. La data del video segue il mese davvero mostrato.
+export function applyAt(t, withCam = true, gated = false) {
   const info = clipAt(t);
   if (!info) return null;
   const { c, t0, lt } = info;
@@ -171,9 +175,49 @@ export function applyAt(t, withCam = true) {
   info.p = progressIn(c, t0, lt);
   info.pos = a + (b - a) * info.p;
   info.range = [a, b];
+  if (gated) {
+    // sul globo servono i file del mese e del successivo (interpolazione)
+    const has = (k) => (A.oe.has ? A.oe.has(k) && A.oe.has(Math.min(b, k + 1)) : A.oe.want(k) && A.oe.want(Math.min(b, k + 1)));
+    const i = Math.floor(info.pos);
+    if (!has(i)) {
+      // il mese arrivato piu' vicino a quello chiesto, senza tornare indietro
+      const same = A.lastKey === A.viewKey && A.lastPos != null && A.lastPos <= info.pos;
+      const from = same ? Math.floor(A.lastPos) : a;
+      let k = i - 1;
+      while (k > from && !has(k)) k--;
+      if (k >= from && k >= a && has(k) && (!same || k > A.lastPos)) info.pos = k;
+      else if (same) info.pos = A.lastPos;
+      else A.oe.want(i);
+      info.p = b > a ? Math.max(0, Math.min(1, (info.pos - a) / (b - a))) : 1;
+      // avviso solo se il globo resta indietro di piu' di un anno
+      info.waiting = Math.floor(info.pos) < i - 12;
+    }
+  }
+  A.lastPos = info.pos; A.lastKey = A.viewKey;
   if (Math.abs(A.oe.timeline.pos - info.pos) > 1e-7) A.oe.timeline.seek(info.pos);
   if (withCam) Object.assign(A.oe.camera, camAt(c, lt));
   return info;
+}
+
+// Download durante il play: al massimo `slots` mesi in volo, scelti dove
+// sara' la riproduzione fra un attimo. Con la rete che non sta dietro ai mesi
+// (una serie di 30 anni in 30 secondi sono 13 mesi al secondo) si salta qualche
+// mese, ma il globo mostra sempre dati veri e la data resta quella mostrata.
+// Chiederli tutti riempiva la coda e la cache dell'atlante li scartava prima
+// che servissero: il globo restava fermo mentre la data correva.
+export function feed(t, slots = 4) {
+  if (!A.oe?.has) return;
+  const now = performance.now();
+  for (const [k, at] of A.asked) if ((A.oe.has(k) && A.oe.has(k + 1)) || now - at > 8000) A.asked.delete(k);
+  for (const lead of [0.3, 0.7, 1.1, 1.6, 2.2, 3]) {
+    if (A.asked.size >= slots) return;
+    const f = peekPos(t + lead);
+    if (f == null) return;
+    const k = Math.floor(f);
+    if (A.asked.has(k) || (A.oe.has(k) && A.oe.has(k + 1))) continue;
+    A.asked.set(k, now);
+    A.oe.want(k); A.oe.want(k + 1);
+  }
 }
 
 // posizione nei dati all'istante t senza toccare l'atlante (per scaricare in anticipo)
