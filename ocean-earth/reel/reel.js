@@ -5,7 +5,7 @@
 import { analyze, downbeats, silence } from './beats.js';
 import {
   S, W, H, VIEWS, DOMAIN, SEA_PARTICLES, newClip, defaultProject, newAudio, migrate, total, clipStart, clipAt,
-  audioEnd, srcBeats, isBarIdx, tlBeats, camAt, progressIn, wrapLon, remember, undo, redo, canUndo, canRedo,
+  audioEnd, srcBars, tlBeats, newSeg, segLen, segEnd, segAt, srcAt, camAt, progressIn, wrapLon, remember, undo, redo, canUndo, canRedo,
 } from './model.js';
 import { A, bootAtlas, applyAt, feed, clipRange } from './atlas.js';
 import { compose, LOCALE } from './render.js';
@@ -28,11 +28,13 @@ const TX = {
     time: 'Tempo', dur: 'Durata (s)', bars: 'Battute', fit: 'adatta', sync: 'Scorrere dei mesi', sync_beat: 'a tempo coi battiti', sync_linear: 'uniforme', hold: 'Pausa sull’ultimo mese (s)', dip: 'Stacco al nero (s)',
     framing: 'Inquadratura', cam0: 'Iniziale', cam1: 'Finale', use_view: 'vista attuale', go: 'vai', spin: 'Rotazione (°/s)',
     avail: (a, b) => `Dati di questa vista: ${a} – ${b}.`, dup: 'Duplica', split: 'Dividi', del: 'Elimina',
-    song: 'Brano', replace: 'Sostituisci', remove_song: 'Rimuovi il brano', volume: 'Volume (%)', mute: 'muto', offset: 'Entra al secondo del reel', in: 'Suona dal secondo del brano', out: 'fino al secondo', fade_in: 'Dissolvenza in entrata (s)', fade_out: 'Dissolvenza in uscita (s)',
+    song: 'Brano', replace: 'Sostituisci', remove_song: 'Rimuovi il brano', volume: 'Volume del brano (%)', mute: 'muto', offset: 'Entra al secondo del reel', in: 'Suona dal secondo del brano', out: 'fino al secondo', fade_in: 'Dissolvenza in entrata (s)', fade_out: 'Dissolvenza in uscita (s)',
+    seg: (i, n) => `Pezzo ${i} di ${n}`, seg_gain: 'Volume del pezzo (%)', speed: 'Velocità (%)', seg_len: 'Durata nel reel (s)', stretch_bars: 'Allunga a battute', split_every: 'Dividi ogni … battute', close_gaps: 'Accoda i pezzi',
+    seg_note: 'S divide il pezzo all’indicatore (Maiusc+←/→ salta di battuta in battuta). Trascina i bordi per tagliare, Maiusc + bordo per allungare o accorciare senza cambiare l’intonazione, il corpo per spostarlo. Duplica mette la copia subito dopo e sposta avanti i pezzi seguenti.',
     trim: 'Togli i silenzi', first_bar: 'Parti dalla battuta più vicina', rhythm: 'Ritmo', bpm: 'Tempo (BPM)', beats: 'Battiti', detected: 'rilevati', grid: 'griglia fissa', meter: 'Battiti per battuta', bar_off: 'La battuta parte dal battito', grid_off: 'Primo battito (s)', tap: 'Batti il tempo (T)',
     bpm_det: (b, n, m) => `${n} battiti rilevati, ${b} BPM, battute da ${m}. Se la griglia non cade sui colpi usa ÷2 o ×2, cambia il primo battito della battuta o batti il tempo con T durante il play.`,
     bpm_grid: (b) => `Griglia fissa a ${b} BPM.`, analyzing: (s) => `Analizzo il brano… ${s}`, song_missing: (n) => `Il progetto usa «${n}»: importalo di nuovo (resta nel browser).`, tap_more: (n) => `Batti ancora (${n})…`, tap_play: 'Avvia il play e batti a tempo.',
-    trimmed: (a, b) => `Silenzi tolti: il brano suona da ${a} a ${b} s.`,
+    trimmed: (a, b) => `Silenzi tolti: il pezzo suona da ${a} a ${b} s.`, no_bars_in: 'Nel pezzo non ci sono battute dove dividerlo.',
     sea: 'Mare', land: 'Terra', air: 'Aria', drop_song: 'Trascina qui un file audio, o usa «Importa un brano»', snap_bar: 'battute', snap_beat: 'battiti', snap_off: 'niente',
     total: (d, n) => `${d} s · ${n} clip`, bar_pos: (n, b) => `battuta ${n}.${b}`,
     no_webcodecs: 'Questo browser non ha WebCodecs: per esportare serve Chrome, Edge o Firefox recenti.',
@@ -48,7 +50,7 @@ const TX = {
     views: 'Views', lib_hint: 'Drag a view onto track V1, or click to add it after the selected clip.', music: 'Music', import_song: 'Import a song',
     song_local: 'The song stays in your browser, it is not uploaded anywhere. To publish the reel you need the rights to the music.', safe: 'areas covered by Instagram',
     split: 'Split', del: 'Delete', on_bars: 'Clips on the bars', fill: 'To the end of the song', zoom: 'Zoom', track_v: 'Globe', track_a: 'Music',
-    tl_help: 'Drag edges to stretch or trim (they snap to bars) · drag a clip to move it · Alt + drag the song to choose which part plays · space play · S split · Ctrl+Z undo · Ctrl+wheel zoom',
+    tl_help: 'Drag edges to stretch or trim (they snap to bars) · drag a clip to move it · song pieces: Shift + edge stretches without changing pitch, Alt + drag chooses which part plays · space play · S split · Ctrl+Z undo · Ctrl+wheel zoom',
     exporting: 'Export', cancel: 'Cancel', download: 'Download the video', wait: 'loading data…',
     undo: 'Undo (Ctrl+Z)', redo: 'Redo (Ctrl+Shift+Z)', go_start: 'Start (Home)', go_prev: 'Previous bar (Shift+←)', go_next: 'Next bar (Shift+→)', go_end: 'End (End)',
     snap_t: 'Snap', split_t: 'Split the clip at the playhead (S)', del_t: 'Delete (Del)', bars_t: 'Move every clip boundary to the nearest bar', fill_t: 'Stretch the clips to the end of the song', mute: 'mute',
@@ -59,11 +61,13 @@ const TX = {
     time: 'Time', dur: 'Length (s)', bars: 'Bars', fit: 'fit', sync: 'Month flow', sync_beat: 'in time with the beats', sync_linear: 'even', hold: 'Hold on last month (s)', dip: 'Dip to black (s)',
     framing: 'Framing', cam0: 'Start', cam1: 'End', use_view: 'current view', go: 'go', spin: 'Rotation (°/s)',
     avail: (a, b) => `Data for this view: ${a} – ${b}.`, dup: 'Duplicate',
-    song: 'Song', replace: 'Replace', remove_song: 'Remove the song', volume: 'Volume (%)', offset: 'Enters at reel second', in: 'Plays from song second', out: 'to second', fade_in: 'Fade in (s)', fade_out: 'Fade out (s)',
+    song: 'Song', replace: 'Replace', remove_song: 'Remove the song', volume: 'Song volume (%)',
+    seg: (i, n) => `Piece ${i} of ${n}`, seg_gain: 'Piece volume (%)', speed: 'Speed (%)', seg_len: 'Length in the reel (s)', stretch_bars: 'Stretch to bars', split_every: 'Split every … bars', close_gaps: 'Line up the pieces',
+    seg_note: 'S splits the piece at the playhead (Shift+←/→ jumps bar to bar). Drag the edges to trim, Shift + edge to stretch or shorten without changing the pitch, the body to move it. Duplicate puts the copy right after and pushes the following pieces forward.', no_bars_in: 'There are no bars inside the piece to split at.', offset: 'Enters at reel second', in: 'Plays from song second', out: 'to second', fade_in: 'Fade in (s)', fade_out: 'Fade out (s)',
     trim: 'Remove silences', first_bar: 'Start on the nearest bar', rhythm: 'Rhythm', bpm: 'Tempo (BPM)', beats: 'Beats', detected: 'detected', grid: 'fixed grid', meter: 'Beats per bar', bar_off: 'Bar starts on beat', grid_off: 'First beat (s)', tap: 'Tap the tempo (T)',
     bpm_det: (b, n, m) => `${n} beats detected, ${b} BPM, bars of ${m}. If the grid does not land on the hits use ÷2 or ×2, change the first beat of the bar or tap the tempo with T while playing.`,
     bpm_grid: (b) => `Fixed grid at ${b} BPM.`, analyzing: (s) => `Analysing the song… ${s}`, song_missing: (n) => `The project uses “${n}”: import it again (it stays in the browser).`, tap_more: (n) => `Keep tapping (${n})…`, tap_play: 'Start playback and tap along.',
-    trimmed: (a, b) => `Silences removed: the song plays from ${a} to ${b} s.`,
+    trimmed: (a, b) => `Silences removed: the piece plays from ${a} to ${b} s.`,
     sea: 'Sea', land: 'Land', air: 'Air', drop_song: 'Drop an audio file here, or use “Import a song”', snap_bar: 'bars', snap_beat: 'beats', snap_off: 'off',
     total: (d, n) => `${d} s · ${n} clips`, bar_pos: (n, b) => `bar ${n}.${b}`,
     no_webcodecs: 'This browser has no WebCodecs: exporting needs a recent Chrome, Edge or Firefox.',
@@ -99,7 +103,7 @@ function saveLocal() { clearTimeout(saveT); saveT = setTimeout(() => { try { loc
 let need = true, camNeed = true, inspT = 0;
 function changed(o = {}) {
   if (S.sel?.kind === 'v' && !S.P.video[S.sel.i]) S.sel = S.P.video.length ? { kind: 'v', i: S.P.video.length - 1 } : null;
-  if (S.sel?.kind === 'a' && !S.P.audio) S.sel = null;
+  if (S.sel?.kind === 'a' && !S.P.audio?.clips[S.sel.i]) S.sel = S.P.audio?.clips.length ? { kind: 'a', i: S.P.audio.clips.length - 1 } : null;
   S.t = Math.min(S.t, total());
   saveLocal();
   renderTimeline();
@@ -151,8 +155,9 @@ async function loadSong(name, bytes, fromProject = false) {
   } else {
     if (!fromProject) remember();
     const keep = S.P.audio;
-    S.P.audio = { ...newAudio(name, buf.duration), offset: keep ? keep.offset : 0, gain: keep ? keep.gain : 1, fadeOut: keep ? keep.fadeOut : 2.5 };
-    S.sel = { kind: 'a' };
+    S.P.audio = newAudio(name, buf.duration);
+    if (keep) { S.P.audio.gain = keep.gain; S.P.audio.clips[0].offset = keep.clips[0]?.offset || 0; }
+    S.sel = { kind: 'a', i: 0 };
     sg.detected = [];
     const t0 = performance.now();
     const tick = setInterval(() => { songMsg = t('analyzing', `${Math.round((performance.now() - t0) / 1000)} s`); renderInspector(); }, 1000);
@@ -164,8 +169,8 @@ async function loadSong(name, bytes, fromProject = false) {
     const A2 = S.P.audio;
     Object.assign(A2, { det: { name, beats: sg.detected, trim: r.trim }, mode: 'detected', bpm: +r.bpm.toFixed(2), meter: r.meter, barOff: r.barOff, gridOff: +(r.beats[0] || 0).toFixed(3) });
     // il brano parte dalla prima battuta dopo il silenzio e finisce con la sua coda
-    const first = sg.detected.find((b, k) => isBarIdx(k) && b >= r.trim.start - 0.01);
-    A2.in = first ?? r.trim.start; A2.out = r.trim.end;
+    const first = srcBars().find((b) => b >= r.trim.start - 0.01);
+    Object.assign(A2.clips[0], { in: first ?? r.trim.start, out: r.trim.end });
   }
   changed();
 }
@@ -223,10 +228,19 @@ function months(lo, hi) {
   for (let i = lo; i <= hi; i++) { const s = A.frames[i].t; out.push([s, f.format(new Date(Date.UTC(+s.slice(0, 4), +s.slice(5, 7) - 1, 1)))]); }
   return out;
 }
+const curSeg = () => (S.sel?.kind === 'a' ? S.P.audio?.clips[S.sel.i] : null);
 const selKey = () => (S.sel ? `${S.sel.kind}${S.sel.i ?? ''}` : 'p');
 function readField(f) {
   const [o, k] = f.split('.');
   if (o === 'a' && k === 'gainPct') return S.P.audio ? Math.round(S.P.audio.gain * 100) : null;
+  if (o === 's') {
+    const c = curSeg();
+    if (!c) return null;
+    if (k === 'ratePct') return +((c.rate || 1) * 100).toFixed(1);
+    if (k === 'gainPct') return Math.round((c.gain ?? 1) * 100);
+    if (k === 'len') return segLen(c);
+    return c[k];
+  }
   const obj = o === 'v' ? S.P.video[S.sel?.i] : o === 'a' ? S.P.audio : o === 'p' ? S.P : null;
   return obj ? obj[k] : null;
 }
@@ -247,7 +261,7 @@ function renderInspector(soft = false) {
   box.dataset.for = selKey();
   const P = S.P;
   if (S.sel?.kind === 'v' && P.video[S.sel.i] && A.oe) box.innerHTML = clipPanel(P.video[S.sel.i], S.sel.i);
-  else if (S.sel?.kind === 'a' && P.audio) box.innerHTML = audioPanel(P.audio);
+  else if (S.sel?.kind === 'a' && P.audio?.clips[S.sel.i]) box.innerHTML = audioPanel(P.audio);
   else box.innerHTML = projectPanel();
 }
 
@@ -303,18 +317,28 @@ function clipPanel(c, i) {
 function audioPanel(Au) {
   const loaded = S.song.buffer && S.song.name === Au.name;
   const info = songMsg || (!loaded ? t('song_missing', Au.name) : Au.mode === 'detected' && S.song.detected.length ? t('bpm_det', Au.bpm.toFixed(1), S.song.detected.length, Au.meter) : t('bpm_grid', Au.bpm.toFixed(2)));
-  const m = Au.meter || 4;
+  const m = Au.meter || 4, i = S.sel.i, c = Au.clips[i], bl = barLength();
+  const nb = bl ? Math.max(1, Math.round(segLen(c) / bl)) : 4;
   return `<h3>🎵 ${esc(Au.name)}</h3>
+  <section><h4>${t('seg', i + 1, Au.clips.length)}</h4><div class="f">
+    <label class="w">${t('offset')}${num('s.offset', c.offset, 0.01, 0)}</label>
+    <label>${t('in')}${num('s.in', c.in, 0.01, 0)}</label>
+    <label>${t('out')}${num('s.out', c.out, 0.01, 0)}</label>
+    <label>${t('speed')}${num('s.ratePct', (c.rate || 1) * 100, 1, 25, 400)}</label>
+    <label>${t('seg_len')}${num('s.len', segLen(c), 0.01, 0.25)}</label>
+    <label>${t('stretch_bars')}<span class="pair"><input type="number" id="seg-bars" value="${nb}" min="1" step="1"${bl ? '' : ' disabled'}><button type="button" class="btn small" data-act="sfit"${bl ? '' : ' disabled'}>${t('fit')}</button></span></label>
+    <label>${t('split_every')}<span class="pair"><input type="number" id="seg-every" value="1" min="1" step="1"${bl ? '' : ' disabled'}><button type="button" class="btn small" data-act="severy"${bl ? '' : ' disabled'}>✂</button></span></label>
+    <label>${t('seg_gain')}${num('s.gainPct', Math.round((c.gain ?? 1) * 100), 5, 0, 200)}</label><span></span>
+    <label>${t('fade_in')}${num('s.fadeIn', c.fadeIn, 0.1, 0)}</label>
+    <label>${t('fade_out')}${num('s.fadeOut', c.fadeOut, 0.1, 0)}</label>
+  </div>
+  <div class="row"><button type="button" class="btn small" data-act="trim"${loaded ? '' : ' disabled'}>${t('trim')}</button><button type="button" class="btn small" data-act="firstbar"${loaded ? '' : ' disabled'}>${t('first_bar')}</button></div>
+  <div class="row"><button type="button" class="btn small" data-act="split">✂ ${t('split')}</button><button type="button" class="btn small" data-act="sdup">${t('dup')}</button><button type="button" class="btn small" data-act="gaps"${Au.clips.length > 1 ? '' : ' disabled'}>${t('close_gaps')}</button><span class="grow"></span><button type="button" class="btn small danger" data-act="sdel"${Au.clips.length > 1 ? '' : ' disabled'}>${t('del')}</button></div>
+  <p class="note">${t('seg_note')}</p></section>
   <section><h4>${t('song')}</h4><div class="f">
     <label>${t('volume')}${num('a.gainPct', Math.round(Au.gain * 100), 5, 0, 200)}</label>
     <span style="align-self:end">${chk('a.mute', Au.mute, t('mute'))}</span>
-    <label class="w">${t('offset')}${num('a.offset', Au.offset, 0.01, 0)}</label>
-    <label>${t('in')}${num('a.in', Au.in, 0.01, 0)}</label>
-    <label>${t('out')}${num('a.out', Au.out, 0.01, 0)}</label>
-    <label>${t('fade_in')}${num('a.fadeIn', Au.fadeIn, 0.1, 0)}</label>
-    <label>${t('fade_out')}${num('a.fadeOut', Au.fadeOut, 0.1, 0)}</label>
-  </div>
-  <div class="row"><button type="button" class="btn small" data-act="trim"${loaded ? '' : ' disabled'}>${t('trim')}</button><button type="button" class="btn small" data-act="firstbar"${loaded ? '' : ' disabled'}>${t('first_bar')}</button></div></section>
+  </div></section>
   <section><h4>${t('rhythm')}</h4><div class="f">
     <label>${t('bpm')}<span class="pair">${num('a.bpm', Au.bpm, 0.01, 40, 240)}<button type="button" class="btn small" data-act="half">÷2</button><button type="button" class="btn small" data-act="double">×2</button></span></label>
     <label>${t('beats')}${sel('a.mode', Au.mode, [['detected', t('detected')], ['grid', t('grid')]])}</label>
@@ -362,21 +386,26 @@ insp.addEventListener('change', async (e) => {
       if (k === 'spin') c.spin = n;
     }
   } else if (o === 'a') {
-    const Au = P.audio, dur = S.song.buffer ? S.song.buffer.duration : Au.out;
+    const Au = P.audio;
     if (k === 'mute') Au.mute = val;
     else if (k === 'mode') Au.mode = val;
     else if (k === 'meter') { Au.meter = +val; Au.barOff = ((Au.barOff % Au.meter) + Au.meter) % Au.meter; }
     else if (k === 'barOff') Au.barOff = +val;
     else if (Number.isFinite(n)) {
       if (k === 'gainPct') Au.gain = Math.max(0, Math.min(2, n / 100));
-      if (k === 'offset') Au.offset = Math.max(0, n);
-      if (k === 'in') Au.in = Math.max(0, Math.min(Au.out - 0.5, n));
-      if (k === 'out') Au.out = Math.max(Au.in + 0.5, Math.min(dur, n));
-      if (k === 'fadeIn') Au.fadeIn = Math.max(0, n);
-      if (k === 'fadeOut') Au.fadeOut = Math.max(0, n);
       if (k === 'bpm') { Au.bpm = Math.max(40, Math.min(240, n)); Au.mode = 'grid'; }
       if (k === 'gridOff') Au.gridOff = Math.max(0, n);
     }
+  } else if (o === 's' && curSeg() && Number.isFinite(n)) {
+    const c = curSeg(), dur = S.song.buffer ? S.song.buffer.duration : Math.max(c.out, n);
+    if (k === 'offset') c.offset = Math.max(0, n);
+    if (k === 'in') c.in = Math.max(0, Math.min(c.out - 0.25, n));
+    if (k === 'out') c.out = Math.max(c.in + 0.25, Math.min(dur, n));
+    if (k === 'ratePct') c.rate = Math.max(0.25, Math.min(4, n / 100));
+    if (k === 'len') c.rate = Math.max(0.25, Math.min(4, (c.out - c.in) / Math.max(0.05, n)));
+    if (k === 'gainPct') c.gain = Math.max(0, Math.min(2, n / 100));
+    if (k === 'fadeIn') c.fadeIn = Math.max(0, n);
+    if (k === 'fadeOut') c.fadeOut = Math.max(0, n);
   }
   changed();
   if (relang) { pause(); await startAtlas(); }
@@ -400,20 +429,27 @@ insp.addEventListener('click', (e) => {
     if (act === 'split') splitAt();
     if (act === 'del') deleteSel();
   } else if (S.sel?.kind === 'a') {
-    const Au = P.audio;
+    const Au = P.audio, c = curSeg();
+    if (!c) return;
     if (act === 'trim' && S.song.trimAuto) {
       remember();
-      Au.in = Math.max(Au.in, S.song.trimAuto.start); Au.out = Math.min(Au.out, S.song.trimAuto.end);
-      if (Au.out - Au.in < 0.5) { Au.in = S.song.trimAuto.start; Au.out = S.song.trimAuto.end; }
-      songMsg = t('trimmed', Au.in.toFixed(2), Au.out.toFixed(2)); changed(); songMsg = '';
+      c.in = Math.max(c.in, S.song.trimAuto.start); c.out = Math.min(c.out, S.song.trimAuto.end);
+      if (c.out - c.in < 0.5) { c.in = S.song.trimAuto.start; c.out = S.song.trimAuto.end; }
+      songMsg = t('trimmed', c.in.toFixed(2), c.out.toFixed(2)); changed(); songMsg = '';
     }
     if (act === 'firstbar') {
-      const bars = srcBeats().filter((_, k) => isBarIdx(k));
-      if (bars.length) { remember(); const b0 = bars.reduce((x, y) => (Math.abs(y - Au.in) < Math.abs(x - Au.in) ? y : x)); Au.in = Math.max(0, Math.min(Au.out - 0.5, b0)); changed(); }
+      const bars = srcBars();
+      if (bars.length) { remember(); const b0 = bars.reduce((x, y) => (Math.abs(y - c.in) < Math.abs(x - c.in) ? y : x)); c.in = Math.max(0, Math.min(c.out - 0.25, b0)); changed(); }
     }
+    if (act === 'split') splitAt();
+    if (act === 'sdup') dupSeg(S.sel.i);
+    if (act === 'sdel') deleteSel();
+    if (act === 'gaps') closeGaps();
+    if (act === 'sfit') { const bl = barLength(), n = Math.max(1, Math.round(+$('#seg-bars').value || 1)); if (bl) { remember(); c.rate = Math.max(0.25, Math.min(4, (c.out - c.in) / (n * bl))); changed(); } }
+    if (act === 'severy') splitEvery(S.sel.i, Math.max(1, Math.round(+$('#seg-every').value || 1)));
     if (act === 'half' || act === 'double') tempo(act === 'double' ? 2 : 0.5);
     if (act === 'tap') tap();
-    if (act === 'del') deleteSel();
+    if (act === 'del') { remember(); P.audio = null; S.sel = null; changed(); }
   }
 });
 
@@ -440,7 +476,9 @@ function tap() {
   const Au = S.P.audio;
   if (!Au) return;
   if (!S.playing) { songMsg = t('tap_play'); renderInspector(); songMsg = ''; return; }
-  const wall = performance.now() / 1000, src = Au.in + (S.t - Au.offset);
+  const si = segAt(S.t);
+  if (si < 0) return;
+  const wall = performance.now() / 1000, src = srcAt(Au.clips[si], S.t);
   if (taps.length && wall - taps[taps.length - 1].w > 2) taps = [];
   taps.push({ w: wall, s: src });
   if (taps.length < 4) { songMsg = t('tap_more', 4 - taps.length); renderInspector(); songMsg = ''; return; }
@@ -466,7 +504,57 @@ function fitBars(i, n) {
 }
 
 // ── strumenti della timeline ───────────────────────────────────────────────
+// pezzi del brano: dividere, duplicare, accodare
+function splitSeg(i, t) {
+  const C = S.P.audio.clips, c = C[i];
+  if (!c || t < c.offset + 0.1 || t > segEnd(c) - 0.1) return false;
+  const src = srcAt(c, t);
+  C.splice(i, 1, { ...c, out: src, fadeOut: 0 }, { ...c, offset: t, in: src, fadeIn: 0 });
+  return true;
+}
+// il pezzo i diviso a ogni n battute del brano che contiene
+function splitEvery(i, n) {
+  const c = S.P.audio.clips[i];
+  const bars = srcBars(), onBar = bars.some((b) => Math.abs(b - c.in) < 0.1);
+  // se il pezzo non parte su una battuta, la prima battuta dentro e' gia' un taglio (l'attacco resta a parte)
+  const cuts = bars.filter((b) => b > c.in + 0.1 && b < c.out - 0.1).filter((_, k) => (onBar ? (k + 1) % n === 0 : k % n === 0));
+  if (!cuts.length) { songMsg = t('no_bars_in'); renderInspector(); songMsg = ''; return; }
+  remember();
+  // da destra a sinistra: gli indici dei pezzi prima non cambiano
+  for (const b of cuts.reverse()) splitSeg(i, c.offset + (b - c.in) / (c.rate || 1));
+  S.sel = { kind: 'a', i };
+  changed();
+}
+function dupSeg(i) {
+  const C = S.P.audio.clips, c = C[i], len = segLen(c), end = segEnd(c);
+  remember();
+  for (const o of C) if (o !== c && o.offset >= end - 1e-3) o.offset += len;
+  C.splice(i + 1, 0, { ...c, offset: end });
+  S.sel = { kind: 'a', i: i + 1 };
+  changed();
+}
+// in ordine di tempo, ognuno subito dopo il precedente (dal primo che resta dov'e')
+function closeGaps() {
+  const C = S.P.audio.clips;
+  remember();
+  const cur = C[S.sel.i];
+  C.sort((a, b) => a.offset - b.offset);
+  for (let k = 1; k < C.length; k++) C[k].offset = segEnd(C[k - 1]);
+  S.sel = { kind: 'a', i: C.indexOf(cur) };
+  changed();
+}
+
 function splitAt() {
+  if (S.sel?.kind === 'a' && S.P.audio) {
+    // il pezzo scelto se l'indicatore ci sta dentro, altrimenti quello che suona li'
+    const C = S.P.audio.clips, i = C[S.sel.i] && S.t > C[S.sel.i].offset && S.t < segEnd(C[S.sel.i]) ? S.sel.i : segAt(S.t);
+    if (i < 0) return;
+    remember();
+    if (!splitSeg(i, S.t)) return;
+    S.sel = { kind: 'a', i: i + 1 };
+    changed();
+    return;
+  }
   const info = clipAt(S.t);
   if (!info) return;
   const { c, i, lt } = info;
@@ -488,6 +576,7 @@ function deleteSel() {
   if (!S.sel) return;
   remember();
   if (S.sel.kind === 'v') { S.P.video.splice(S.sel.i, 1); S.sel = S.P.video.length ? { kind: 'v', i: Math.max(0, S.sel.i - 1) } : null; }
+  else if (S.P.audio.clips.length > 1) { S.P.audio.clips.splice(S.sel.i, 1); S.sel = { kind: 'a', i: Math.max(0, S.sel.i - 1) }; }
   else { S.P.audio = null; S.sel = null; }
   changed();
 }
@@ -554,7 +643,8 @@ function play() {
   $('#play').textContent = '❚❚';
 }
 function pause() {
-  if (src) { try { src.stop(); } catch (e) { /* gia' fermo */ } src = null; }
+  for (const x of src || []) { try { x.stop(); } catch (e) { /* gia' fermo */ } }
+  src = null;
   S.playing = false;
   A.oe?.preview(false);
   $('#play').textContent = '▶';

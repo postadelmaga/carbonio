@@ -3,11 +3,12 @@
 // V1: clip una dopo l'altra. Bordo destro = allunga o accorcia la clip e sposta
 // le seguenti; bordo sinistro = sposta il confine con la clip prima (la durata
 // totale non cambia); trascinare il corpo = cambiare l'ordine.
-// A1: bordi = tagliare l'inizio o la fine del brano; corpo = spostarlo nel
-// tempo; Alt + corpo = scegliere quale parte del brano suona; i pallini in alto
-// = dissolvenze.
+// A1: pezzi del brano. Bordi = tagliare l'inizio o la fine del pezzo;
+// Maiuscolo + bordo = allungarlo o accorciarlo (cambia la velocita', non
+// l'intonazione), come una clip video; corpo = spostarlo nel tempo; Alt + corpo
+// = scegliere quale parte del brano suona; i pallini in alto = dissolvenze.
 
-import { S, total, clipStart, audioLen, audioEnd, tlBeats, snapPoints, snapTo, remember, PALETTE_OF } from './model.js';
+import { S, total, clipStart, segLen, segEnd, audioEnd, tlBeats, snapPoints, snapTo, remember, PALETTE_OF } from './model.js';
 import { A } from './atlas.js';
 import { cssGradient } from '../app/palettes.js';
 
@@ -126,29 +127,34 @@ function drawAudio() {
     lane.innerHTML = `<div class="empty-a" id="empty-a">${H.text ? H.text('drop_song') : ''}</div>`;
     return;
   }
-  const x = X(Au.offset), w = Math.max(2, audioLen() * pps), on = S.sel?.kind === 'a';
-  const fi = Math.min(w, Au.fadeIn * pps), fo = Math.min(w, Au.fadeOut * pps);
-  lane.innerHTML = `<div class="clip audio${on ? ' sel' : ''}" data-a="1" tabindex="0" style="left:${x}px;width:${w}px" title="${Au.name}">
+  lane.innerHTML = Au.clips.map((c, i) => {
+    const x = X(c.offset), w = Math.max(2, segLen(c) * pps), on = S.sel?.kind === 'a' && S.sel.i === i;
+    const fi = Math.min(w, c.fadeIn * pps), fo = Math.min(w, c.fadeOut * pps), r = c.rate || 1;
+    const sp = Math.abs(r - 1) > 1e-3 ? ` · ${Math.round(r * 100)}%` : '';
+    return `<div class="clip audio${on ? ' sel' : ''}${sp ? ' st' : ''}" data-a="${i}" tabindex="0" style="left:${x}px;width:${w}px" title="${Au.name}">
     <canvas></canvas>
     <div class="fade" style="left:0;width:${fi}px;background:linear-gradient(to top right, rgba(0,0,0,.45) 50%, transparent 50%)"></div>
     <div class="fade" style="right:0;width:${fo}px;background:linear-gradient(to top left, rgba(0,0,0,.45) 50%, transparent 50%)"></div>
-    <div class="lab">${Au.mute ? '🔇 ' : ''}${Au.name}</div>
+    <div class="lab">${Au.mute ? '🔇 ' : ''}${Au.clips.length > 1 ? `${i + 1} · ` : ''}${Au.name}${sp}</div>
     <div class="fh" data-f="in" style="left:${Math.max(2, fi - 6)}px"></div><div class="fh" data-f="out" style="right:${Math.max(2, fo - 6)}px"></div>
     <div class="h l" data-h="l"></div><div class="h r" data-h="r"></div></div>`;
-  const cv = lane.querySelector('canvas');
-  const h = lane.offsetHeight - 10;
-  const cw = Math.min(16000, w);
-  const g = canvasFit(cv, cw, h);
-  cv.style.width = '100%';
+  }).join('');
   const sg = S.song;
-  if (!sg.peaks) return;
-  const dur = sg.buffer.duration, n = sg.peaks.length, mid = h / 2 + 6, amp = h / 2 - 9;
-  g.fillStyle = 'rgba(150,200,235,.75)';
-  for (let px = 0; px < cw; px++) {
-    const s = Au.in + (px / cw) * audioLen();
-    const p = sg.peaks[Math.min(n - 1, Math.floor((s / dur) * n))] || 0;
-    g.fillRect(px, mid - p * amp, 1, Math.max(1, 2 * p * amp));
-  }
+  const h = lane.offsetHeight - 10;
+  lane.querySelectorAll('.clip.audio').forEach((el) => {
+    const c = Au.clips[+el.dataset.a], cv = el.querySelector('canvas');
+    const w = Math.max(2, segLen(c) * pps), cw = Math.min(16000, w);
+    const g = canvasFit(cv, cw, h);
+    cv.style.width = '100%';
+    if (!sg.peaks) return;
+    const dur = sg.buffer.duration, n = sg.peaks.length, mid = h / 2 + 6, amp = h / 2 - 9;
+    g.fillStyle = 'rgba(150,200,235,.75)';
+    for (let px = 0; px < cw; px++) {
+      const s = c.in + (px / cw) * (c.out - c.in);
+      const p = sg.peaks[Math.min(n - 1, Math.floor((s / dur) * n))] || 0;
+      g.fillRect(px, mid - p * amp, 1, Math.max(1, 2 * p * amp));
+    }
+  });
 }
 
 export function movePlayhead() {
@@ -168,6 +174,7 @@ function showSnap(t, raw) {
   s.style.left = `${X(t)}px`;
 }
 const tol = () => 8 / pps;
+const songDur = (fallback) => (S.song.buffer ? S.song.buffer.duration : fallback);
 
 export function initTimeline(hooks) {
   H = hooks;
@@ -196,16 +203,15 @@ export function initTimeline(hooks) {
       else drag = { kind: 'v-move', i, x0: x, moved: false };
       return;
     }
-    const Au = S.P.audio;
-    H.select({ kind: 'a' });
+    const si = +aClip.dataset.a, c = S.P.audio.clips[si];
+    H.select({ kind: 'a', i: si });
     const f = e.target.dataset.f, hnd = e.target.dataset.h;
-    // spostando il brano si spostano anche i suoi battiti; tagliandolo restano
-    const all = snapPoints().filter((p) => p.kind !== 'a');
-    const base = { x0: x, off: Au.offset, in: Au.in, out: Au.out, fi: Au.fadeIn, fo: Au.fadeOut, pts: all };
+    // i punti del pezzo stesso si muovono con lui (spostandolo anche i suoi battiti)
+    const all = snapPoints().filter((p) => !(p.kind === 'a' && p.s === si));
+    const base = { si, x0: x, off: c.offset, in: c.in, out: c.out, rate: c.rate || 1, fi: c.fadeIn, fo: c.fadeOut, pts: all };
     if (f) drag = { kind: f === 'in' ? 'a-fi' : 'a-fo', ...base };
-    else if (hnd === 'l') drag = { kind: 'a-l', ...base };
-    else if (hnd === 'r') drag = { kind: 'a-r', ...base };
-    else drag = { kind: e.altKey ? 'a-slip' : 'a-move', ...base, pts: all.filter((p) => p.kind !== 'beat') };
+    else if (hnd) drag = { kind: (e.shiftKey ? 'a-s' : 'a-') + hnd, ...base, pts: e.shiftKey ? all.filter((p) => !(p.kind === 'beat' && p.s === si)) : all };
+    else drag = { kind: e.altKey ? 'a-slip' : 'a-move', ...base, pts: all.filter((p) => !(p.kind === 'beat' && p.s === si)) };
   });
 
   inner.addEventListener('pointermove', (e) => {
@@ -241,36 +247,50 @@ export function initTimeline(hooks) {
         return;
       }
       case 'a-move': {
-        const raw = drag.off + dt;
-        // si aggancia l'inizio del brano oppure la sua fine
+        const c = Au.clips[drag.si], len = segLen(c), raw = drag.off + dt;
+        // si aggancia l'inizio del pezzo oppure la sua fine
         let t = snapTo(raw, tol(), drag.pts);
-        if (t === raw) t = snapTo(raw + audioLen(), tol(), drag.pts) - audioLen();
-        Au.offset = Math.max(0, t);
-        showSnap(Au.offset, raw);
+        if (t === raw) t = snapTo(raw + len, tol(), drag.pts) - len;
+        c.offset = Math.max(0, t);
+        showSnap(c.offset, raw);
         break;
       }
       case 'a-slip': {
-        const len = drag.out - drag.in, dur = S.song.buffer ? S.song.buffer.duration : drag.out;
-        Au.in = Math.max(0, Math.min(dur - len, drag.in - dt));
-        Au.out = Au.in + len;
+        const c = Au.clips[drag.si], len = drag.out - drag.in, dur = songDur(drag.out);
+        c.in = Math.max(0, Math.min(dur - len, drag.in - dt * drag.rate));
+        c.out = c.in + len;
         break;
       }
       case 'a-l': {
-        const raw = drag.off + dt, t = snapTo(raw, tol(), drag.pts);
-        const d = Math.max(-drag.in, Math.min(drag.out - drag.in - 0.5, t - drag.off));
-        Au.offset = Math.max(0, drag.off + d); Au.in = drag.in + (Au.offset - drag.off);
-        showSnap(Au.offset, raw);
+        const c = Au.clips[drag.si], raw = drag.off + dt, t = snapTo(raw, tol(), drag.pts);
+        const d = Math.max(-drag.in / drag.rate, Math.min((drag.out - drag.in) / drag.rate - 0.25, t - drag.off));
+        c.offset = Math.max(0, drag.off + d); c.in = drag.in + (c.offset - drag.off) * drag.rate;
+        showSnap(c.offset, raw);
         break;
       }
       case 'a-r': {
-        const end0 = drag.off + (drag.out - drag.in), raw = end0 + dt, t = snapTo(raw, tol(), drag.pts);
-        const dur = S.song.buffer ? S.song.buffer.duration : drag.out;
-        Au.out = Math.max(Au.in + 0.5, Math.min(dur, drag.in + (t - drag.off)));
-        showSnap(Au.offset + audioLen(), raw);
+        const c = Au.clips[drag.si], end0 = drag.off + (drag.out - drag.in) / drag.rate, raw = end0 + dt, t = snapTo(raw, tol(), drag.pts);
+        c.out = Math.max(c.in + 0.25, Math.min(songDur(drag.out), drag.in + (t - drag.off) * drag.rate));
+        showSnap(segEnd(c), raw);
         break;
       }
-      case 'a-fi': Au.fadeIn = Math.max(0, Math.min(audioLen() / 2, drag.fi + dt)); break;
-      case 'a-fo': Au.fadeOut = Math.max(0, Math.min(audioLen() / 2, drag.fo - dt)); break;
+      // allungare: lo stesso tratto di brano in piu' o meno tempo (25%…400%)
+      case 'a-sr': {
+        const c = Au.clips[drag.si], src = drag.out - drag.in, end0 = drag.off + src / drag.rate, raw = end0 + dt;
+        const t = Math.max(drag.off + src / 4, Math.min(drag.off + src * 4, snapTo(raw, tol(), drag.pts)));
+        c.rate = +(src / (t - drag.off)).toFixed(5);
+        showSnap(t, raw);
+        break;
+      }
+      case 'a-sl': {
+        const c = Au.clips[drag.si], src = drag.out - drag.in, end = drag.off + src / drag.rate, raw = drag.off + dt;
+        const t = Math.max(Math.max(0, end - src * 4), Math.min(end - src / 4, snapTo(raw, tol(), drag.pts)));
+        c.offset = t; c.rate = +(src / (end - t)).toFixed(5);
+        showSnap(t, raw);
+        break;
+      }
+      case 'a-fi': { const c = Au.clips[drag.si]; c.fadeIn = Math.max(0, Math.min(segLen(c) / 2, drag.fi + dt)); break; }
+      case 'a-fo': { const c = Au.clips[drag.si]; c.fadeOut = Math.max(0, Math.min(segLen(c) / 2, drag.fo - dt)); break; }
     }
     H.changed({ light: true });
   });

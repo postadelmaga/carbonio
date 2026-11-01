@@ -3,7 +3,8 @@
 // traccia musica (AAC dove il browser lo codifica, altrimenti Opus).
 
 import { Muxer, ArrayBufferTarget } from './vendor/mp4-muxer.mjs';
-import { S, W, H, total, gainAt, audioLen } from './model.js';
+import { S, W, H, total, gainAt, segLen } from './model.js';
+import { stretched } from './stretch.js';
 import { A, applyAt, until } from './atlas.js';
 import { compose } from './render.js';
 
@@ -11,7 +12,9 @@ export async function pickCodecs(withAudio) {
   if (!('VideoEncoder' in window)) return null;
   const fps = S.P.fps, bitrate = S.P.rate * 1e6;
   let video = null;
-  for (const codec of ['avc1.640028', 'avc1.4d0028', 'avc1.420028', 'avc1.640032']) {
+  // 1080×1920 a 60 fotogrammi al secondo chiede il livello 4.2 (2a); a 30 basta il 4.0 (28)
+  const levels = fps > 30 ? ['2a', '32', '28'] : ['28', '2a', '32'];
+  for (const codec of levels.flatMap((l) => ['6400', '4d00', '4200'].map((p) => `avc1.${p}${l}`))) {
     const cfg = { codec, width: W, height: H, bitrate, framerate: fps, avc: { format: 'avc' } };
     try { if ((await VideoEncoder.isConfigSupported(cfg)).supported) { video = cfg; break; } } catch (e) { /* prossimo */ }
   }
@@ -26,29 +29,39 @@ export async function pickCodecs(withAudio) {
   return { video, audio };
 }
 
-// curva del volume campionata (50 punti al secondo) da t0 per la durata d
-export function gainCurve(t0, d) {
+// curva del volume del segmento c campionata (50 punti al secondo) da t0 per la durata d
+export function gainCurve(c, t0, d) {
   const n = Math.max(2, Math.ceil(d * 50));
-  const c = new Float32Array(n);
-  for (let i = 0; i < n; i++) c[i] = gainAt(t0 + (d * i) / (n - 1));
-  return c;
+  const g = new Float32Array(n);
+  for (let i = 0; i < n; i++) g[i] = gainAt(c, t0 + (d * i) / (n - 1));
+  return g;
 }
 
-// il brano suonato sulla timeline da t0 (in tempo reale o fuori linea)
+// i pezzi del brano suonati sulla timeline da t0 (in tempo reale o fuori linea)
 export function scheduleSong(ctx, dest, t0, when) {
   const P = S.P, Au = P.audio;
-  if (!Au || !S.song.buffer || Au.mute) return null;
-  const T = total(), len = audioLen();
-  const startTl = Math.max(t0, Au.offset), endTl = Math.min(T, Au.offset + len);
-  if (endTl <= startTl) return null;
-  const src = ctx.createBufferSource(), gain = ctx.createGain();
-  src.buffer = S.song.buffer;
-  src.connect(gain).connect(dest);
-  const at = when + (startTl - t0), d = endTl - startTl;
-  gain.gain.value = gainAt(startTl);
-  gain.gain.setValueCurveAtTime(gainCurve(startTl, d), at, d);
-  src.start(at, Au.in + (startTl - Au.offset), d);
-  return src;
+  if (!Au || !S.song.buffer || Au.mute) return [];
+  const T = total(), out = [];
+  for (const c of Au.clips) {
+    const startTl = Math.max(t0, c.offset), endTl = Math.min(T, c.offset + segLen(c));
+    if (endTl <= startTl + 1e-3) continue;
+    const rate = c.rate || 1;
+    const src = ctx.createBufferSource(), gain = ctx.createGain();
+    src.connect(gain).connect(dest);
+    const at = when + (startTl - t0), d = endTl - startTl;
+    gain.gain.value = gainAt(c, startTl);
+    gain.gain.setValueCurveAtTime(gainCurve(c, startTl, d), at, d);
+    if (Math.abs(rate - 1) < 1e-4) {
+      src.buffer = S.song.buffer;
+      src.start(at, c.in + (startTl - c.offset), d);
+    } else {
+      // allungato: il pezzo ricalcolato parte da c.in, il tempo e' gia' quello della timeline
+      src.buffer = stretched(S.song.buffer, c.in, c.out, rate);
+      src.start(at, startTl - c.offset, d);
+    }
+    out.push(src);
+  }
+  return out;
 }
 
 async function renderAudio() {
