@@ -121,6 +121,21 @@ async function open(w, h, mobile, theme) {
     return out;
   });
   check('viste livello del mare e ghiaccio', views.tier === 'monthly' && Math.abs(views.sla) < 60 && views.icePole > 50 && !(views.iceEq > 0) && views.status, JSON.stringify(views));
+  // schede Mare / Terra / Aria e vista nell'indirizzo
+  const nav = await page.evaluate(async () => {
+    const out = {};
+    document.querySelector('.domains button[data-domain=land]').click();
+    await new Promise((r) => setTimeout(r, 800));
+    out.land = { view: __oe.ui.view, hash: location.hash, shown: [...document.querySelectorAll('.quick-mode button')].filter((b) => b.offsetParent).map((b) => b.dataset.mode) };
+    document.querySelector('.domains button[data-domain=sea]').click();
+    await new Promise((r) => setTimeout(r, 800));
+    out.sea = __oe.ui.view;
+    out.cap = !!document.querySelector('#legend .lg-cap b');
+    __oe.timeline.setTier('daily');
+    await new Promise((r) => setTimeout(r, 1500));
+    return out;
+  });
+  check('schede e indirizzo', nav.land.view === 'rain' && nav.land.hash.startsWith('#pioggia/') && nav.land.shown.join() === 'rain,drought' && nav.sea === 'sst' && nav.cap, JSON.stringify(nav));
   // aria (CAMS, 1°): CO₂ e flussi di giugno 1994 (presenti anche con la serie parziale)
   const airv = await page.evaluate(async () => {
     const wait = async (ok) => { for (let k = 0; k < 60 && !ok(); k++) await new Promise((r) => setTimeout(r, 250)); };

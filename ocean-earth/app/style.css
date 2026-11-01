@@ -308,3 +308,29 @@ body.immersive:not(.peek) .mini { transform: translate(-50%, 0); opacity: 1; poi
 .lg.mx .mx-na { font-size: 10.5px; margin-top: 2px; }
 .lg.mx.na .lg-t { color: var(--ink-3); }
 @media (max-width: 720px) { .quick-mode { -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 18px), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 18px), transparent); } }
+/* schede Mare · Terra · Aria e viste della scheda aperta */
+.domains { display: flex; gap: 2px; margin-left: auto; }
+.domains button { border: 0; background: transparent; padding: 6px 9px; font-weight: 700; font-size: 12.5px; color: var(--ink-3); border-bottom: 2px solid transparent; border-radius: 0; }
+.domains button:hover { color: var(--ink); }
+.domains button.on { color: var(--ink); border-bottom-color: var(--accent); }
+.domains + .quick-mode { margin-left: 0; }
+.quick-mode[data-domain] button[data-domain] { display: none; }
+.quick-mode[data-domain=sea] button[data-domain=sea]:not([hidden]),
+.quick-mode[data-domain=land] button[data-domain=land]:not([hidden]),
+.quick-mode[data-domain=air] button[data-domain=air]:not([hidden]) { display: inline-block; }
+.quick-mode button { border-left: 0; }
+.quick-mode button:not(:first-child) { border-left: 1px solid var(--rule); }
+/* legenda: cosa si sta guardando, poi i gruppi che si aprono */
+.lg-cap { font-size: 11.5px; line-height: 1.4; color: var(--ink-2); max-width: 300px; margin-bottom: 6px; padding-bottom: 6px; border-bottom: 1px solid var(--rule); }
+.lg-cap b { color: var(--ink); }
+button.lg-group { display: flex; align-items: center; gap: 6px; width: 100%; border: 0; background: transparent; padding: 3px 0; cursor: pointer; text-align: left; }
+button.lg-group::before { content: '▸'; font-size: 9px; transition: transform .15s; }
+button.lg-group.open::before { transform: rotate(90deg); }
+button.lg-group:hover { color: var(--ink); }
+@media (max-width: 720px) {
+  .domains button { padding: 6px 6px; font-size: 11.5px; }
+  .lg-cap { max-width: 260px; font-size: 11px; }
+}
+.lg-cap b { display: block; font-size: 12.5px; margin-bottom: 1px; }
+.lg-cap span { display: block; }
+.lg-cap span::first-letter { text-transform: uppercase; }

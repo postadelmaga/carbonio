@@ -20,6 +20,9 @@ const ui = {
   regionMode: false, region: null,
   compare: false, compareIndex: null,
   landVar: 'precip',           // terraferma: precip | soil (solo serie mensile)
+  domain: 'sea',               // scheda: sea | land | air
+  view: 'sst',                 // vista scelta (null se il mixer ha fatto una combinazione sua)
+  open: new Set(),             // gruppi del mixer aperti a mano
   airMode: 1,                  // CO₂: 0 ppm, 1 rispetto alla media globale del mese
   fluxMode: 0,                 // flussi: 0 totale, 1 fossili, 2 naturali
 };
@@ -68,6 +71,8 @@ async function start() {
   bindControls();
   buildAbout();
   timeline.setTier(manifest.tiers.monthly ? 'monthly' : Object.keys(manifest.tiers)[0], false);
+  if (!readHash()) { syncModeButtons(); setDomain(ui.view ? DOMAIN[ui.view] : ui.domain); }
+  hashReady = true;
   $('#loading').hidden = true;
   // per i test automatici e per chi vuole curiosare dalla console
   window.__oe = { camera, timeline, globe, store, ui, shown: () => current };
@@ -367,8 +372,10 @@ function stale() {
   return !!current && (current.A !== timeline.frameA || (timeline.interpolated && current.B !== timeline.frameB));
 }
 
+let hashReady = false;
 function onTime(why) {
   const A = timeline.frameA, B = timeline.frameB;
+  if (hashReady && !timeline.playing) writeHash();
   // cambio di livello o di fonte: finche' i fotogrammi nuovi non arrivano la
   // riga delle fonti non deve descrivere quelli di prima
   if (why === 'tier' || why === 'source') {
@@ -1113,6 +1120,12 @@ function bindControls() {
   const NEEDS = { sla: ['sla'], ice: ['ice'], drought: ['soil'], co2: ['co2'], emis: ['co2foss', 'co2nat'] };
   $$('.quick-mode button').forEach((b) => { b.hidden = !(NEEDS[b.dataset.mode] || []).every((v) => mv.includes(v)); });
   $$('.quick-mode button').forEach((b) => b.addEventListener('click', () => setMode(b.dataset.mode)));
+  // una scheda senza viste con dati non si mostra
+  $$('.domains button').forEach((b) => {
+    b.hidden = !Object.keys(DOMAIN).some((m) => DOMAIN[m] === b.dataset.domain && viewAvailable(m));
+    b.addEventListener('click', () => pickDomain(b.dataset.domain));
+  });
+  addEventListener('hashchange', () => readHash());
   bindMixer();
   try {
     const saved = JSON.parse(localStorage.getItem('oe-layers') || 'null');
@@ -1252,6 +1265,7 @@ const OFF = { sst: 0, anom: 0, speed: 0, land: 0, sla: 0, ice: 0, co2: 0, flux: 
 const PRESETS = {
   sst: { ...OFF, sst: 1 }, anom: { ...OFF, anom: 1 }, speed: { ...OFF, speed: 1 },
   sla: { ...OFF, sla: 1 }, ice: { ...OFF, anom: 1, ice: 1 },
+  rain: { ...OFF, anom: 0.6, land: 1, landVar: 'precip' },
   drought: { ...OFF, anom: 1, land: 1, landVar: 'soil' },
   co2: { ...OFF, co2: 1, airMode: 1 }, emis: { ...OFF, flux: 1, fluxMode: 0 },
   mix: { ...OFF, sst: 1, anom: 0.7, speed: 0.6 },
@@ -1260,7 +1274,49 @@ const LAYERS = ['sst', 'anom', 'speed'];      // quelli del mare: decidono il li
 const ALL_LAYERS = [...LAYERS, 'sla', 'ice', 'land', 'co2', 'flux'];
 const MONTHLY_ONLY = ['sla', 'ice', 'land', 'co2', 'flux'];
 function saveAir() { try { localStorage.setItem('oe-air', JSON.stringify([ui.airMode, ui.fluxMode])); } catch (e) { /* niente */ } }
+// schede e viste: la scheda raggruppa le viste, la vista fissa i livelli
+const DOMAIN = { sst: 'sea', anom: 'sea', speed: 'sea', sla: 'sea', ice: 'sea', mix: 'sea', rain: 'land', drought: 'land', co2: 'air', emis: 'air' };
+const CAPTION = { sst: 'cap_sst', anom: 'cap_anom', speed: 'cap_speed', sla: 'sla_title', ice: 'ice_title', mix: 'mix_title', rain: 'rain_title', drought: 'drought_title', co2: 'co2_title', emis: 'emis_title' };
+// nell'indirizzo: nomi stabili, uguali in tutte le lingue
+const SLUG = { sst: 'temperatura', anom: 'anomalia', speed: 'correnti', sla: 'livello-mare', ice: 'ghiaccio', mix: 'mix', rain: 'pioggia', drought: 'siccita', co2: 'co2', emis: 'emissioni' };
+const viewAvailable = (m) => { const b = $(`.quick-mode button[data-mode=${m}]`); return b && !b.hidden; };
+
+function setDomain(d) {
+  ui.domain = d;
+  $('.quick-mode').dataset.domain = d;
+  $$('.domains button').forEach((b) => { b.classList.toggle('on', b.dataset.domain === d); b.setAttribute('aria-selected', b.dataset.domain === d); });
+}
+function pickDomain(d) {
+  setDomain(d);
+  if (ui.view && DOMAIN[ui.view] === d) return;
+  const first = Object.keys(DOMAIN).find((m) => DOMAIN[m] === d && viewAvailable(m));
+  if (first) setMode(first);
+}
+
+// vista e data nell'indirizzo (#anomalia/2022-09): un link mostra la stessa mappa
+function writeHash() {
+  if (!timeline || !ui.view || !hashReady) return;
+  const f = timeline.frames[Math.round(timeline.index)];
+  const h = `#${SLUG[ui.view]}${f ? '/' + f.t : ''}`;
+  if (location.hash !== h) history.replaceState(null, '', h);
+}
+function readHash() {
+  const [slug, stamp] = decodeURIComponent(location.hash.slice(1)).split('/');
+  const mode = Object.keys(SLUG).find((m) => SLUG[m] === slug);
+  if (!mode || !viewAvailable(mode)) return false;
+  setMode(mode);
+  if (stamp) {
+    const tier = stamp.length === 7 ? 'monthly' : stamp.length === 10 ? 'daily' : stamp.length === 13 ? 'hourly' : null;
+    if (tier && manifest.tiers[tier] && timeline.tierName !== tier) timeline.setTier(tier);
+    const i = timeline.findStamp(stamp);
+    if (i != null && i >= 0 && timeline.frames[i]?.t === stamp) timeline.seek(i);
+  }
+  return true;
+}
+
 function setMode(mode) {
+  ui.view = mode;
+  setDomain(DOMAIN[mode]);
   const { landVar, airMode, fluxMode, ...w } = PRESETS[mode];
   if (airMode != null) ui.airMode = airMode;
   if (fluxMode != null) ui.fluxMode = fluxMode;
@@ -1271,6 +1327,7 @@ function setMode(mode) {
   if (needMonthly) { timeline.setTier('monthly'); note(t('to_monthly')); }
   else if (landVar && current) onTime('source');
   drawLegend();
+  writeHash();
 }
 
 function setLayers(w) {
@@ -1295,6 +1352,11 @@ function syncModeButtons() {
   const same = (p) => ALL_LAYERS.every((k) => Math.abs((L[k] || 0) - (p[k] || 0)) < 1e-6) && (!p.landVar || p.landVar === ui.landVar)
     && (p.airMode == null || p.airMode === ui.airMode) && (p.fluxMode == null || p.fluxMode === ui.fluxMode);
   $$('.quick-mode button').forEach((b) => b.classList.toggle('on', same(PRESETS[b.dataset.mode])));
+  // la vista corrente: quella che corrisponde ai pesi (prima nella scheda aperta),
+  // altrimenti nessuna: e' una combinazione fatta col mixer
+  const match = Object.keys(PRESETS).filter((m) => same(PRESETS[m]));
+  ui.view = match.find((m) => DOMAIN[m] === ui.domain) || match[0] || null;
+  if (ui.view && DOMAIN[ui.view] !== ui.domain) setDomain(DOMAIN[ui.view]);
   const st = globe.state;
   const r = ui.mode === 'anom' ? st.rangeAnom : ui.mode === 'speed' ? st.rangeSpeed : st.rangeSst;
   $('#r-min').value = r[0];
@@ -1339,14 +1401,22 @@ function drawLegend() {
       <label class="mx-head"><span class="lg-t">${title}</span><input type="range" min="0" max="100" step="5" value="${w}" aria-label="${title}"><output>${w}%</output></label>
       ${extra}${na ? `<div class="mx-na muted">${t('monthly_only')}</div>` : ''}<div class="mx-scale">${body}</div></div>`);
   };
-  L.push(`<div class="lg-group">${t('group_sea')}</div>`);
+  // in cima: cosa si sta guardando
+  L.push(`<div class="lg-cap">${ui.view ? `<b>${$(`.quick-mode button[data-mode=${ui.view}] .l`)?.textContent || ''}</b><span>${t(CAPTION[ui.view])}</span>` : t('custom_mix')}</div>`);
+  // gruppi: aperto quello della scheda, quelli con un livello acceso e quelli aperti a mano
+  const GROUP_LAYERS = { sea: ['sst', 'anom', 'speed', 'sla', 'ice'], land: ['land'], air: ['co2', 'flux'] };
+  const group = (g) => {
+    const open = g === ui.domain || ui.open.has(g) || GROUP_LAYERS[g].some((k) => st.layers[k] > 0);
+    L.push(`<button type="button" class="lg-group${open ? ' open' : ''}" data-g="${g}" aria-expanded="${open}">${t('group_' + g)}</button><div class="lg-sec"${open ? '' : ' hidden'}>`);
+  };
+  group('sea');
   row('sst', t('sst_label'), scale(st.paletteSst, st.rangeSst[0], st.rangeSst[1], 0));
   row('anom', `${t('anom_label')} ${manifest ? manifest.climatology.years.join('–') : '1993–2020'}`, scale('anomaly', st.rangeAnom[0], st.rangeAnom[1], 1));
   row('speed', t('speed_label'), scale('speedField', st.rangeSpeed[0], st.rangeSpeed[1], 1));
   if (vars.includes('sla')) row('sla', t('sla_label'), scale('sla', st.rangeSla[0], st.rangeSla[1], 0, ' cm') + `<div class="lg-ends"><span>${t('lower')}</span><span>${t('higher')}</span></div>`);
   if (vars.includes('ice')) row('ice', t('ice_label'), `<div class="lg-bar" style="background:linear-gradient(90deg,rgba(184,214,237,.35),#b8d6ed 15%,#f7fcff)"></div><div class="lg-ticks"><span style="left:0">0</span><span style="left:15%">15</span><span style="left:100%">100%</span></div>`);
   if (vars.some((v) => v === 'precip' || v === 'soil')) {
-    L.push(`<div class="lg-group">${t('group_land')}</div>`);
+    L.push('</div>'); group('land');
     // terraferma: scala logaritmica, la stessa dello shader
     const span = LAND_SPAN[ui.landVar];
     const ticks = [-1, -0.5, 0, 0.5, 1].map((f, i) => `<span style="left:${i * 25}%">${Math.round(100 * 2 ** (f * span))}%</span>`).join('');
@@ -1355,7 +1425,7 @@ function drawLegend() {
       `<div class="mx-var"><select id="land-var" aria-label="${t('land_label')}">${opt('precip')}${opt('soil')}</select> <span class="muted">% ${t('of_normal')} ${manifest.land?.clim_years.join('–') || '1993–2020'}</span></div>`);
   }
   if (vars.includes('co2')) {
-    L.push(`<div class="lg-group">${t('group_air')}</div>`);
+    L.push('</div>'); group('air');
     const sel = (id, cur, opts) => `<select id="${id}">${opts.map(([v, k]) => `<option value="${v}"${cur === v ? ' selected' : ''}>${t(k)}</option>`).join('')}</select>`;
     const r = ui.airMode ? st.rangeCo2Rel : st.rangeCo2;
     row('co2', `${t('co2_label')} · ppm`, scale(ui.airMode ? 'anomaly' : 'co2', r[0], r[1], 0),
@@ -1365,6 +1435,7 @@ function drawLegend() {
     row('flux', t('flux_label'), `<div class="lg-bar" style="background:${cssGradient('flux')}"></div><div class="lg-ticks">${ft}</div><div class="lg-ends"><span>${t('absorbs')}</span><span>${t('emits')}</span></div>`,
       `<div class="mx-var">${sel('flux-mode', ui.fluxMode, [[0, 'flux_total'], [1, 'flux_foss'], [2, 'flux_nat']])} <span class="muted">g C/m² ${t('per_day')}</span></div>`);
   }
+  L.push('</div>');
   if ((st.particles || st.arrows) && !(st.layers.speed > 0)) L.push(`<div class="lg"><div class="lg-t">${t('particles')} · ${t('speed_label')}</div>${scale('speed', st.rangeSpeed[0], st.rangeSpeed[1], 1)}</div>`);
   if (st.hotspot) L.push(`<div class="lg"><span class="hatch"></span> ${t('hotspot')}</div>`);
   $('#legend').innerHTML = L.join('');
@@ -1379,6 +1450,15 @@ function bindMixer() {
     row.classList.toggle('off', v === 0);
     row.querySelector('output').textContent = `${r.value}%`;
     setLayers({ [k]: v });
+  });
+  // i titoli dei gruppi aprono e chiudono la loro sezione
+  $('#legend').addEventListener('click', (e) => {
+    const g = e.target.closest('.lg-group');
+    if (!g) return;
+    const open = !g.classList.contains('open');
+    if (open) ui.open.add(g.dataset.g); else ui.open.delete(g.dataset.g);
+    g.classList.toggle('open', open); g.setAttribute('aria-expanded', open);
+    g.nextElementSibling.hidden = !open;
   });
   // a cursore rilasciato la legenda si aggiorna (scala delle particelle, ecc.)
   $('#legend').addEventListener('change', (e) => {

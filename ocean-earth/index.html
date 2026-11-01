@@ -37,16 +37,22 @@
     <span class="mark-co2">CO₂·info</span>
   </a>
   <h1 class="brand" data-i18n="brand_name">Atlante del clima</h1>
-  <div class="quick-mode" role="group">
-    <button type="button" data-mode="sst" data-i18n-title="mode_sst"><span class="l" data-i18n="mode_sst">Temperatura</span><span class="s" data-i18n="mode_sst_s"></span></button>
-    <button type="button" data-mode="anom" data-i18n-title="mode_anom"><span class="l" data-i18n="mode_anom">Anomalia</span><span class="s" data-i18n="mode_anom_s"></span></button>
-    <button type="button" data-mode="speed" data-i18n-title="mode_speed"><span class="l" data-i18n="mode_speed">Velocità</span><span class="s" data-i18n="mode_speed_s"></span></button>
-    <button type="button" data-mode="sla" data-i18n-title="sla_title"><span class="l" data-i18n="mode_sla">Livello del mare</span><span class="s" data-i18n="mode_sla_s"></span></button>
-    <button type="button" data-mode="ice" data-i18n-title="ice_title"><span class="l" data-i18n="mode_ice">Ghiaccio</span><span class="s" data-i18n="mode_ice_s"></span></button>
-    <button type="button" data-mode="drought" data-i18n-title="drought_title"><span class="l" data-i18n="mode_drought">Siccità</span><span class="s" data-i18n="mode_drought_s"></span></button>
-    <button type="button" data-mode="co2" data-i18n-title="co2_title"><span class="l">CO₂</span><span class="s">CO₂</span></button>
-    <button type="button" data-mode="emis" data-i18n-title="emis_title"><span class="l" data-i18n="mode_emis">Emissioni</span><span class="s" data-i18n="mode_emis_s"></span></button>
-    <button type="button" data-mode="mix" data-i18n-title="mix_title"><span class="l" data-i18n="mode_mix">Mix</span><span class="s" data-i18n="mode_mix">Mix</span></button>
+  <div class="domains" role="tablist">
+    <button type="button" role="tab" data-domain="sea" data-i18n="group_sea">Mare</button>
+    <button type="button" role="tab" data-domain="land" data-i18n="group_land">Terra</button>
+    <button type="button" role="tab" data-domain="air" data-i18n="group_air">Aria</button>
+  </div>
+  <div class="quick-mode" role="group" data-domain="sea">
+    <button type="button" data-mode="sst" data-domain="sea" data-i18n-title="cap_sst"><span class="l" data-i18n="mode_sst">Temperatura</span><span class="s" data-i18n="mode_sst_s"></span></button>
+    <button type="button" data-mode="anom" data-domain="sea" data-i18n-title="cap_anom"><span class="l" data-i18n="mode_anom">Anomalia</span><span class="s" data-i18n="mode_anom_s"></span></button>
+    <button type="button" data-mode="speed" data-domain="sea" data-i18n-title="cap_speed"><span class="l" data-i18n="mode_speed">Velocità</span><span class="s" data-i18n="mode_speed_s"></span></button>
+    <button type="button" data-mode="sla" data-domain="sea" data-i18n-title="sla_title"><span class="l" data-i18n="mode_sla">Livello del mare</span><span class="s" data-i18n="mode_sla_s"></span></button>
+    <button type="button" data-mode="ice" data-domain="sea" data-i18n-title="ice_title"><span class="l" data-i18n="mode_ice">Ghiaccio</span><span class="s" data-i18n="mode_ice_s"></span></button>
+    <button type="button" data-mode="rain" data-domain="land" data-i18n-title="rain_title"><span class="l" data-i18n="mode_rain">Pioggia</span><span class="s" data-i18n="mode_rain_s"></span></button>
+    <button type="button" data-mode="drought" data-domain="land" data-i18n-title="drought_title"><span class="l" data-i18n="mode_drought">Siccità</span><span class="s" data-i18n="mode_drought_s"></span></button>
+    <button type="button" data-mode="co2" data-domain="air" data-i18n-title="co2_title"><span class="l">CO₂</span><span class="s">CO₂</span></button>
+    <button type="button" data-mode="emis" data-domain="air" data-i18n-title="emis_title"><span class="l" data-i18n="mode_emis">Emissioni</span><span class="s" data-i18n="mode_emis_s"></span></button>
+    <button type="button" data-mode="mix" data-domain="sea" data-i18n-title="mix_title"><span class="l" data-i18n="mode_mix">Mix</span><span class="s" data-i18n="mode_mix">Mix</span></button>
   </div>
   <div class="top-r">
     <button id="world-btn" type="button" class="ghost" data-i18n="world">Globo</button>
