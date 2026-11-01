@@ -5,6 +5,7 @@
 
 export const TEXTS = {
   it: {
+    make_reel: 'Crea un reel',
     mode_rain: 'Pioggia', mode_rain_s: 'Pioggia', rain_title: 'La pioggia di ogni mese rispetto al normale 1993–2020 dello stesso mese, sopra l’anomalia del mare (serie mensile)', cap_sst: 'la temperatura dell’acqua in superficie, con il Mediterraneo in alta risoluzione nella serie giornaliera.', cap_anom: 'quanto il mare è più caldo (rosso) o più freddo (blu) del normale 1993–2020 dello stesso periodo.', cap_speed: 'la velocità delle correnti superficiali; le scie mostrano dove va l’acqua.', custom_mix: 'Combinazione scelta col mixer: i cursori qui sotto dosano ogni livello.',
     mode_emis: 'Emissioni', mode_emis_s: 'Emiss.', co2_title: 'CO₂ nell’aria: dove è più alta o più bassa della media globale del mese (inversione CAMS, serie mensile)', emis_title: 'Dove la CO₂ esce dalla superficie (fossili, incendi) e dove entra (foreste, oceani) (serie mensile)', group_air: 'Aria', co2_label: 'CO₂ nell’aria (colonna media)', co2_short: 'CO₂ nell’aria', co2_abs: 'ppm', co2_rel: 'rispetto alla media globale', vs_global: 'rispetto alla media globale', flux_label: 'Flussi di CO₂ alla superficie', flux_short: 'Flussi di carbonio', flux_total: 'totale', flux_foss: 'fossili', flux_nat: 'naturali (terra e oceano)', per_day: 'al giorno', absorbs: 'assorbe', emits: 'emette', air_until: 'aria: dati CAMS fino all’ultimo anno pubblicato',
     brand_name: 'Atlante del clima',
@@ -51,6 +52,7 @@ export const TEXTS = {
     km: 'km', alt: 'quota', data_until: 'dati fino al', updated: 'aggiornato', buffering: 'in caricamento',
   },
   en: {
+    make_reel: 'Make a reel',
     mode_rain: 'Rainfall', mode_rain_s: 'Rain', rain_title: 'Each month’s rainfall against the 1993–2020 normal of the same month, over the sea anomaly (monthly series)', cap_sst: 'the temperature of the surface water, with the Mediterranean in high resolution in the daily series.', cap_anom: 'how much warmer (red) or colder (blue) the sea is than the 1993–2020 normal for the same time of year.', cap_speed: 'the speed of surface currents; the trails show where the water goes.', custom_mix: 'A combination made with the mixer: the sliders below set each layer.',
     mode_emis: 'Emissions', mode_emis_s: 'Emiss.', co2_title: 'CO₂ in the air: where it is above or below the global mean of the month (CAMS inversion, monthly series)', emis_title: 'Where CO₂ leaves the surface (fossil fuels, fires) and where it goes in (forests, oceans) (monthly series)', group_air: 'Air', co2_label: 'CO₂ in the air (column mean)', co2_short: 'CO₂ in the air', co2_abs: 'ppm', co2_rel: 'vs the global mean', vs_global: 'vs the global mean', flux_label: 'Surface CO₂ fluxes', flux_short: 'Carbon fluxes', flux_total: 'total', flux_foss: 'fossil', flux_nat: 'natural (land and ocean)', per_day: 'per day', absorbs: 'absorbs', emits: 'emits', air_until: 'air: CAMS data up to the last published year',
     brand_name: 'Climate Atlas',
@@ -97,6 +99,7 @@ export const TEXTS = {
     km: 'km', alt: 'altitude', data_until: 'data until', updated: 'updated', buffering: 'loading',
   },
   es: {
+    make_reel: 'Crea un reel',
     mode_rain: 'Lluvia', mode_rain_s: 'Lluvia', rain_title: 'La lluvia de cada mes frente a lo normal 1993–2020 del mismo mes, sobre la anomalía del mar (serie mensual)', cap_sst: 'la temperatura del agua en superficie, con el Mediterráneo en alta resolución en la serie diaria.', cap_anom: 'cuánto más cálido (rojo) o más frío (azul) está el mar que lo normal 1993–2020 en la misma época.', cap_speed: 'la velocidad de las corrientes superficiales; las estelas muestran adónde va el agua.', custom_mix: 'Combinación hecha con el mezclador: los controles de abajo dosifican cada capa.',
     mode_emis: 'Emisiones', mode_emis_s: 'Emis.', co2_title: 'CO₂ en el aire: dónde está por encima o por debajo de la media global del mes (inversión CAMS, serie mensual)', emis_title: 'Dónde sale el CO₂ de la superficie (fósiles, incendios) y dónde entra (bosques, océanos) (serie mensual)', group_air: 'Aire', co2_label: 'CO₂ en el aire (media de la columna)', co2_short: 'CO₂ en el aire', co2_abs: 'ppm', co2_rel: 'respecto a la media global', vs_global: 'respecto a la media global', flux_label: 'Flujos de CO₂ en la superficie', flux_short: 'Flujos de carbono', flux_total: 'total', flux_foss: 'fósiles', flux_nat: 'naturales (tierra y océano)', per_day: 'al día', absorbs: 'absorbe', emits: 'emite', air_until: 'aire: datos CAMS hasta el último año publicado',
     brand_name: 'Atlas del clima',
@@ -143,6 +146,7 @@ export const TEXTS = {
     km: 'km', alt: 'altitud', data_until: 'datos hasta', updated: 'actualizado', buffering: 'cargando',
   },
   fr: {
+    make_reel: 'Créer un reel',
     mode_rain: 'Pluie', mode_rain_s: 'Pluie', rain_title: 'La pluie de chaque mois par rapport à la normale 1993–2020 du même mois, sur l’anomalie de la mer (série mensuelle)', cap_sst: 'la température de l’eau en surface, avec la Méditerranée en haute résolution dans la série journalière.', cap_anom: 'de combien la mer est plus chaude (rouge) ou plus froide (bleu) que la normale 1993–2020 à la même période.', cap_speed: 'la vitesse des courants de surface ; les traînées montrent où va l’eau.', custom_mix: 'Combinaison faite avec le mélangeur : les curseurs ci-dessous dosent chaque calque.',
     mode_emis: 'Émissions', mode_emis_s: 'Émiss.', co2_title: 'CO₂ dans l’air : où il est au-dessus ou au-dessous de la moyenne mondiale du mois (inversion CAMS, série mensuelle)', emis_title: 'Où le CO₂ sort de la surface (fossiles, incendies) et où il entre (forêts, océans) (série mensuelle)', group_air: 'Air', co2_label: 'CO₂ dans l’air (moyenne de la colonne)', co2_short: 'CO₂ dans l’air', co2_abs: 'ppm', co2_rel: 'par rapport à la moyenne mondiale', vs_global: 'par rapport à la moyenne mondiale', flux_label: 'Flux de CO₂ à la surface', flux_short: 'Flux de carbone', flux_total: 'total', flux_foss: 'fossiles', flux_nat: 'naturels (terre et océan)', per_day: 'par jour', absorbs: 'absorbe', emits: 'émet', air_until: 'air : données CAMS jusqu’à la dernière année publiée',
     brand_name: 'Atlas du climat',
@@ -189,6 +193,7 @@ export const TEXTS = {
     km: 'km', alt: 'altitude', data_until: 'données jusqu’au', updated: 'mis à jour', buffering: 'chargement',
   },
   zh: {
+    make_reel: '制作短视频',
     mode_rain: '降水', mode_rain_s: '降水', rain_title: '每月降水与同月1993–2020年常年值的比较，叠加海洋距平（月度序列）', cap_sst: '表层海水温度；日序列中地中海为高分辨率。', cap_anom: '海洋比同期1993–2020年常年值偏暖（红）或偏冷（蓝）多少。', cap_speed: '表层洋流的速度；轨迹显示海水流向。', custom_mix: '用混合器调出的组合：下方滑块调节各图层。',
     mode_emis: '排放', mode_emis_s: '排放', co2_title: '空气中的二氧化碳：比当月全球平均高或低的地方（CAMS 反演，月度序列）', emis_title: '二氧化碳从哪里离开地表（化石燃料、火灾），又在哪里被吸收（森林、海洋）（月度序列）', group_air: '大气', co2_label: '空气中的二氧化碳（柱平均）', co2_short: '空气中的二氧化碳', co2_abs: 'ppm', co2_rel: '相对全球平均', vs_global: '相对全球平均', flux_label: '地表二氧化碳通量', flux_short: '碳通量', flux_total: '总计', flux_foss: '化石', flux_nat: '自然（陆地与海洋）', per_day: '每天', absorbs: '吸收', emits: '排放', air_until: '大气：CAMS 数据截至最近发布的年份',
     brand_name: '气候地图集',

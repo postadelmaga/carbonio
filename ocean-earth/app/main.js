@@ -11,6 +11,11 @@ import { t, LANG, LANGS, LANG_NAMES, setLang, siteHome, applyStatic, fmtStamp, f
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => document.querySelectorAll(s);
 
+// ?reel: la pagina e' comandata dall'editor dei reel (reel/): niente
+// interfaccia, niente indirizzo, e le scelte non toccano quelle salvate
+const REEL = new URLSearchParams(location.search).has('reel');
+function keep(k, v) { if (REEL) return; try { localStorage.setItem(k, v); } catch (e) { /* niente */ } }
+
 const ui = {
   mode: 'sst',                 // livello principale (il piu' pesante): punto, scala, intervalli
   source: 'model',             // model | ostia (solo giornaliero)
@@ -25,6 +30,7 @@ const ui = {
   open: new Set(),             // gruppi del mixer aperti a mano
   airMode: 1,                  // CO₂: 0 ppm, 1 rispetto alla media globale del mese
   fluxMode: 0,                 // flussi: 0 totale, 1 fossili, 2 naturali
+  reelPreview: false,          // editor dei reel: anteprime leggere mentre si suona
 };
 
 const camera = new Camera();
@@ -37,7 +43,7 @@ async function start() {
   applyStatic();
   const canvas = $('#globe');
   try {
-    globe = new Globe(canvas, camera);
+    globe = new Globe(canvas, camera, REEL);
   } catch (e) {
     fatal(t('webgl_fail'));
     return;
@@ -47,7 +53,7 @@ async function start() {
   // l'altezza vera della barra del tempo (cambia con la larghezza): i pannelli
   // e la legenda si appoggiano sopra
   new ResizeObserver(([e]) => document.documentElement.style.setProperty('--time-h', Math.ceil(e.target.getBoundingClientRect().height) + 'px')).observe($('.time'));
-  if (matchMedia('(max-width: 720px)').matches) {
+  if (!REEL && matchMedia('(max-width: 720px)').matches) {
     camera.dist = 2.7;
     globe.state.particleCount = 4000;
     $('#p-count').value = 4000;
@@ -71,11 +77,13 @@ async function start() {
   bindControls();
   buildAbout();
   timeline.setTier(manifest.tiers.monthly ? 'monthly' : Object.keys(manifest.tiers)[0], false);
-  if (!readHash()) { syncModeButtons(); setDomain(ui.view ? DOMAIN[ui.view] : ui.domain); }
+  if (REEL || !readHash()) { syncModeButtons(); setDomain(ui.view ? DOMAIN[ui.view] : ui.domain); }
   hashReady = true;
   $('#loading').hidden = true;
   // per i test automatici e per chi vuole curiosare dalla console
-  window.__oe = { camera, timeline, globe, store, ui, shown: () => current };
+  window.__oe = { camera, timeline, globe, store, ui, shown: () => current, setMode, ready: reelReady, want: isReady,
+    preview(on) { if (ui.reelPreview === on) return; ui.reelPreview = on; if (current) onTime('source'); },
+    setAir(a, f) { if (a != null) ui.airMode = a; if (f != null) ui.fluxMode = f; syncShown(); drawLegend(); } };
 }
 
 function fatal(msg) {
@@ -150,7 +158,7 @@ function sstVar(frame) {
 // durante la riproduzione si usano le anteprime leggere (pipeline/preview.py);
 // da fermi, al clic e nei grafici i dati esatti. Il Mediterraneo e' gia' leggero.
 function previewMode() {
-  return !!(timeline && timeline.playing && manifest.preview && manifest.preview.available);
+  return !!(timeline && (timeline.playing || ui.reelPreview) && manifest.preview && manifest.preview.available);
 }
 
 // variabili senza anteprima: gia' leggere (Mediterraneo, terraferma)
@@ -365,6 +373,14 @@ function syncShown() {
   const co2 = current.airF?.co2;
   st.airMode = ui.airMode; st.fluxMode = ui.fluxMode;
   st.airMean = co2 && co2[0] ? airMean(co2[0]) + (airMean(co2[1]) - airMean(co2[0])) * st.mix : 0;
+}
+
+// editor dei reel: sul globo ci sono esattamente gli istanti chiesti, con i
+// file del tipo giusto (anteprime o esatti) e la climatologia per l'anomalia
+function reelReady() {
+  if (!current || current.A !== timeline.frameA || current.B !== timeline.frameB) return false;
+  if (current.preview !== previewMode()) return false;
+  return !(globe.state.layers.anom > 0 && !globe.hasClim);
 }
 
 // il globo mostra ancora altri istanti (si sta caricando quello scelto)
@@ -1127,7 +1143,7 @@ function bindControls() {
   });
   addEventListener('hashchange', () => readHash());
   bindMixer();
-  try {
+  if (!REEL) try {
     const saved = JSON.parse(localStorage.getItem('oe-layers') || 'null');
     const air = JSON.parse(localStorage.getItem('oe-air') || 'null');
     if (Array.isArray(air) && [0, 1].includes(air[0]) && [0, 1, 2].includes(air[1])) [ui.airMode, ui.fluxMode] = air;
@@ -1273,7 +1289,7 @@ const PRESETS = {
 const LAYERS = ['sst', 'anom', 'speed'];      // quelli del mare: decidono il livello principale
 const ALL_LAYERS = [...LAYERS, 'sla', 'ice', 'land', 'co2', 'flux'];
 const MONTHLY_ONLY = ['sla', 'ice', 'land', 'co2', 'flux'];
-function saveAir() { try { localStorage.setItem('oe-air', JSON.stringify([ui.airMode, ui.fluxMode])); } catch (e) { /* niente */ } }
+function saveAir() { keep('oe-air', JSON.stringify([ui.airMode, ui.fluxMode])); }
 // schede e viste: la scheda raggruppa le viste, la vista fissa i livelli
 const DOMAIN = { sst: 'sea', anom: 'sea', speed: 'sea', sla: 'sea', ice: 'sea', mix: 'sea', rain: 'land', drought: 'land', co2: 'air', emis: 'air' };
 const CAPTION = { sst: 'cap_sst', anom: 'cap_anom', speed: 'cap_speed', sla: 'sla_title', ice: 'ice_title', mix: 'mix_title', rain: 'rain_title', drought: 'drought_title', co2: 'co2_title', emis: 'emis_title' };
@@ -1295,7 +1311,7 @@ function pickDomain(d) {
 
 // vista e data nell'indirizzo (#anomalia/2022-09): un link mostra la stessa mappa
 function writeHash() {
-  if (!timeline || !ui.view || !hashReady) return;
+  if (REEL || !timeline || !ui.view || !hashReady) return;
   const f = timeline.frames[Math.round(timeline.index)];
   const h = `#${SLUG[ui.view]}${f ? '/' + f.t : ''}`;
   if (location.hash !== h) history.replaceState(null, '', h);
@@ -1321,7 +1337,7 @@ function setMode(mode) {
   if (airMode != null) ui.airMode = airMode;
   if (fluxMode != null) ui.fluxMode = fluxMode;
   if (airMode != null || fluxMode != null) saveAir();
-  if (landVar) { ui.landVar = landVar; try { localStorage.setItem('oe-land', landVar); } catch (e) { /* niente */ } }
+  if (landVar) { ui.landVar = landVar; keep('oe-land', landVar); }
   const needMonthly = MONTHLY_ONLY.some((k) => w[k] > 0) && timeline.tierName !== 'monthly' && manifest.tiers.monthly;
   setLayers(w);
   if (needMonthly) { timeline.setTier('monthly'); note(t('to_monthly')); }
@@ -1338,7 +1354,7 @@ function setLayers(w) {
   const changedMain = top !== ui.mode;
   ui.mode = top;
   if (st.layers.anom > 0 && !globe.hasClim) { note(t('loading')); loadClim(); }
-  try { localStorage.setItem('oe-layers', JSON.stringify(st.layers)); } catch (e) { /* niente */ }
+  keep('oe-layers', JSON.stringify(st.layers));
   syncModeButtons();
   // quale file serve (OSTIA, Mediterraneo) dipende da quali livelli sono accesi
   const on = (o) => ALL_LAYERS.map((k) => o[k] > 0).join();
@@ -1472,7 +1488,7 @@ function bindMixer() {
     }
     if (e.target.id === 'land-var') {
       ui.landVar = e.target.value;
-      try { localStorage.setItem('oe-land', ui.landVar); } catch (err) { /* niente */ }
+      keep('oe-land', ui.landVar);
       if (!(globe.state.layers.land > 0)) setLayers({ land: 1 });
       else if (current) onTime('source');
       drawLegend();

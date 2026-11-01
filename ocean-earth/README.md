@@ -430,3 +430,27 @@ page in each language on a phone-sized screen.
   instantaneous at HH:00: the two layers are half an hour apart.
 - Particles need `EXT_color_buffer_float` (all desktop browsers, iOS ≥ 15);
   without it the page says so and arrows remain.
+
+## Reel editor (`reel/`, published at /atlante/reel/)
+
+A page for making vertical videos (1080 × 1920) from the atlas and a song of
+your choice. The atlas runs in a hidden iframe (`index.html?reel`: no
+interface, dark theme, choices not saved to the visitor's settings) on a
+virtual clock driven by the editor, which copies the globe into a canvas and
+draws title, caption, date, legend and data sources on top. The preview and
+the export use the same drawing.
+
+- Song: decoded in the browser and kept in IndexedDB, never uploaded. Beats
+  are found in `reel/beats.js` (spectral flux, tempo by autocorrelation, beat
+  tracking by dynamic programming, Ellis 2007); a fixed grid or tapped tempo
+  (T) can replace them. `tests/beats.test.mjs` checks a synthetic song.
+- Clips: view (with the CO₂ variant in ppm or relative, fluxes total, fossil or
+  natural), month range, length, start and end framing, rotation, hold on the
+  last month, dip to black. Dragging the right edge of a clip in the timeline
+  stretches it and snaps to beats or bars; “in time with the beats” spreads
+  the months evenly between beats, so the data follows the music.
+- Export: frame by frame, waiting for the exact data of each instant
+  (`__oe.ready()`), H.264 with WebCodecs and `reel/vendor/mp4-muxer.mjs`
+  (MIT, v5.2.1). Audio is AAC where the browser encodes it (Windows, macOS) and
+  Opus otherwise (Chrome on Linux); the dialog says which and how to convert.
+- Projects are saved in the browser and as JSON files.

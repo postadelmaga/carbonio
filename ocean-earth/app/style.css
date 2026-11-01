@@ -334,3 +334,8 @@ button.lg-group:hover { color: var(--ink); }
 .lg-cap b { display: block; font-size: 12.5px; margin-bottom: 1px; }
 .lg-cap span { display: block; }
 .lg-cap span::first-letter { text-transform: uppercase; }
+/* comandata dall'editor dei reel: solo il globo */
+html.reel body > :not(#globe) { display: none !important; }
+a.link.reel-link { color: var(--accent); padding: 2px 4px; font-size: 12px; font-weight: 600; text-decoration: none; }
+a.link.reel-link:hover { text-decoration: underline; }
+@media (max-width: 720px) { a.link.reel-link { display: none; } }

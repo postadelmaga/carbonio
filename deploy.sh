@@ -106,7 +106,7 @@ cp -R "$SRC_DIR/cer" "$BUILD_DIR/cer"
 OE_DATA="$SRC_DIR/ocean-earth/data"
 if [ -f "$SRC_DIR/ocean-earth/index.html" ]; then
   mkdir -p "$BUILD_DIR/atlante" "$BUILD_DIR/ocean-earth"
-  cp -R "$SRC_DIR/ocean-earth/index.html" "$SRC_DIR/ocean-earth/app" "$BUILD_DIR/atlante/"
+  cp -R "$SRC_DIR/ocean-earth/index.html" "$SRC_DIR/ocean-earth/app" "$SRC_DIR/ocean-earth/reel" "$BUILD_DIR/atlante/"
   # i dati restano dove la chiave di arm_php puo' scriverli (/ocean-earth/data/)
   sed -i 's|<meta name="data-base" content="data/">|<meta name="data-base" content="/ocean-earth/data/">|; s|<link rel="preload" href="data/manifest.json"|<link rel="preload" href="/ocean-earth/data/manifest.json"|' "$BUILD_DIR/atlante/index.html"
   grep -q 'content="/ocean-earth/data/"' "$BUILD_DIR/atlante/index.html" || { err "atlante: percorso dei dati non sostituito"; exit 1; }

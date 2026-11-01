@@ -32,10 +32,11 @@ const LUT_ROWS = ['sst', 'anom', 'speedField', 'land', 'sla', 'co2', 'flux'];
 const MONTHLY_BASE = { clim: 0, p90: 12, bias: 24 };
 
 export class Globe {
-  constructor(canvas, camera) {
+  constructor(canvas, camera, keepBuffer = false) {
     this.canvas = canvas;
     this.camera = camera;
-    const gl = canvas.getContext('webgl2', { antialias: true, alpha: false, premultipliedAlpha: false, powerPreference: 'high-performance' });
+    // keepBuffer: l'editor dei reel copia il disegno in un altro canvas in un altro momento
+    const gl = canvas.getContext('webgl2', { antialias: true, alpha: false, premultipliedAlpha: false, powerPreference: 'high-performance', preserveDrawingBuffer: keepBuffer });
     if (!gl) throw new Error('webgl2');
     this.gl = gl;
     this.floatTargets = !!gl.getExtension('EXT_color_buffer_float');

@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="it" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Editor dei reel · Atlante del clima</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..900&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="reel.css">
+<script type="module" src="reel.js"></script>
+</head>
+<body>
+<header class="bar">
+  <a class="back" href="../" data-u="back">‹ Atlante del clima</a>
+  <b class="brand" data-u="brand">Editor dei reel</b>
+  <span class="grow"></span>
+  <label class="btn file"><input type="file" id="proj-open" accept=".json,application/json" hidden><span data-u="open">Apri progetto</span></label>
+  <button type="button" class="btn" id="proj-save" data-u="save">Salva progetto</button>
+  <button type="button" class="btn primary" id="export" data-u="export" disabled>Esporta MP4</button>
+</header>
+
+<main class="work">
+  <section class="stage">
+    <div class="screen" id="screen">
+      <canvas id="out" width="1080" height="1920"></canvas>
+      <div class="safe" id="safe" hidden><i class="s-top"></i><i class="s-bottom"></i><i class="s-right"></i></div>
+      <div class="boot" id="boot" data-u="loading">Carico l'atlante…</div>
+    </div>
+    <div class="transport">
+      <button type="button" class="btn icon" id="play" aria-label="Play" disabled>▶</button>
+      <span class="time mono" id="clock">0:00.0 / 0:00.0</span>
+      <span class="grow"></span>
+      <label class="chk"><input type="checkbox" id="safe-on"> <span data-u="safe">zone coperte da Instagram</span></label>
+    </div>
+    <p class="hint" data-u="drag_hint">Trascina sull'anteprima per girare il globo, rotella per avvicinarti; poi «vista attuale» nella clip.</p>
+  </section>
+
+  <section class="side">
+    <details open class="card">
+      <summary data-u="song">Brano</summary>
+      <div class="row">
+        <label class="btn file"><input type="file" id="song-file" accept="audio/*" hidden><span data-u="pick_song">Scegli un file audio</span></label>
+        <span class="muted" id="song-name" data-u="no_song">nessun brano</span>
+      </div>
+      <p class="muted small" data-u="song_local">Il brano resta nel tuo browser: non viene caricato da nessuna parte. Per pubblicare il reel servono i diritti sulla musica.</p>
+      <div class="grid2">
+        <label><span data-u="bpm">Tempo (BPM)</span><input type="number" id="bpm" step="0.01" min="40" max="240"></label>
+        <label><span data-u="beats_src">Battiti</span><select id="beat-mode"><option value="detected" data-u="detected">rilevati</option><option value="grid" data-u="grid">griglia fissa</option></select></label>
+        <label><span data-u="grid_off">Primo battito (s)</span><input type="number" id="grid-off" step="0.001" min="0"></label>
+        <label><span data-u="bar_off">Battuta inizia al battito</span><select id="bar-off"><option>1</option><option>2</option><option>3</option><option>4</option></select></label>
+        <label><span data-u="song_start">Inizio nel brano (s)</span><input type="number" id="song-start" step="0.01" min="0"></label>
+        <label><span data-u="snap">Aggancia a</span><select id="snap"><option value="beat" data-u="beat">battito</option><option value="bar" data-u="bar">battuta</option><option value="none" data-u="none">niente</option></select></label>
+        <label><span data-u="fade_in">Dissolvenza iniziale (s)</span><input type="number" id="fade-in" step="0.1" min="0" max="10"></label>
+        <label><span data-u="fade_out">Dissolvenza finale (s)</span><input type="number" id="fade-out" step="0.1" min="0" max="10"></label>
+      </div>
+      <div class="row">
+        <button type="button" class="btn" id="tap" data-u="tap">Batti il tempo (T)</button>
+        <button type="button" class="btn" id="start-beat" data-u="start_beat">Inizio sul battito più vicino</button>
+      </div>
+      <p class="muted small" id="beat-info"></p>
+    </details>
+
+    <details open class="card">
+      <summary data-u="clip">Clip</summary>
+      <div class="row">
+        <button type="button" class="btn" id="clip-add" data-u="add">+ Aggiungi</button>
+        <button type="button" class="btn" id="clip-dup" data-u="dup">Duplica</button>
+        <button type="button" class="btn" id="clip-left" aria-label="←">←</button>
+        <button type="button" class="btn" id="clip-right" aria-label="→">→</button>
+        <button type="button" class="btn danger" id="clip-del" data-u="del">Elimina</button>
+      </div>
+      <div class="grid2" id="clip-form">
+        <label class="wide"><span data-u="view">Vista</span><select id="c-view"></select></label>
+        <label class="wide" id="c-variant-l"><span data-u="variant">Variante</span><select id="c-variant"></select></label>
+        <label><span data-u="from">Dal mese</span><select id="c-from"></select></label>
+        <label><span data-u="to">Al mese</span><select id="c-to"></select></label>
+        <label><span data-u="dur">Durata (s)</span><input type="number" id="c-dur" step="0.01" min="0.5"></label>
+        <label><span data-u="bars">Battute</span><span class="pair"><input type="number" id="c-bars" step="1" min="1" value="8"><button type="button" class="btn" id="c-fit" data-u="fit">adatta</button></span></label>
+        <label><span data-u="sync">Scorrere del tempo</span><select id="c-sync"><option value="beat" data-u="sync_beat">a tempo coi battiti</option><option value="linear" data-u="sync_linear">uniforme</option></select></label>
+        <label><span data-u="hold">Pausa sull'ultimo mese (s)</span><input type="number" id="c-hold" step="0.1" min="0"></label>
+        <label><span data-u="spin">Rotazione (°/s)</span><input type="number" id="c-spin" step="0.5"></label>
+        <label><span data-u="dip">Stacco al nero (s)</span><input type="number" id="c-fade" step="0.1" min="0" max="3"></label>
+        <label class="wide chk"><input type="checkbox" id="c-particles"> <span data-u="particles">scie delle correnti</span></label>
+        <label class="wide"><span data-u="caption">Didascalia (vuota = quella della vista)</span><textarea id="c-caption" rows="2"></textarea></label>
+      </div>
+      <div class="cams">
+        <div><b data-u="cam0">Inquadratura iniziale</b><span class="mono small" id="c-cam0"></span><button type="button" class="btn" id="c-set0" data-u="use_view">vista attuale</button></div>
+        <div><b data-u="cam1">Inquadratura finale</b><span class="mono small" id="c-cam1"></span><button type="button" class="btn" id="c-set1" data-u="use_view">vista attuale</button></div>
+      </div>
+      <p class="muted small" id="c-avail"></p>
+    </details>
+
+    <details class="card">
+      <summary data-u="texts">Testi e formato</summary>
+      <div class="grid2">
+        <label class="wide"><span data-u="title">Titolo</span><input type="text" id="p-title"></label>
+        <label><span data-u="lang">Lingua dei testi</span><select id="p-lang"><option value="it">Italiano</option><option value="en">English</option><option value="es">Español</option><option value="fr">Français</option><option value="zh">中文</option></select></label>
+        <label><span data-u="fps">Fotogrammi/s</span><select id="p-fps"><option>30</option><option>60</option></select></label>
+        <label><span data-u="globe_y">Globo più in basso (px)</span><input type="number" id="p-globey" step="10" min="0" max="700"></label>
+        <label><span data-u="quality">Qualità (Mbit/s)</span><input type="number" id="p-rate" step="1" min="4" max="40"></label>
+        <label class="chk"><input type="checkbox" id="o-date"> <span data-u="o_date">data</span></label>
+        <label class="chk"><input type="checkbox" id="o-legend"> <span data-u="o_legend">legenda</span></label>
+        <label class="chk"><input type="checkbox" id="o-caption"> <span data-u="o_caption">titolo e didascalia</span></label>
+        <label class="chk"><input type="checkbox" id="o-credits"> <span data-u="o_credits">fonti dei dati</span></label>
+      </div>
+    </details>
+  </section>
+
+  <section class="tracks">
+    <canvas id="overview" height="44"></canvas>
+    <canvas id="timeline" height="150"></canvas>
+    <p class="muted small" data-u="tl_hint">Clic per spostarti · trascina il bordo destro di una clip per allungarla o accorciarla (si aggancia ai battiti) · trascina la finestra chiara sul brano intero per scegliere da dove parte la musica · spazio: play/pausa</p>
+  </section>
+</main>
+
+<dialog id="exp">
+  <h3 data-u="exporting">Esportazione</h3>
+  <p id="exp-info" class="small"></p>
+  <progress id="exp-bar" max="1" value="0"></progress>
+  <p id="exp-status" class="mono small"></p>
+  <div class="row"><span class="grow"></span><button type="button" class="btn" id="exp-cancel" data-u="cancel">Annulla</button><a class="btn primary" id="exp-dl" hidden data-u="download">Scarica il video</a></div>
+</dialog>
+
+<iframe id="atlas" title="globo" tabindex="-1" aria-hidden="true"></iframe>
+</body>
+</html>

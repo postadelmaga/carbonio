@@ -22,7 +22,9 @@
 <script defer src="https://cloud.umami.is/script.js" data-website-id="2cf64696-ed71-405e-9e22-b2b3e7b8bb6f"></script>
 <script>
 /* il tema salvato dal sito, prima del primo disegno */
-(function(){ var t=null; try{t=localStorage.getItem("tema");}catch(e){} if(t==="light"||t==="dark") document.documentElement.setAttribute("data-theme",t); })();
+(function(){ var t=null; try{t=localStorage.getItem("tema");}catch(e){} if(t==="light"||t==="dark") document.documentElement.setAttribute("data-theme",t);
+  /* ?reel: comandato dall'editor dei reel (reel/): solo il globo, sempre scuro */
+  if (/[?&]reel\b/.test(location.search)) { document.documentElement.setAttribute("data-theme","dark"); document.documentElement.classList.add("reel"); } })();
 </script>
 </head>
 <body>
@@ -156,6 +158,7 @@
       <label><span data-i18n="to">a</span> <select id="loop-to"></select></label>
     </span>
     <button id="loop-year" type="button" class="link" data-i18n="loop_year">Anno intero</button>
+    <a class="link reel-link" href="reel/" data-i18n="make_reel">Crea un reel</a>
     <span class="dl-wrap"><button id="dl" type="button" class="link" hidden></button> <span id="dl-info" class="dl-info mono"></span></span>
   </div>
   <div id="status" class="status"></div>
