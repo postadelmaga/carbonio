@@ -37,9 +37,13 @@ uniform vec3 uEye;
 uniform sampler2D uSstA, uSstB;      // due istanti, mescolati con uMix
 uniform sampler2D uCurA, uCurB;
 uniform sampler2D uSstC, uSstD;      // confronto: la seconda data
-uniform sampler2DArray uClim;        // 12 mesi di climatologia
-uniform sampler2DArray uP90;         // 12 mesi di 90° percentile
-uniform sampler2DArray uBias;        // 12 mesi di differenza anfc − GLORYS (pipeline/bias.py)
+// 36 strati: climatologia (0–11), 90° percentile (12–23) e differenza
+// anfc − GLORYS (24–35, pipeline/bias.py), un mese per strato
+uniform sampler2DArray uMonthly;
+uniform sampler2D uOceanA, uOceanB;  // livello del mare (R/G, cm) e ghiaccio (B/A, %)
+uniform bool uOceanOn, uHasP90;
+uniform vec2 uRangeSla;
+uniform vec2 uLayers2;               // pesi: livello del mare, ghiaccio marino
 uniform float uBiasW, uBiasWCmp;     // quanto del dato mostrato viene da anfc (0…1)
 uniform sampler2D uLand;
 uniform sampler2D uMedA, uMedB;      // Mediterraneo 1/16° (griglia sua)
@@ -59,7 +63,7 @@ uniform vec2 uRangeSst, uRangeAnom, uRangeSpeed;
 uniform float uOpacity;
 uniform vec3 uBg, uLandCol, uNoData, uCoastGlow;
 
-vec3 lut(float t, float row) { return texture(uLuts, vec2(clamp(t, 0.0, 1.0), (row + 0.5) / 4.0)).rgb; }
+vec3 lut(float t, float row) { return texture(uLuts, vec2(clamp(t, 0.0, 1.0), (row + 0.5) / 5.0)).rgb; }
 vec2 sampleSst(sampler2D a, sampler2D b, vec2 uv, float m) {
   vec2 x = mix(texture(a, uv).rg, texture(b, uv).rg, m);
   return vec2(x.g > 0.5 ? x.r / x.g : 0.0, x.g);
@@ -67,13 +71,13 @@ vec2 sampleSst(sampler2D a, sampler2D b, vec2 uv, float m) {
 // Climatologia e 90° percentile sono di GLORYS12. Per un dato anfc la base
 // si sposta della differenza media fra i due sistemi in quel mese, cosi'
 // l'anomalia non contiene la differenza fra i modelli.
-float monthly(sampler2DArray t, vec2 uv, vec4 sel, float missing) {
-  vec2 x = mix(texture(t, vec3(uv, sel.x)).rg, texture(t, vec3(uv, sel.y)).rg, sel.z);
+float monthly(float first, vec2 uv, vec4 sel, float missing) {
+  vec2 x = mix(texture(uMonthly, vec3(uv, first + sel.x)).rg, texture(uMonthly, vec3(uv, first + sel.y)).rg, sel.z);
   return x.g > 0.5 ? x.r / x.g : missing;
 }
-float base(sampler2DArray t, vec2 uv, vec4 sel, float w) {
-  float b = monthly(t, uv, sel, 1e9);
-  return b < 1e8 && w > 0.0 ? b + w * monthly(uBias, uv, sel, 0.0) : b;
+float base(float first, vec2 uv, vec4 sel, float w) {
+  float b = monthly(first, uv, sel, 1e9);
+  return b < 1e8 && w > 0.0 ? b + w * monthly(24.0, uv, sel, 0.0) : b;
 }
 
 void main() {
@@ -128,7 +132,7 @@ void main() {
     }
     if (s.y > 0.5) {
       if (wA > 0.0 && uHasClim) {
-        float cl = base(uClim, uv, sel, cmpSide ? uBiasWCmp : uBiasW);
+        float cl = base(0.0, uv, sel, cmpSide ? uBiasWCmp : uBiasW);
         if (cl < 1e8) {
           sea = true;
           float an = s.x - cl;
@@ -138,8 +142,8 @@ void main() {
           col = mix(col, lut(t, 1.0), wA * mix(1.0, strong, wT));
         }
       }
-      if (uHotspot && uHasClim) {
-        float th = base(uP90, uv, sel, cmpSide ? uBiasWCmp : uBiasW);
+      if (uHotspot && uHasP90) {
+        float th = base(12.0, uv, sel, cmpSide ? uBiasWCmp : uBiasW);
         if (th < 1e8 && s.x > th) {
           // tratteggio diagonale sopra le celle oltre il 90° percentile
           float h = fract((gl_FragCoord.x + gl_FragCoord.y) / 7.0);
@@ -158,6 +162,28 @@ void main() {
       float under = max(wT, wA);
       col = mix(col, lut(t, 2.0), wS * mix(1.0, pow(smoothstep(0.1, 0.7, t), 1.5), under));
       sea = true;
+    }
+  }
+  // livello del mare e ghiaccio: solo nella serie mensile e mai nella meta'
+  // di confronto (che mostra la sola temperatura)
+  if (uOceanOn && !cmpSide && (uLayers2.x > 0.0 || uLayers2.y > 0.0)) {
+    vec4 o = mix(texture(uOceanA, uv), texture(uOceanB, uv), uMix);
+    if (uLayers2.x > 0.0 && o.g > 0.5) {
+      // anomalia del livello del mare (cm, rispetto al 1993–2012): divergente;
+      // sopra altri livelli conta soprattutto dove si allontana dallo zero
+      float v = o.r / o.g;
+      float t = (v - uRangeSla.x) / (uRangeSla.y - uRangeSla.x);
+      float strong = smoothstep(0.05, 0.6, abs(t - 0.5) * 2.0);
+      col = mix(col, lut(t, 4.0), uLayers2.x * mix(1.0, strong, max(wT, wA)));
+      sea = true;
+    }
+    if (uLayers2.y > 0.0 && o.a > 0.5) {
+      // ghiaccio marino: bianco azzurro, opaco quanto e' fitto (sotto il 15%
+      // per convenzione non c'e' ghiaccio)
+      float c = o.b / o.a;
+      float k = smoothstep(15.0, 90.0, c);
+      col = mix(col, mix(vec3(0.72, 0.84, 0.93), vec3(0.97, 0.99, 1.0), k), uLayers2.y * (c >= 15.0 ? mix(0.55, 1.0, k) : 0.0));
+      if (c >= 15.0) sea = true;
     }
   }
   if (sea) col = mix(uNoData, col, uOpacity);

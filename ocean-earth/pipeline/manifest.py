@@ -24,7 +24,8 @@ import sources  # noqa: E402
 
 TIERS = {
     # precip e soil: terraferma da ERA5 (pipeline/land.py), percentuale del normale
-    'monthly': dict(step='P1M', vars=['sst', 'cur', 'precip', 'soil']),
+    # sla: livello del mare (altimetria), ice: ghiaccio marino (GLORYS12 → analisi)
+    'monthly': dict(step='P1M', vars=['sst', 'cur', 'precip', 'soil', 'sla', 'ice']),
     'daily': dict(step='P1D', vars=['sst', 'cur', 'ostia', 'med']),
     'hourly': dict(step='PT1H', vars=['sst', 'cur']),
 }
@@ -71,7 +72,10 @@ def build():
         # tengo solo gli istanti per cui il file c'e' davvero
         for v, idx in per_var.items():
             per_var[v] = {s: d for s, d in idx.items() if frames.frame_path(tier, v, s).exists()}
-        stamps = sorted(set().union(*[set(i) for i in per_var.values()]))
+        # gli istanti della serie sono quelli del mare (temperatura, correnti): un
+        # mese che ha solo il livello del mare o la pioggia aspetta gli altri
+        base = [v for v in conf['vars'] if v in ('sst', 'cur', 'ostia', 'med')]
+        stamps = sorted(set().union(*[set(per_var[v]) for v in base]))
         if not stamps:
             continue
         rows = []
@@ -112,7 +116,8 @@ def build():
         'generated': dt.datetime.now(dt.timezone.utc).strftime('%Y-%m-%dT%H:%MZ'),
         'grid': {'nlat': grid.NLAT, 'nlon': grid.NLON, 'step': grid.STEP,
                  'lat0': float(grid.LATS[0]), 'lon0': float(grid.LONS[0])},
-        'encoding': {'scalar': {'offset': encode.SCALAR_OFFSET, 'step': encode.SCALAR_STEP},
+        'encoding': {'scalar': {'offset': encode.SCALAR_OFFSET, 'step': encode.SCALAR_STEP,
+                                'offsets': encode.SCALAR_OFFSETS},
                      'vector': {'step': encode.VECTOR_STEP, 'zero': encode.VECTOR_ZERO}},
         # anteprime per la riproduzione (pipeline/preview.py): stessi istanti,
         # meno bit; ci sono solo se la cartella p/ e' stata generata

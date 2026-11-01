@@ -79,7 +79,9 @@ info "Preparo la build in $BUILD_DIR"
 # Il repository ha una cartella per progetto; sul server convivono cosi':
 #   co2-info/     → /            "Il carbonio che resta" (radice inglese, it/ es/ fr/ zh/)
 #   cer/          → /cer/        la Comunita' Energetica Rinnovabile e il suo statuto
-#   ocean-earth/  → /ocean-earth/
+#   ocean-earth/  → /atlante/      l'Atlante del clima (pagina e codice)
+#                   /ocean-earth/  solo i dati, che arm_php aggiorna ogni giorno, e
+#                                  un rinvio al nuovo indirizzo per i vecchi link
 CO2="$SRC_DIR/co2-info"
 cp -R "$CO2/404.html" "$CO2/robots.txt" "$CO2/assets" "$BUILD_DIR/"
 # La radice del sito e' l'inglese. build.py lo genera dentro en/, ma con
@@ -103,8 +105,26 @@ cp -R "$SRC_DIR/cer" "$BUILD_DIR/cer"
 # si sincronizzano a parte, direttamente dalla loro cartella, piu' sotto.
 OE_DATA="$SRC_DIR/ocean-earth/data"
 if [ -f "$SRC_DIR/ocean-earth/index.html" ]; then
-  mkdir -p "$BUILD_DIR/ocean-earth"
-  cp -R "$SRC_DIR/ocean-earth/index.html" "$SRC_DIR/ocean-earth/app" "$BUILD_DIR/ocean-earth/"
+  mkdir -p "$BUILD_DIR/atlante" "$BUILD_DIR/ocean-earth"
+  cp -R "$SRC_DIR/ocean-earth/index.html" "$SRC_DIR/ocean-earth/app" "$BUILD_DIR/atlante/"
+  # i dati restano dove la chiave di arm_php puo' scriverli (/ocean-earth/data/)
+  sed -i 's|<meta name="data-base" content="data/">|<meta name="data-base" content="/ocean-earth/data/">|; s|<link rel="preload" href="data/manifest.json"|<link rel="preload" href="/ocean-earth/data/manifest.json"|' "$BUILD_DIR/atlante/index.html"
+  grep -q 'content="/ocean-earth/data/"' "$BUILD_DIR/atlante/index.html" || { err "atlante: percorso dei dati non sostituito"; exit 1; }
+  # il vecchio indirizzo porta al nuovo, con parametri e ancora
+  cat > "$BUILD_DIR/ocean-earth/index.html" <<'RINVIO'
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<title>Atlante del clima · CO₂·info</title>
+<link rel="canonical" href="__ROOT__/atlante/">
+<meta name="robots" content="noindex">
+<meta http-equiv="refresh" content="0; url=/atlante/">
+<script>location.replace('/atlante/' + location.search + location.hash);</script>
+</head>
+<body><p>Ocean Earth ora si chiama <a href="/atlante/">Atlante del clima</a>.</p></body>
+</html>
+RINVIO
 fi
 
 # I sorgenti tengono un placeholder perche' l'URL pubblico lo decide il deploy,
@@ -137,7 +157,7 @@ cat <<UNA
 UNA
 done)
   <url>
-    <loc>${PUBLIC_URL}/ocean-earth/</loc>
+    <loc>${PUBLIC_URL}/atlante/</loc>
     <lastmod>$(date -u +%Y-%m-%d)</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>

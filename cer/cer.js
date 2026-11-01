@@ -1,5 +1,5 @@
 /* Tema chiaro/scuro: lo stesso valore "tema" in localStorage usato da CO₂·info
-   e Ocean Earth, cosi' la scelta vale su tutto il sito. */
+   e l'Atlante del clima, cosi' la scelta vale su tutto il sito. */
 (function () {
   var root = document.documentElement;
   function saved() { try { return localStorage.getItem('tema'); } catch (e) { return null; } }

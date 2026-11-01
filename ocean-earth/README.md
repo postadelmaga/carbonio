@@ -1,9 +1,16 @@
-# Ocean Earth
+# Atlante del clima (Climate Atlas)
 
-Interactive globe of **sea surface temperature** and **surface ocean currents**
-from January 1993 to the latest published data, built on Copernicus Marine
-Service products. It lives inside the CO₂·info site at
-**https://co2-info.duckdns.org/ocean-earth/**.
+Interactive globe of sea and land from January 1993 to the latest published
+data: **sea surface temperature** and its anomaly, **surface currents**, **sea
+level**, **sea ice**, **rainfall** and **soil moisture**, built on Copernicus
+Marine and Copernicus Climate Change Service products. It lives inside the
+CO₂·info site at **https://co2-info.duckdns.org/atlante/**.
+
+Until November 2026 it was called *Ocean Earth*: the repository folder, the
+data path (`/ocean-earth/data/`, where arm_php is allowed to write) and the
+`oe-` browser keys keep that name; `/ocean-earth/` redirects to `/atlante/`.
+The name is translated: Atlante del clima, Climate Atlas, Atlas del clima,
+Atlas du climat, 气候地图集.
 
 > The text below is in English. Il resto del repository è in italiano; questa
 > cartella segue le stesse convenzioni (sito statico, niente build, deploy con
@@ -19,6 +26,8 @@ Service products. It lives inside the CO₂·info site at
 | Particles | GPU particles advected by the current field (U, V), coloured by speed | m/s |
 | Arrows | a zoom-dependent grid of arrows, oriented along the current, colour and length by speed | m/s |
 | Hotspots | months above the 1993–2020 90th percentile of the same month (monthly time step only) | — |
+| Sea level | sea level anomaly from the 1993–2012 mean, satellite altimetry (monthly time step only) | cm |
+| Sea ice | sea ice concentration, drawn from 15% (monthly time step only) | % |
 | Land | precipitation or soil moisture (0–7 cm) as a percentage of the 1993–2020 normal of the same month, ERA5 (monthly time step only) | % |
 
 Time steps: **month** (1993 → last complete month), **day** (since 1 January
@@ -34,8 +43,13 @@ one over the other, each with its own weight: the legend is the mixer, with a
 slider next to each colour scale. Over the temperature the anomaly shows mostly
 where it is strong (normal areas let the temperature through), and the current
 speed mostly where the current is fast. A single layer at 100% is exactly the
-old single mode. The buttons in the header are shortcuts: one layer only, or
-"Mix" (temperature 100%, anomaly 70%, speed 60%). The weights are remembered in
+old single mode. The buttons in the header are **views**, ready-made
+combinations that set every weight: Temperature, Anomaly, Currents, Sea level,
+Sea ice (ice over the anomaly), Drought (soil moisture over the anomaly) and
+Mix (temperature 100%, anomaly 70%, speed 60%). Views that need monthly-only
+layers switch to the monthly series by themselves and say so. On narrow
+screens the views use short labels, and on phones they scroll sideways.
+The legend groups the rows in **Sea** and **Land**. The weights are remembered in
 the browser (`localStorage` `oe-layers`). A fourth row, **Land**, colours the
 continents (normally grey) with precipitation or soil moisture, chosen in the
 row (`oe-land`); it exists only in the monthly time step. The point panel, the range fields and
@@ -64,6 +78,30 @@ native grid; otherwise it is land.
 | day | SST Mediterranean (overlay) | `SST_MED_SST_L4_NRT_OBSERVATIONS_010_004_a_V2` (SST_MED_SST_L4_NRT_OBSERVATIONS_010_004) | 1/16°, daily, L4, **kept on its native grid** | satellite observations | last 365 days |
 | hour | SST | `cmems_mod_glo_phy_anfc_0.083deg_PT1H-m` | 1/12°, hourly mean | operational analysis | last 14 days |
 | hour | U, V | `cmems_obs-mob_glo_phy-cur_nrt_0.25deg_PT1H-i` | 0.25°, hourly instantaneous (with tides) | observation-based | last 14 days |
+
+**Sea level and sea ice** (monthly, `frames.py monthly sla|ice`):
+
+| Variable | Dataset (Copernicus Marine) | Native | Kind |
+|---|---|---|---|
+| sea level | `cmems_obs-sl_glo_phy-ssh_my_allsat-l4-duacs-0.125deg_P1M-m` (SEALEVEL_GLO_PHY_L4_MY_008_047), `sla` | 0.125°, monthly mean, anomaly vs 1993–2012 | observations (multi-mission altimetry) |
+| sea level | `cmems_obs-sl_glo_phy-ssh_nrt_allsat-l4-duacs-0.125deg_P1D` (SEALEVEL_GLO_PHY_L4_NRT_008_046), after the multi-year series ends | 0.125°, daily maps averaged into the month (only complete months) | observations |
+| sea ice | `cmems_mod_glo_phy_my_0.083deg_P1M-m`, `siconc` (the same GLORYS12 monthly dataset as the temperature) | 1/12° | reanalysis |
+| sea ice | `cmems_mod_glo_phy_anfc_0.083deg_P1M-m`, `siconc`, after GLORYS12 ends | 1/12° | operational analysis |
+
+Sea level is stored in cm with its own zero (−200 cm, `encode.SCALAR_OFFSETS`,
+listed in the manifest), since it goes below the temperature's −5. The Caspian
+Sea is masked: it is a lake, and the two DUACS series measure it from
+different references (−16 cm, then −180 cm). Near-real-time minus multi-year on
+shared months: +0.94 cm (2025-03), +0.37 cm (2025-09), +0.70 cm (2026-04) in the
+area-weighted mean, about 1.3 cm RMS: small against the ±30 cm scale, but about
+two years of global rise, so trends across the seam should be read with care.
+In GLORYS12 `siconc` is empty over open water: the pipeline reads it as 0 where
+`mlotst` (defined only over the sea) exists. Check: Arctic extent (cells ≥ 15%)
+of September 2024 from the frame is 4.34 million km² (NSIDC: 4.38); September
+1996 8.01 (7.88), September 2012 3.65 (3.57).
+`validate.py` section 7c checks every March and September extent and the
+1993–1998 → 2020–2025 rise of the global mean. Monthly instants are the ones
+that have temperature or currents: a month with only sea level waits.
 
 **Land** (`pipeline/land.py`), from the Copernicus Climate Change Service
 Climate Data Store, not Copernicus Marine:
@@ -280,6 +318,18 @@ Sizes on 30 Oct 2026 (3.5 GB of exact frames plus 0.7 GB of playback previews): 
 climatology and percentiles 12 MB, land and coasts 0.9 MB.
 
 ## Deploy
+
+**Addresses**: `deploy.sh` publishes the page and `app/` at `/atlante/`,
+pointing it at the data in `/ocean-earth/data/` (`<meta name="data-base">`;
+locally it stays `data/`), and writes `/ocean-earth/index.html` as a redirect
+that keeps query and hash. The data path did not move because the arm_php key
+may only write there.
+
+**Bandwidth** (Oracle Always Free: 10 TB outbound per month). Measured with
+the OCI CLI (`oci monitoring metric-data summarize-metrics-data`, namespace
+`oci_vcn`, `VnicToNetworkBytes`) on 1 November 2026: 48 GB in 30 days for the
+four machines together, the web server about 11 GB (5 GB/day on the two days of
+tests and video renders).
 
 **Code** (`index.html`, `app/`): `publish.sh` → `deploy.sh` from the repository
 root, like the rest of the site. The main rsync excludes `/ocean-earth/data/`,

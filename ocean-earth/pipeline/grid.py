@@ -96,6 +96,17 @@ def from_twentieth(field, lat, lon):
     return coarse[::-1] if lat[0] < lat[-1] else coarse
 
 
+def from_eighth(field, lat, lon):
+    """Da 0,125° (altimetria DUACS) a 0,25°: blocchi esatti di 2×2 punti."""
+    lat = np.asarray(lat)
+    lon = np.asarray(lon)
+    assert lat.size == 2 * NLAT and lon.size == 2 * NLON, "griglia 0,125° inattesa"
+    assert abs(lon[0] + 180 - STEP / 4) < 1e-3, "longitudini non allineate"
+    sv, sw, tot = regrid_sum(field, 2, False, wrap_lon=False)
+    coarse = _finish(sv, sw, tot)
+    return coarse[::-1] if lat[0] < lat[-1] else coarse
+
+
 def from_quarter(field, lat, lon):
     """Prodotti gia' a 0,25° (015_003): solo verifica e orientamento nord → sud."""
     lat = np.asarray(lat)

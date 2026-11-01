@@ -28,6 +28,10 @@ export const PALETTES = {
     [0.85, '#fca636'], [1.00, '#f0f921']] },
   // terraferma, percentuale del normale (scala logaritmica 25…400%):
   // marrone = secco, bianco = normale, verde-blu = umido (come BrBG)
+  // livello del mare: blu sotto, bianco sullo zero, viola-rosso sopra
+  sla: { kind: 'sla', stops: [
+    [0.00, '#1d2f6f'], [0.18, '#2f6db3'], [0.36, '#8fbfe0'], [0.50, '#f4f4f2'],
+    [0.64, '#e8a3c6'], [0.82, '#b03a8c'], [1.00, '#5b0a4d']] },
   precip: { kind: 'land', stops: [
     [0.00, '#543005'], [0.14, '#8c510a'], [0.28, '#bf812d'], [0.42, '#e6cf98'],
     [0.50, '#f5f2ea'], [0.58, '#a8ddd5'], [0.72, '#35978f'], [0.86, '#01665e'], [1.00, '#003c30']] },

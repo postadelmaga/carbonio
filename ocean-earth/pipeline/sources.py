@@ -55,6 +55,20 @@ DATASETS = {
     'cmems_obs-mob_glo_phy-cur_nrt_0.25deg_PT1H-i': dict(
         product='MULTIOBS_GLO_PHY_MYNRT_015_003', name='Copernicus-GlobCurrent (near real time), hourly instantaneous',
         kind='observation', res='0.25°', freq='PT1H', var='uo,vo', depth=True),
+    # ghiaccio marino dopo la fine di GLORYS12 (prima viene dallo stesso dataset
+    # mensile della temperatura, con le variabili di FIELDS['ice'])
+    'cmems_mod_glo_phy_anfc_0.083deg_P1M-m': dict(
+        product='GLOBAL_ANALYSISFORECAST_PHY_001_024', name='Global analysis (NEMO 1/12°)',
+        kind='model', res='1/12°', freq='P1M', var='siconc,mlotst', depth=False),
+    # livello del mare: altimetria multi-missione DUACS, anomalia rispetto al 1993–2012
+    'cmems_obs-sl_glo_phy-ssh_my_allsat-l4-duacs-0.125deg_P1M-m': dict(
+        product='SEALEVEL_GLO_PHY_L4_MY_008_047', name='DUACS multi-mission altimetry (multi-year)',
+        kind='observation', res='0.125°', freq='P1M', var='sla', depth=False),
+    # dopo la fine della serie multi-anno: media del mese calcolata dalle mappe
+    # giornaliere in tempo quasi reale (stesso sistema DUACS, stesso riferimento)
+    'cmems_obs-sl_glo_phy-ssh_nrt_allsat-l4-duacs-0.125deg_P1D': dict(
+        product='SEALEVEL_GLO_PHY_L4_NRT_008_046', name='DUACS multi-mission altimetry (near real time), monthly mean of daily maps',
+        kind='observation', res='0.125°', freq='P1M', var='sla', depth=False, aggregate='P1M'),
     # terraferma (pipeline/land.py): Copernicus Climate Change Service, Climate
     # Data Store; non passano da copernicusmarine, il DOI e' scritto qui
     'reanalysis-era5-single-levels-monthly-means': dict(
@@ -71,6 +85,9 @@ DATASETS = {
 CHAINS = {
     ('monthly', 'sst'): ['cmems_mod_glo_phy_my_0.083deg_P1M-m', 'cmems_mod_glo_phy-thetao_anfc_0.083deg_P1M-m'],
     ('monthly', 'cur'): ['cmems_obs-mob_glo_phy-cur_my_0.25deg_P1M-m', 'cmems_obs-mob_glo_phy-cur_nrt_0.25deg_P1M-m'],
+    ('monthly', 'ice'): ['cmems_mod_glo_phy_my_0.083deg_P1M-m', 'cmems_mod_glo_phy_anfc_0.083deg_P1M-m'],
+    ('monthly', 'sla'): ['cmems_obs-sl_glo_phy-ssh_my_allsat-l4-duacs-0.125deg_P1M-m',
+                         'cmems_obs-sl_glo_phy-ssh_nrt_allsat-l4-duacs-0.125deg_P1D'],
     ('daily', 'sst'): ['cmems_mod_glo_phy_my_0.083deg_P1D-m', 'cmems_mod_glo_phy-thetao_anfc_0.083deg_P1D-m'],
     ('daily', 'cur'): ['cmems_obs-mob_glo_phy-cur_my_0.25deg_P1D-m', 'cmems_obs-mob_glo_phy-cur_nrt_0.25deg_P1D-m'],
     ('daily', 'ostia'): ['METOFFICE-GLO-SST-L4-NRT-OBS-SST-V2'],
@@ -78,6 +95,13 @@ CHAINS = {
     ('hourly', 'sst'): ['cmems_mod_glo_phy_anfc_0.083deg_PT1H-m'],
     ('hourly', 'cur'): ['cmems_obs-mob_glo_phy-cur_nrt_0.25deg_PT1H-i'],
 }
+
+
+# variabili da scaricare quando un dataset serve per una variabile diversa da
+# quella della sua scheda (GLORYS mensile: thetao per la temperatura, qui il
+# ghiaccio). mlotst esiste solo sul mare: distingue "niente ghiaccio" (siconc
+# vuoto sul mare) dalla terra.
+FIELDS = {'ice': ('siconc,mlotst', False)}
 
 
 def yesterday_end():

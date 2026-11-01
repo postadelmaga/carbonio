@@ -27,7 +27,9 @@ function compile(gl, vs, fs) {
 }
 
 // righe della texture delle scale (uLuts nello shader del globo)
-const LUT_ROWS = ['sst', 'anom', 'speedField', 'land'];
+const LUT_ROWS = ['sst', 'anom', 'speedField', 'land', 'sla'];
+// primo strato di ogni campo mensile nella texture array comune (uMonthly)
+const MONTHLY_BASE = { clim: 0, p90: 12, bias: 24 };
 
 export class Globe {
   constructor(canvas, camera) {
@@ -56,15 +58,18 @@ export class Globe {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     this.frameTex = new Map();          // chiave del fotogramma → texture (piccola LRU)
     this.pinned = new Set();
-    this.clim = this.blankArr; this.p90 = this.blankArr; this.bias = this.blankArr; this.hasClim = false;
+    // climatologia, 90° percentile e differenza anfc − GLORYS in una texture
+    // array sola (strati 0–11, 12–23, 24–35): libera unita' per i livelli nuovi
+    this.monthly = this.blankArr; this.monthlyDims = null; this.hasClim = false; this.hasP90 = false;
     this.coast = null; this.region = null;
     this.state = {
       sstA: null, sstB: null, curA: null, curB: null, mix: 0,
       medA: null, medB: null, medBox: [0, 0, 1, 1],
+      oceanA: null, oceanB: null,       // livello del mare (R/G) e ghiaccio (B/A), RGBA16F
       landA: null, landB: null, landSpan: 2,   // terraferma: % del normale (ERA5), scala log ±landSpan ottave
       sstC: null, sstD: null, mixCmp: 0, compare: false, split: 0.5,
       climSel: [0, 0, 0, 0], climSelCmp: [0, 0, 0, 0], biasW: 0, biasWCmp: 0,
-      layers: { sst: 1, anom: 0, speed: 0, land: 0 }, hotspot: false, opacity: 1,
+      layers: { sst: 1, anom: 0, speed: 0, land: 0, sla: 0, ice: 0 }, rangeSla: [-30, 30], hotspot: false, opacity: 1,
       paletteSst: 'classic', rangeSst: [-2, 32], rangeAnom: [-3, 3], rangeSpeed: [0, 1.2],
       particles: true, particleCount: 8000, particleSpeed: 1, particleWidth: 1.6,
       arrows: false, arrowDensity: 1, coast: true,
@@ -76,6 +81,7 @@ export class Globe {
     this.setPalette('speed', 'speed');
     this.setPalette('speedField', 'speedField');
     this.setPalette('land', 'precip');
+    this.setPalette('sla', 'sla');
   }
 
   makeTex(w, h, ifmt, fmt, type, data, filter, clampS = false) {
@@ -138,12 +144,7 @@ export class Globe {
       ? this.makeTex(frame.w, frame.h, gl.RGBA16F, gl.RGBA, gl.HALF_FLOAT, frame.gpu)
       : this.makeTex(frame.w, frame.h, gl.RG16F, gl.RG, gl.HALF_FLOAT, frame.gpu, null, regional);
     this.frameTex.set(key, t);
-    for (const k of this.frameTex.keys()) {
-      if (this.frameTex.size <= 12) break;
-      if (this.pinned.has(k)) continue;
-      gl.deleteTexture(this.frameTex.get(k));
-      this.frameTex.delete(k);
-    }
+    this.trimFrames();
     return t;
   }
 
@@ -153,14 +154,47 @@ export class Globe {
     this.land = this.makeTex(w, h, gl.R8, gl.RED, gl.UNSIGNED_BYTE, gray);
   }
 
-  // 12 mesi in una texture array; frames: array di 12 risultati 'scalar'
+  // 12 mesi di un campo nella texture array comune; frames: 12 risultati 'scalar'
   setMonthly(which, frames) {
     const gl = this.gl;
     const { w, h } = frames[0];
-    const all = new Uint16Array(w * h * 2 * 12);
-    frames.forEach((f, k) => all.set(f.gpu, k * w * h * 2));
-    const t = this.makeArray(w, h, 12, all);
-    if (which === 'clim') { this.clim = t; this.hasClim = true; } else this[which] = t;
+    if (!this.monthlyDims) {
+      this.monthly = this.makeArray(w, h, 36, null);
+      this.monthlyDims = [w, h];
+    }
+    gl.bindTexture(gl.TEXTURE_2D_ARRAY, this.monthly);
+    gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+    const base = MONTHLY_BASE[which];
+    frames.forEach((f, k) => gl.texSubImage3D(gl.TEXTURE_2D_ARRAY, 0, 0, 0, base + k, w, h, 1, gl.RG, gl.HALF_FLOAT, f.gpu));
+    if (which === 'clim') this.hasClim = true;
+    if (which === 'p90') this.hasP90 = true;
+  }
+
+  // livello del mare e ghiaccio dello stesso istante in una texture RGBA16F:
+  // (valore, valido) del primo in R/G, del secondo in B/A
+  oceanTexture(key, sla, ice) {
+    if (!sla && !ice) return null;
+    let t = this.frameTex.get(key);
+    if (t) { this.frameTex.delete(key); this.frameTex.set(key, t); return t; }
+    const { w, h } = sla || ice, n = w * h;
+    const px = new Uint16Array(n * 4);
+    for (let i = 0; i < n; i++) {
+      if (sla) { px[i * 4] = sla.gpu[i * 2]; px[i * 4 + 1] = sla.gpu[i * 2 + 1]; }
+      if (ice) { px[i * 4 + 2] = ice.gpu[i * 2]; px[i * 4 + 3] = ice.gpu[i * 2 + 1]; }
+    }
+    t = this.makeTex(w, h, this.gl.RGBA16F, this.gl.RGBA, this.gl.HALF_FLOAT, px);
+    this.frameTex.set(key, t);
+    this.trimFrames();
+    return t;
+  }
+
+  trimFrames() {
+    for (const k of this.frameTex.keys()) {
+      if (this.frameTex.size <= 16) break;
+      if (this.pinned.has(k)) continue;
+      this.gl.deleteTexture(this.frameTex.get(k));
+      this.frameTex.delete(k);
+    }
   }
 
   setCoast(lines) {
@@ -308,8 +342,11 @@ export class Globe {
     this.bind(P, 'uCurA', 2, curA); this.bind(P, 'uCurB', 3, curB);
     const sstC = st.sstC || sstA, sstD = st.sstD || sstC;
     this.bind(P, 'uSstC', 4, sstC); this.bind(P, 'uSstD', 5, sstD);
-    this.bind(P, 'uClim', 6, this.clim, gl.TEXTURE_2D_ARRAY);
-    this.bind(P, 'uP90', 7, this.p90, gl.TEXTURE_2D_ARRAY);
+    this.bind(P, 'uMonthly', 6, this.monthly, gl.TEXTURE_2D_ARRAY);
+    const oceanA = st.oceanA || this.blank4, oceanB = st.oceanB || oceanA;
+    this.bind(P, 'uOceanA', 7, oceanA); this.bind(P, 'uOceanB', 14, oceanB);
+    gl.uniform1i(P.u.uOceanOn, st.oceanA ? 1 : 0);
+    gl.uniform2fv(P.u.uRangeSla, st.rangeSla);
     this.bind(P, 'uLand', 8, this.land);
     this.bind(P, 'uLuts', 9, this.lutAtlas);
     const landA = st.landA || this.blank2, landB = st.landB || landA;
@@ -319,7 +356,6 @@ export class Globe {
     // texture del Mediterraneo: senza bordo che si ripete in longitudine
     const medA = st.medA || this.blank2, medB = st.medB || medA;
     this.bind(P, 'uMedA', 12, medA); this.bind(P, 'uMedB', 13, medB);
-    this.bind(P, 'uBias', 14, this.bias, gl.TEXTURE_2D_ARRAY);
     gl.uniform1f(P.u.uBiasW, st.biasW);
     gl.uniform1f(P.u.uBiasWCmp, st.biasWCmp);
     gl.uniform4fv(P.u.uMedBox, st.medBox);
@@ -329,7 +365,9 @@ export class Globe {
     gl.uniform4fv(P.u.uClimSel, st.climSel);
     gl.uniform4fv(P.u.uClimSelCmp, st.climSelCmp);
     gl.uniform4fv(P.u.uLayers, [st.layers.sst, st.layers.anom, st.layers.speed, st.layers.land || 0]);
+    gl.uniform2fv(P.u.uLayers2, [st.layers.sla || 0, st.layers.ice || 0]);
     gl.uniform1i(P.u.uHasClim, this.hasClim ? 1 : 0);
+    gl.uniform1i(P.u.uHasP90, this.hasP90 ? 1 : 0);
     gl.uniform1i(P.u.uHotspot, st.hotspot ? 1 : 0);
     gl.uniform1i(P.u.uCompare, st.compare ? 1 : 0);
     gl.uniform1i(P.u.uHaveData, st.sstA || st.medA ? 1 : 0);

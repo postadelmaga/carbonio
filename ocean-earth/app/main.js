@@ -147,7 +147,7 @@ function previewMode() {
 }
 
 // variabili senza anteprima: gia' leggere (Mediterraneo, terraferma)
-const NO_PREVIEW = new Set(['med', 'precip', 'soil']);
+const NO_PREVIEW = new Set(['med', 'precip', 'soil', 'sla', 'ice']);
 
 function keyFor(frame, v, prev = previewMode()) {
   return `${prev && !NO_PREVIEW.has(v) ? 'p:' : ''}${timeline.tierName}/${v}/${frame.t}`;
@@ -157,7 +157,7 @@ function keyFor(frame, v, prev = previewMode()) {
 function fileOf(frame, v, prev) {
   const tier = timeline.tierName;
   if (prev && !NO_PREVIEW.has(v)) return [store.previewPath(tier, v, frame.t), v === 'cur' ? 'pcur' : 'psst'];
-  return [store.framePath(tier, v, frame.t), v === 'cur' ? 'vector' : 'scalar'];
+  return [store.framePath(tier, v, frame.t), v === 'cur' ? 'vector' : v === 'sla' ? 'sla' : 'scalar'];
 }
 
 function request(frame, v, prev = previewMode()) {
@@ -170,16 +170,23 @@ function needed(f) {
   const need = [sstVar(f), 'cur'];
   if (medOn()) need.push('med');
   if (landOn()) need.push(ui.landVar);
+  need.push(...oceanVars());
   return need.filter((v) => f[v] != null);
+}
+
+// livello del mare e ghiaccio: serie mensile
+function monthlyHas(v) {
+  return !!timeline && timeline.tierName === 'monthly' && !!manifest.tiers.monthly?.vars.includes(v);
+}
+function oceanVars() {
+  return ['sla', 'ice'].filter((v) => globe.state.layers[v] > 0 && monthlyHas(v));
 }
 
 // terraferma: precipitazioni o umidita' del suolo, solo nella serie mensile.
 // Scala logaritmica: la pioggia di un mese va facilmente da un quarto al
 // quadruplo del normale, l'acqua nel suolo si muove molto meno
 const LAND_SPAN = { precip: 2, soil: 1 };
-function landAvail() {
-  return !!timeline && timeline.tierName === 'monthly' && !!manifest.tiers.monthly?.vars.includes(ui.landVar);
-}
+function landAvail() { return monthlyHas(ui.landVar); }
 function landOn() {
   return globe.state.layers.land > 0 && landAvail();
 }
@@ -238,15 +245,19 @@ async function applyFrames() {
   const token = ++applyToken;
   const A = timeline.frameA, B = timeline.frameB;
   const svA = sstVar(A), svB = sstVar(B);
-  const med = medOn(), lv = landOn() ? ui.landVar : null;
+  const med = medOn(), lv = landOn() ? ui.landVar : null, ov = oceanVars();
+  const slaOn = ov.includes('sla'), iceOn = ov.includes('ice');
   const got = (p) => (p ? p.catch(() => null) : null);
   // tutti i file prima di toccare il globo: temperatura, correnti e
   // Mediterraneo cambiano insieme, con l'interpolazione e la climatologia
-  const [sA, sB, cA, cB, mA, mB, lA, lB] = await Promise.all([
+  const [sA, sB, cA, cB, mA, mB, lA, lB, ...rest] = await Promise.all([
     request(A, svA), request(B, svB), request(A, 'cur'), request(B, 'cur'),
     med ? request(A, 'med') : null, med ? request(B, 'med') : null,
     lv ? request(A, lv) : null, lv ? request(B, lv) : null,
+    slaOn ? request(A, 'sla') : null, slaOn ? request(B, 'sla') : null,
+    iceOn ? request(A, 'ice') : null, iceOn ? request(B, 'ice') : null,
   ].map(got));
+  const [qA, qB, gA, gB] = rest;
   if (token !== applyToken) return;
   const st = globe.state;
   st.sstA = globe.frameTexture(keyFor(A, svA), sA, 'scalar');
@@ -258,8 +269,12 @@ async function applyFrames() {
   if (med) { const g = manifest.regional.med; st.medBox = [g.west, g.south, g.east, g.north]; }
   st.landA = lv ? globe.frameTexture(keyFor(A, lv), lA, 'scalar') : null;
   if (lv) st.landSpan = LAND_SPAN[lv];
+  // livello del mare e ghiaccio dello stesso istante in una texture sola
+  const okey = (F) => `oc:${timeline.tierName}/${F.t}/${slaOn ? 's' : ''}${iceOn ? 'i' : ''}`;
+  st.oceanA = ov.length ? globe.oceanTexture(okey(A), qA, gA) : null;
+  st.oceanB = ov.length ? globe.oceanTexture(okey(B), qB, gB) || st.oceanA : null;
   st.landB = lv ? globe.frameTexture(keyFor(B, lv), lB, 'scalar') || st.landA : null;
-  current = { A, B, sA, sB, cA, cB, svA, svB, mA, mB, lA, lB, lv, preview: previewMode(), missing: !sA && A[svA] != null };
+  current = { A, B, sA, sB, cA, cB, svA, svB, mA, mB, lA, lB, lv, qA, qB, gA, gB, ov, preview: previewMode(), missing: !sA && A[svA] != null };
   syncShown();
   syncTimeUI(false);
   loadClim();
@@ -543,8 +558,8 @@ function valueAt(frameA, frameB, i, kind) {
   if ((frameA && frameA.preview) || (frameB && frameB.preview)) return kind === 'scalar' ? NaN : [NaN, NaN];
   const mix = globe.state.mix;
   if (kind === 'scalar') {
-    const a = frameA ? store.scalarValue(frameA.codes, i) : NaN;
-    const b = frameB ? store.scalarValue(frameB.codes, i) : a;
+    const a = frameA ? store.scalarValue(frameA.codes, i, frameA.off) : NaN;
+    const b = frameB ? store.scalarValue(frameB.codes, i, frameB.off) : a;
     return mix > 0 && Number.isFinite(b) ? a + (b - a) * mix : a;
   }
   const a = frameA ? store.vectorValue(frameA, i) : [NaN, NaN];
@@ -594,7 +609,9 @@ function pointValues(p) {
   // l'anomalia e' sempre sul modello, come la climatologia: con OSTIA non c'e'
   const model = current.svA === 'sst' ? valueAt(current.sA, current.sB, c.i, 'scalar') : NaN;
   const land = current.lv ? valueAt(current.lA, current.lB, c.i, 'scalar') : NaN;
-  return { c, sst, anom: model - cl, u, v, speed, dirDeg, med, land };
+  const sla = current.qA ? valueAt(current.qA, current.qB, c.i, 'scalar') : NaN;
+  const ice = current.gA ? valueAt(current.gA, current.gB, c.i, 'scalar') : NaN;
+  return { c, sst, anom: model - cl, u, v, speed, dirDeg, med, land, sla, ice };
 }
 
 
@@ -609,6 +626,10 @@ function refreshPoint() {
     if (Number.isFinite(v.land)) {
       rows.push(`<dl class="vals"><dt>${t(current.lv + '_short')}</dt><dd><b class="${v.land >= 100 ? 'wet' : 'dry'}">${fmtNum(v.land, 0)}%</b> <span class="muted">${t('of_normal')} ${manifest.land.clim_years.join('–')}</span></dd></dl>`);
     }
+    const extra = [];
+    if (Number.isFinite(v.sla)) extra.push(`<dt>${t('sla_short')}</dt><dd><b>${v.sla >= 0 ? '+' : ''}${fmtNum(v.sla, 1)} cm</b> <span class="muted">${t('sla_ref')}</span></dd>`);
+    if (Number.isFinite(v.ice) && v.ice >= 0.5) extra.push(`<dt>${t('ice_short')}</dt><dd><b>${fmtNum(v.ice, 0)}%</b> <span class="muted">${t('ice_conc')}</span></dd>`);
+    if (extra.length) rows.push(`<dl class="vals">${extra.join('')}</dl>`);
     if (!Number.isFinite(v.sst) && !Number.isFinite(v.speed)) { if (!Number.isFinite(v.land)) rows.push(`<div class="muted">${t('no_data')}</div>`); return; }
     const dir = compass(v.dirDeg);
     rows.push(`<dl class="vals">
@@ -967,10 +988,15 @@ function updateStatus() {
   const parts = [];
   if (sS) parts.push(`<b>${t('temp')}</b> ${sS.name} <span class="muted">(${t(sS.kind)}, ${freqLabel(sS)}, ${sS.res})</span>`);
   if (sC) parts.push(`<b>${t('cur_speed')}</b> ${sC.name} <span class="muted">(${t(sC.kind)}, ${freqLabel(sC)}, ${sC.res})</span>`);
+  for (const v of current.ov || []) {
+    const s = store.source(current.A[v]);
+    if (s) parts.push(`<b>${t(v + '_short')}</b> ${s.name} <span class="muted">(${t(s.kind)}, ${freqLabel(s)}, ${s.res})</span>`);
+  }
+  if (timeline.tierName !== 'monthly' && ['sla', 'ice'].some((v) => globe.state.layers[v] > 0)) notes.push(t('monthly_only'));
   if (current.lv) {
     const l = store.source(current.A[current.lv]);
     if (l) parts.push(`<b>${t(current.lv + '_short')}</b> ${l.name} <span class="muted">(${t(l.kind)}, ${freqLabel(l)}, ${l.res})</span>`);
-  } else if (globe.state.layers.land > 0 && timeline.tierName !== 'monthly') notes.push(t('land_monthly_only'));
+  } else if (globe.state.layers.land > 0 && timeline.tierName !== 'monthly' && !notes.includes(t('monthly_only'))) notes.push(t('monthly_only'));
   if (current.mA && globe.state.layers.sst > 0) {
     const m = store.source(current.A.med);
     if (m) parts.push(`<b>${t('med_hi')}</b> ${m.name} <span class="muted">(${t(m.kind)}, ${freqLabel(m)}, ${m.res})</span>`);
@@ -1041,7 +1067,7 @@ function bindControls() {
     const saved = JSON.parse(localStorage.getItem('oe-layers') || 'null');
     const lv = localStorage.getItem('oe-land');
     if (lv === 'precip' || lv === 'soil') ui.landVar = lv;
-    if (saved && !(typeof saved.land === 'number' && saved.land >= 0 && saved.land <= 1)) saved.land = 0;
+    for (const k of MONTHLY_ONLY) if (saved && !(typeof saved[k] === 'number' && saved[k] >= 0 && saved[k] <= 1)) saved[k] = 0;
     if (saved && LAYERS.every((k) => typeof saved[k] === 'number' && saved[k] >= 0 && saved[k] <= 1)) setLayers(saved);
   } catch (e) { /* niente */ }
   $('#particles').addEventListener('change', (e) => { st.particles = e.target.checked; drawLegend(); });
@@ -1167,13 +1193,27 @@ function autoRange() {
 
 // I tre livelli si sommano con un peso ciascuno (legenda = mixer). I pulsanti
 // in alto sono scorciatoie: un livello solo, oppure "Mix" con tutti e tre.
+// Viste pronte: ognuna fissa tutti i pesi. Quelle con livello del mare,
+// ghiaccio o terraferma esistono solo nella serie mensile e ci portano.
+const OFF = { sst: 0, anom: 0, speed: 0, land: 0, sla: 0, ice: 0 };
 const PRESETS = {
-  sst: { sst: 1, anom: 0, speed: 0 }, anom: { sst: 0, anom: 1, speed: 0 },
-  speed: { sst: 0, anom: 0, speed: 1 }, mix: { sst: 1, anom: 0.7, speed: 0.6 },
+  sst: { ...OFF, sst: 1 }, anom: { ...OFF, anom: 1 }, speed: { ...OFF, speed: 1 },
+  sla: { ...OFF, sla: 1 }, ice: { ...OFF, anom: 1, ice: 1 },
+  drought: { ...OFF, anom: 1, land: 1, landVar: 'soil' },
+  mix: { ...OFF, sst: 1, anom: 0.7, speed: 0.6 },
 };
 const LAYERS = ['sst', 'anom', 'speed'];      // quelli del mare: decidono il livello principale
-const ALL_LAYERS = [...LAYERS, 'land'];
-function setMode(mode) { setLayers(PRESETS[mode]); drawLegend(); }
+const ALL_LAYERS = [...LAYERS, 'sla', 'ice', 'land'];
+const MONTHLY_ONLY = ['sla', 'ice', 'land'];
+function setMode(mode) {
+  const { landVar, ...w } = PRESETS[mode];
+  if (landVar) { ui.landVar = landVar; try { localStorage.setItem('oe-land', landVar); } catch (e) { /* niente */ } }
+  const needMonthly = MONTHLY_ONLY.some((k) => w[k] > 0) && timeline.tierName !== 'monthly' && manifest.tiers.monthly;
+  setLayers(w);
+  if (needMonthly) { timeline.setTier('monthly'); note(t('to_monthly')); }
+  else if (landVar && current) onTime('source');
+  drawLegend();
+}
 
 function setLayers(w) {
   const st = globe.state, before = { ...st.layers };
@@ -1193,8 +1233,9 @@ function setLayers(w) {
 }
 
 function syncModeButtons() {
-  const L = globe.state.layers, n = ALL_LAYERS.filter((k) => L[k] > 0).length;
-  $$('.quick-mode button').forEach((b) => b.classList.toggle('on', b.dataset.mode === 'mix' ? n > 1 : n === 1 && L[b.dataset.mode] > 0));
+  const L = globe.state.layers;
+  const same = (p) => ALL_LAYERS.every((k) => Math.abs((L[k] || 0) - (p[k] || 0)) < 1e-6) && (!p.landVar || p.landVar === ui.landVar);
+  $$('.quick-mode button').forEach((b) => b.classList.toggle('on', same(PRESETS[b.dataset.mode])));
   const st = globe.state;
   const r = ui.mode === 'anom' ? st.rangeAnom : ui.mode === 'speed' ? st.rangeSpeed : st.rangeSst;
   $('#r-min').value = r[0];
@@ -1224,29 +1265,35 @@ function bindSplit() {
 function drawLegend() {
   const st = globe.state;
   const L = [];
-  const scale = (pal, lo, hi, digits) => {
-    const ticks = [0, 0.25, 0.5, 0.75, 1].map((f) => `<span style="left:${f * 100}%">${fmtNum(lo + (hi - lo) * f, digits)}</span>`).join('');
+  const scale = (pal, lo, hi, digits, unit = '') => {
+    const ticks = [0, 0.25, 0.5, 0.75, 1].map((f) => `<span style="left:${f * 100}%">${fmtNum(lo + (hi - lo) * f, digits)}${f === 1 ? unit : ''}</span>`).join('');
     return `<div class="lg-bar" style="background:${cssGradient(pal)}"></div><div class="lg-ticks">${ticks}</div>`;
   };
-  // ogni scala ha il suo cursore: la legenda e' anche il mixer dei livelli
-  const row = (k, title, pal, lo, hi, digits) => {
-    const w = Math.round(st.layers[k] * 100);
-    L.push(`<div class="lg mx${w ? '' : ' off'}" data-layer="${k}">
+  const vars = manifest ? manifest.tiers.monthly?.vars || [] : [];
+  // ogni scala ha il suo cursore: la legenda e' anche il mixer dei livelli.
+  // Le righe spente mostrano solo nome e cursore; quelle che in questa serie
+  // non esistono (solo mensili) restano visibili ma dicono perche'.
+  const row = (k, title, body, extra = '') => {
+    const w = Math.round((st.layers[k] || 0) * 100);
+    const na = MONTHLY_ONLY.includes(k) && timeline && timeline.tierName !== 'monthly';
+    L.push(`<div class="lg mx${w ? '' : ' off'}${na ? ' na' : ''}" data-layer="${k}">
       <label class="mx-head"><span class="lg-t">${title}</span><input type="range" min="0" max="100" step="5" value="${w}" aria-label="${title}"><output>${w}%</output></label>
-      <div class="mx-scale">${scale(pal, lo, hi, digits)}</div></div>`);
+      ${extra}${na ? `<div class="mx-na muted">${t('monthly_only')}</div>` : ''}<div class="mx-scale">${body}</div></div>`);
   };
-  row('sst', t('sst_label'), st.paletteSst, st.rangeSst[0], st.rangeSst[1], 0);
-  row('anom', `${t('anom_label')} ${manifest ? manifest.climatology.years.join('–') : '1993–2020'}`, 'anomaly', st.rangeAnom[0], st.rangeAnom[1], 1);
-  row('speed', t('speed_label'), 'speedField', st.rangeSpeed[0], st.rangeSpeed[1], 1);
-  if (manifest && manifest.tiers.monthly?.vars.some((v) => v === 'precip' || v === 'soil')) {
+  L.push(`<div class="lg-group">${t('group_sea')}</div>`);
+  row('sst', t('sst_label'), scale(st.paletteSst, st.rangeSst[0], st.rangeSst[1], 0));
+  row('anom', `${t('anom_label')} ${manifest ? manifest.climatology.years.join('–') : '1993–2020'}`, scale('anomaly', st.rangeAnom[0], st.rangeAnom[1], 1));
+  row('speed', t('speed_label'), scale('speedField', st.rangeSpeed[0], st.rangeSpeed[1], 1));
+  if (vars.includes('sla')) row('sla', t('sla_label'), scale('sla', st.rangeSla[0], st.rangeSla[1], 0, ' cm') + `<div class="lg-ends"><span>${t('lower')}</span><span>${t('higher')}</span></div>`);
+  if (vars.includes('ice')) row('ice', t('ice_label'), `<div class="lg-bar" style="background:linear-gradient(90deg,rgba(184,214,237,.35),#b8d6ed 15%,#f7fcff)"></div><div class="lg-ticks"><span style="left:0">0</span><span style="left:15%">15</span><span style="left:100%">100%</span></div>`);
+  if (vars.some((v) => v === 'precip' || v === 'soil')) {
+    L.push(`<div class="lg-group">${t('group_land')}</div>`);
     // terraferma: scala logaritmica, la stessa dello shader
-    const w = Math.round((st.layers.land || 0) * 100), avail = landAvail(), span = LAND_SPAN[ui.landVar];
+    const span = LAND_SPAN[ui.landVar];
     const ticks = [-1, -0.5, 0, 0.5, 1].map((f, i) => `<span style="left:${i * 25}%">${Math.round(100 * 2 ** (f * span))}%</span>`).join('');
     const opt = (v) => `<option value="${v}"${ui.landVar === v ? ' selected' : ''}>${t(v + '_short')}</option>`;
-    L.push(`<div class="lg mx${w ? '' : ' off'}${avail ? '' : ' na'}" data-layer="land">
-      <label class="mx-head"><span class="lg-t">${t('land_label')}</span><input type="range" min="0" max="100" step="5" value="${w}" aria-label="${t('land_label')}"><output>${w}%</output></label>
-      <div class="mx-var"><select id="land-var" aria-label="${t('land_label')}">${opt('precip')}${opt('soil')}</select> <span class="muted">${avail ? `% ${t('of_normal')} ${manifest.land?.clim_years.join('–') || '1993–2020'}` : t('land_monthly_only')}</span></div>
-      <div class="mx-scale"><div class="lg-bar" style="background:${cssGradient('precip')}"></div><div class="lg-ticks">${ticks}</div><div class="lg-ends"><span>${t('drier')}</span><span>${t('wetter')}</span></div></div></div>`);
+    row('land', t('land_label'), `<div class="lg-bar" style="background:${cssGradient('precip')}"></div><div class="lg-ticks">${ticks}</div><div class="lg-ends"><span>${t('drier')}</span><span>${t('wetter')}</span></div>`,
+      `<div class="mx-var"><select id="land-var" aria-label="${t('land_label')}">${opt('precip')}${opt('soil')}</select> <span class="muted">% ${t('of_normal')} ${manifest.land?.clim_years.join('–') || '1993–2020'}</span></div>`);
   }
   if ((st.particles || st.arrows) && !(st.layers.speed > 0)) L.push(`<div class="lg"><div class="lg-t">${t('particles')} · ${t('speed_label')}</div>${scale('speed', st.rangeSpeed[0], st.rangeSpeed[1], 1)}</div>`);
   if (st.hotspot) L.push(`<div class="lg"><span class="hatch"></span> ${t('hotspot')}</div>`);

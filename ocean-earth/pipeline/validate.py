@@ -44,7 +44,9 @@ def log(s=''):
 
 def published(tier, var, stamp):
     rgb = encode.load_png(frames.frame_path(tier, var, stamp))
-    return encode.decode_vector(rgb) if var == 'cur' else encode.decode_scalar(rgb)
+    if var == 'cur':
+        return encode.decode_vector(rgb)
+    return encode.decode_scalar(rgb, offset=encode.SCALAR_OFFSETS.get(var, encode.SCALAR_OFFSET))
 
 
 def ocean_cells(field, n, seed):
@@ -367,6 +369,46 @@ def check_era5_land():
     log('')
 
 
+def check_sea_level_ice():
+    """Ghiaccio: estensione artica (celle con almeno il 15%) di settembre e marzo
+    negli intervalli osservati (NSIDC dal 1993: settembre 3,6–7,9, marzo 13,9–16,3
+    milioni di km², con un margine per la differenza modello–satellite) e in calo; livello del mare: media globale in salita di
+    5–15 cm fra 1993–1998 e 2020–2025 (circa 3–4 mm l'anno)."""
+    log('## 7c. Livello del mare e ghiaccio marino\n')
+    lat = grid.LATS[:, None]
+    area = (6371.0 * np.radians(grid.STEP)) ** 2 * np.cos(np.radians(lat)) * np.ones((1, grid.NLON))
+    idx = sorted(frames.load_index('monthly', 'ice'))
+    if idx:
+        ext = {}
+        for s in idx:
+            if s[5:7] in ('03', '09'):
+                f = published('monthly', 'ice', s)
+                ext[s] = float(area[(f >= 15) & (lat > 0)].sum() / 1e6)
+        sep = {k: v for k, v in ext.items() if k.endswith('-09')}
+        mar = {k: v for k, v in ext.items() if k.endswith('-03')}
+        early = np.mean([v for k, v in sep.items() if k < '2001'])
+        late = np.mean([v for k, v in sep.items() if k >= '2015'])
+        # margine: GLORYS12 su celle di 0,25° sta un paio di % sopra il dato
+        # satellitare (settembre 1996: 8,01 contro 7,88 NSIDC; 2012: 3,65 contro 3,57)
+        ok = all(3.0 <= v <= 8.5 for v in sep.values()) and all(12.5 <= v <= 17.0 for v in mar.values()) and late < early
+        log(f'- settembre: {min(sep.values()):.2f}–{max(sep.values()):.2f} milioni di km², media 1993–2000 {early:.2f} → 2015– {late:.2f}; '
+            f'marzo {min(mar.values()):.2f}–{max(mar.values()):.2f} → **{"OK" if ok else "FALLITO"}**')
+        summary['ghiaccio artico'] = ok
+    idx = sorted(frames.load_index('monthly', 'sla'))
+    if idx:
+        w = np.cos(np.radians(lat))
+        def gmean(s):
+            f = published('monthly', 'sla', s)
+            m = np.isfinite(f) & (np.abs(lat) < 66)          # dove l'altimetria vede sempre
+            return float((f * w)[m].sum() / (w * m).sum())
+        a = np.mean([gmean(s) for s in idx if '1993' <= s[:4] <= '1998'])
+        b = np.mean([gmean(s) for s in idx if '2020' <= s[:4] <= '2025'])
+        ok = 5 <= b - a <= 15
+        log(f'- livello medio (66° S–66° N): 1993–1998 {a:+.2f} cm, 2020–2025 {b:+.2f} cm, salita {b - a:+.2f} cm → **{"OK" if ok else "FALLITO"}**')
+        summary['livello del mare'] = ok
+    log('')
+
+
 def check_anomaly():
     log('## 7. Anomalie\n')
     idx = sorted(frames.load_index('monthly', 'sst'))
@@ -433,7 +475,7 @@ def check_bias(idx, clim):
 def main():
     log(f'# Ocean Earth: validazione dei dati\n\nEseguita il {dt.datetime.now(dt.timezone.utc):%Y-%m-%d %H:%M} UTC '
         f'con `pipeline/validate.py`.\n')
-    for fn in (check_continuity, check_ranges, check_land, check_orientation, check_anomaly, check_era5_land, check_points, check_seams):
+    for fn in (check_continuity, check_ranges, check_land, check_orientation, check_anomaly, check_era5_land, check_sea_level_ice, check_points, check_seams):
         try:
             fn()
         except Exception as e:  # una verifica che non parte e' un fallimento, non un silenzio

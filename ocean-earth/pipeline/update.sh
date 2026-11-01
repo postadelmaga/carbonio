@@ -23,9 +23,9 @@ f() { $PY pipeline/frames.py "$@" 2>&1 | grep -v -E '^(INFO|WARNING)' ; }
 
 # tre code in parallelo: la banda (~40 MB/s) e' il collo di bottiglia, la
 # memoria (un campo 1/12° globale alla volta per processo) no
-( f monthly sst; f daily sst --start "$DAILY_START" ) > "$LOG/temperatura.log" & q1=$!
+( f monthly sst; f monthly ice; f daily sst --start "$DAILY_START" ) > "$LOG/temperatura.log" & q1=$!
 ( f monthly cur; f daily cur --start "$DAILY_START"; f hourly cur --days "$HOURLY_DAYS"; f hourly sst --days "$HOURLY_DAYS" ) > "$LOG/correnti.log" & q2=$!
-( f daily ostia --days "$OSTIA_DAYS"; f daily med --days "$OSTIA_DAYS" ) > "$LOG/ostia.log" & q3=$!
+( f daily ostia --days "$OSTIA_DAYS"; f daily med --days "$OSTIA_DAYS"; f monthly sla ) > "$LOG/ostia.log" & q3=$!
 # un 'wait' senza argomenti rende sempre 0: una coda fallita passava inosservata
 # e si pubblicavano climatologia e manifest su dati incompleti
 fail=0

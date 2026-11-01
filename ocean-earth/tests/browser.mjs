@@ -98,6 +98,29 @@ async function open(w, h, mobile, theme) {
   await sleep(3000);
   const daily = await page.evaluate(() => ({ now: document.querySelector('#now').innerText, src: !document.querySelector('#src-row').hidden, st: document.querySelector('#status').innerText }));
   check('livello giornaliero', /\d{1,2} \w+ 20\d\d/.test(daily.now) && daily.src, JSON.stringify(daily));
+  // viste mensili: dal giornaliero portano alla serie mensile; valori plausibili
+  const views = await page.evaluate(async () => {
+    const wait = async (ok) => { for (let k = 0; k < 60 && !ok(); k++) await new Promise((r) => setTimeout(r, 250)); };
+    const tl = __oe.timeline, out = {};
+    document.querySelector('.quick-mode button[data-mode=sla]').click();
+    out.tier = tl.tierName;
+    tl.seek(tl.findStamp('2022-09'));
+    await wait(() => __oe.shown()?.qA && __oe.shown().A.t === '2022-09');
+    let c = __oe.shown();
+    out.sla = c.qA ? +__oe.store.scalarValue(c.qA.codes, __oe.store.cell(20, -150).i, c.qA.off).toFixed(1) : null;
+    document.querySelector('.quick-mode button[data-mode=ice]').click();
+    await wait(() => __oe.shown()?.gA && __oe.shown().A.t === '2022-09');
+    c = __oe.shown();
+    out.icePole = c.gA ? Math.round(__oe.store.scalarValue(c.gA.codes, __oe.store.cell(88, 0).i)) : null;
+    out.iceEq = c.gA ? __oe.store.scalarValue(c.gA.codes, __oe.store.cell(0, -150).i) : null;
+    out.status = /DUACS|GLORYS12/.test(document.querySelector('#status').innerText);
+    document.querySelector('.quick-mode button[data-mode=sst]').click();
+    await new Promise((r) => setTimeout(r, 500));
+    tl.setTier('daily');
+    await new Promise((r) => setTimeout(r, 1500));
+    return out;
+  });
+  check('viste livello del mare e ghiaccio', views.tier === 'monthly' && Math.abs(views.sla) < 60 && views.icePole > 50 && !(views.iceEq > 0) && views.status, JSON.stringify(views));
   // il pannello laterale parte chiuso: lo si apre come farebbe chi usa la pagina
   check('pannello laterale chiuso all\'avvio', await page.evaluate(() => !document.body.classList.contains('side-open')));
   await page.click('#side-btn');
@@ -168,7 +191,7 @@ for (const [lang, word] of [['en', 'Anomaly'], ['it', 'Anomalia'], ['es', 'Anoma
     return {
       htmlLang: document.documentElement.lang,
       mode: document.querySelector('.quick-mode button[data-mode=anom] .l').textContent,
-      qfit: (() => { const q = document.querySelector('.quick-mode'); return q.scrollWidth <= q.clientWidth + 1; })(),
+      qfit: (() => { const q = document.querySelector('.quick-mode'); return q.scrollWidth <= q.clientWidth + 1 || getComputedStyle(q).overflowX === 'auto'; })(),
       status: document.querySelector('#status').innerText,
       fits: top.scrollWidth <= top.clientWidth + 1 && document.documentElement.scrollWidth <= window.innerWidth,
       back: document.querySelector('#back-link').getAttribute('href'),

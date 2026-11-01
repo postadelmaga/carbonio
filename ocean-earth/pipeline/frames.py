@@ -17,6 +17,7 @@ import sys
 import time
 
 import numpy as np
+import pandas as pd
 import xarray as xr
 
 HERE = pathlib.Path(__file__).resolve().parent
@@ -31,6 +32,7 @@ TIER_DIR = {'monthly': 'm', 'daily': 'd', 'hourly': 'h'}
 # quanti passi temporali per ogni download: abbastanza da ammortizzare la
 # richiesta, abbastanza pochi da non riempire la memoria (7 GB, 1/12° globale)
 CHUNK = {('monthly', 'sst'): 6, ('monthly', 'cur'): 24, ('daily', 'sst'): 8, ('daily', 'cur'): 31,
+         ('monthly', 'ice'): 12, ('monthly', 'sla'): 6,
          ('daily', 'ostia'): 2, ('daily', 'med'): 31, ('hourly', 'sst'): 12, ('hourly', 'cur'): 48}
 
 
@@ -97,9 +99,11 @@ def save_index(tier, var, idx):
     tmp.replace(p)
 
 
-def download(ds_id, lo, hi, tag):
+def download(ds_id, lo, hi, tag, var=None):
     import copernicusmarine as cm
-    meta = sources.DATASETS[ds_id]
+    meta = dict(sources.DATASETS[ds_id])
+    if var in sources.FIELDS:
+        meta['var'], meta['depth'] = sources.FIELDS[var]
     RAW.mkdir(parents=True, exist_ok=True)
     name = f'{tag}-{lo:%Y%m%d%H}-{hi:%Y%m%d%H}.nc'
     target = RAW / name
@@ -124,6 +128,15 @@ def _surface(da):
     if 'depth' in da.dims:
         da = da.isel(depth=0)
     return da
+
+
+def _monthly_mean(ds):
+    """Media mensile da mappe giornaliere; solo i mesi con tutti i giorni."""
+    days = ds['time'].resample(time='MS').count()
+    m = ds.resample(time='MS').mean(keep_attrs=True)
+    full = [i for i, t in enumerate(m['time'].values)
+            if int(days.values[i]) == pd.Timestamp(t).days_in_month]
+    return m.isel(time=full)
 
 
 def process(var, ds, i):
@@ -156,6 +169,20 @@ def process(var, ds, i):
             sst = sst[::-1]
         save_regional_grid('med', lat, lon)
         return encode.encode_scalar(sst)
+    if var == 'ice':
+        # concentrazione del ghiaccio in %: vuota sul mare = niente ghiaccio
+        c = ds['siconc'].isel(time=i).values.astype(np.float64)
+        sea = np.isfinite(ds['mlotst'].isel(time=i).values)
+        f = np.where(sea, np.clip(np.nan_to_num(c, nan=0.0), 0, 1) * 100, np.nan)
+        return encode.encode_scalar(grid.from_twelfth(f, ds.latitude.values, ds.longitude.values))
+    if var == 'sla':
+        # anomalia del livello del mare (m → cm) rispetto alla media 1993–2012
+        f = ds['sla'].isel(time=i).values.astype(np.float64) * 100
+        g = grid.from_eighth(f, ds.latitude.values, ds.longitude.values)
+        # il Caspio e' un lago: il suo livello non e' livello del mare, e le due
+        # serie DUACS lo misurano da riferimenti diversi (-16 → -180 cm al cambio)
+        g[np.ix_((grid.LATS > 36) & (grid.LATS < 48), (grid.LONS > 45) & (grid.LONS < 56))] = np.nan
+        return encode.encode_scalar(g, offset=encode.SCALAR_OFFSETS['sla'])
     if var == 'cur':
         u = _surface(ds['uo'].isel(time=i)).values
         v = _surface(ds['vo'].isel(time=i)).values
@@ -218,12 +245,16 @@ def run(tier, var, start, end):
         for block in contiguous_blocks(missing, wanted, CHUNK[(tier, var)]):
             b_lo = block[0]
             b_hi = block[-1]
-            if tier == 'monthly':
+            agg = sources.DATASETS[ds_id].get('aggregate')
+            if agg:
+                b_hi = _add_month(b_hi) - dt.timedelta(days=1)   # tutti i giorni del mese
+            elif tier == 'monthly':
                 b_hi = b_hi + dt.timedelta(days=1)     # basta a includere il primo del mese
             t0 = time.time()
-            nc = download(ds_id, b_lo, b_hi, f'{tier}-{var}')
+            nc = download(ds_id, b_lo, b_hi, f'{tier}-{var}', var)
             try:
-                with xr.open_dataset(nc) as ds:
+                with xr.open_dataset(nc) as raw:
+                    ds = _monthly_mean(raw) if agg else raw
                     for i, tv in enumerate(ds['time'].values):
                         t = sources._to_dt(tv)
                         s = stamp(tier, t)
@@ -261,7 +292,7 @@ def prune(tier, var, start):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('tier', choices=['monthly', 'daily', 'hourly'])
-    ap.add_argument('var', choices=['sst', 'cur', 'ostia', 'med'])
+    ap.add_argument('var', choices=['sst', 'cur', 'ostia', 'med', 'ice', 'sla'])
     ap.add_argument('--start')
     ap.add_argument('--end')
     ap.add_argument('--days', type=int, help='finestra mobile che finisce ieri')

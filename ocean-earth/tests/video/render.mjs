@@ -97,10 +97,10 @@ await page.evaluate((LAND) => {
   const LT = { soil: 'Umidità del suolo', precip: 'Precipitazioni' }[LAND];
   d.id = 'v-ov';
   d.innerHTML = `
-    <div id="v-title"><b>OCEAN EARTH</b><span>${LT ? `Anomalia della temperatura del mare, correnti e ${LT.toLowerCase()} sulla terraferma, rispetto al 1993–2020` : 'Anomalia della temperatura del mare rispetto al 1993–2020 e correnti superficiali'}</span></div>
+    <div id="v-title"><b>ATLANTE DEL CLIMA</b><span>${LT ? `Anomalia della temperatura del mare, correnti e ${LT.toLowerCase()} sulla terraferma, rispetto al 1993–2020` : 'Anomalia della temperatura del mare rispetto al 1993–2020 e correnti superficiali'}</span></div>
     <div id="v-date"><div id="v-year"></div><div id="v-month"></div><div id="v-prog"><u></u></div><p id="v-ends"><span>1994</span><span>2026</span></p></div>
     <div id="v-leg">Anomalia della temperatura superficiale<i></i><p><span>−3 °C</span><span>0</span><span>+3 °C</span></p>${LT ? `<div class="l2">${LT}, % del normale<i class="land"></i><p>${LAND === "soil" ? "<span>50%</span><span>100%</span><span>200%</span>" : "<span>25%</span><span>100%</span><span>400%</span>"}</p></div>` : ''}<small>Le scie luminose sono le correnti: piu' chiare dove sono piu' veloci${LT ? '. In grigio i deserti, dove il normale e\' quasi zero' : ''}</small></div>
-    <div id="v-src"><span>Dati: Copernicus Marine Service · GLORYS12, analisi globale, Copernicus-GlobCurrent${LT ? ' · Copernicus Climate Change Service · ' + (LAND === 'soil' ? 'ERA5-Land' : 'ERA5') : ''}</span><span>co2-info.duckdns.org/ocean-earth</span></div>
+    <div id="v-src"><span>Dati: Copernicus Marine Service · GLORYS12, analisi globale, Copernicus-GlobCurrent${LT ? ' · Copernicus Climate Change Service · ' + (LAND === 'soil' ? 'ERA5-Land' : 'ERA5') : ''}</span><span>co2-info.duckdns.org/atlante</span></div>
     <div id="v-fade"></div>`;
   document.body.appendChild(d);
   const st = __oe.globe.state;

@@ -106,18 +106,20 @@ async function decodeBlob(blob, kind) {
     for (let i = 0; i < n; i++) g[i] = data[i * 4];
     return { w, h, gray: g };
   }
-  if (kind === 'scalar' || kind === 'series') {
-    const { offset, step } = ENC.scalar;
+  if (kind === 'scalar' || kind === 'series' || kind === 'sla') {
+    // il livello del mare ha il suo zero (manifest: encoding.scalar.offsets)
+    const { step } = ENC.scalar;
+    const offset = kind === 'sla' ? ENC.scalar.offsets.sla : ENC.scalar.offset;
     const codes = new Uint16Array(n);
     for (let i = 0; i < n; i++) codes[i] = (data[i * 4] << 8) | data[i * 4 + 1];
     if (kind === 'series') return { w, h, codes };
-    const L = lut('scalar', 65536, (c) => offset + (c - 1) * step);
+    const L = lut('scalar' + offset, 65536, (c) => offset + (c - 1) * step);   // una tabella per zero
     const gpu = new Uint16Array(n * 2);
     for (let i = 0; i < n; i++) {
       const c = codes[i];
       if (c) { gpu[i * 2] = L[c]; gpu[i * 2 + 1] = HALF_ONE; }
     }
-    return { w, h, codes, gpu };
+    return { w, h, codes, gpu, off: offset };
   }
   // anteprime per la riproduzione (pipeline/preview.py): 8 bit
   if (kind === 'psst') {

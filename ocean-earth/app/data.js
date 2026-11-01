@@ -1,6 +1,9 @@
 // Accesso ai dati: manifest, decodifica nei worker, cache dei fotogrammi.
 
-const BASE = new URL('../data/', import.meta.url);
+// dove stanno i dati: <meta name="data-base"> (deploy.sh la punta a /ocean-earth/data/,
+// che arm_php aggiorna; la pagina vive in /atlante/), altrimenti data/ accanto alla pagina
+const META_BASE = globalThis.document?.querySelector('meta[name=data-base]')?.content;
+const BASE = META_BASE ? new URL(META_BASE, globalThis.document.baseURI) : new URL('../data/', import.meta.url);
 
 export class DataStore {
   constructor() {
@@ -156,11 +159,12 @@ export class DataStore {
   source(i) { return i == null ? null : this.manifest.sources[i]; }
 
   // ── lettura dei valori esatti dai codici ──
-  scalarValue(codes, i) {
+  // off: zero della variabile se diverso (livello del mare), dal fotogramma
+  scalarValue(codes, i, off) {
     const c = codes[i];
     if (!c) return NaN;
     const e = this.manifest.encoding.scalar;
-    return e.offset + (c - 1) * e.step;
+    return (off ?? e.offset) + (c - 1) * e.step;
   }
 
   vectorValue(frame, i) {
