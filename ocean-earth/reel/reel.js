@@ -34,6 +34,7 @@ const U = {
     trim_in: 'The song starts at (s)', trim_out: 'and ends at (s)', trim_auto: 'Remove silences', trim_hint: 'or drag the handles on the whole song below',
     meter: 'Beats per bar', clips_bars: 'Clips on the bars', clips_fill: 'Clips to the end of the song',
     tl_hint: 'Click to move · drag the right edge of a clip to stretch or shorten it (snaps to beats) · drag the light window on the whole song to choose where the music starts · space: play/pause',
+    legend_size: 'Legend size (%)',
     exporting: 'Export', cancel: 'Cancel', download: 'Download the video',
   },
 };
@@ -116,7 +117,7 @@ function newClip(over = {}) {
 }
 function defaultProject() {
   return {
-    version: 1, title: 'ATLANTE DEL CLIMA', lang: UI_LANG === 'it' ? 'it' : 'en', fps: 30, rate: 14, globeY: 160,
+    version: 1, title: 'ATLANTE DEL CLIMA', lang: UI_LANG === 'it' ? 'it' : 'en', fps: 30, rate: 14, globeY: 160, legendScale: 100,
     overlay: { date: true, legend: true, caption: true, credits: true }, safe: false,
     song: { name: '', start: 0, fadeIn: 0.6, fadeOut: 2.5, mode: 'detected', bpm: 120, gridOff: 0, barOff: 0, meter: 4, snap: 'bar', trimIn: 0, trimOut: 0, det: null },
     clips: [newClip()],
@@ -493,12 +494,17 @@ function compose(info, t) {
     blocks.push({ h: lines.length * 26 + 10, draw: (top) => { g.font = '500 19px Archivo'; g.fillStyle = '#93a8b2'; lines.forEach((l, k) => g.fillText(l, W / 2, top + 26 + k * 26)); } });
   }
   if (blocks.length) {
+    // ridotta o ingrandita attorno al suo bordo basso, che resta sopra la zona di Instagram
+    const k = (P.legendScale || 100) / 100, base = H - 430;
+    g.save();
+    g.translate(W / 2, base); g.scale(k, k); g.translate(-W / 2, -base);
     const hTot = blocks.reduce((s, b) => s + b.h, 0) + 24;
-    let top = H - 430 - hTot;
+    let top = base - hTot;
     g.fillStyle = 'rgba(4,10,16,.62)';
     roundRect(g, 90, top, W - 180, hTot, 18); g.fill();
     top += 14;
     for (const b of blocks) { b.draw(top); top += b.h; }
+    g.restore();
   }
   const a = blackAt(t);
   if (a > 0) { g.globalAlpha = a; g.fillStyle = '#000'; g.fillRect(0, 0, W, H); g.globalAlpha = 1; }
@@ -852,7 +858,7 @@ function fillForms() {
   $('#c-fade').disabled = sel === 0;
   $('#clip-del').disabled = P.clips.length < 2;
   $('#clip-left').disabled = sel === 0; $('#clip-right').disabled = sel === P.clips.length - 1;
-  $('#p-title').value = P.title; $('#p-lang').value = P.lang; $('#p-fps').value = String(P.fps); $('#p-globey').value = P.globeY; $('#p-rate').value = P.rate;
+  $('#p-title').value = P.title; $('#p-lang').value = P.lang; $('#p-fps').value = String(P.fps); $('#p-globey').value = P.globeY; $('#p-legend').value = P.legendScale || 100; $('#p-rate').value = P.rate;
   for (const k of ['date', 'legend', 'caption', 'credits']) $(`#o-${k}`).checked = !!P.overlay[k];
   $('#safe-on').checked = !!P.safe; $('#safe').hidden = !P.safe;
   showCams();
@@ -918,6 +924,7 @@ $('#clip-right').addEventListener('click', () => { if (sel >= P.clips.length - 1
 $('#p-title').addEventListener('input', (e) => { P.title = e.target.value; saveLocal(); });
 $('#p-lang').addEventListener('change', async (e) => { P.lang = e.target.value; saveLocal(); pause(); await bootAtlas(); });
 $('#p-fps').addEventListener('change', (e) => { P.fps = +e.target.value; saveLocal(); });
+$('#p-legend').addEventListener('change', (e) => { P.legendScale = Math.max(40, Math.min(130, +e.target.value || 100)); saveLocal(); });
 $('#p-globey').addEventListener('change', (e) => { P.globeY = Math.max(0, Math.min(700, +e.target.value || 0)); saveLocal(); });
 $('#p-rate').addEventListener('change', (e) => { P.rate = Math.max(4, Math.min(40, +e.target.value || 14)); saveLocal(); });
 for (const k of ['date', 'legend', 'caption', 'credits']) $(`#o-${k}`).addEventListener('change', (e) => { P.overlay[k] = e.target.checked; saveLocal(); });

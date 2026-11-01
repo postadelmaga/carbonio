@@ -339,3 +339,17 @@ html.reel body > :not(#globe) { display: none !important; }
 a.link.reel-link { color: var(--accent); padding: 2px 4px; font-size: 12px; font-weight: 600; text-decoration: none; }
 a.link.reel-link:hover { text-decoration: underline; }
 @media (max-width: 720px) { a.link.reel-link { display: none; } }
+/* legenda: pulsante per ridurla; ridotta mostra solo nome della vista e scale
+   dei livelli accesi (classe lg-small: .mini e' gia' la pillola del play) */
+.lg-cap { padding-right: 26px; }
+.legend .lg-min { position: absolute; top: 7px; right: 8px; width: 24px; height: 24px; border: 1px solid var(--rule); border-radius: 6px; background: transparent; color: var(--ink-2); font: 600 15px/1 Archivo, sans-serif; cursor: pointer; padding: 0; }
+.legend .lg-min:hover { color: var(--ink); border-color: var(--ink-3); }
+.legend.lg-small { min-width: 0; width: 220px; padding: 6px 10px; }
+.legend.lg-small .lg-cap { margin-bottom: 4px; padding-bottom: 4px; }
+.legend.lg-small .lg-cap span, .legend.lg-small .lg-group, .legend.lg-small .mx.off, .legend.lg-small .mx.na,
+.legend.lg-small .mx-head input, .legend.lg-small .mx-head output, .legend.lg-small .mx-var, .legend.lg-small .mx-na { display: none !important; }
+.legend.lg-small .mx-head { display: block; }
+.legend.lg-small .lg-t { font-size: 11px; }
+.legend.lg-small .lg { margin: 2px 0 6px; }
+.lg-sub { display: none; }
+.legend.lg-small .lg-sub { display: inline; }

@@ -31,6 +31,8 @@ const ui = {
   airMode: 1,                  // CO₂: 0 ppm, 1 rispetto alla media globale del mese
   fluxMode: 0,                 // flussi: 0 totale, 1 fossili, 2 naturali
   reelPreview: false,          // editor dei reel: anteprime leggere mentre si suona
+  // legenda ridotta: solo le scale dei livelli accesi (di base sui telefoni)
+  legendMini: (() => { try { const v = localStorage.getItem('oe-legend-mini'); if (v != null) return v === '1'; } catch (e) { /* niente */ } return matchMedia('(max-width: 720px)').matches; })(),
 };
 
 const camera = new Camera();
@@ -1418,7 +1420,8 @@ function drawLegend() {
       ${extra}${na ? `<div class="mx-na muted">${t('monthly_only')}</div>` : ''}<div class="mx-scale">${body}</div></div>`);
   };
   // in cima: cosa si sta guardando
-  L.push(`<div class="lg-cap">${ui.view ? `<b>${$(`.quick-mode button[data-mode=${ui.view}] .l`)?.textContent || ''}</b><span>${t(CAPTION[ui.view])}</span>` : t('custom_mix')}</div>`);
+  const minBtn = `<button type="button" class="lg-min" aria-expanded="${!ui.legendMini}" title="${t(ui.legendMini ? 'legend_more' : 'legend_less')}" aria-label="${t(ui.legendMini ? 'legend_more' : 'legend_less')}">${ui.legendMini ? '+' : '−'}</button>`;
+  L.push(`<div class="lg-cap">${minBtn}${ui.view ? `<b>${$(`.quick-mode button[data-mode=${ui.view}] .l`)?.textContent || ''}</b><span>${t(CAPTION[ui.view])}</span>` : `<b>${t('custom_mix')}</b>`}</div>`);
   // gruppi: aperto quello della scheda, quelli con un livello acceso e quelli aperti a mano
   const GROUP_LAYERS = { sea: ['sst', 'anom', 'speed', 'sla', 'ice'], land: ['land'], air: ['co2', 'flux'] };
   const group = (g) => {
@@ -1437,7 +1440,7 @@ function drawLegend() {
     const span = LAND_SPAN[ui.landVar];
     const ticks = [-1, -0.5, 0, 0.5, 1].map((f, i) => `<span style="left:${i * 25}%">${Math.round(100 * 2 ** (f * span))}%</span>`).join('');
     const opt = (v) => `<option value="${v}"${ui.landVar === v ? ' selected' : ''}>${t(v + '_short')}</option>`;
-    row('land', t('land_label'), `<div class="lg-bar" style="background:${cssGradient('precip')}"></div><div class="lg-ticks">${ticks}</div><div class="lg-ends"><span>${t('drier')}</span><span>${t('wetter')}</span></div>`,
+    row('land', `${t('land_label')}<span class="lg-sub"> · ${t(ui.landVar + '_short')}</span>`, `<div class="lg-bar" style="background:${cssGradient('precip')}"></div><div class="lg-ticks">${ticks}</div><div class="lg-ends"><span>${t('drier')}</span><span>${t('wetter')}</span></div>`,
       `<div class="mx-var"><select id="land-var" aria-label="${t('land_label')}">${opt('precip')}${opt('soil')}</select> <span class="muted">% ${t('of_normal')} ${manifest.land?.clim_years.join('–') || '1993–2020'}</span></div>`);
   }
   if (vars.includes('co2')) {
@@ -1468,7 +1471,15 @@ function bindMixer() {
     setLayers({ [k]: v });
   });
   // i titoli dei gruppi aprono e chiudono la loro sezione
+  $('#legend').classList.toggle('lg-small', ui.legendMini);
   $('#legend').addEventListener('click', (e) => {
+    if (e.target.closest('.lg-min')) {
+      ui.legendMini = !ui.legendMini;
+      keep('oe-legend-mini', ui.legendMini ? '1' : '0');
+      $('#legend').classList.toggle('lg-small', ui.legendMini);
+      drawLegend();
+      return;
+    }
     const g = e.target.closest('.lg-group');
     if (!g) return;
     const open = !g.classList.contains('open');
