@@ -47,11 +47,20 @@
       </div>
       <p class="muted small" data-u="song_local">Il brano resta nel tuo browser: non viene caricato da nessuna parte. Per pubblicare il reel servono i diritti sulla musica.</p>
       <div class="grid2">
-        <label><span data-u="bpm">Tempo (BPM)</span><input type="number" id="bpm" step="0.01" min="40" max="240"></label>
+        <label><span data-u="trim_in">Il brano parte da (s)</span><input type="number" id="trim-in" step="0.01" min="0"></label>
+        <label><span data-u="trim_out">e finisce a (s)</span><input type="number" id="trim-out" step="0.01" min="0"></label>
+      </div>
+      <div class="row">
+        <button type="button" class="btn" id="trim-auto" data-u="trim_auto">Togli i silenzi</button>
+        <span class="muted small" data-u="trim_hint">o trascina le maniglie sul brano intero, qui sotto</span>
+      </div>
+      <div class="grid2">
+        <label><span data-u="bpm">Tempo (BPM)</span><span class="pair"><input type="number" id="bpm" step="0.01" min="40" max="240"><button type="button" class="btn" id="bpm-half" title="÷2">÷2</button><button type="button" class="btn" id="bpm-double" title="×2">×2</button></span></label>
         <label><span data-u="beats_src">Battiti</span><select id="beat-mode"><option value="detected" data-u="detected">rilevati</option><option value="grid" data-u="grid">griglia fissa</option></select></label>
+        <label><span data-u="meter">Battiti per battuta</span><select id="meter"><option value="4">4</option><option value="3">3</option><option value="2">2</option><option value="6">6</option></select></label>
+        <label><span data-u="bar_off">La battuta parte dal battito</span><select id="bar-off"></select></label>
         <label><span data-u="grid_off">Primo battito (s)</span><input type="number" id="grid-off" step="0.001" min="0"></label>
-        <label><span data-u="bar_off">Battuta inizia al battito</span><select id="bar-off"><option>1</option><option>2</option><option>3</option><option>4</option></select></label>
-        <label><span data-u="song_start">Inizio nel brano (s)</span><input type="number" id="song-start" step="0.01" min="0"></label>
+        <label><span data-u="song_start">Il reel parte dal secondo</span><input type="number" id="song-start" step="0.01" min="0"></label>
         <label><span data-u="snap">Aggancia a</span><select id="snap"><option value="beat" data-u="beat">battito</option><option value="bar" data-u="bar">battuta</option><option value="none" data-u="none">niente</option></select></label>
         <label><span data-u="fade_in">Dissolvenza iniziale (s)</span><input type="number" id="fade-in" step="0.1" min="0" max="10"></label>
         <label><span data-u="fade_out">Dissolvenza finale (s)</span><input type="number" id="fade-out" step="0.1" min="0" max="10"></label>
@@ -59,6 +68,10 @@
       <div class="row">
         <button type="button" class="btn" id="tap" data-u="tap">Batti il tempo (T)</button>
         <button type="button" class="btn" id="start-beat" data-u="start_beat">Inizio sul battito più vicino</button>
+      </div>
+      <div class="row">
+        <button type="button" class="btn" id="clips-bars" data-u="clips_bars">Clip sulle battute</button>
+        <button type="button" class="btn" id="clips-fill" data-u="clips_fill">Clip fino alla fine del brano</button>
       </div>
       <p class="muted small" id="beat-info"></p>
     </details>

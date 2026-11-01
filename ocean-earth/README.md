@@ -440,10 +440,24 @@ virtual clock driven by the editor, which copies the globe into a canvas and
 draws title, caption, date, legend and data sources on top. The preview and
 the export use the same drawing.
 
-- Song: decoded in the browser and kept in IndexedDB, never uploaded. Beats
-  are found in `reel/beats.js` (spectral flux, tempo by autocorrelation, beat
-  tracking by dynamic programming, Ellis 2007); a fixed grid or tapped tempo
-  (T) can replace them. `tests/beats.test.mjs` checks a synthetic song.
+- Song: decoded in the browser and kept in IndexedDB, never uploaded. It is
+  analysed in a worker (`reel/beats-worker.js`, a few seconds for a whole
+  song, result saved in the project) by `reel/beats.js`:
+  - silence at start and end: 20 ms windows under −50 dB from the peak, cut
+    automatically and adjustable with handles on the whole-song waveform;
+  - beats: spectral flux at 16–24 kHz, tempo by autocorrelation, beat tracking
+    by dynamic programming (Ellis 2007); ÷2 and ×2 resolve the usual double or
+    half tempo ambiguity, and a fixed grid or tapped tempo (T) can replace them;
+  - bars: the beat that starts the bar is the one with the strongest low-end
+    hits (kick, bass) plus chord changes (chroma, 1 − cosine between beats);
+    3/4 only when it clearly beats 4/4. On “Evolution” the bars fall on the same
+    times at 22 and 48 kHz, one of them at the entry chosen by ear for the
+    earlier videos (81.6 s).
+  `tests/beats.test.mjs` checks tempo, beats and the first beat of the bar on
+  synthetic songs.
+- “Clips on the bars” moves every clip boundary to the nearest bar; “clips to
+  the end of the song” stretches the clips so the reel ends where the song
+  does.
 - Clips: view (with the CO₂ variant in ppm or relative, fluxes total, fossil or
   natural), month range, length, start and end framing, rotation, hold on the
   last month, dip to black. Dragging the right edge of a clip in the timeline

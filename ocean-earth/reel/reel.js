@@ -7,7 +7,7 @@
 // vede e' quello che si esporta. L'esportazione e' fotogramma per fotogramma
 // (aspetta i dati esatti di ogni istante) e scrive un MP4 con WebCodecs.
 
-import { analyze } from './beats.js';
+import { analyze, downbeats, silence } from './beats.js';
 import { Muxer, ArrayBufferTarget } from './vendor/mp4-muxer.mjs';
 
 const $ = (s) => document.querySelector(s);
@@ -31,29 +31,33 @@ const U = {
     particles: 'current trails', caption: 'Caption (empty = the view’s own)', cam0: 'Start framing', cam1: 'End framing', use_view: 'current view',
     texts: 'Texts and format', title: 'Title', lang: 'Text language', fps: 'Frames/s', globe_y: 'Globe lower (px)', quality: 'Quality (Mbit/s)',
     o_date: 'date', o_legend: 'legend', o_caption: 'title and caption', o_credits: 'data sources',
+    trim_in: 'The song starts at (s)', trim_out: 'and ends at (s)', trim_auto: 'Remove silences', trim_hint: 'or drag the handles on the whole song below',
+    meter: 'Beats per bar', clips_bars: 'Clips on the bars', clips_fill: 'Clips to the end of the song',
     tl_hint: 'Click to move · drag the right edge of a clip to stretch or shorten it (snaps to beats) · drag the light window on the whole song to choose where the music starts · space: play/pause',
     exporting: 'Export', cancel: 'Cancel', download: 'Download the video',
   },
 };
 const MSG = {
   it: {
-    bpm_det: (b, n) => `${n} battiti rilevati, ${b} BPM. Se la griglia non cade sui colpi, correggi il tempo o batti il tempo con T.`,
+    bpm_det: (b, n, m) => `${n} battiti rilevati, ${b} BPM, battute da ${m}. Se la griglia non cade sui colpi usa ÷2 o ×2, correggi il tempo o battilo con T.`,
     bpm_grid: (b) => `Griglia fissa a ${b} BPM.`, analyzing: 'Analizzo il brano…', avail: (a, b) => `Dati disponibili per questa vista: ${a} – ${b}.`,
     no_webcodecs: 'Questo browser non ha WebCodecs: per esportare serve Chrome, Edge o Firefox recenti.',
     codec_info: (v, a) => `Video ${v}${a ? `, audio ${a}` : ', senza audio'}. Il video si costruisce fotogramma per fotogramma con i dati esatti: ci vuole qualche minuto.`,
     opus_note: 'Questo browser non codifica l’audio AAC: l’audio è Opus. Se Instagram non lo accetta: ffmpeg -i reel.mp4 -c:v copy -c:a aac reel-ig.mp4',
     frame: (i, n, eta) => `fotogramma ${i}/${n} · mancano ${eta}`, done: (mb, s) => `Fatto: ${mb} MB in ${s}.`, wait_data: 'aspetto i dati…',
     timeout: 'I dati di un istante non arrivano: controlla la connessione e riprova.', cancelled: 'Annullato.', song_missing: (n) => `Il progetto usa «${n}»: sceglilo di nuovo.`,
+    analyzing_n: (s) => `Analizzo il brano (${s})…`, trimmed: (a, b) => `Silenzi tolti: il brano va da ${a} a ${b} s.`,
     bad_project: 'Il file non è un progetto dell’editor.', atlas_fail: 'L’atlante non si è caricato.', tap_more: (n) => `Batti ancora (${n})…`,
   },
   en: {
-    bpm_det: (b, n) => `${n} beats detected, ${b} BPM. If the grid does not land on the hits, fix the tempo or tap it with T.`,
+    bpm_det: (b, n, m) => `${n} beats detected, ${b} BPM, bars of ${m}. If the grid does not land on the hits use ÷2 or ×2, fix the tempo or tap it with T.`,
     bpm_grid: (b) => `Fixed grid at ${b} BPM.`, analyzing: 'Analysing the song…', avail: (a, b) => `Data available for this view: ${a} – ${b}.`,
     no_webcodecs: 'This browser has no WebCodecs: exporting needs a recent Chrome, Edge or Firefox.',
     codec_info: (v, a) => `Video ${v}${a ? `, audio ${a}` : ', no audio'}. The video is built frame by frame with the exact data: it takes a few minutes.`,
     opus_note: 'This browser does not encode AAC audio: the audio is Opus. If Instagram refuses it: ffmpeg -i reel.mp4 -c:v copy -c:a aac reel-ig.mp4',
     frame: (i, n, eta) => `frame ${i}/${n} · ${eta} left`, done: (mb, s) => `Done: ${mb} MB in ${s}.`, wait_data: 'waiting for data…',
     timeout: 'The data for one instant does not arrive: check the connection and try again.', cancelled: 'Cancelled.', song_missing: (n) => `The project uses “${n}”: choose it again.`,
+    analyzing_n: (s) => `Analysing the song (${s})…`, trimmed: (a, b) => `Silences removed: the song runs from ${a} to ${b} s.`,
     bad_project: 'The file is not an editor project.', atlas_fail: 'The atlas did not load.', tap_more: (n) => `Keep tapping (${n})…`,
   },
 }[UI_LANG];
@@ -114,7 +118,7 @@ function defaultProject() {
   return {
     version: 1, title: 'ATLANTE DEL CLIMA', lang: UI_LANG === 'it' ? 'it' : 'en', fps: 30, rate: 14, globeY: 160,
     overlay: { date: true, legend: true, caption: true, credits: true }, safe: false,
-    song: { name: '', start: 0, fadeIn: 0.6, fadeOut: 2.5, mode: 'detected', bpm: 120, gridOff: 0, barOff: 0, snap: 'beat', beats: [] },
+    song: { name: '', start: 0, fadeIn: 0.6, fadeOut: 2.5, mode: 'detected', bpm: 120, gridOff: 0, barOff: 0, meter: 4, snap: 'bar', trimIn: 0, trimOut: 0, det: null },
     clips: [newClip()],
   };
 }
@@ -172,7 +176,12 @@ function songBeats() {
   return out;
 }
 function reelBeats() { const s = P.song.start; return songBeats().map((b) => b - s).filter((b) => b >= -0.001 && b <= total() + 0.001); }
-function isBar(k) { return ((k - P.song.barOff) % 4 + 4) % 4 === 0; }
+function isBar(k) { const m = P.song.meter || 4; return ((k - P.song.barOff) % m + m) % m === 0; }
+// il brano utile, senza i silenzi
+const songIn = () => P.song.trimIn || 0;
+const songOut = () => (song.buffer ? Math.min(song.buffer.duration, P.song.trimOut || song.buffer.duration) : 600);
+// il reel deve stare dentro il brano utile
+function clampStart() { P.song.start = Math.max(songIn(), Math.min(Math.max(songIn(), songOut() - total()), P.song.start)); }
 function snapTime(t) {
   const mode = P.song.snap;
   if (mode === 'none' || !song.buffer) return t;
@@ -626,24 +635,59 @@ function seek(t) { tNow = Math.max(0, Math.min(total(), t)); need = true; camNee
 }
 
 // ── brano ──────────────────────────────────────────────────────────────────
+// analisi nel worker (qualche secondo per un brano intero); se il browser non
+// la permette, nella pagina
+function analyzeSong(buf) {
+  const channels = [...Array(buf.numberOfChannels)].map((_, c) => buf.getChannelData(c).slice());
+  return new Promise((res) => {
+    let w;
+    try { w = new Worker(new URL('./beats-worker.js', import.meta.url), { type: 'module' }); } catch (e) { w = null; }
+    const local = () => {
+      const r = analyze(buf), m4 = downbeats(r.beats, r.low, r.env, r.fr, 4, r.chroma);
+      res({ bpm: r.bpm, beats: r.beats, meter: 4, barOff: m4.phase, trim: silence(buf) });
+    };
+    if (!w) return local();
+    w.onmessage = (e) => { res(e.data); w.terminate(); };
+    w.onerror = () => { w.terminate(); local(); };
+    w.postMessage({ sampleRate: buf.sampleRate, channels }, channels.map((c) => c.buffer));
+  });
+}
+
 async function setSong(name, bytes, keepStart = false) {
-  $('#beat-info').textContent = MSG.analyzing;
   const a = audioCtx();
   const buf = await a.decodeAudioData(bytes.slice(0));
   song.buffer = buf;
-  P.song.name = name;
-  if (!keepStart) P.song.start = 0;
+  song.name = name;
   $('#song-name').textContent = `${name} · ${fmtTime(buf.duration)}`;
   // forma d'onda: massimo per colonna, 4000 colonne
   const n = 4000, d0 = buf.getChannelData(0), d1 = buf.numberOfChannels > 1 ? buf.getChannelData(1) : d0, per = Math.floor(buf.length / n);
   const peaks = new Float32Array(n);
   for (let i = 0; i < n; i++) { let m = 0; for (let k = i * per; k < (i + 1) * per; k += 4) m = Math.max(m, Math.abs(d0[k]), Math.abs(d1[k])); peaks[i] = m; }
   song.peaks = peaks;
-  await new Promise((r) => setTimeout(r, 30));          // lascia disegnare il messaggio
-  const r = analyze(buf);
-  song.detected = r.beats;
-  if (!keepStart || !P.song.bpm) P.song.bpm = +r.bpm.toFixed(2);
-  if (!keepStart) P.song.gridOff = +(r.beats[0] || 0).toFixed(3);
+  const S = P.song;
+  // gia' analizzato (stesso brano nel progetto): si riusano i battiti salvati
+  if (keepStart && S.det && S.det.name === name && S.det.beats?.length) {
+    song.detected = S.det.beats;
+    song.trimAuto = S.det.trim || { start: 0, end: buf.duration };
+  } else {
+    const t0 = performance.now();
+    const tick = setInterval(() => { $('#beat-info').textContent = MSG.analyzing_n(`${Math.round((performance.now() - t0) / 1000)} s`); }, 500);
+    $('#beat-info').textContent = MSG.analyzing;
+    const r = await analyzeSong(buf);
+    clearInterval(tick);
+    song.detected = r.beats.map((b) => +b.toFixed(4));
+    song.trimAuto = r.trim;
+    S.det = { name, beats: song.detected, trim: r.trim };
+    S.name = name; S.mode = 'detected';
+    S.bpm = +r.bpm.toFixed(2); S.meter = r.meter; S.barOff = r.barOff;
+    S.gridOff = +(r.beats[0] || 0).toFixed(3);
+    S.trimIn = +r.trim.start.toFixed(2); S.trimOut = +r.trim.end.toFixed(2);
+    // il reel parte dalla prima battuta dopo il silenzio iniziale
+    const first = song.detected.find((b, k) => isBar(k) && b >= S.trimIn - 0.01);
+    S.start = first ?? S.trimIn;
+  }
+  S.name = name;
+  clampStart();
   fillSong();
   need = true;
   saveLocal();
@@ -651,9 +695,13 @@ async function setSong(name, bytes, keepStart = false) {
 
 function fillSong() {
   const S = P.song;
-  $('#bpm').value = S.bpm; $('#beat-mode').value = S.mode; $('#grid-off').value = S.gridOff; $('#bar-off').value = String(S.barOff + 1);
+  $('#bpm').value = S.bpm; $('#beat-mode').value = S.mode; $('#grid-off').value = S.gridOff;
+  $('#meter').value = String(S.meter || 4);
+  $('#bar-off').innerHTML = [...Array(S.meter || 4)].map((_, k) => `<option value="${k}">${k + 1}</option>`).join('');
+  $('#bar-off').value = String(((S.barOff % (S.meter || 4)) + (S.meter || 4)) % (S.meter || 4));
+  $('#trim-in').value = +(S.trimIn || 0).toFixed(2); $('#trim-out').value = +songOut().toFixed(2);
   $('#song-start').value = +S.start.toFixed(2); $('#snap').value = S.snap; $('#fade-in').value = S.fadeIn; $('#fade-out').value = S.fadeOut;
-  $('#beat-info').textContent = !song.buffer ? '' : S.mode === 'detected' && song.detected.length ? MSG.bpm_det(S.bpm.toFixed(1), song.detected.length) : MSG.bpm_grid(S.bpm.toFixed(2));
+  $('#beat-info').textContent = !song.buffer ? '' : S.mode === 'detected' && song.detected.length ? MSG.bpm_det(S.bpm.toFixed(1), song.detected.length, S.meter || 4) : MSG.bpm_grid(S.bpm.toFixed(2));
 }
 
 $('#song-file').addEventListener('change', async (e) => {
@@ -666,18 +714,90 @@ $('#song-file').addEventListener('change', async (e) => {
 const num = (id, fn) => $(id).addEventListener('change', (e) => { const v = parseFloat(e.target.value); if (Number.isFinite(v)) { fn(v); fillSong(); need = true; saveLocal(); } });
 num('#bpm', (v) => { P.song.bpm = Math.max(40, Math.min(240, v)); P.song.mode = 'grid'; });
 num('#grid-off', (v) => { P.song.gridOff = Math.max(0, v); });
-num('#song-start', (v) => { P.song.start = Math.max(0, Math.min(song.buffer ? song.buffer.duration - 1 : 9999, v)); });
+num('#song-start', (v) => { P.song.start = v; clampStart(); });
+num('#trim-in', (v) => { P.song.trimIn = Math.max(0, Math.min(songOut() - 1, v)); clampStart(); });
+num('#trim-out', (v) => { P.song.trimOut = Math.max(songIn() + 1, Math.min(song.buffer ? song.buffer.duration : v, v)); clampStart(); });
+$('#trim-auto').addEventListener('click', () => {
+  if (!song.trimAuto) return;
+  P.song.trimIn = +song.trimAuto.start.toFixed(2); P.song.trimOut = +song.trimAuto.end.toFixed(2);
+  clampStart(); fillSong(); need = true; saveLocal();
+  $('#beat-info').textContent = MSG.trimmed(P.song.trimIn.toFixed(2), P.song.trimOut.toFixed(2));
+});
+// tempo doppio o dimezzato: l'ambiguita' classica (80 o 160 BPM?)
+$('#bpm-double').addEventListener('click', () => {
+  const S = P.song, m = S.meter || 4;
+  S.bpm = +(S.bpm * 2).toFixed(2);
+  if (song.detected.length > 1) {
+    const d = song.detected, out = [];
+    d.forEach((b, k) => { out.push(b); if (k < d.length - 1) out.push(+((b + d[k + 1]) / 2).toFixed(4)); });
+    song.detected = out;
+    if (S.det) S.det.beats = out;
+  }
+  S.barOff = (S.barOff * 2) % m;
+  fillSong(); need = true; saveLocal();
+});
+$('#bpm-half').addEventListener('click', () => {
+  const S = P.song, m = S.meter || 4;
+  S.bpm = +(S.bpm / 2).toFixed(2);
+  if (song.detected.length > 3) {
+    // si tengono i battiti allineati alle battute
+    const p = ((S.barOff % 2) + 2) % 2;
+    song.detected = song.detected.filter((_, k) => k % 2 === p);
+    if (S.det) S.det.beats = song.detected;
+    S.barOff = Math.floor(S.barOff / 2) % m;
+  }
+  fillSong(); need = true; saveLocal();
+});
+$('#meter').addEventListener('change', (e) => { P.song.meter = +e.target.value; P.song.barOff %= P.song.meter; fillSong(); need = true; saveLocal(); });
+// i bordi fra le clip sulla battuta piu' vicina
+function snapBoundaries(ends) {
+  const all = songBeats(), s0 = P.song.start;
+  const bars = all.filter((_, k) => isBar(k)).map((b) => b - s0).filter((b) => b > 0.4);
+  let prev = 0;
+  return ends.map((e, i) => {
+    let best = e;
+    if (bars.length && i < ends.length - 1) {
+      let bd = Infinity;
+      for (const b of bars) if (b > prev + 0.5 && Math.abs(b - e) < bd) { bd = Math.abs(b - e); best = b; }
+    }
+    const d = Math.max(0.5, best - prev);
+    prev += d;
+    return d;
+  });
+}
+$('#clips-bars').addEventListener('click', () => {
+  let acc = 0;
+  const ends = P.clips.map((c) => (acc += c.dur));
+  // anche l'ultima clip finisce su una battuta
+  const all = songBeats().filter((_, k) => isBar(k)).map((b) => b - P.song.start);
+  const last = ends[ends.length - 1];
+  const lb = all.reduce((best, b) => (b > 0.5 && Math.abs(b - last) < Math.abs(best - last) ? b : best), last);
+  ends[ends.length - 1] = lb;
+  snapBoundaries(ends).forEach((d, i) => { P.clips[i].dur = d; P.clips[i].hold = Math.min(P.clips[i].hold, Math.max(0, d - 0.2)); });
+  changed();
+});
+$('#clips-fill').addEventListener('click', () => {
+  if (!song.buffer) return;
+  const target = songOut() - P.song.start;
+  if (target < 1) return;
+  const k = target / total();
+  let acc = 0;
+  const ends = P.clips.map((c) => (acc += c.dur * k));
+  ends[ends.length - 1] = target;                       // la musica finisce col reel
+  snapBoundaries(ends).forEach((d, i) => { P.clips[i].dur = d; P.clips[i].hold = Math.min(P.clips[i].hold, Math.max(0, d - 0.2)); });
+  changed();
+});
 num('#fade-in', (v) => { P.song.fadeIn = Math.max(0, v); });
 num('#fade-out', (v) => { P.song.fadeOut = Math.max(0, v); });
 $('#beat-mode').addEventListener('change', (e) => { P.song.mode = e.target.value; fillSong(); need = true; saveLocal(); });
-$('#bar-off').addEventListener('change', (e) => { P.song.barOff = +e.target.value - 1; saveLocal(); });
+$('#bar-off').addEventListener('change', (e) => { P.song.barOff = +e.target.value; saveLocal(); });
 $('#snap').addEventListener('change', (e) => { P.song.snap = e.target.value; saveLocal(); });
 $('#start-beat').addEventListener('click', () => {
   const all = songBeats();
   if (!all.length) return;
   let best = all[0];
   all.forEach((b, k) => { if ((P.song.snap !== 'bar' || isBar(k)) && Math.abs(b - P.song.start) < Math.abs(best - P.song.start)) best = b; });
-  P.song.start = best; fillSong(); need = true; saveLocal();
+  P.song.start = best; clampStart(); fillSong(); need = true; saveLocal();
 });
 // batti il tempo: griglia fissa dal tempo battuto, il primo colpo e' l'ancora
 let taps = [];
@@ -783,7 +903,8 @@ $('#c-fit').addEventListener('click', () => {
   if (!all.length) return;
   let k = 0, bd = Infinity;
   all.forEach((b, i) => { const d = Math.abs(b - s0); if (d < bd) { bd = d; k = i; } });
-  const end = all[k + n * 4] ?? all[k] + (n * 4 * 60) / P.song.bpm;
+  const m = P.song.meter || 4;
+  const end = all[k + n * m] ?? all[k] + (n * m * 60) / P.song.bpm;
   cl().dur = Math.max(0.5, end - s0);
   changed();
 });
@@ -857,11 +978,17 @@ function drawTimeline() {
     }
     // battiti; le battute piu' marcate
     const all = songBeats();
+    let bar = 0, lastLabel = -99;
     all.forEach((b, k) => {
       const t = b - P.song.start;
       if (t < 0 || t > total()) return;
       g.fillStyle = isBar(k) ? 'rgba(255,214,102,.9)' : 'rgba(255,214,102,.35)';
       g.fillRect(X(t) - 0.5, TL.wave[0], isBar(k) ? 2 : 1, TL.clips[1] - TL.wave[0]);
+      if (isBar(k)) {
+        bar++;
+        // numero della battuta, se c'e' spazio
+        if (X(t) - lastLabel > 22) { g.fillStyle = '#ffd666'; g.font = '10px "IBM Plex Mono"'; g.textAlign = 'left'; g.fillText(String(bar), X(t) + 3, TL.wave[0] + 9); lastLabel = X(t); }
+      }
     });
   } else {
     g.fillStyle = '#6f8592'; g.font = '12px Archivo'; g.textAlign = 'left';
@@ -905,6 +1032,11 @@ function drawOverview() {
   const dur = song.buffer.duration, n = song.peaks.length;
   g.fillStyle = '#35556b';
   for (let x = 0; x < w; x++) { const p = song.peaks[Math.floor((x / w) * n)]; g.fillRect(x, h / 2 - p * (h / 2 - 3), 1, Math.max(1, 2 * p * (h / 2 - 3))); }
+  // fuori dal brano utile: in grigio, con le maniglie per spostare i tagli
+  const ti = (songIn() / dur) * w, to = (songOut() / dur) * w;
+  g.fillStyle = 'rgba(0,0,0,.55)'; g.fillRect(0, 0, ti, h); g.fillRect(to, 0, w - to, h);
+  g.fillStyle = '#ffb347';
+  for (const x of [ti, to]) { g.fillRect(x - 1, 0, 2, h); g.fillRect(x - 4, h / 2 - 9, 8, 18); }
   const a = (P.song.start / dur) * w, b = ((P.song.start + total()) / dur) * w;
   g.fillStyle = 'rgba(232,240,244,.16)'; g.fillRect(a, 0, b - a, h);
   g.strokeStyle = '#e8f0f4'; g.lineWidth = 1.5; g.strokeRect(a + 0.5, 0.5, Math.max(2, b - a - 1), h - 1);
@@ -958,23 +1090,34 @@ tl.addEventListener('pointerup', () => { if (tlDrag?.kind === 'edge') { saveLoca
     if (!song.buffer) return;
     const r = ov.getBoundingClientRect(), x = e.clientX - r.left, dur = song.buffer.duration;
     const s = (x / r.width) * dur;
-    drag = { off: s >= P.song.start && s <= P.song.start + total() ? s - P.song.start : 0 };
     ov.setPointerCapture(e.pointerId);
+    // vicino a una maniglia: si sposta il taglio
+    const px = (t) => (t / dur) * r.width;
+    if (Math.abs(x - px(songIn())) < 7) { drag = { trim: 'in' }; return; }
+    if (Math.abs(x - px(songOut())) < 7) { drag = { trim: 'out' }; return; }
+    drag = { off: s >= P.song.start && s <= P.song.start + total() ? s - P.song.start : 0 };
     move(e);
   });
   const move = (e) => {
-    if (!drag) return;
-    const r = ov.getBoundingClientRect(), dur = song.buffer.duration;
-    let s = ((e.clientX - r.left) / r.width) * dur - drag.off;
-    s = Math.max(0, Math.min(dur - Math.min(dur, total()), s));
-    P.song.start = s;
-    $('#song-start').value = +s.toFixed(2);
+    const r = ov.getBoundingClientRect();
+    if (!drag) {
+      if (song.buffer) { const dur = song.buffer.duration, x = e.clientX - r.left; ov.style.cursor = [songIn(), songOut()].some((t) => Math.abs(x - (t / dur) * r.width) < 7) ? 'ew-resize' : 'grab'; }
+      return;
+    }
+    const dur = song.buffer.duration, at = ((e.clientX - r.left) / r.width) * dur;
+    if (drag.trim === 'in') { P.song.trimIn = +Math.max(0, Math.min(songOut() - 1, at)).toFixed(2); clampStart(); fillSong(); need = true; return; }
+    if (drag.trim === 'out') { P.song.trimOut = +Math.max(songIn() + 1, Math.min(dur, at)).toFixed(2); clampStart(); fillSong(); need = true; return; }
+    P.song.start = at - drag.off;
+    clampStart();
+    $('#song-start').value = +P.song.start.toFixed(2);
     need = true;
   };
   ov.addEventListener('pointermove', move);
   ov.addEventListener('pointerup', () => {
     if (!drag) return;
+    const wasTrim = drag.trim;
     drag = null;
+    if (wasTrim) { saveLocal(); return; }
     // aggancia l'inizio a un battito (o a una battuta)
     if (P.song.snap !== 'none') {
       const all = songBeats();
@@ -982,6 +1125,7 @@ tl.addEventListener('pointerup', () => { if (tlDrag?.kind === 'edge') { saveLoca
       all.forEach((b, k) => { if (P.song.snap === 'bar' && !isBar(k)) return; const d = Math.abs(b - P.song.start); if (d < bd) { bd = d; best = b; } });
       P.song.start = best;
     }
+    clampStart();
     fillSong(); need = true; saveLocal();
     if (playing) { pause(); play(); }
   });
