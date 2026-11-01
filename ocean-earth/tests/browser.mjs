@@ -86,11 +86,13 @@ async function open(w, h, mobile, theme) {
     const i = __oe.store.cell(45.1, 10.0).i;
     const v = c.lA ? __oe.store.scalarValue(c.lA.codes, i) : NaN;
     const out = { row: true, lv: c.lv, t: c.A.t, po: Math.round(v), status: document.querySelector('#status').innerText.includes('ERA5') };
-    const r = row.querySelector('input[type=range]');
+    // la legenda si ridisegna: la riga va ripresa
+    const r = document.querySelector('.mx[data-layer=land] input[type=range]');
     r.value = 0; r.dispatchEvent(new Event('input', { bubbles: true }));
+    out.off = __oe.globe.state.layers.land === 0;
     return out;
   });
-  check('terraferma: umidita\' del suolo', land.row && land.lv === 'soil' && land.t === '2022-07' && land.po > 0 && land.po < 100 && land.status, JSON.stringify(land));
+  check('terraferma: umidita\' del suolo', land.row && land.lv === 'soil' && land.t === '2022-07' && land.po > 0 && land.po < 100 && land.status && land.off, JSON.stringify(land));
   // giornaliero
   await page.select('#tier', 'daily');
   await sleep(3000);
