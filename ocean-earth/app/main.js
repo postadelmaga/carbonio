@@ -19,6 +19,7 @@ const ui = {
   picking: null,               // null | 'second'
   regionMode: false, region: null,
   compare: false, compareIndex: null,
+  landVar: 'precip',           // terraferma: precip | soil (solo serie mensile)
 };
 
 const camera = new Camera();
@@ -145,14 +146,17 @@ function previewMode() {
   return !!(timeline && timeline.playing && manifest.preview && manifest.preview.available);
 }
 
+// variabili senza anteprima: gia' leggere (Mediterraneo, terraferma)
+const NO_PREVIEW = new Set(['med', 'precip', 'soil']);
+
 function keyFor(frame, v, prev = previewMode()) {
-  return `${prev && v !== 'med' ? 'p:' : ''}${timeline.tierName}/${v}/${frame.t}`;
+  return `${prev && !NO_PREVIEW.has(v) ? 'p:' : ''}${timeline.tierName}/${v}/${frame.t}`;
 }
 
 // percorso e tipo di decodifica di un file (anteprima durante il play)
 function fileOf(frame, v, prev) {
   const tier = timeline.tierName;
-  if (prev && v !== 'med') return [store.previewPath(tier, v, frame.t), v === 'cur' ? 'pcur' : 'psst'];
+  if (prev && !NO_PREVIEW.has(v)) return [store.previewPath(tier, v, frame.t), v === 'cur' ? 'pcur' : 'psst'];
   return [store.framePath(tier, v, frame.t), v === 'cur' ? 'vector' : 'scalar'];
 }
 
@@ -165,7 +169,19 @@ function request(frame, v, prev = previewMode()) {
 function needed(f) {
   const need = [sstVar(f), 'cur'];
   if (medOn()) need.push('med');
+  if (landOn()) need.push(ui.landVar);
   return need.filter((v) => f[v] != null);
+}
+
+// terraferma: precipitazioni o umidita' del suolo, solo nella serie mensile.
+// Scala logaritmica: la pioggia di un mese va facilmente da un quarto al
+// quadruplo del normale, l'acqua nel suolo si muove molto meno
+const LAND_SPAN = { precip: 2, soil: 1 };
+function landAvail() {
+  return !!timeline && timeline.tierName === 'monthly' && !!manifest.tiers.monthly?.vars.includes(ui.landVar);
+}
+function landOn() {
+  return globe.state.layers.land > 0 && landAvail();
 }
 
 function medOn() {
@@ -222,13 +238,14 @@ async function applyFrames() {
   const token = ++applyToken;
   const A = timeline.frameA, B = timeline.frameB;
   const svA = sstVar(A), svB = sstVar(B);
-  const med = medOn();
+  const med = medOn(), lv = landOn() ? ui.landVar : null;
   const got = (p) => (p ? p.catch(() => null) : null);
   // tutti i file prima di toccare il globo: temperatura, correnti e
   // Mediterraneo cambiano insieme, con l'interpolazione e la climatologia
-  const [sA, sB, cA, cB, mA, mB] = await Promise.all([
+  const [sA, sB, cA, cB, mA, mB, lA, lB] = await Promise.all([
     request(A, svA), request(B, svB), request(A, 'cur'), request(B, 'cur'),
     med ? request(A, 'med') : null, med ? request(B, 'med') : null,
+    lv ? request(A, lv) : null, lv ? request(B, lv) : null,
   ].map(got));
   if (token !== applyToken) return;
   const st = globe.state;
@@ -239,7 +256,10 @@ async function applyFrames() {
   st.medA = globe.frameTexture(keyFor(A, 'med'), mA, 'scalar', true);
   st.medB = globe.frameTexture(keyFor(B, 'med'), mB, 'scalar', true) || st.medA;
   if (med) { const g = manifest.regional.med; st.medBox = [g.west, g.south, g.east, g.north]; }
-  current = { A, B, sA, sB, cA, cB, svA, svB, mA, mB, preview: previewMode(), missing: !sA && A[svA] != null };
+  st.landA = lv ? globe.frameTexture(keyFor(A, lv), lA, 'scalar') : null;
+  if (lv) st.landSpan = LAND_SPAN[lv];
+  st.landB = lv ? globe.frameTexture(keyFor(B, lv), lB, 'scalar') || st.landA : null;
+  current = { A, B, sA, sB, cA, cB, svA, svB, mA, mB, lA, lB, lv, preview: previewMode(), missing: !sA && A[svA] != null };
   syncShown();
   syncTimeUI(false);
   loadClim();
@@ -311,6 +331,7 @@ function onTime(why) {
   // la meta' di confronto segue fonte e modalita' (OSTIA non entra nell'anomalia)
   if (ui.compare && why === 'source') applyCompare();
   if (why === 'tier') {
+    drawLegend();                     // la terraferma c'e' solo nella serie mensile
     if (ui.compare) { ui.compareIndex = Math.max(0, timeline.frames.length - 1); buildCompareUI(); applyCompare(); }
     $('#src-row').hidden = timeline.tierName !== 'daily';
     $('#hotspot').disabled = timeline.tierName !== 'monthly';
@@ -572,7 +593,8 @@ function pointValues(p) {
   const dirDeg = (Math.atan2(u, v) / DEG + 360) % 360;         // verso cui va, da nord in senso orario
   // l'anomalia e' sempre sul modello, come la climatologia: con OSTIA non c'e'
   const model = current.svA === 'sst' ? valueAt(current.sA, current.sB, c.i, 'scalar') : NaN;
-  return { c, sst, anom: model - cl, u, v, speed, dirDeg, med };
+  const land = current.lv ? valueAt(current.lA, current.lB, c.i, 'scalar') : NaN;
+  return { c, sst, anom: model - cl, u, v, speed, dirDeg, med, land };
 }
 
 
@@ -584,7 +606,10 @@ function refreshPoint() {
     if (!v) return;
     const head = tag ? `<span class="tag ${tag}">${tag.toUpperCase()}</span> ` : '';
     rows.push(`<div class="pt-head">${head}${fmtLat(p.lat)}, ${fmtLon(p.lon)} <span class="muted">· ${t('resolution')} ${fmtNum(0.25, 2)}° (${fmtLat(v.c.lat)}, ${fmtLon(v.c.lon)})</span></div>`);
-    if (!Number.isFinite(v.sst) && !Number.isFinite(v.speed)) { rows.push(`<div class="muted">${t('no_data')}</div>`); return; }
+    if (Number.isFinite(v.land)) {
+      rows.push(`<dl class="vals"><dt>${t(current.lv + '_short')}</dt><dd><b class="${v.land >= 100 ? 'wet' : 'dry'}">${fmtNum(v.land, 0)}%</b> <span class="muted">${t('of_normal')} ${manifest.land.clim_years.join('–')}</span></dd></dl>`);
+    }
+    if (!Number.isFinite(v.sst) && !Number.isFinite(v.speed)) { if (!Number.isFinite(v.land)) rows.push(`<div class="muted">${t('no_data')}</div>`); return; }
     const dir = compass(v.dirDeg);
     rows.push(`<dl class="vals">
       <dt>${t('temp')}</dt><dd>${Number.isFinite(v.sst) ? `<b>${fmtNum(v.sst, 2)} °C</b>` : '—'}${v.med ? ` <span class="muted">· ${store.source(current.A.med)?.name}, 1/16°</span>` : ''}</dd>
@@ -598,7 +623,7 @@ function refreshPoint() {
   const srcC = store.source(current.A.cur);
   rows.push(`<dl class="vals meta">
     <dt>${t('datum')}</dt><dd>${timeLabel()}</dd>
-    <dt>${t('dataset')}</dt><dd>${srcS ? srcLine(srcS) : '—'}<br>${srcC ? srcLine(srcC) : '—'}</dd>
+    <dt>${t('dataset')}</dt><dd>${srcS ? srcLine(srcS) : '—'}<br>${srcC ? srcLine(srcC) : '—'}${current.lv && store.source(current.A[current.lv]) ? '<br>' + srcLine(store.source(current.A[current.lv])) : ''}</dd>
   </dl>`);
   $('#pt-values').innerHTML = rows.join('');
 }
@@ -609,8 +634,13 @@ function freqLabel(s) {
   return s.id.endsWith('-i') ? t('hourly_inst') : t('hourly_mean');
 }
 
+// pagina del prodotto: Copernicus Marine, oppure Climate Data Store per ERA5
+function srcUrl(s) {
+  return s.cds ? `https://cds.climate.copernicus.eu/datasets/${s.product}` : `https://data.marine.copernicus.eu/product/${s.product}/description`;
+}
+
 function srcLine(s) {
-  return `<a href="https://data.marine.copernicus.eu/product/${s.product}/description" target="_blank" rel="noopener">${s.name}</a> <span class="muted">· ${t(s.kind)} · ${freqLabel(s)} · ${s.res}${s.res !== '0.25°' ? ` → ${fmtNum(0.25, 2)}°` : ''}</span>`;
+  return `<a href="${srcUrl(s)}" target="_blank" rel="noopener">${s.name}</a> <span class="muted">· ${t(s.kind)} · ${freqLabel(s)} · ${s.res}${s.res !== '0.25°' ? ` → ${fmtNum(0.25, 2)}°` : ''}</span>`;
 }
 
 // l'istante dei valori del pannello: quello sul globo, non quello richiesto
@@ -937,6 +967,10 @@ function updateStatus() {
   const parts = [];
   if (sS) parts.push(`<b>${t('temp')}</b> ${sS.name} <span class="muted">(${t(sS.kind)}, ${freqLabel(sS)}, ${sS.res})</span>`);
   if (sC) parts.push(`<b>${t('cur_speed')}</b> ${sC.name} <span class="muted">(${t(sC.kind)}, ${freqLabel(sC)}, ${sC.res})</span>`);
+  if (current.lv) {
+    const l = store.source(current.A[current.lv]);
+    if (l) parts.push(`<b>${t(current.lv + '_short')}</b> ${l.name} <span class="muted">(${t(l.kind)}, ${freqLabel(l)}, ${l.res})</span>`);
+  } else if (globe.state.layers.land > 0 && timeline.tierName !== 'monthly') notes.push(t('land_monthly_only'));
   if (current.mA && globe.state.layers.sst > 0) {
     const m = store.source(current.A.med);
     if (m) parts.push(`<b>${t('med_hi')}</b> ${m.name} <span class="muted">(${t(m.kind)}, ${freqLabel(m)}, ${m.res})</span>`);
@@ -1005,6 +1039,9 @@ function bindControls() {
   bindMixer();
   try {
     const saved = JSON.parse(localStorage.getItem('oe-layers') || 'null');
+    const lv = localStorage.getItem('oe-land');
+    if (lv === 'precip' || lv === 'soil') ui.landVar = lv;
+    if (saved && !(typeof saved.land === 'number' && saved.land >= 0 && saved.land <= 1)) saved.land = 0;
     if (saved && LAYERS.every((k) => typeof saved[k] === 'number' && saved[k] >= 0 && saved[k] <= 1)) setLayers(saved);
   } catch (e) { /* niente */ }
   $('#particles').addEventListener('change', (e) => { st.particles = e.target.checked; drawLegend(); });
@@ -1134,7 +1171,8 @@ const PRESETS = {
   sst: { sst: 1, anom: 0, speed: 0 }, anom: { sst: 0, anom: 1, speed: 0 },
   speed: { sst: 0, anom: 0, speed: 1 }, mix: { sst: 1, anom: 0.7, speed: 0.6 },
 };
-const LAYERS = ['sst', 'anom', 'speed'];
+const LAYERS = ['sst', 'anom', 'speed'];      // quelli del mare: decidono il livello principale
+const ALL_LAYERS = [...LAYERS, 'land'];
 function setMode(mode) { setLayers(PRESETS[mode]); drawLegend(); }
 
 function setLayers(w) {
@@ -1148,14 +1186,14 @@ function setLayers(w) {
   try { localStorage.setItem('oe-layers', JSON.stringify(st.layers)); } catch (e) { /* niente */ }
   syncModeButtons();
   // quale file serve (OSTIA, Mediterraneo) dipende da quali livelli sono accesi
-  const on = (o) => LAYERS.map((k) => o[k] > 0).join();
+  const on = (o) => ALL_LAYERS.map((k) => o[k] > 0).join();
   if (!current) return;               // all'avvio: i fotogrammi non ci sono ancora
   if (on(before) !== on(st.layers)) onTime('source');
   else if (changedMain) refreshPoint();
 }
 
 function syncModeButtons() {
-  const L = globe.state.layers, n = LAYERS.filter((k) => L[k] > 0).length;
+  const L = globe.state.layers, n = ALL_LAYERS.filter((k) => L[k] > 0).length;
   $$('.quick-mode button').forEach((b) => b.classList.toggle('on', b.dataset.mode === 'mix' ? n > 1 : n === 1 && L[b.dataset.mode] > 0));
   const st = globe.state;
   const r = ui.mode === 'anom' ? st.rangeAnom : ui.mode === 'speed' ? st.rangeSpeed : st.rangeSst;
@@ -1200,6 +1238,16 @@ function drawLegend() {
   row('sst', t('sst_label'), st.paletteSst, st.rangeSst[0], st.rangeSst[1], 0);
   row('anom', `${t('anom_label')} ${manifest ? manifest.climatology.years.join('–') : '1993–2020'}`, 'anomaly', st.rangeAnom[0], st.rangeAnom[1], 1);
   row('speed', t('speed_label'), 'speedField', st.rangeSpeed[0], st.rangeSpeed[1], 1);
+  if (manifest && manifest.tiers.monthly?.vars.some((v) => v === 'precip' || v === 'soil')) {
+    // terraferma: scala logaritmica, la stessa dello shader
+    const w = Math.round((st.layers.land || 0) * 100), avail = landAvail(), span = LAND_SPAN[ui.landVar];
+    const ticks = [-1, -0.5, 0, 0.5, 1].map((f, i) => `<span style="left:${i * 25}%">${Math.round(100 * 2 ** (f * span))}%</span>`).join('');
+    const opt = (v) => `<option value="${v}"${ui.landVar === v ? ' selected' : ''}>${t(v + '_short')}</option>`;
+    L.push(`<div class="lg mx${w ? '' : ' off'}${avail ? '' : ' na'}" data-layer="land">
+      <label class="mx-head"><span class="lg-t">${t('land_label')}</span><input type="range" min="0" max="100" step="5" value="${w}" aria-label="${t('land_label')}"><output>${w}%</output></label>
+      <div class="mx-var"><select id="land-var" aria-label="${t('land_label')}">${opt('precip')}${opt('soil')}</select> <span class="muted">${avail ? `% ${t('of_normal')} ${manifest.land?.clim_years.join('–') || '1993–2020'}` : t('land_monthly_only')}</span></div>
+      <div class="mx-scale"><div class="lg-bar" style="background:${cssGradient('precip')}"></div><div class="lg-ticks">${ticks}</div><div class="lg-ends"><span>${t('drier')}</span><span>${t('wetter')}</span></div></div></div>`);
+  }
   if ((st.particles || st.arrows) && !(st.layers.speed > 0)) L.push(`<div class="lg"><div class="lg-t">${t('particles')} · ${t('speed_label')}</div>${scale('speed', st.rangeSpeed[0], st.rangeSpeed[1], 1)}</div>`);
   if (st.hotspot) L.push(`<div class="lg"><span class="hatch"></span> ${t('hotspot')}</div>`);
   $('#legend').innerHTML = L.join('');
@@ -1216,12 +1264,22 @@ function bindMixer() {
     setLayers({ [k]: v });
   });
   // a cursore rilasciato la legenda si aggiorna (scala delle particelle, ecc.)
-  $('#legend').addEventListener('change', (e) => { if (e.target.closest('.mx')) drawLegend(); });
+  $('#legend').addEventListener('change', (e) => {
+    if (e.target.id === 'land-var') {
+      ui.landVar = e.target.value;
+      try { localStorage.setItem('oe-land', ui.landVar); } catch (err) { /* niente */ }
+      if (!(globe.state.layers.land > 0)) setLayers({ land: 1 });
+      else if (current) onTime('source');
+      drawLegend();
+      return;
+    }
+    if (e.target.closest('.mx')) drawLegend();
+  });
 }
 
 function buildAbout() {
   if (!manifest) return;
-  const rows = manifest.sources.map((s) => `<tr><td><a href="https://data.marine.copernicus.eu/product/${s.product}/description" target="_blank" rel="noopener">${s.product}</a><br><code>${s.id}</code></td><td>${s.name}</td><td>${t(s.kind)}</td><td>${freqLabel(s)}</td><td>${s.res}</td><td>${s.doi ? `<a href="https://doi.org/${s.doi}" target="_blank" rel="noopener">${s.doi}</a>` : ''}</td></tr>`).join('');
+  const rows = manifest.sources.map((s) => `<tr><td><a href="${srcUrl(s)}" target="_blank" rel="noopener">${s.product}</a><br><code>${s.id}</code></td><td>${s.name}</td><td>${t(s.kind)}</td><td>${freqLabel(s)}</td><td>${s.res}</td><td>${s.doi ? `<a href="https://doi.org/${s.doi}" target="_blank" rel="noopener">${s.doi}</a>` : ''}</td></tr>`).join('');
   const tiers = Object.entries(manifest.tiers).map(([k, v]) => `<li><b>${t('tier_' + k)}</b>: ${fmtStamp(v.first)} → ${fmtStamp(v.last)} (${v.frames.length})</li>`).join('');
   $('#about-sources').innerHTML = `<table><thead><tr><th>Copernicus</th><th></th><th></th><th></th><th></th><th>DOI</th></tr></thead><tbody>${rows}</tbody></table>`;
   $('#about-tiers').innerHTML = tiers;

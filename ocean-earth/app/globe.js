@@ -26,6 +26,9 @@ function compile(gl, vs, fs) {
   return { p, u };
 }
 
+// righe della texture delle scale (uLuts nello shader del globo)
+const LUT_ROWS = ['sst', 'anom', 'speedField', 'land'];
+
 export class Globe {
   constructor(canvas, camera) {
     this.canvas = canvas;
@@ -47,6 +50,10 @@ export class Globe {
     this.blankArr = this.makeArray(1, 1, 1, null);
     this.land = this.makeTex(1, 1, gl.R8, gl.RED, gl.UNSIGNED_BYTE, new Uint8Array([0]));
     this.luts = {};
+    // le scale del globo stanno in una texture sola, una riga ciascuna: le unita'
+    // di texture dello shader del globo (16 garantite) sono quasi tutte occupate
+    this.lutAtlas = this.makeTex(256, LUT_ROWS.length, gl.RGBA8, gl.RGBA, gl.UNSIGNED_BYTE, null);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     this.frameTex = new Map();          // chiave del fotogramma → texture (piccola LRU)
     this.pinned = new Set();
     this.clim = this.blankArr; this.p90 = this.blankArr; this.bias = this.blankArr; this.hasClim = false;
@@ -54,9 +61,10 @@ export class Globe {
     this.state = {
       sstA: null, sstB: null, curA: null, curB: null, mix: 0,
       medA: null, medB: null, medBox: [0, 0, 1, 1],
+      landA: null, landB: null, landSpan: 2,   // terraferma: % del normale (ERA5), scala log ±landSpan ottave
       sstC: null, sstD: null, mixCmp: 0, compare: false, split: 0.5,
       climSel: [0, 0, 0, 0], climSelCmp: [0, 0, 0, 0], biasW: 0, biasWCmp: 0,
-      layers: { sst: 1, anom: 0, speed: 0 }, hotspot: false, opacity: 1,
+      layers: { sst: 1, anom: 0, speed: 0, land: 0 }, hotspot: false, opacity: 1,
       paletteSst: 'classic', rangeSst: [-2, 32], rangeAnom: [-3, 3], rangeSpeed: [0, 1.2],
       particles: true, particleCount: 8000, particleSpeed: 1, particleWidth: 1.6,
       arrows: false, arrowDensity: 1, coast: true,
@@ -67,6 +75,7 @@ export class Globe {
     this.setPalette('anom', 'anomaly');
     this.setPalette('speed', 'speed');
     this.setPalette('speedField', 'speedField');
+    this.setPalette('land', 'precip');
   }
 
   makeTex(w, h, ifmt, fmt, type, data, filter, clampS = false) {
@@ -98,6 +107,13 @@ export class Globe {
 
   setPalette(slot, name) {
     const gl = this.gl;
+    const row = LUT_ROWS.indexOf(slot);
+    if (row >= 0) {
+      gl.bindTexture(gl.TEXTURE_2D, this.lutAtlas);
+      gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+      gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, row, 256, 1, gl.RGBA, gl.UNSIGNED_BYTE, lut(name));
+      return;
+    }
     if (this.luts[slot]) gl.deleteTexture(this.luts[slot]);
     this.luts[slot] = this.makeTex(256, 1, gl.RGBA8, gl.RGBA, gl.UNSIGNED_BYTE, lut(name));
     gl.bindTexture(gl.TEXTURE_2D, this.luts[slot]);
@@ -295,9 +311,11 @@ export class Globe {
     this.bind(P, 'uClim', 6, this.clim, gl.TEXTURE_2D_ARRAY);
     this.bind(P, 'uP90', 7, this.p90, gl.TEXTURE_2D_ARRAY);
     this.bind(P, 'uLand', 8, this.land);
-    this.bind(P, 'uLutSst', 9, this.luts.sst);
-    this.bind(P, 'uLutAnom', 10, this.luts.anom);
-    this.bind(P, 'uLutSpeed', 11, this.luts.speedField);
+    this.bind(P, 'uLuts', 9, this.lutAtlas);
+    const landA = st.landA || this.blank2, landB = st.landB || landA;
+    this.bind(P, 'uLandA', 10, landA); this.bind(P, 'uLandB', 11, landB);
+    gl.uniform1i(P.u.uLandOn, st.landA ? 1 : 0);
+    gl.uniform1f(P.u.uLandSpan, st.landSpan);
     // texture del Mediterraneo: senza bordo che si ripete in longitudine
     const medA = st.medA || this.blank2, medB = st.medB || medA;
     this.bind(P, 'uMedA', 12, medA); this.bind(P, 'uMedB', 13, medB);
@@ -310,7 +328,7 @@ export class Globe {
     gl.uniform1f(P.u.uMixCmp, st.mixCmp);
     gl.uniform4fv(P.u.uClimSel, st.climSel);
     gl.uniform4fv(P.u.uClimSelCmp, st.climSelCmp);
-    gl.uniform3fv(P.u.uLayers, [st.layers.sst, st.layers.anom, st.layers.speed]);
+    gl.uniform4fv(P.u.uLayers, [st.layers.sst, st.layers.anom, st.layers.speed, st.layers.land || 0]);
     gl.uniform1i(P.u.uHasClim, this.hasClim ? 1 : 0);
     gl.uniform1i(P.u.uHotspot, st.hotspot ? 1 : 0);
     gl.uniform1i(P.u.uCompare, st.compare ? 1 : 0);

@@ -72,6 +72,25 @@ async function open(w, h, mobile, theme) {
   const mon = (t) => +t.slice(5, 7) - 1;
   check('anomalia col mese mostrato', clim.during.sel === mon(clim.during.shown) && clim.during.shown !== '2001-07' && clim.after.shown === '2001-07' && clim.after.sel === 6, JSON.stringify(clim));
   check('pausa su dato originale', Number.isInteger(+paused.v), JSON.stringify(paused));
+  // terraferma (ERA5): umidita' del suolo dell'estate 2022, siccita' in Europa
+  const land = await page.evaluate(async () => {
+    const tl = __oe.timeline;
+    const row = document.querySelector('.mx[data-layer=land]');
+    if (!row) return { row: false };
+    const sel = row.querySelector('select');
+    sel.value = 'soil'; sel.dispatchEvent(new Event('change', { bubbles: true }));
+    tl.seek(tl.findStamp('2022-07'));
+    for (let k = 0; k < 40 && !(__oe.shown()?.lv === 'soil' && __oe.shown().lA && __oe.shown().A.t === '2022-07'); k++) await new Promise((r) => setTimeout(r, 250));
+    const c = __oe.shown();
+    // una cella nella pianura padana: luglio 2022 sotto il normale
+    const i = __oe.store.cell(45.1, 10.0).i;
+    const v = c.lA ? __oe.store.scalarValue(c.lA.codes, i) : NaN;
+    const out = { row: true, lv: c.lv, t: c.A.t, po: Math.round(v), status: document.querySelector('#status').innerText.includes('ERA5') };
+    const r = row.querySelector('input[type=range]');
+    r.value = 0; r.dispatchEvent(new Event('input', { bubbles: true }));
+    return out;
+  });
+  check('terraferma: umidita\' del suolo', land.row && land.lv === 'soil' && land.t === '2022-07' && land.po > 0 && land.po < 100 && land.status, JSON.stringify(land));
   // giornaliero
   await page.select('#tier', 'daily');
   await sleep(3000);

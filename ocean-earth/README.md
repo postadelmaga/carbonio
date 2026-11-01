@@ -19,6 +19,7 @@ Service products. It lives inside the CO₂·info site at
 | Particles | GPU particles advected by the current field (U, V), coloured by speed | m/s |
 | Arrows | a zoom-dependent grid of arrows, oriented along the current, colour and length by speed | m/s |
 | Hotspots | months above the 1993–2020 90th percentile of the same month (monthly time step only) | — |
+| Land | precipitation or soil moisture (0–7 cm) as a percentage of the 1993–2020 normal of the same month, ERA5 (monthly time step only) | % |
 
 Time steps: **month** (1993 → last complete month), **day** (since 1 January
 2024) and **hour** (last 14 days). In the daily step, the Mediterranean is drawn from the 1/16° satellite
@@ -35,7 +36,9 @@ where it is strong (normal areas let the temperature through), and the current
 speed mostly where the current is fast. A single layer at 100% is exactly the
 old single mode. The buttons in the header are shortcuts: one layer only, or
 "Mix" (temperature 100%, anomaly 70%, speed 60%). The weights are remembered in
-the browser (`localStorage` `oe-layers`). The point panel, the range fields and
+the browser (`localStorage` `oe-layers`). A fourth row, **Land**, colours the
+continents (normally grey) with precipitation or soil moisture, chosen in the
+row (`oe-land`); it exists only in the monthly time step. The point panel, the range fields and
 "auto range" follow the heaviest layer.
 
 During playback the header and the time bar slide out of view and only a small
@@ -61,6 +64,27 @@ native grid; otherwise it is land.
 | day | SST Mediterranean (overlay) | `SST_MED_SST_L4_NRT_OBSERVATIONS_010_004_a_V2` (SST_MED_SST_L4_NRT_OBSERVATIONS_010_004) | 1/16°, daily, L4, **kept on its native grid** | satellite observations | last 365 days |
 | hour | SST | `cmems_mod_glo_phy_anfc_0.083deg_PT1H-m` | 1/12°, hourly mean | operational analysis | last 14 days |
 | hour | U, V | `cmems_obs-mob_glo_phy-cur_nrt_0.25deg_PT1H-i` | 0.25°, hourly instantaneous (with tides) | observation-based | last 14 days |
+
+**Land** (`pipeline/land.py`), from the Copernicus Climate Change Service
+Climate Data Store, not Copernicus Marine:
+
+| Variable | Dataset (Climate Data Store) | Native | DOI |
+|---|---|---|---|
+| precipitation | `reanalysis-era5-single-levels-monthly-means`, `total_precipitation` | 0.25°, monthly mean | 10.24381/cds.f17050d7 |
+| soil moisture | `reanalysis-era5-land-monthly-means`, `volumetric_soil_water_layer_1` (0–7 cm) | 0.1°, monthly mean | 10.24381/cds.68d2bb30 |
+
+Each frame is the value divided by the 1993–2020 mean of the same calendar
+month, in percent (100 = normal, 50 = half, 200 = double), encoded like the
+temperature (`encode_scalar`, 0–600). Where the normal is almost zero
+(precipitation below 0.2 mm/day, soil water below 0.03 m³/m³: deserts in the dry
+season, ice sheets) a ratio means nothing and the cell is left empty. Only
+land cells (ERA5-Land's own mask). The page draws it on a logarithmic scale
+from 25% to 400% for precipitation and 50% to 200% for soil moisture (which moves much less), so half and double are equally far from normal. It is a
+reanalysis (model + observations), like GLORYS12. The token is in
+`~/.cdsapirc` on arm_php, never in the repository; the two dataset licences
+(CC BY 4.0) were accepted once on the CDS site. ERA5 monthly means appear
+about a week after the month ends; if the CDS does not answer, `update.sh`
+still publishes the ocean and the land stays as it was.
 
 Rules that keep the data honest:
 
@@ -107,7 +131,9 @@ Rules that keep the data honest:
 
 Licence and attribution: Copernicus Marine products are free and open
 (Copernicus licence); the page credits "E.U. Copernicus Marine Service
-Information" and lists each product with its DOI. Coastlines and land:
+Information" and lists each product with its DOI. ERA5 and ERA5-Land: CC BY 4.0,
+"Copernicus Climate Change Service (C3S) Climate Data Store", Hersbach et al.
+(2020) and Muñoz-Sabater et al. (2021), with their DOIs in the same list. Coastlines and land:
 Natural Earth, public domain.
 
 ### Encoding

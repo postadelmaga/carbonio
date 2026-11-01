@@ -35,6 +35,12 @@ if [ "$fail" -ne 0 ]; then
   exit 1
 fi
 
+# terraferma (ERA5 dal Climate Data Store, ~/.cdsapirc): se il CDS non risponde
+# o il token manca si pubblica lo stesso il mare, la terraferma resta com'era
+if [ -f "$HOME/.cdsapirc" ]; then
+  $PY pipeline/land.py 2>&1 | grep -v -E '^(INFO|WARNING)' > "$LOG/land.log" || echo "terraferma non aggiornata: vedi $LOG/land.log" >&2
+fi
+
 $PY pipeline/derived.py 2>&1 | tee "$LOG/derived.log"
 $PY pipeline/bias.py 2>&1 | grep -v -E '^(INFO|WARNING)' | tee "$LOG/bias.log"
 $PY pipeline/preview.py 2>&1 | tee "$LOG/preview.log"

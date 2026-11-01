@@ -230,6 +230,12 @@ def run(tier, var, start, end):
                         if t not in block and s not in {stamp(tier, x) for x in block}:
                             continue
                         rgb = process(var, ds, i)
+                        # un istante gia' in catalogo ma non ancora riempito (capita
+                        # con OSTIA di primo mattino) e' tutto vuoto: non si salva,
+                        # cosi' resta fra i mancanti e si riprova al giro dopo
+                        if not rgb.any():
+                            print(f'  {s}: campo vuoto alla fonte, riprovo la prossima volta', flush=True)
+                            continue
                         encode.save_png(rgb, frame_path(tier, var, s))
                         idx[s] = ds_id
                         save_index(tier, var, idx)   # subito: file e fonte restano allineati

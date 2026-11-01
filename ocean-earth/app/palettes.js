@@ -26,6 +26,11 @@ export const PALETTES = {
   speedField: { kind: 'speed', stops: [
     [0.00, '#0d0887'], [0.25, '#6a00a8'], [0.50, '#b12a90'], [0.70, '#e16462'],
     [0.85, '#fca636'], [1.00, '#f0f921']] },
+  // terraferma, percentuale del normale (scala logaritmica 25…400%):
+  // marrone = secco, bianco = normale, verde-blu = umido (come BrBG)
+  precip: { kind: 'land', stops: [
+    [0.00, '#543005'], [0.14, '#8c510a'], [0.28, '#bf812d'], [0.42, '#e6cf98'],
+    [0.50, '#f5f2ea'], [0.58, '#a8ddd5'], [0.72, '#35978f'], [0.86, '#01665e'], [1.00, '#003c30']] },
 };
 
 function hex(c) {

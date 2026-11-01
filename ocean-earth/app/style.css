@@ -286,3 +286,11 @@ body.immersive:not(.peek) .mini { transform: translate(-50%, 0); opacity: 1; poi
 @media (max-width: 480px) { .legend { min-width: 0; width: min(300px, calc(100vw - 16px)); } .lg.mx .mx-head { grid-template-columns: 1fr 70px 30px; } }
 .quick-mode .s { display: none; }
 @media (max-width: 480px) { .quick-mode .l { display: none; } .quick-mode .s { display: inline; } }
+/* terraferma: scelta della variabile e scala logaritmica */
+.lg.mx .mx-var { display: flex; align-items: center; gap: 8px; margin-top: 4px; font-size: 11px; }
+.lg.mx .mx-var select { font: inherit; font-size: 11px; padding: 1px 4px; background: transparent; color: var(--ink); border: 1px solid var(--line, rgba(127,127,127,.35)); border-radius: 4px; }
+.lg.mx.off .mx-var .muted { display: none; }
+.lg.mx.na .mx-scale { opacity: .35; }
+.lg-ends { display: flex; justify-content: space-between; font-size: 10px; color: var(--ink-3); margin-top: 1px; }
+.dry { color: #a8742c; }
+.wet { color: #2f9a8f; }

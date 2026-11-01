@@ -5,6 +5,7 @@
 
 export const TEXTS = {
   it: {
+    land_label: 'Terraferma', precip_short: 'Precipitazioni', soil_short: 'Umidità del suolo', of_normal: 'del normale', drier: 'più secco', wetter: 'più umido', land_monthly_only: 'terraferma solo nella serie mensile',
     back: 'Torna a CO₂·info', about: 'Informazioni', layers: 'Livelli', mode_sst: 'Temperatura',
     mode_anom: 'Anomalia', mode_speed: 'Velocità', mode_sst_s: 'Temp.', mode_anom_s: 'Anom.', mode_speed_s: 'Vel.', mode_mix: 'Mix', mix_title: 'Temperatura, anomalia e correnti insieme: i cursori nella legenda dosano ogni livello', particles: 'Particelle',
     advanced: 'Regolazioni', p_density: 'Particelle', p_speed: 'Velocità delle particelle', p_width: 'Spessore delle particelle', a_density: 'Densità delle frecce', pal_classic: 'Classica',
@@ -46,6 +47,7 @@ export const TEXTS = {
     km: 'km', alt: 'quota', data_until: 'dati fino al', updated: 'aggiornato', buffering: 'in caricamento',
   },
   en: {
+    land_label: 'Land', precip_short: 'Precipitation', soil_short: 'Soil moisture', of_normal: 'of normal', drier: 'drier', wetter: 'wetter', land_monthly_only: 'land only in the monthly series',
     back: 'Back to CO₂·info', about: 'About', layers: 'Layers', mode_sst: 'Temperature',
     mode_anom: 'Anomaly', mode_speed: 'Speed', mode_sst_s: 'Temp', mode_anom_s: 'Anom', mode_speed_s: 'Speed', mode_mix: 'Mix', mix_title: 'Temperature, anomaly and currents together: the sliders in the legend set each layer', particles: 'Particles',
     advanced: 'Settings', p_density: 'Particles', p_speed: 'Particle speed', p_width: 'Particle width', a_density: 'Arrow density', pal_classic: 'Classic',
@@ -87,6 +89,7 @@ export const TEXTS = {
     km: 'km', alt: 'altitude', data_until: 'data until', updated: 'updated', buffering: 'loading',
   },
   es: {
+    land_label: 'Tierra firme', precip_short: 'Precipitación', soil_short: 'Humedad del suelo', of_normal: 'de lo normal', drier: 'más seco', wetter: 'más húmedo', land_monthly_only: 'tierra firme solo en la serie mensual',
     back: 'Volver a CO₂·info', about: 'Información', layers: 'Capas', mode_sst: 'Temperatura',
     mode_anom: 'Anomalía', mode_speed: 'Velocidad', mode_sst_s: 'Temp.', mode_anom_s: 'Anom.', mode_speed_s: 'Vel.', mode_mix: 'Mezcla', mix_title: 'Temperatura, anomalía y corrientes juntas: los controles de la leyenda dosifican cada capa', particles: 'Partículas',
     advanced: 'Ajustes', p_density: 'Partículas', p_speed: 'Velocidad de las partículas', p_width: 'Grosor de las partículas', a_density: 'Densidad de las flechas', pal_classic: 'Clásica',
@@ -128,6 +131,7 @@ export const TEXTS = {
     km: 'km', alt: 'altitud', data_until: 'datos hasta', updated: 'actualizado', buffering: 'cargando',
   },
   fr: {
+    land_label: 'Terres émergées', precip_short: 'Précipitations', soil_short: 'Humidité du sol', of_normal: 'de la normale', drier: 'plus sec', wetter: 'plus humide', land_monthly_only: 'terres émergées seulement dans la série mensuelle',
     back: 'Retour à CO₂·info', about: 'À propos', layers: 'Calques', mode_sst: 'Température',
     mode_anom: 'Anomalie', mode_speed: 'Vitesse', mode_sst_s: 'Temp.', mode_anom_s: 'Anom.', mode_speed_s: 'Vit.', mode_mix: 'Mix', mix_title: 'Température, anomalie et courants ensemble : les curseurs de la légende dosent chaque calque', particles: 'Particules',
     advanced: 'Réglages', p_density: 'Particules', p_speed: 'Vitesse des particules', p_width: 'Épaisseur des particules', a_density: 'Densité des flèches', pal_classic: 'Classique',
@@ -169,6 +173,7 @@ export const TEXTS = {
     km: 'km', alt: 'altitude', data_until: 'données jusqu’au', updated: 'mis à jour', buffering: 'chargement',
   },
   zh: {
+    land_label: '陆地', precip_short: '降水', soil_short: '土壤湿度', of_normal: '相对常年', drier: '偏干', wetter: '偏湿', land_monthly_only: '陆地图层仅适用于月度序列',
     back: '返回 CO₂·info', about: '关于', layers: '图层', mode_sst: '温度',
     mode_anom: '距平', mode_speed: '流速', mode_sst_s: '温度', mode_anom_s: '距平', mode_speed_s: '流速', mode_mix: '叠加', mix_title: '温度、距平和洋流叠加显示：用图例中的滑块调节每个图层', particles: '粒子',
     advanced: '设置', p_density: '粒子', p_speed: '粒子速度', p_width: '粒子粗细', a_density: '箭头密度', pal_classic: '经典',

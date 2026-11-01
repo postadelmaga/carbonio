@@ -339,6 +339,34 @@ def check_continuity():
     log('')
 
 
+def check_era5_land():
+    """Terraferma: la media 1993–2020 di ogni cella deve tornare al 100% (e' la
+    base della percentuale) e sul mare aperto non ci devono essere dati."""
+    import land
+    log('## 7b. Terraferma (ERA5)\n')
+    for v in land.VARS:
+        idx = sorted(frames.load_index('monthly', v))
+        if not idx:
+            log(f'- {v}: nessun fotogramma (CDS non configurato?)')
+            continue
+        base = [s for s in idx if land.CLIM[0] <= int(s[:4]) <= land.CLIM[1]]
+        acc = np.zeros((720, 1440)); cnt = np.zeros((720, 1440))
+        for s in base:
+            f = published('monthly', v, s)
+            ok = np.isfinite(f)
+            acc[ok] += f[ok]; cnt[ok] += 1
+        with np.errstate(all='ignore'):
+            mean = acc / cnt
+        good = cnt >= len(base) * 0.9
+        med = float(np.nanmedian(mean[good]))
+        sea = published('monthly', v, idx[-1])[360, 600]       # Atlantico equatoriale, 30° O: mare aperto
+        ok = abs(med - 100) < 1.5 and not np.isfinite(sea)
+        log(f'- {v}: {idx[0]} → {idx[-1]}, {len(idx)} mesi; media {land.CLIM[0]}–{land.CLIM[1]} '
+            f'(mediana delle celle) {med:.2f}% → **{"OK" if ok else "FALLITO"}**')
+        summary[f'terraferma {v}'] = ok
+    log('')
+
+
 def check_anomaly():
     log('## 7. Anomalie\n')
     idx = sorted(frames.load_index('monthly', 'sst'))
@@ -405,7 +433,7 @@ def check_bias(idx, clim):
 def main():
     log(f'# Ocean Earth: validazione dei dati\n\nEseguita il {dt.datetime.now(dt.timezone.utc):%Y-%m-%d %H:%M} UTC '
         f'con `pipeline/validate.py`.\n')
-    for fn in (check_continuity, check_ranges, check_land, check_orientation, check_anomaly, check_points, check_seams):
+    for fn in (check_continuity, check_ranges, check_land, check_orientation, check_anomaly, check_era5_land, check_points, check_seams):
         try:
             fn()
         except Exception as e:  # una verifica che non parte e' un fallimento, non un silenzio

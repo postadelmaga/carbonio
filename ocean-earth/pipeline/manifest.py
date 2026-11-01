@@ -18,11 +18,13 @@ import derived  # noqa: E402
 import encode  # noqa: E402
 import frames  # noqa: E402
 import grid  # noqa: E402
+import land  # noqa: E402
 import preview  # noqa: E402
 import sources  # noqa: E402
 
 TIERS = {
-    'monthly': dict(step='P1M', vars=['sst', 'cur']),
+    # precip e soil: terraferma da ERA5 (pipeline/land.py), percentuale del normale
+    'monthly': dict(step='P1M', vars=['sst', 'cur', 'precip', 'soil']),
     'daily': dict(step='P1D', vars=['sst', 'cur', 'ostia', 'med']),
     'hourly': dict(step='PT1H', vars=['sst', 'cur']),
 }
@@ -31,6 +33,8 @@ TIERS = {
 @functools.lru_cache(maxsize=None)
 def product_meta(product_id):
     """DOI e titolo del prodotto, dal catalogo Copernicus (per l'attribuzione)."""
+    if sources.DATASETS.get(product_id, {}).get('cds'):
+        return {}                        # Climate Data Store: il DOI e' gia' in sources.py
     try:
         p = cm.describe(product_id=product_id).products[0]
         return {'doi': p.digital_object_identifier, 'title': p.title,
@@ -124,6 +128,8 @@ def build():
                         'bias': bias_meta()},
         'series': {'tile': derived.TILE,
                    'available': (frames.DATA / 'series' / 'sst.json').exists()},
+        # terraferma: percentuale del normale dello stesso mese (pipeline/land.py)
+        'land': {'clim_years': list(land.CLIM), 'encoding': 'percent'},
         'regional': {n: json.loads((frames.DATA / 'index' / f'{n}-grid.json').read_text())
                      for n in ['med'] if (frames.DATA / 'index' / f'{n}-grid.json').exists()},
         'sources': [dict(id=d, **sources.DATASETS[d], **product_meta(sources.DATASETS[d]['product'])) for d in used],

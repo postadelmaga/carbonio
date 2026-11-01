@@ -45,17 +45,21 @@ uniform sampler2D uLand;
 uniform sampler2D uMedA, uMedB;      // Mediterraneo 1/16° (griglia sua)
 uniform vec4 uMedBox;                // ovest, sud, est, nord (gradi, bordi esterni)
 uniform bool uMedOn;
-uniform sampler2D uLutSst, uLutAnom, uLutSpeed;
+uniform sampler2D uLuts;             // scale di colore, una per riga (globe.js LUT_ROWS)
+uniform sampler2D uLandA, uLandB;    // terraferma: % del normale dello stesso mese (ERA5)
+uniform bool uLandOn;
+uniform float uLandSpan;             // ottave di qua e di la' dal normale: 2 = 25…400%, 1 = 50…200%
 uniform float uMix, uMixCmp;
 uniform vec4 uClimSel;               // mese a, mese b, peso di b, 0  (per l'istante principale)
 uniform vec4 uClimSelCmp;            // idem per la data di confronto
-uniform vec3 uLayers;                // pesi 0…1 dei livelli: temperatura, anomalia, velocita'
+uniform vec4 uLayers;                // pesi 0…1: temperatura, anomalia, velocita', terraferma
 uniform bool uHasClim, uHotspot, uCompare, uHaveData;
 uniform float uSplit;                // confronto: x (pixel) della linea di separazione
 uniform vec2 uRangeSst, uRangeAnom, uRangeSpeed;
 uniform float uOpacity;
 uniform vec3 uBg, uLandCol, uNoData, uCoastGlow;
 
+vec3 lut(float t, float row) { return texture(uLuts, vec2(clamp(t, 0.0, 1.0), (row + 0.5) / 4.0)).rgb; }
 vec2 sampleSst(sampler2D a, sampler2D b, vec2 uv, float m) {
   vec2 x = mix(texture(a, uv).rg, texture(b, uv).rg, m);
   return vec2(x.g > 0.5 ? x.r / x.g : 0.0, x.g);
@@ -120,7 +124,7 @@ void main() {
     if (sT.y > 0.5 && wT > 0.0) {
       sea = true;
       float t = (sT.x - uRangeSst.x) / (uRangeSst.y - uRangeSst.x);
-      col = mix(col, texture(uLutSst, vec2(clamp(t, 0.0, 1.0), 0.5)).rgb, wT);
+      col = mix(col, lut(t, 0.0), wT);
     }
     if (s.y > 0.5) {
       if (wA > 0.0 && uHasClim) {
@@ -131,7 +135,7 @@ void main() {
           float t = (an - uRangeAnom.x) / (uRangeAnom.y - uRangeAnom.x);
           float span = max(abs(uRangeAnom.x), abs(uRangeAnom.y));
           float strong = smoothstep(0.08, 0.7, abs(an) / max(span, 1e-3));
-          col = mix(col, texture(uLutAnom, vec2(clamp(t, 0.0, 1.0), 0.5)).rgb, wA * mix(1.0, strong, wT));
+          col = mix(col, lut(t, 1.0), wA * mix(1.0, strong, wT));
         }
       }
       if (uHotspot && uHasClim) {
@@ -152,13 +156,20 @@ void main() {
       // anche dove manca la temperatura (laghi, coste) la corrente resta un
       // livello sopra gli altri: se sono accesi, si vede solo dove e' veloce
       float under = max(wT, wA);
-      col = mix(col, texture(uLutSpeed, vec2(t, 0.5)).rgb, wS * mix(1.0, pow(smoothstep(0.1, 0.7, t), 1.5), under));
+      col = mix(col, lut(t, 2.0), wS * mix(1.0, pow(smoothstep(0.1, 0.7, t), 1.5), under));
       sea = true;
     }
   }
   if (sea) col = mix(uNoData, col, uOpacity);
   float land = texture(uLand, uv).r;
-  col = mix(col, uLandCol, smoothstep(0.35, 0.65, land));
+  // terraferma: percentuale del normale su scala logaritmica (uLandSpan)
+  // (meta' e doppio stanno alla stessa distanza dal normale)
+  vec3 landCol = uLandCol;
+  if (uLandOn && uLayers.w > 0.0) {
+    vec2 r = sampleSst(uLandA, uLandB, uv, uMix);
+    if (r.y > 0.5) landCol = mix(uLandCol, lut(log2(max(r.x, 1.0) / 100.0) / (2.0 * uLandSpan) + 0.5, 3.0), uLayers.w);
+  }
+  col = mix(col, landCol, smoothstep(0.35, 0.65, land));
   outColor = vec4(col * shade, 1.0);
   if (uCompare && abs(gl_FragCoord.x - uSplit) < 1.0) outColor = vec4(1.0);
 }`;
