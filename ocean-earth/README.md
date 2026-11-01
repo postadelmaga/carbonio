@@ -433,6 +433,23 @@ page in each language on a phone-sized screen.
 
 ## Reel editor (`reel/`, published at /atlante/reel/)
 
+Laid out like a video editor: a library of the atlas views (drag one onto the
+timeline, or click), the vertical preview with transport controls, the
+properties of what is selected, and a timeline with two tracks:
+- **V1 · Globe**: clips one after the other. The right edge stretches or
+  shortens a clip and moves the ones after it; the left edge moves the cut
+  with the previous clip; dragging a clip changes the order; S splits it at the
+  playhead (the month range and the framing are split too).
+- **A1 · Music**: one song, with its position on the timeline, the part of the
+  file that plays (trim the edges; Alt + drag slides the content), volume and
+  fades (the dots at the top corners).
+Edges snap to bars, beats or nothing (magnet button), to clip cuts and to the
+playhead. Undo and redo (Ctrl+Z, Ctrl+Shift+Z), zoom (Ctrl+wheel), space to
+play, Shift+arrows to jump by bars. Modules: `model.js` (project, timing,
+undo), `atlas.js` (the atlas in the iframe), `render.js` (the frame),
+`timeline.js`, `export.js`, `reel.js` (the rest). Projects of the first editor
+are converted when opened.
+
 A page for making vertical videos (1080 × 1920) from the atlas and a song of
 your choice. The atlas runs in a hidden iframe (`index.html?reel`: no
 interface, dark theme, choices not saved to the visitor's settings) on a

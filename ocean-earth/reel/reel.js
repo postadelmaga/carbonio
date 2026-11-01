@@ -1,143 +1,117 @@
-// Editor dei reel dell'Atlante del clima.
-//
-// L'atlante gira in un iframe nascosto (../index.html?reel) con un orologio
-// virtuale: e' l'editor a decidere istante, inquadratura e passo di ogni
-// fotogramma, poi copia il globo in un canvas 1080×1920 e ci disegna sopra i
-// testi. L'anteprima e l'esportazione usano lo stesso disegno: quello che si
-// vede e' quello che si esporta. L'esportazione e' fotogramma per fotogramma
-// (aspetta i dati esatti di ogni istante) e scrive un MP4 con WebCodecs.
+// Editor dei reel dell'Atlante del clima: un piccolo programma di montaggio.
+//   libreria (viste dell'atlante, musica) · anteprima · proprieta' · timeline
+//   con la traccia V1 (globo) e A1 (musica)
 
 import { analyze, downbeats, silence } from './beats.js';
-import { Muxer, ArrayBufferTarget } from './vendor/mp4-muxer.mjs';
+import {
+  S, W, H, VIEWS, DOMAIN, SEA_PARTICLES, newClip, defaultProject, newAudio, migrate, total, clipStart, clipAt,
+  audioEnd, srcBeats, isBarIdx, tlBeats, camAt, progressIn, wrapLon, remember, undo, redo, canUndo, canRedo,
+} from './model.js';
+import { A, bootAtlas, applyAt, peekPos, clipRange } from './atlas.js';
+import { compose, LOCALE } from './render.js';
+import { initTimeline, renderTimeline, movePlayhead, setZoom, scrollToT, viewGradient } from './timeline.js';
+import { pickCodecs, exportMp4, scheduleSong } from './export.js';
 
 const $ = (s) => document.querySelector(s);
-const W = 1080, H = 1920;
 
-// ── testi dell'editor (italiano o inglese) ─────────────────────────────────
-const UI_LANG = (() => {
+// ── testi ──────────────────────────────────────────────────────────────────
+const UI = (() => {
   try { const l = new URLSearchParams(location.search).get('lang') || localStorage.getItem('lingua'); if (l) return l === 'it' ? 'it' : 'en'; } catch (e) { /* niente */ }
   return (navigator.language || 'en').startsWith('it') ? 'it' : 'en';
 })();
-const U = {
-  it: {},
-  en: {
-    back: '‹ Climate Atlas', brand: 'Reel editor', open: 'Open project', save: 'Save project', export: 'Export MP4', loading: 'Loading the atlas…',
-    safe: 'areas covered by Instagram', drag_hint: 'Drag on the preview to turn the globe, scroll to zoom; then “current view” in the clip.',
-    song: 'Song', pick_song: 'Choose an audio file', no_song: 'no song', song_local: 'The song stays in your browser: it is not uploaded anywhere. To publish the reel you need the rights to the music.',
-    bpm: 'Tempo (BPM)', beats_src: 'Beats', detected: 'detected', grid: 'fixed grid', grid_off: 'First beat (s)', bar_off: 'Bar starts on beat', song_start: 'Start in the song (s)',
-    snap: 'Snap to', beat: 'beat', bar: 'bar', none: 'nothing', fade_in: 'Fade in (s)', fade_out: 'Fade out (s)', tap: 'Tap the tempo (T)', start_beat: 'Start on nearest beat',
-    clip: 'Clips', add: '+ Add', dup: 'Duplicate', del: 'Delete', view: 'View', variant: 'Variant', from: 'From month', to: 'To month', dur: 'Length (s)', bars: 'Bars', fit: 'fit',
-    sync: 'Time flow', sync_beat: 'in time with the beats', sync_linear: 'even', hold: 'Hold on last month (s)', spin: 'Rotation (°/s)', dip: 'Dip to black (s)',
-    particles: 'current trails', caption: 'Caption (empty = the view’s own)', cam0: 'Start framing', cam1: 'End framing', use_view: 'current view',
-    texts: 'Texts and format', title: 'Title', lang: 'Text language', fps: 'Frames/s', globe_y: 'Globe lower (px)', quality: 'Quality (Mbit/s)',
-    o_date: 'date', o_legend: 'legend', o_caption: 'title and caption', o_credits: 'data sources',
-    trim_in: 'The song starts at (s)', trim_out: 'and ends at (s)', trim_auto: 'Remove silences', trim_hint: 'or drag the handles on the whole song below',
-    meter: 'Beats per bar', clips_bars: 'Clips on the bars', clips_fill: 'Clips to the end of the song',
-    tl_hint: 'Click to move · drag the right edge of a clip to stretch or shorten it (snaps to beats) · drag the light window on the whole song to choose where the music starts · space: play/pause',
-    legend_size: 'Legend size (%)',
-    exporting: 'Export', cancel: 'Cancel', download: 'Download the video',
-  },
-};
-const MSG = {
+const TX = {
   it: {
-    bpm_det: (b, n, m) => `${n} battiti rilevati, ${b} BPM, battute da ${m}. Se la griglia non cade sui colpi usa ÷2 o ×2, correggi il tempo o battilo con T.`,
-    bpm_grid: (b) => `Griglia fissa a ${b} BPM.`, analyzing: 'Analizzo il brano…', avail: (a, b) => `Dati disponibili per questa vista: ${a} – ${b}.`,
+    project: 'Progetto', texts: 'Testi', format: 'Formato', title: 'Titolo', lang: 'Lingua dei testi', o_date: 'data', o_legend: 'legenda', o_caption: 'titolo e didascalia', o_credits: 'fonti dei dati',
+    fps: 'Fotogrammi/s', rate: 'Qualità (Mbit/s)', globe_y: 'Globo più in basso (px)', legend_size: 'Dimensione legenda (%)', black_in: 'Nero all’inizio (s)', black_out: 'Nero alla fine (s)',
+    proj_note: (n, d) => `${n} clip, ${d} s. Seleziona una clip o il brano nella timeline per modificarli.`,
+    content: 'Contenuto', view: 'Vista', variant: 'Variante', from: 'Dal mese', to: 'Al mese', caption: 'Didascalia (vuota = quella della vista)', particles: 'scie delle correnti',
+    time: 'Tempo', dur: 'Durata (s)', bars: 'Battute', fit: 'adatta', sync: 'Scorrere dei mesi', sync_beat: 'a tempo coi battiti', sync_linear: 'uniforme', hold: 'Pausa sull’ultimo mese (s)', dip: 'Stacco al nero (s)',
+    framing: 'Inquadratura', cam0: 'Iniziale', cam1: 'Finale', use_view: 'vista attuale', go: 'vai', spin: 'Rotazione (°/s)',
+    avail: (a, b) => `Dati di questa vista: ${a} – ${b}.`, dup: 'Duplica', split: 'Dividi', del: 'Elimina',
+    song: 'Brano', replace: 'Sostituisci', remove_song: 'Rimuovi il brano', volume: 'Volume (%)', mute: 'muto', offset: 'Entra al secondo del reel', in: 'Suona dal secondo del brano', out: 'fino al secondo', fade_in: 'Dissolvenza in entrata (s)', fade_out: 'Dissolvenza in uscita (s)',
+    trim: 'Togli i silenzi', first_bar: 'Parti dalla battuta più vicina', rhythm: 'Ritmo', bpm: 'Tempo (BPM)', beats: 'Battiti', detected: 'rilevati', grid: 'griglia fissa', meter: 'Battiti per battuta', bar_off: 'La battuta parte dal battito', grid_off: 'Primo battito (s)', tap: 'Batti il tempo (T)',
+    bpm_det: (b, n, m) => `${n} battiti rilevati, ${b} BPM, battute da ${m}. Se la griglia non cade sui colpi usa ÷2 o ×2, cambia il primo battito della battuta o batti il tempo con T durante il play.`,
+    bpm_grid: (b) => `Griglia fissa a ${b} BPM.`, analyzing: (s) => `Analizzo il brano… ${s}`, song_missing: (n) => `Il progetto usa «${n}»: importalo di nuovo (resta nel browser).`, tap_more: (n) => `Batti ancora (${n})…`, tap_play: 'Avvia il play e batti a tempo.',
+    trimmed: (a, b) => `Silenzi tolti: il brano suona da ${a} a ${b} s.`,
+    sea: 'Mare', land: 'Terra', air: 'Aria', drop_song: 'Trascina qui un file audio, o usa «Importa un brano»', snap_bar: 'battute', snap_beat: 'battiti', snap_off: 'niente',
+    total: (d, n) => `${d} s · ${n} clip`, bar_pos: (n, b) => `battuta ${n}.${b}`,
     no_webcodecs: 'Questo browser non ha WebCodecs: per esportare serve Chrome, Edge o Firefox recenti.',
     codec_info: (v, a) => `Video ${v}${a ? `, audio ${a}` : ', senza audio'}. Il video si costruisce fotogramma per fotogramma con i dati esatti: ci vuole qualche minuto.`,
     opus_note: 'Questo browser non codifica l’audio AAC: l’audio è Opus. Se Instagram non lo accetta: ffmpeg -i reel.mp4 -c:v copy -c:a aac reel-ig.mp4',
     frame: (i, n, eta) => `fotogramma ${i}/${n} · mancano ${eta}`, done: (mb, s) => `Fatto: ${mb} MB in ${s}.`, wait_data: 'aspetto i dati…',
-    timeout: 'I dati di un istante non arrivano: controlla la connessione e riprova.', cancelled: 'Annullato.', song_missing: (n) => `Il progetto usa «${n}»: sceglilo di nuovo.`,
-    analyzing_n: (s) => `Analizzo il brano (${s})…`, trimmed: (a, b) => `Silenzi tolti: il brano va da ${a} a ${b} s.`,
-    bad_project: 'Il file non è un progetto dell’editor.', atlas_fail: 'L’atlante non si è caricato.', tap_more: (n) => `Batti ancora (${n})…`,
+    timeout: 'I dati di un istante non arrivano: controlla la connessione e riprova.', cancelled: 'Annullato.', close: 'Chiudi', cancel: 'Annulla',
+    bad_project: 'Il file non è un progetto dell’editor.', atlas_fail: 'L’atlante non si è caricato.', no_clips: 'Aggiungi almeno una clip alla traccia V1.',
+    fossil: 'fossili', natural: 'naturali',
   },
   en: {
-    bpm_det: (b, n, m) => `${n} beats detected, ${b} BPM, bars of ${m}. If the grid does not land on the hits use ÷2 or ×2, fix the tempo or tap it with T.`,
-    bpm_grid: (b) => `Fixed grid at ${b} BPM.`, analyzing: 'Analysing the song…', avail: (a, b) => `Data available for this view: ${a} – ${b}.`,
+    back: '‹ Climate Atlas', brand: 'Reel editor', open: 'Open project', save: 'Save project', export: 'Export MP4', loading: 'Loading the atlas…',
+    views: 'Views', lib_hint: 'Drag a view onto track V1, or click to add it after the selected clip.', music: 'Music', import_song: 'Import a song',
+    song_local: 'The song stays in your browser, it is not uploaded anywhere. To publish the reel you need the rights to the music.', safe: 'areas covered by Instagram',
+    split: 'Split', del: 'Delete', on_bars: 'Clips on the bars', fill: 'To the end of the song', zoom: 'Zoom', track_v: 'Globe', track_a: 'Music',
+    tl_help: 'Drag edges to stretch or trim (they snap to bars) · drag a clip to move it · Alt + drag the song to choose which part plays · space play · S split · Ctrl+Z undo · Ctrl+wheel zoom',
+    exporting: 'Export', cancel: 'Cancel', download: 'Download the video',
+    undo: 'Undo (Ctrl+Z)', redo: 'Redo (Ctrl+Shift+Z)', go_start: 'Start (Home)', go_prev: 'Previous bar (Shift+←)', go_next: 'Next bar (Shift+→)', go_end: 'End (End)',
+    snap_t: 'Snap', split_t: 'Split the clip at the playhead (S)', del_t: 'Delete (Del)', bars_t: 'Move every clip boundary to the nearest bar', fill_t: 'Stretch the clips to the end of the song', mute: 'mute',
+    project: 'Project', texts: 'Texts', format: 'Format', title: 'Title', lang: 'Text language', o_date: 'date', o_legend: 'legend', o_caption: 'title and caption', o_credits: 'data sources',
+    fps: 'Frames/s', rate: 'Quality (Mbit/s)', globe_y: 'Globe lower (px)', legend_size: 'Legend size (%)', black_in: 'Black at the start (s)', black_out: 'Black at the end (s)',
+    proj_note: (n, d) => `${n} clips, ${d} s. Select a clip or the song in the timeline to edit it.`,
+    content: 'Content', view: 'View', variant: 'Variant', from: 'From month', to: 'To month', caption: 'Caption (empty = the view’s own)', particles: 'current trails',
+    time: 'Time', dur: 'Length (s)', bars: 'Bars', fit: 'fit', sync: 'Month flow', sync_beat: 'in time with the beats', sync_linear: 'even', hold: 'Hold on last month (s)', dip: 'Dip to black (s)',
+    framing: 'Framing', cam0: 'Start', cam1: 'End', use_view: 'current view', go: 'go', spin: 'Rotation (°/s)',
+    avail: (a, b) => `Data for this view: ${a} – ${b}.`, dup: 'Duplicate',
+    song: 'Song', replace: 'Replace', remove_song: 'Remove the song', volume: 'Volume (%)', offset: 'Enters at reel second', in: 'Plays from song second', out: 'to second', fade_in: 'Fade in (s)', fade_out: 'Fade out (s)',
+    trim: 'Remove silences', first_bar: 'Start on the nearest bar', rhythm: 'Rhythm', bpm: 'Tempo (BPM)', beats: 'Beats', detected: 'detected', grid: 'fixed grid', meter: 'Beats per bar', bar_off: 'Bar starts on beat', grid_off: 'First beat (s)', tap: 'Tap the tempo (T)',
+    bpm_det: (b, n, m) => `${n} beats detected, ${b} BPM, bars of ${m}. If the grid does not land on the hits use ÷2 or ×2, change the first beat of the bar or tap the tempo with T while playing.`,
+    bpm_grid: (b) => `Fixed grid at ${b} BPM.`, analyzing: (s) => `Analysing the song… ${s}`, song_missing: (n) => `The project uses “${n}”: import it again (it stays in the browser).`, tap_more: (n) => `Keep tapping (${n})…`, tap_play: 'Start playback and tap along.',
+    trimmed: (a, b) => `Silences removed: the song plays from ${a} to ${b} s.`,
+    sea: 'Sea', land: 'Land', air: 'Air', drop_song: 'Drop an audio file here, or use “Import a song”', snap_bar: 'bars', snap_beat: 'beats', snap_off: 'off',
+    total: (d, n) => `${d} s · ${n} clips`, bar_pos: (n, b) => `bar ${n}.${b}`,
     no_webcodecs: 'This browser has no WebCodecs: exporting needs a recent Chrome, Edge or Firefox.',
     codec_info: (v, a) => `Video ${v}${a ? `, audio ${a}` : ', no audio'}. The video is built frame by frame with the exact data: it takes a few minutes.`,
     opus_note: 'This browser does not encode AAC audio: the audio is Opus. If Instagram refuses it: ffmpeg -i reel.mp4 -c:v copy -c:a aac reel-ig.mp4',
     frame: (i, n, eta) => `frame ${i}/${n} · ${eta} left`, done: (mb, s) => `Done: ${mb} MB in ${s}.`, wait_data: 'waiting for data…',
-    timeout: 'The data for one instant does not arrive: check the connection and try again.', cancelled: 'Cancelled.', song_missing: (n) => `The project uses “${n}”: choose it again.`,
-    analyzing_n: (s) => `Analysing the song (${s})…`, trimmed: (a, b) => `Silences removed: the song runs from ${a} to ${b} s.`,
-    bad_project: 'The file is not an editor project.', atlas_fail: 'The atlas did not load.', tap_more: (n) => `Keep tapping (${n})…`,
+    timeout: 'The data for one instant does not arrive: check the connection and try again.', cancelled: 'Cancelled.', close: 'Close',
+    bad_project: 'The file is not an editor project.', atlas_fail: 'The atlas did not load.', no_clips: 'Add at least one clip to track V1.',
+    fossil: 'fossil', natural: 'natural',
   },
-}[UI_LANG];
-document.documentElement.lang = UI_LANG;
-if (UI_LANG !== 'it') {
-  document.querySelectorAll('[data-u]').forEach((el) => { const v = U.en[el.dataset.u]; if (v) el.textContent = v; });
+};
+const t = (k, ...a) => { const v = TX[UI][k] ?? TX.it[k] ?? k; return typeof v === 'function' ? v(...a) : v; };
+document.documentElement.lang = UI;
+if (UI !== 'it') {
   document.title = 'Reel editor · Climate Atlas';
+  document.querySelectorAll('[data-u]').forEach((el) => { if (TX.en[el.dataset.u]) el.textContent = TX.en[el.dataset.u]; });
+  document.querySelectorAll('[data-ut]').forEach((el) => { if (TX.en[el.dataset.ut]) el.title = TX.en[el.dataset.ut]; });
 }
+const VARIANTS = { co2: [['0', 'ppm'], ['1', UI === 'it' ? 'rispetto alla media globale del mese' : 'relative to the global mean of the month']], emis: [['0', UI === 'it' ? 'totale' : 'total'], ['1', t('fossil')], ['2', t('natural')]] };
 
 // ── progetto ───────────────────────────────────────────────────────────────
-const VIEWS = ['sst', 'anom', 'speed', 'sla', 'ice', 'mix', 'rain', 'drought', 'co2', 'emis'];
-// dati che servono a ogni vista (per sapere da quando a quando esistono)
-const NEEDS = { sst: ['sst'], anom: ['sst'], speed: ['cur'], sla: ['sla'], ice: ['ice'], mix: ['sst', 'cur'], rain: ['precip', 'sst'], drought: ['soil', 'sst'], co2: ['co2'], emis: ['co2foss', 'co2nat'] };
-// righe della legenda da mostrare nel video
-const LEGEND = { sst: ['sst'], anom: ['anom'], speed: ['speed'], sla: ['sla'], ice: ['ice'], mix: ['anom'], rain: ['land', 'anom'], drought: ['land', 'anom'], co2: ['co2'], emis: ['flux'] };
-const VARIANTS = {
-  co2: { it: [['0', 'in ppm (si vede la crescita)'], ['1', 'rispetto alla media globale del mese']], en: [['0', 'in ppm (shows the rise)'], ['1', 'relative to the global mean of the month']] },
-  emis: { it: [['0', 'totale'], ['1', 'fossili'], ['2', 'naturali']], en: [['0', 'total'], ['1', 'fossil'], ['2', 'natural']] },
-};
-// fonti, per servizio Copernicus
-const SRC = {
-  sst: ['m:GLORYS12'], anom: ['m:GLORYS12'], mix: ['m:GLORYS12'], speed: ['m:Copernicus-GlobCurrent'], sla: ['m:DUACS'], ice: ['m:GLORYS12'],
-  rain: ['c:ERA5', 'm:GLORYS12'], drought: ['c:ERA5-Land', 'm:GLORYS12'], co2: ['a:CAMS'], emis: ['a:CAMS'],
-};
-// didascalie delle varianti che l'atlante non ha come vista propria
-const VCAP = {
-  'co2/0': {
-    it: 'Quanta CO₂ c’è nell’aria, media su tutta la colonna d’aria, in parti per milione (inversione CAMS, serie mensile)',
-    en: 'How much CO₂ is in the air, averaged over the whole air column, in parts per million (CAMS inversion, monthly series)',
-    es: 'Cuánto CO₂ hay en el aire, media de toda la columna de aire, en partes por millón (inversión CAMS, serie mensual)',
-    fr: 'Quantité de CO₂ dans l’air, moyenne sur toute la colonne d’air, en parties par million (inversion CAMS, série mensuelle)',
-    zh: '空气中的二氧化碳含量，整个气柱的平均值，单位为百万分之一（CAMS 反演，月度序列）',
-  },
-  'emis/1': {
-    it: 'Le emissioni di CO₂ da combustibili fossili, in grammi di carbonio per m² al giorno (inversione CAMS, serie mensile)',
-    en: 'CO₂ emissions from fossil fuels, in grams of carbon per m² per day (CAMS inversion, monthly series)',
-    es: 'Las emisiones de CO₂ de combustibles fósiles, en gramos de carbono por m² al día (inversión CAMS, serie mensual)',
-    fr: 'Les émissions de CO₂ des combustibles fossiles, en grammes de carbone par m² et par jour (inversion CAMS, série mensuelle)',
-    zh: '化石燃料的二氧化碳排放，单位为每天每平方米碳克数（CAMS 反演，月度序列）',
-  },
-  'emis/2': {
-    it: 'Lo scambio naturale di CO₂: foreste e oceani che assorbono (verde), incendi e suoli che emettono (rosso) (inversione CAMS, serie mensile)',
-    en: 'The natural exchange of CO₂: forests and oceans absorbing (green), fires and soils emitting (red) (CAMS inversion, monthly series)',
-    es: 'El intercambio natural de CO₂: bosques y océanos que absorben (verde), incendios y suelos que emiten (rojo) (inversión CAMS, serie mensual)',
-    fr: 'L’échange naturel de CO₂ : forêts et océans qui absorbent (vert), incendies et sols qui émettent (rouge) (inversion CAMS, série mensuelle)',
-    zh: '二氧化碳的自然交换：森林和海洋吸收（绿色），火灾和土壤排放（红色）（CAMS 反演，月度序列）',
-  },
-};
-const SERVICE = { m: 'Copernicus Marine Service', c: 'Copernicus Climate Change Service', a: 'Copernicus Atmosphere Monitoring Service' };
-const DATA_WORD = { it: 'Dati', en: 'Data', es: 'Datos', fr: 'Données', zh: '数据' };
-const LOCALE = { en: 'en-GB', it: 'it-IT', es: 'es-ES', fr: 'fr-FR', zh: 'zh-CN' };
-
-function newClip(over = {}) {
-  return { view: 'co2', variant: 0, from: '1993-01', to: '2025-12', dur: 24, sync: 'beat', hold: 1.5, spin: 5, fade: 0.4, particles: false, caption: '',
-    cam0: { lon: 10, lat: 35, dist: 3.3 }, cam1: { lon: 10, lat: 35, dist: 3.3 }, ...over };
-}
-function defaultProject() {
-  return {
-    version: 1, title: 'ATLANTE DEL CLIMA', lang: UI_LANG === 'it' ? 'it' : 'en', fps: 30, rate: 14, globeY: 160, legendScale: 100,
-    overlay: { date: true, legend: true, caption: true, credits: true }, safe: false,
-    song: { name: '', start: 0, fadeIn: 0.6, fadeOut: 2.5, mode: 'detected', bpm: 120, gridOff: 0, barOff: 0, meter: 4, snap: 'bar', trimIn: 0, trimOut: 0, det: null },
-    clips: [newClip()],
-  };
-}
-let P = loadLocal() || defaultProject();
-let sel = 0;
-
 function loadLocal() {
-  try { const p = JSON.parse(localStorage.getItem('oe-reel') || 'null'); return valid(p) ? p : null; } catch (e) { return null; }
+  for (const k of ['oe-reel2', 'oe-reel']) {
+    try { const p = migrate(JSON.parse(localStorage.getItem(k) || 'null')); if (p) return p; } catch (e) { /* prossimo */ }
+  }
+  return null;
 }
-function valid(p) { return p && p.version === 1 && Array.isArray(p.clips) && p.clips.length && p.song; }
+S.P = loadLocal() || defaultProject(UI);
 let saveT = 0;
-function saveLocal() {
-  clearTimeout(saveT);
-  saveT = setTimeout(() => { try { localStorage.setItem('oe-reel', JSON.stringify(P)); } catch (e) { /* niente */ } }, 300);
+function saveLocal() { clearTimeout(saveT); saveT = setTimeout(() => { try { localStorage.setItem('oe-reel2', JSON.stringify(S.P)); } catch (e) { /* niente */ } }, 300); }
+
+// ogni modifica: salva, ridisegna, riporta l'atlante all'istante
+let need = true, camNeed = true, inspT = 0;
+function changed(o = {}) {
+  if (S.sel?.kind === 'v' && !S.P.video[S.sel.i]) S.sel = S.P.video.length ? { kind: 'v', i: S.P.video.length - 1 } : null;
+  if (S.sel?.kind === 'a' && !S.P.audio) S.sel = null;
+  S.t = Math.min(S.t, total());
+  saveLocal();
+  renderTimeline();
+  if (o.light) { if (!inspT) inspT = requestAnimationFrame(() => { inspT = 0; renderInspector(true); }); } else renderInspector();
+  need = true; camNeed = true;
+  $('#undo').disabled = !canUndo(); $('#redo').disabled = !canRedo();
+  $('#export').disabled = !A.oe || !S.P.video.length;
 }
 
-// il brano (i suoi byte) resta nel browser, in IndexedDB: cosi' riaprendo
-// l'editor non serve sceglierlo di nuovo
+// ── brano ──────────────────────────────────────────────────────────────────
+let actx = null;
+const audioCtx = () => (actx ||= new AudioContext());
 function idb() {
   return new Promise((res, rej) => {
     const r = indexedDB.open('oe-reel', 1);
@@ -145,513 +119,17 @@ function idb() {
     r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
   });
 }
-async function storeSong(name, bytes) {
-  try { const db = await idb(); db.transaction('song', 'readwrite').objectStore('song').put({ name, bytes }, 'last'); } catch (e) { /* niente */ }
-}
+async function storeSong(name, bytes) { try { const db = await idb(); db.transaction('song', 'readwrite').objectStore('song').put({ name, bytes }, 'last'); } catch (e) { /* niente */ } }
 async function loadStoredSong() {
-  try {
-    const db = await idb();
-    return await new Promise((res) => { const r = db.transaction('song').objectStore('song').get('last'); r.onsuccess = () => res(r.result || null); r.onerror = () => res(null); });
-  } catch (e) { return null; }
+  try { const db = await idb(); return await new Promise((res) => { const r = db.transaction('song').objectStore('song').get('last'); r.onsuccess = () => res(r.result || null); r.onerror = () => res(null); }); } catch (e) { return null; }
 }
 
-// ── tempo del reel ─────────────────────────────────────────────────────────
-const total = () => P.clips.reduce((s, c) => s + c.dur, 0);
-function clipStart(i) { let s = 0; for (let k = 0; k < i; k++) s += P.clips[k].dur; return s; }
-function clipAt(t) {
-  let s = 0;
-  for (let i = 0; i < P.clips.length; i++) {
-    const c = P.clips[i];
-    if (t < s + c.dur || i === P.clips.length - 1) return { c, i, t0: s, lt: Math.max(0, Math.min(t - s, c.dur)) };
-    s += c.dur;
-  }
-}
-
-// battiti del brano (secondi nel file) e sul tempo del reel
-let song = { buffer: null, peaks: null, detected: [] };
-function songBeats() {
-  const S = P.song;
-  if (S.mode === 'detected' && song.detected.length) return song.detected;
-  const dur = song.buffer ? song.buffer.duration : 600, step = 60 / S.bpm, out = [];
-  for (let b = S.gridOff; b < dur; b += step) out.push(b);
-  return out;
-}
-function reelBeats() { const s = P.song.start; return songBeats().map((b) => b - s).filter((b) => b >= -0.001 && b <= total() + 0.001); }
-function isBar(k) { const m = P.song.meter || 4; return ((k - P.song.barOff) % m + m) % m === 0; }
-// il brano utile, senza i silenzi
-const songIn = () => P.song.trimIn || 0;
-const songOut = () => (song.buffer ? Math.min(song.buffer.duration, P.song.trimOut || song.buffer.duration) : 600);
-// il reel deve stare dentro il brano utile
-function clampStart() { P.song.start = Math.max(songIn(), Math.min(Math.max(songIn(), songOut() - total()), P.song.start)); }
-function snapTime(t) {
-  const mode = P.song.snap;
-  if (mode === 'none' || !song.buffer) return t;
-  const all = songBeats(), s = P.song.start;
-  let best = t, bd = Infinity;
-  all.forEach((b, k) => { if (mode === 'bar' && !isBar(k)) return; const d = Math.abs(b - s - t); if (d < bd) { bd = d; best = b - s; } });
-  return best;
-}
-
-// quanto del suo intervallo di mesi ha percorso la clip (0…1)
-function progressIn(c, t0, lt) {
-  const active = Math.max(0.05, c.dur - c.hold);
-  if (lt >= active) return 1;
-  if (c.sync === 'linear' || !song.buffer) return lt / active;
-  // tra un battito e l'altro lo stesso numero di mesi: segue anche un tempo che oscilla
-  const bs = reelBeats().filter((b) => b > t0 + 0.04 && b < t0 + active - 0.04).map((b) => b - t0);
-  const g = [0, ...bs, active];
-  let k = 0;
-  while (k < g.length - 2 && g[k + 1] <= lt) k++;
-  return (k + (lt - g[k]) / (g[k + 1] - g[k])) / (g.length - 1);
-}
-
-const smooth = (x) => x * x * (3 - 2 * x);
-function camAt(c, lt) {
-  const e = smooth(Math.min(1, lt / Math.max(0.01, c.dur)));
-  const d = ((c.cam1.lon - c.cam0.lon + 540) % 360) - 180;
-  return { lon: c.cam0.lon + d * e + c.spin * lt, lat: c.cam0.lat + (c.cam1.lat - c.cam0.lat) * e, dist: c.cam0.dist + (c.cam1.dist - c.cam0.dist) * e };
-}
-
-// nero: all'inizio e alla fine del reel, e attorno agli stacchi fra le clip
-function blackAt(t) {
-  const T = total();
-  let a = 0;
-  if (P.song.fadeIn > 0) a = Math.max(a, 1 - t / P.song.fadeIn);
-  if (P.song.fadeOut > 0) a = Math.max(a, 1 - (T - t) / P.song.fadeOut);
-  for (let i = 1; i < P.clips.length; i++) {
-    const f = P.clips[i].fade;
-    if (!(f > 0)) continue;
-    const d = Math.abs(t - clipStart(i));
-    if (d < f / 2) a = Math.max(a, 1 - d / (f / 2));
-  }
-  return Math.max(0, Math.min(1, a));
-}
-
-// ── atlante nell'iframe ────────────────────────────────────────────────────
-const frame = $('#atlas');
-let oe = null, clock = null, frames = [], views = {}, viewKey = '', legendCache = {};
-
-function installClock(w) {
-  // performance.now e requestAnimationFrame dell'atlante: il tempo lo decide l'editor
-  const q = [];
-  let vt = w.performance.now();
-  w.requestAnimationFrame = (cb) => { q.push(cb); return q.length; };
-  w.cancelAnimationFrame = () => {};
-  w.performance.now = () => vt;
-  return { step(ms) { vt += ms; const cbs = q.splice(0); for (const cb of cbs) cb(vt); } };
-}
-
-const until = (ok, ms = 60000, every = 30) => new Promise((res, rej) => {
-  const t0 = performance.now();
-  (function poll() {
-    let v = false;
-    try { v = ok(); } catch (e) { /* non ancora */ }
-    if (v) return res(v);
-    if (performance.now() - t0 > ms) return rej(new Error('timeout'));
-    setTimeout(poll, every);
-  })();
-});
-
-async function bootAtlas() {
-  $('#boot').hidden = false;
-  $('#boot').textContent = U[UI_LANG].loading || 'Carico l’atlante…';
-  oe = null; viewKey = ''; legendCache = {};
-  const dpr = Math.min(window.devicePixelRatio || 1, 2);
-  frame.style.width = `${W / dpr}px`;
-  frame.style.height = `${H / dpr}px`;
-  const loaded = new Promise((r) => { frame.onload = r; });
-  frame.src = `../index.html?reel&lang=${encodeURIComponent(P.lang)}`;
-  await loaded;
-  const w = frame.contentWindow;
-  try {
-    await until(() => w.__oe && w.__oe.timeline && w.__oe.ready, 90000);
-  } catch (e) {
-    $('#boot').textContent = MSG.atlas_fail; $('#boot').classList.add('error');
-    return;
-  }
-  oe = w.__oe;
-  clock = installClock(w);
-  oe.timeline.setTier('monthly', false);
-  frames = oe.timeline.frames;
-  const st = oe.globe.state;
-  st.particleCount = 22000; st.particleWidth = 1.9; st.coast = true; st.hotspot = false;
-  oe.globe.resetParticles?.();
-  // le viste che hanno dati, con i nomi dell'atlante nella lingua scelta
-  views = {};
-  const doc = frame.contentDocument;
-  for (const v of VIEWS) {
-    const b = doc.querySelector(`.quick-mode button[data-mode=${v}]`);
-    if (!b || b.hidden) continue;
-    const idx = frames.map((f, i) => (NEEDS[v].every((k) => f[k] != null) ? i : -1)).filter((i) => i >= 0);
-    if (!idx.length) continue;
-    views[v] = { name: b.querySelector('.l')?.textContent.trim() || v, first: idx[0], last: idx[idx.length - 1] };
-  }
-  await document.fonts.load('700 40px "IBM Plex Mono"').catch(() => {});
-  await document.fonts.load('900 40px Archivo').catch(() => {});
-  $('#boot').hidden = true;
-  $('#play').disabled = false;
-  $('#export').disabled = false;
-  fillForms();
-  need = true;
-}
-
-// vista, variante e scie della clip; legenda e didascalia lette dall'atlante
-function ensureView(c) {
-  const key = `${c.view}/${c.variant}/${c.particles}`;
-  if (key === viewKey) return;
-  viewKey = key;
-  oe.setMode(c.view);
-  const doc = frame.contentDocument;
-  const cap = doc.querySelector('#legend .lg-cap');
-  let caption = cap ? (cap.querySelector('span')?.textContent || '').trim() : '';
-  const vc = VCAP[`${c.view}/${c.variant}`];
-  if (vc) caption = vc[P.lang] || vc.en;
-  caption = caption.charAt(0).toUpperCase() + caption.slice(1);
-  if (c.view === 'co2') oe.setAir(+c.variant, null);
-  if (c.view === 'emis') oe.setAir(null, +c.variant);
-  oe.globe.state.particles = !!c.particles;
-  oe.globe.state.arrows = false;
-  if (!legendCache[key]) {
-    const rows = LEGEND[c.view].map((k) => legendRow(doc, k)).filter(Boolean);
-    legendCache[key] = { rows, caption };
-  }
-}
-
-function legendRow(doc, k) {
-  const el = doc.querySelector(`#legend .mx[data-layer=${k}]`);
-  if (!el) return null;
-  const bar = el.querySelector('.mx-scale .lg-bar');
-  if (!bar) return null;
-  const stops = gradientStops(bar.style.background || '');
-  if (stops.length < 2) return null;
-  let title = el.querySelector('.lg-t')?.textContent.trim() || '';
-  const opt = el.querySelector('.mx-var select option:checked')?.textContent.trim();
-  const unit = el.querySelector('.mx-var .muted')?.textContent.trim();
-  if (opt && k !== 'co2' && !title.includes(opt)) title += ` · ${opt}`;
-  if (unit && !title.includes(unit)) title += ` (${unit})`;
-  const ticks = [...el.querySelectorAll('.mx-scale .lg-ticks span')].map((s) => ({ text: s.textContent.trim(), at: s.style.left.endsWith('%') ? parseFloat(s.style.left) / 100 : 0 }));
-  const ends = [...el.querySelectorAll('.mx-scale .lg-ends span')].map((s) => s.textContent.trim());
-  return { title, stops, ticks, ends };
-}
-
-// "linear-gradient(90deg, rgb(..) 0%, rgba(..), #abc 15%)" → [[0, colore], …];
-// le posizioni mancanti si distribuiscono fra quelle note, come fa il CSS
-function gradientStops(css) {
-  const i = css.indexOf('(');
-  if (i < 0) return [];
-  const body = css.slice(i + 1, css.lastIndexOf(')'));
-  const parts = [];
-  let depth = 0, cur = '';
-  for (const ch of body) {
-    if (ch === '(') depth++;
-    if (ch === ')') depth--;
-    if (ch === ',' && depth === 0) { parts.push(cur.trim()); cur = ''; } else cur += ch;
-  }
-  parts.push(cur.trim());
-  const st = parts.filter((p) => !/^(-?[\d.]+deg|to\s)/.test(p)).map((p) => {
-    const m = p.match(/^(.*?)(?:\s+(-?[\d.]+)%)?$/);
-    return [m[2] != null ? +m[2] / 100 : null, m[1].trim()];
-  });
-  if (!st.length) return [];
-  if (st[0][0] == null) st[0][0] = 0;
-  if (st[st.length - 1][0] == null) st[st.length - 1][0] = 1;
-  for (let a = 0; a < st.length; a++) {
-    if (st[a][0] != null) continue;
-    let b = a; while (st[b][0] == null) b++;
-    for (let k = a; k < b; k++) st[k][0] = st[a - 1][0] + ((st[b][0] - st[a - 1][0]) * (k - a + 1)) / (b - a + 1);
-    a = b;
-  }
-  return st;
-}
-
-function frameIndex(stamp, fallback) {
-  const i = frames.findIndex((f) => f.t === stamp);
-  return i >= 0 ? i : fallback;
-}
-function clipRange(c) {
-  const v = views[c.view];
-  const lo = v ? v.first : 0, hi = v ? v.last : frames.length - 1;
-  const a = Math.max(lo, Math.min(hi, frameIndex(c.from, lo))), b = Math.max(lo, Math.min(hi, frameIndex(c.to, hi)));
-  return [a, b];
-}
-
-// porta l'atlante all'istante t del reel
-function applyAt(t, withCam = true) {
-  const info = clipAt(t);
-  const { c, t0, lt } = info;
-  ensureView(c);
-  const [a, b] = clipRange(c);
-  info.p = progressIn(c, t0, lt);
-  info.pos = a + (b - a) * info.p;
-  info.range = [a, b];
-  if (Math.abs(oe.timeline.pos - info.pos) > 1e-7) oe.timeline.seek(info.pos);
-  if (withCam) Object.assign(oe.camera, camAt(c, lt));
-  return info;
-}
-
-// ── disegno del fotogramma ─────────────────────────────────────────────────
-const out = $('#out');
-const ctx = out.getContext('2d');
-
-function fmtTime(s) { const m = Math.floor(s / 60); return `${m}:${(s - m * 60).toFixed(1).padStart(4, '0')}`; }
-function monthName(stamp) {
-  return new Date(Date.UTC(+stamp.slice(0, 4), +stamp.slice(5, 7) - 1, 1)).toLocaleDateString(LOCALE[P.lang] || 'en-GB', { month: 'long', timeZone: 'UTC' });
-}
-
-function wrap(g, text, maxW) {
-  const words = text.split(/\s+/), lines = [];
-  let line = '';
-  // il cinese non ha spazi: si va a capo carattere per carattere
-  const units = P.lang === 'zh' ? [...text] : words;
-  const sep = P.lang === 'zh' ? '' : ' ';
-  for (const w of units) {
-    const tryL = line ? line + sep + w : w;
-    if (g.measureText(tryL).width > maxW && line) { lines.push(line); line = w; } else line = tryL;
-  }
-  if (line) lines.push(line);
-  return lines;
-}
-
-function credits(c) {
-  const ids = [...SRC[c.view]];
-  if (c.particles && !ids.includes('m:Copernicus-GlobCurrent')) ids.push('m:Copernicus-GlobCurrent');
-  const by = {};
-  for (const id of ids) { const [s, n] = id.split(':'); (by[s] = by[s] || []).push(n); }
-  return `${DATA_WORD[P.lang] || 'Data'}: ` + Object.entries(by).map(([s, n]) => `${SERVICE[s]} (${n.join(', ')})`).join(' · ');
-}
-
-function compose(info, t) {
-  const g = ctx;
-  const gc = frame.contentDocument.querySelector('#globe');
-  g.setTransform(1, 0, 0, 1, 0, 0);
-  g.globalAlpha = 1;
-  g.fillStyle = '#000';
-  g.fillRect(0, 0, W, H);
-  const dy = Math.round(P.globeY);
-  if (gc && gc.width) {
-    g.drawImage(gc, 0, 0, gc.width, gc.height, 0, dy, W, H);
-    // sopra il globo abbassato: il colore dello spazio, poi una sfumatura che
-    // nasconde il bordo del disegno del globo
-    if (dy > 0) {
-      const sp = spaceColor(gc);
-      g.fillStyle = sp; g.fillRect(0, 0, W, dy);
-      const fade = g.createLinearGradient(0, dy, 0, dy + 160);
-      fade.addColorStop(0, sp); fade.addColorStop(1, sp.replace('rgb(', 'rgba(').replace(')', ',0)'));
-      g.fillStyle = fade; g.fillRect(0, dy, W, 160);
-    }
-  }
-  const { c, i } = info;
-  const L = legendCache[viewKey] || { rows: [], caption: '' };
-  // velature in alto e in basso: i testi restano leggibili sopra il globo
-  let gr = g.createLinearGradient(0, 0, 0, 760);
-  gr.addColorStop(0, 'rgba(0,0,0,.62)'); gr.addColorStop(1, 'rgba(0,0,0,0)');
-  g.fillStyle = gr; g.fillRect(0, 0, W, 760);
-  gr = g.createLinearGradient(0, H - 700, 0, H);
-  gr.addColorStop(0, 'rgba(0,0,0,0)'); gr.addColorStop(1, 'rgba(0,0,0,.7)');
-  g.fillStyle = gr; g.fillRect(0, H - 700, W, 700);
-  g.textAlign = 'center';
-  g.textBaseline = 'alphabetic';
-  let y = 268;
-  if (P.overlay.caption) {
-    g.fillStyle = '#e8f0f4';
-    g.font = '900 40px Archivo';
-    g.letterSpacing = '7px';
-    g.fillText(P.title.toUpperCase(), W / 2, y);
-    g.letterSpacing = '0px';
-    y += 50;
-    const cap = c.caption.trim() || L.caption;
-    g.font = '500 28px Archivo';
-    g.fillStyle = '#c3d2da';
-    for (const line of wrap(g, cap, 840).slice(0, 3)) { g.fillText(line, W / 2, y); y += 37; }
-  }
-  if (P.overlay.date) {
-    const f = frames[Math.round(info.pos)];
-    y += 118;
-    g.fillStyle = '#ffffff';
-    g.font = '700 132px "IBM Plex Mono"';
-    g.fillText(f.t.slice(0, 4), W / 2, y);
-    y += 46;
-    g.font = '500 32px Archivo';
-    g.fillStyle = '#c3d2da';
-    g.fillText(monthName(f.t), W / 2, y);
-    // dove siamo nell'intervallo della clip
-    y += 30;
-    const bw = 420, bx = (W - bw) / 2;
-    g.fillStyle = 'rgba(255,255,255,.2)'; g.fillRect(bx, y, bw, 4);
-    g.fillStyle = '#e8f0f4'; g.fillRect(bx, y, bw * info.p, 4);
-    g.font = '500 19px "IBM Plex Mono"'; g.fillStyle = '#9fb3bd';
-    g.textAlign = 'left'; g.fillText(frames[info.range[0]].t.slice(0, 4), bx, y + 26);
-    g.textAlign = 'right'; g.fillText(frames[info.range[1]].t.slice(0, 4), bx + bw, y + 26);
-    g.textAlign = 'center';
-  }
-  // legenda e fonti sopra la zona che Instagram copre in basso, su un fondo
-  // scuro: devono leggersi anche sopra un globo chiaro
-  const blocks = [];
-  if (P.overlay.legend) for (const r of L.rows) blocks.push({ h: r.ends.length ? 122 : 98, draw: (top) => drawLegendRow(g, r, top) });
-  if (P.overlay.credits) {
-    g.font = '500 19px Archivo';
-    const lines = [...wrap(g, credits(c), 820), 'co2-info.duckdns.org/atlante'];
-    blocks.push({ h: lines.length * 26 + 10, draw: (top) => { g.font = '500 19px Archivo'; g.fillStyle = '#93a8b2'; lines.forEach((l, k) => g.fillText(l, W / 2, top + 26 + k * 26)); } });
-  }
-  if (blocks.length) {
-    // ridotta o ingrandita attorno al suo bordo basso, che resta sopra la zona di Instagram
-    const k = (P.legendScale || 100) / 100, base = H - 430;
-    g.save();
-    g.translate(W / 2, base); g.scale(k, k); g.translate(-W / 2, -base);
-    const hTot = blocks.reduce((s, b) => s + b.h, 0) + 24;
-    let top = base - hTot;
-    g.fillStyle = 'rgba(4,10,16,.62)';
-    roundRect(g, 90, top, W - 180, hTot, 18); g.fill();
-    top += 14;
-    for (const b of blocks) { b.draw(top); top += b.h; }
-    g.restore();
-  }
-  const a = blackAt(t);
-  if (a > 0) { g.globalAlpha = a; g.fillStyle = '#000'; g.fillRect(0, 0, W, H); g.globalAlpha = 1; }
-}
-function drawLegendRow(g, r, top) {
-  const lw = 680, lx = (W - lw) / 2;
-  g.textAlign = 'center';
-  g.font = '600 24px Archivo'; g.fillStyle = '#e1eaef';
-  g.fillText(wrap(g, r.title, lw + 140)[0], W / 2, top + 28);
-  const lg = g.createLinearGradient(lx, 0, lx + lw, 0);
-  for (const [o, col] of r.stops) lg.addColorStop(Math.min(1, Math.max(0, o)), col);
-  g.fillStyle = lg;
-  roundRect(g, lx, top + 42, lw, 16, 6); g.fill();
-  g.font = '500 20px "IBM Plex Mono"'; g.fillStyle = '#b9c9d2';
-  // nel video bastano estremi e centro (o le tacche speciali, come il 15% del ghiaccio)
-  const tk = r.ticks.length > 3 ? r.ticks.filter((s) => [0, 0.5, 1].some((a) => Math.abs(s.at - a) < 0.01)) : r.ticks;
-  for (const s of tk) {
-    g.textAlign = s.at < 0.02 ? 'left' : s.at > 0.98 ? 'right' : 'center';
-    g.fillText(s.text, lx + lw * s.at, top + 84);
-  }
-  if (r.ends.length === 2) {
-    g.font = 'italic 500 19px Archivo'; g.fillStyle = '#93a8b2';
-    g.textAlign = 'left'; g.fillText(r.ends[0], lx, top + 110);
-    g.textAlign = 'right'; g.fillText(r.ends[1], lx + lw, top + 110);
-  }
-  g.textAlign = 'center';
-}
-// il colore dello spazio: il pixel piu' scuro della prima riga del globo
-const probe = document.createElement('canvas');
-probe.width = 64; probe.height = 1;
-function spaceColor(gc) {
-  const p = probe.getContext('2d', { willReadFrequently: true });
-  p.drawImage(gc, 0, 0, gc.width, 1, 0, 0, 64, 1);
-  const d = p.getImageData(0, 0, 64, 1).data;
-  let best = 0, bl = Infinity;
-  for (let i = 0; i < 64; i++) { const l = d[i * 4] + d[i * 4 + 1] + d[i * 4 + 2]; if (l < bl) { bl = l; best = i; } }
-  return `rgb(${d[best * 4]},${d[best * 4 + 1]},${d[best * 4 + 2]})`;
-}
-function roundRect(g, x, y, w, h, r) {
-  g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath();
-}
-
-// ── anteprima ──────────────────────────────────────────────────────────────
-let tNow = 0, playing = false, need = true, camNeed = true, exporting = false;
-let actx = null, src = null, playT0 = 0, playWall = 0;
-
-function audioCtx() { if (!actx) actx = new AudioContext(); return actx; }
-function play() {
-  if (!oe || exporting) return;
-  if (tNow >= total() - 0.05) tNow = 0;
-  playing = true;
-  oe.preview(true);
-  $('#play').textContent = '❚❚';
-  if (song.buffer) {
-    const a = audioCtx();
-    a.resume();
-    const gain = a.createGain();
-    src = a.createBufferSource();
-    src.buffer = song.buffer;
-    src.connect(gain).connect(a.destination);
-    envelope(gain.gain, a.currentTime, tNow);
-    src.start(0, P.song.start + tNow, total() - tNow);
-    playT0 = a.currentTime - tNow;
-  } else playWall = performance.now() / 1000 - tNow;
-}
-function pause() {
-  playing = false;
-  if (src) { try { src.stop(); } catch (e) { /* gia' fermo */ } src = null; }
-  if (oe) oe.preview(false);
-  $('#play').textContent = '▶';
-  need = true;
-}
-function playTime() { return song.buffer && actx ? actx.currentTime - playT0 : performance.now() / 1000 - playWall; }
-// volume con le dissolvenze, a partire dall'istante t0 del reel
-function envelope(p, at, t0) {
-  const T = total(), fi = P.song.fadeIn, fo = P.song.fadeOut;
-  const v = (t) => Math.min(fi > 0 ? Math.min(1, t / fi) : 1, fo > 0 ? Math.min(1, (T - t) / fo) : 1);
-  p.setValueAtTime(Math.max(0, v(t0)), at);
-  if (fi > 0 && t0 < fi) p.linearRampToValueAtTime(1, at + fi - t0);
-  if (fo > 0) { const s = Math.max(t0, T - fo); p.setValueAtTime(Math.max(0, v(s)), at + s - t0); p.linearRampToValueAtTime(0, at + T - t0); }
-}
-
-let lastNow = performance.now(), lastInfo = null;
-function tick(now) {
-  const dt = Math.min(100, now - lastNow);
-  lastNow = now;
-  if (oe && !exporting) {
-    if (playing) {
-      tNow = playTime();
-      if (tNow >= total()) { tNow = total(); pause(); }
-      lastInfo = applyAt(tNow);
-      // i prossimi due secondi: scaricati in anticipo
-      for (let k = 1; k <= 8; k++) { const f = applyPeek(tNow + k * 0.25); if (f != null) { oe.want(Math.floor(f)); oe.want(Math.floor(f) + 1); } }
-    } else if (need || !lastInfo) {
-      lastInfo = applyAt(tNow, camNeed);
-      need = false; camNeed = false;
-    }
-    clock.step(dt);
-    compose(lastInfo, tNow);
-    drawTimeline();
-    $('#clock').textContent = `${fmtTime(tNow)} / ${fmtTime(total())}`;
-  }
-  requestAnimationFrame(tick);
-}
-// posizione nei dati all'istante t, senza toccare l'atlante
-function applyPeek(t) {
-  if (t > total()) return null;
-  const { c, t0, lt } = clipAt(t);
-  if (`${c.view}/${c.variant}/${c.particles}` !== viewKey) return null;
-  const [a, b] = clipRange(c);
-  return a + (b - a) * progressIn(c, t0, lt);
-}
-function seek(t) { tNow = Math.max(0, Math.min(total(), t)); need = true; camNeed = true; if (playing) { pause(); play(); } }
-
-// trascinare l'anteprima gira il globo (a pausa), la rotella avvicina
-{
-  let drag = null;
-  out.addEventListener('pointerdown', (e) => { if (!oe || playing) return; drag = { x: e.clientX, y: e.clientY }; out.setPointerCapture(e.pointerId); });
-  out.addEventListener('pointermove', (e) => {
-    if (!drag) return;
-    const k = (oe.camera.dist - 1) * 40 / out.clientHeight;
-    oe.camera.lon -= (e.clientX - drag.x) * k * 1.8;
-    oe.camera.lat = Math.max(-85, Math.min(85, oe.camera.lat + (e.clientY - drag.y) * k * 1.8));
-    drag = { x: e.clientX, y: e.clientY };
-    showCams();
-  });
-  out.addEventListener('pointerup', () => { drag = null; });
-  out.addEventListener('wheel', (e) => {
-    if (!oe || playing) return;
-    e.preventDefault();
-    oe.camera.dist = Math.max(1.3, Math.min(6, oe.camera.dist * Math.exp(e.deltaY * 0.0012)));
-    showCams();
-  }, { passive: false });
-}
-
-// ── brano ──────────────────────────────────────────────────────────────────
-// analisi nel worker (qualche secondo per un brano intero); se il browser non
-// la permette, nella pagina
 function analyzeSong(buf) {
   const channels = [...Array(buf.numberOfChannels)].map((_, c) => buf.getChannelData(c).slice());
   return new Promise((res) => {
     let w;
     try { w = new Worker(new URL('./beats-worker.js', import.meta.url), { type: 'module' }); } catch (e) { w = null; }
-    const local = () => {
-      const r = analyze(buf), m4 = downbeats(r.beats, r.low, r.env, r.fr, 4, r.chroma);
-      res({ bpm: r.bpm, beats: r.beats, meter: 4, barOff: m4.phase, trim: silence(buf) });
-    };
+    const local = () => { const r = analyze(buf), m4 = downbeats(r.beats, r.low, r.env, r.fr, 4, r.chroma); res({ bpm: r.bpm, beats: r.beats, meter: 4, barOff: m4.phase, trim: silence(buf) }); };
     if (!w) return local();
     w.onmessage = (e) => { res(e.data); w.terminate(); };
     w.onerror = () => { w.terminate(); local(); };
@@ -659,110 +137,367 @@ function analyzeSong(buf) {
   });
 }
 
-async function setSong(name, bytes, keepStart = false) {
-  const a = audioCtx();
-  const buf = await a.decodeAudioData(bytes.slice(0));
-  song.buffer = buf;
-  song.name = name;
-  $('#song-name').textContent = `${name} · ${fmtTime(buf.duration)}`;
-  // forma d'onda: massimo per colonna, 4000 colonne
-  const n = 4000, d0 = buf.getChannelData(0), d1 = buf.numberOfChannels > 1 ? buf.getChannelData(1) : d0, per = Math.floor(buf.length / n);
-  const peaks = new Float32Array(n);
-  for (let i = 0; i < n; i++) { let m = 0; for (let k = i * per; k < (i + 1) * per; k += 4) m = Math.max(m, Math.abs(d0[k]), Math.abs(d1[k])); peaks[i] = m; }
-  song.peaks = peaks;
-  const S = P.song;
-  // gia' analizzato (stesso brano nel progetto): si riusano i battiti salvati
-  if (keepStart && S.det && S.det.name === name && S.det.beats?.length) {
-    song.detected = S.det.beats;
-    song.trimAuto = S.det.trim || { start: 0, end: buf.duration };
+let songMsg = '';
+async function loadSong(name, bytes, fromProject = false) {
+  const buf = await audioCtx().decodeAudioData(bytes.slice(0));
+  const sg = S.song;
+  sg.buffer = buf; sg.name = name;
+  const n = 6000, d0 = buf.getChannelData(0), d1 = buf.numberOfChannels > 1 ? buf.getChannelData(1) : d0, per = Math.max(1, Math.floor(buf.length / n));
+  sg.peaks = new Float32Array(n);
+  for (let i = 0; i < n; i++) { let m = 0; for (let k = i * per; k < (i + 1) * per && k < buf.length; k += 3) m = Math.max(m, Math.abs(d0[k]), Math.abs(d1[k])); sg.peaks[i] = m; }
+  const Au = S.P.audio;
+  if (fromProject && Au?.det?.name === name && Au.det.beats?.length) {
+    sg.detected = Au.det.beats; sg.trimAuto = Au.det.trim || { start: 0, end: buf.duration };
   } else {
+    if (!fromProject) remember();
+    const keep = S.P.audio;
+    S.P.audio = { ...newAudio(name, buf.duration), offset: keep ? keep.offset : 0, gain: keep ? keep.gain : 1, fadeOut: keep ? keep.fadeOut : 2.5 };
+    S.sel = { kind: 'a' };
+    sg.detected = [];
     const t0 = performance.now();
-    const tick = setInterval(() => { $('#beat-info').textContent = MSG.analyzing_n(`${Math.round((performance.now() - t0) / 1000)} s`); }, 500);
-    $('#beat-info').textContent = MSG.analyzing;
+    const tick = setInterval(() => { songMsg = t('analyzing', `${Math.round((performance.now() - t0) / 1000)} s`); renderInspector(); }, 1000);
+    songMsg = t('analyzing', ''); changed();
     const r = await analyzeSong(buf);
     clearInterval(tick);
-    song.detected = r.beats.map((b) => +b.toFixed(4));
-    song.trimAuto = r.trim;
-    S.det = { name, beats: song.detected, trim: r.trim };
-    S.name = name; S.mode = 'detected';
-    S.bpm = +r.bpm.toFixed(2); S.meter = r.meter; S.barOff = r.barOff;
-    S.gridOff = +(r.beats[0] || 0).toFixed(3);
-    S.trimIn = +r.trim.start.toFixed(2); S.trimOut = +r.trim.end.toFixed(2);
-    // il reel parte dalla prima battuta dopo il silenzio iniziale
-    const first = song.detected.find((b, k) => isBar(k) && b >= S.trimIn - 0.01);
-    S.start = first ?? S.trimIn;
+    songMsg = '';
+    sg.detected = r.beats.map((b) => +b.toFixed(4)); sg.trimAuto = r.trim;
+    const A2 = S.P.audio;
+    Object.assign(A2, { det: { name, beats: sg.detected, trim: r.trim }, mode: 'detected', bpm: +r.bpm.toFixed(2), meter: r.meter, barOff: r.barOff, gridOff: +(r.beats[0] || 0).toFixed(3) });
+    // il brano parte dalla prima battuta dopo il silenzio e finisce con la sua coda
+    const first = sg.detected.find((b, k) => isBarIdx(k) && b >= r.trim.start - 0.01);
+    A2.in = first ?? r.trim.start; A2.out = r.trim.end;
   }
-  S.name = name;
-  clampStart();
-  fillSong();
-  need = true;
-  saveLocal();
+  changed();
 }
-
-function fillSong() {
-  const S = P.song;
-  $('#bpm').value = S.bpm; $('#beat-mode').value = S.mode; $('#grid-off').value = S.gridOff;
-  $('#meter').value = String(S.meter || 4);
-  $('#bar-off').innerHTML = [...Array(S.meter || 4)].map((_, k) => `<option value="${k}">${k + 1}</option>`).join('');
-  $('#bar-off').value = String(((S.barOff % (S.meter || 4)) + (S.meter || 4)) % (S.meter || 4));
-  $('#trim-in').value = +(S.trimIn || 0).toFixed(2); $('#trim-out').value = +songOut().toFixed(2);
-  $('#song-start').value = +S.start.toFixed(2); $('#snap').value = S.snap; $('#fade-in').value = S.fadeIn; $('#fade-out').value = S.fadeOut;
-  $('#beat-info').textContent = !song.buffer ? '' : S.mode === 'detected' && song.detected.length ? MSG.bpm_det(S.bpm.toFixed(1), song.detected.length, S.meter || 4) : MSG.bpm_grid(S.bpm.toFixed(2));
-}
-
-$('#song-file').addEventListener('change', async (e) => {
-  const f = e.target.files[0];
-  if (!f) return;
+async function importFile(f) {
   const bytes = await f.arrayBuffer();
-  await setSong(f.name, bytes);
+  await loadSong(f.name, bytes);
   storeSong(f.name, bytes);
+}
+$('#song-file').addEventListener('change', (e) => { const f = e.target.files[0]; if (f) importFile(f); e.target.value = ''; });
+
+// ── libreria ───────────────────────────────────────────────────────────────
+function renderLibrary() {
+  const box = $('#lib-views');
+  const fmt = (i) => A.frames[i].t.slice(0, 4);
+  box.innerHTML = ['sea', 'land', 'air'].map((d) => {
+    const vs = VIEWS.filter((v) => DOMAIN[v] === d && A.views[v]);
+    if (!vs.length) return '';
+    return `<div class="lib-group">${t(d)}</div>` + vs.map((v) => `<button type="button" class="tile" draggable="true" data-view="${v}" title="${esc(A.views[v].title)}">
+      <i style="background:${viewGradient(v)}"></i><span>${esc(A.views[v].name)}<small>${fmt(A.views[v].first)}–${fmt(A.views[v].last)}</small></span></button>`).join('');
+  }).join('');
+  box.querySelectorAll('.tile').forEach((el) => {
+    el.addEventListener('dragstart', (e) => { e.dataTransfer.setData('text/x-oe-view', el.dataset.view); e.dataTransfer.effectAllowed = 'copy'; });
+    el.addEventListener('click', () => addView(el.dataset.view, S.sel?.kind === 'v' ? S.sel.i + 1 : S.P.video.length));
+  });
+}
+
+// durata di una battuta al tempo del brano (null senza brano)
+function barLength() { const Au = S.P.audio; return Au ? ((Au.meter || 4) * 60) / Au.bpm : null; }
+
+// una vista nuova sulla traccia V1: tutto l'intervallo di dati, 4 battute
+// (o 8 secondi senza brano), l'inquadratura di adesso
+function addView(v, idx) {
+  const vw = A.views[v];
+  if (!vw) return;
+  remember();
+  const bar = barLength();
+  const cam = A.oe ? { lon: wrapLon(A.oe.camera.lon), lat: A.oe.camera.lat, dist: A.oe.camera.dist } : { lon: 10, lat: 35, dist: 3.3 };
+  const c = newClip({ view: v, from: A.frames[vw.first].t, to: A.frames[vw.last].t, particles: SEA_PARTICLES.includes(v), dur: bar ? bar * 4 : 8, cam0: { ...cam }, cam1: { ...cam } });
+  S.P.video.splice(idx, 0, c);
+  S.sel = { kind: 'v', i: idx };
+  S.t = clipStart(idx) + 0.01;
+  changed();
+  scrollToT(S.t);
+}
+
+// ── proprieta' ─────────────────────────────────────────────────────────────
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const num = (f, v, step, min, max) => `<input type="number" data-f="${f}" value="${+(+v).toFixed(3)}" step="${step}"${min != null ? ` min="${min}"` : ''}${max != null ? ` max="${max}"` : ''}>`;
+const sel = (f, v, opts) => `<select data-f="${f}">${opts.map(([k, l]) => `<option value="${k}"${String(k) === String(v) ? ' selected' : ''}>${esc(l)}</option>`).join('')}</select>`;
+const chk = (f, v, l) => `<label class="chk"><input type="checkbox" data-f="${f}"${v ? ' checked' : ''}> ${l}</label>`;
+const fmtCam = (k) => `${k.lon.toFixed(1)}°, ${k.lat.toFixed(1)}°, ×${k.dist.toFixed(2)}`;
+function months(lo, hi) {
+  const f = new Intl.DateTimeFormat(LOCALE[UI] || 'it-IT', { month: 'short', year: 'numeric', timeZone: 'UTC' });
+  const out = [];
+  for (let i = lo; i <= hi; i++) { const s = A.frames[i].t; out.push([s, f.format(new Date(Date.UTC(+s.slice(0, 4), +s.slice(5, 7) - 1, 1)))]); }
+  return out;
+}
+const selKey = () => (S.sel ? `${S.sel.kind}${S.sel.i ?? ''}` : 'p');
+function readField(f) {
+  const [o, k] = f.split('.');
+  if (o === 'a' && k === 'gainPct') return S.P.audio ? Math.round(S.P.audio.gain * 100) : null;
+  const obj = o === 'v' ? S.P.video[S.sel?.i] : o === 'a' ? S.P.audio : o === 'p' ? S.P : null;
+  return obj ? obj[k] : null;
+}
+
+function renderInspector(soft = false) {
+  const box = $('#insp');
+  // durante un trascinamento si aggiornano solo i numeri, senza rifare il pannello
+  if (soft && box.dataset.for === selKey()) {
+    box.querySelectorAll('input[type=number][data-f]').forEach((el) => {
+      if (el === document.activeElement) return;
+      const v = readField(el.dataset.f);
+      if (v != null && Number.isFinite(+v)) el.value = +(+v).toFixed(3);
+    });
+    return;
+  }
+  // non si rifa' il pannello mentre si scrive in un campo di testo
+  if (box.contains(document.activeElement) && document.activeElement.matches('input[type=text], textarea') && box.dataset.for === selKey()) return;
+  box.dataset.for = selKey();
+  const P = S.P;
+  if (S.sel?.kind === 'v' && P.video[S.sel.i] && A.oe) box.innerHTML = clipPanel(P.video[S.sel.i], S.sel.i);
+  else if (S.sel?.kind === 'a' && P.audio) box.innerHTML = audioPanel(P.audio);
+  else box.innerHTML = projectPanel();
+}
+
+function projectPanel() {
+  const P = S.P;
+  return `<h3>${t('project')}</h3>
+  <section><h4>${t('texts')}</h4><div class="f">
+    <label class="w">${t('title')}<input type="text" data-f="p.title" value="${esc(P.title)}"></label>
+    <label>${t('lang')}${sel('p.lang', P.lang, [['it', 'Italiano'], ['en', 'English'], ['es', 'Español'], ['fr', 'Français'], ['zh', '中文']])}</label><span></span>
+    ${chk('o.date', P.overlay.date, t('o_date'))}${chk('o.legend', P.overlay.legend, t('o_legend'))}${chk('o.caption', P.overlay.caption, t('o_caption'))}${chk('o.credits', P.overlay.credits, t('o_credits'))}
+  </div></section>
+  <section><h4>${t('format')}</h4><div class="f">
+    <label>${t('fps')}${sel('p.fps', P.fps, [[30, '30'], [60, '60']])}</label>
+    <label>${t('rate')}${num('p.rate', P.rate, 1, 4, 40)}</label>
+    <label>${t('globe_y')}${num('p.globeY', P.globeY, 10, 0, 700)}</label>
+    <label>${t('legend_size')}${num('p.legendScale', P.legendScale || 100, 5, 40, 130)}</label>
+    <label>${t('black_in')}${num('p.fadeIn', P.fadeIn, 0.1, 0, 10)}</label>
+    <label>${t('black_out')}${num('p.fadeOut', P.fadeOut, 0.1, 0, 10)}</label>
+  </div></section>
+  <p class="note">${t('proj_note', P.video.length, total().toFixed(1))}</p>`;
+}
+
+function clipPanel(c, i) {
+  const v = A.views[c.view];
+  const vr = VARIANTS[c.view];
+  const ms = v ? months(v.first, v.last) : [];
+  const bar = barLength();
+  return `<h3><i style="background:${viewGradient(c.view)}"></i>${esc(v?.name || c.view)} <span class="muted small">#${i + 1}</span></h3>
+  <section><h4>${t('content')}</h4><div class="f">
+    <label class="w">${t('view')}${sel('v.view', c.view, VIEWS.filter((k) => A.views[k]).map((k) => [k, A.views[k].name]))}</label>
+    ${vr ? `<label class="w">${t('variant')}${sel('v.variant', c.variant, vr)}</label>` : ''}
+    <label>${t('from')}${sel('v.from', c.from, ms)}</label>
+    <label>${t('to')}${sel('v.to', c.to, ms)}</label>
+    <label class="w">${t('caption')}<textarea data-f="v.caption" rows="2" placeholder="${esc(A.legend[`${c.view}/${c.variant}/${c.particles}`]?.caption || '')}">${esc(c.caption)}</textarea></label>
+    ${chk('v.particles', c.particles, t('particles'))}
+  </div></section>
+  <section><h4>${t('time')}</h4><div class="f">
+    <label>${t('dur')}${num('v.dur', c.dur, 0.01, 0.5)}</label>
+    <label>${t('bars')}<span class="pair"><input type="number" id="fit-n" value="${bar ? Math.max(1, Math.round(c.dur / bar)) : 4}" min="1" step="1"${bar ? '' : ' disabled'}><button type="button" class="btn small" data-act="fit"${bar ? '' : ' disabled'}>${t('fit')}</button></span></label>
+    <label>${t('sync')}${sel('v.sync', c.sync, [['beat', t('sync_beat')], ['linear', t('sync_linear')]])}</label>
+    <label>${t('hold')}${num('v.hold', c.hold, 0.1, 0)}</label>
+    ${i > 0 ? `<label>${t('dip')}${num('v.fade', c.fade, 0.1, 0, 3)}</label>` : ''}
+  </div></section>
+  <section><h4>${t('framing')}</h4>
+    <div class="cam"><span><b>${t('cam0')}</b><span class="mono">${fmtCam(c.cam0)}</span></span><button type="button" class="btn small" data-act="cam0">${t('use_view')}</button><button type="button" class="btn small" data-act="go0">${t('go')}</button></div>
+    <div class="cam"><span><b>${t('cam1')}</b><span class="mono">${fmtCam(c.cam1)}</span></span><button type="button" class="btn small" data-act="cam1">${t('use_view')}</button><button type="button" class="btn small" data-act="go1">${t('go')}</button></div>
+    <div class="f"><label>${t('spin')}${num('v.spin', c.spin, 0.5)}</label></div>
+  </section>
+  <p class="note">${v ? t('avail', A.frames[v.first].t, A.frames[v.last].t) : ''}</p>
+  <div class="row"><button type="button" class="btn small" data-act="dup">${t('dup')}</button><button type="button" class="btn small" data-act="split">✂ ${t('split')}</button><span class="grow"></span><button type="button" class="btn small danger" data-act="del">${t('del')}</button></div>`;
+}
+
+function audioPanel(Au) {
+  const loaded = S.song.buffer && S.song.name === Au.name;
+  const info = songMsg || (!loaded ? t('song_missing', Au.name) : Au.mode === 'detected' && S.song.detected.length ? t('bpm_det', Au.bpm.toFixed(1), S.song.detected.length, Au.meter) : t('bpm_grid', Au.bpm.toFixed(2)));
+  const m = Au.meter || 4;
+  return `<h3>🎵 ${esc(Au.name)}</h3>
+  <section><h4>${t('song')}</h4><div class="f">
+    <label>${t('volume')}${num('a.gainPct', Math.round(Au.gain * 100), 5, 0, 200)}</label>
+    <span style="align-self:end">${chk('a.mute', Au.mute, t('mute'))}</span>
+    <label class="w">${t('offset')}${num('a.offset', Au.offset, 0.01, 0)}</label>
+    <label>${t('in')}${num('a.in', Au.in, 0.01, 0)}</label>
+    <label>${t('out')}${num('a.out', Au.out, 0.01, 0)}</label>
+    <label>${t('fade_in')}${num('a.fadeIn', Au.fadeIn, 0.1, 0)}</label>
+    <label>${t('fade_out')}${num('a.fadeOut', Au.fadeOut, 0.1, 0)}</label>
+  </div>
+  <div class="row"><button type="button" class="btn small" data-act="trim"${loaded ? '' : ' disabled'}>${t('trim')}</button><button type="button" class="btn small" data-act="firstbar"${loaded ? '' : ' disabled'}>${t('first_bar')}</button></div></section>
+  <section><h4>${t('rhythm')}</h4><div class="f">
+    <label>${t('bpm')}<span class="pair">${num('a.bpm', Au.bpm, 0.01, 40, 240)}<button type="button" class="btn small" data-act="half">÷2</button><button type="button" class="btn small" data-act="double">×2</button></span></label>
+    <label>${t('beats')}${sel('a.mode', Au.mode, [['detected', t('detected')], ['grid', t('grid')]])}</label>
+    <label>${t('meter')}${sel('a.meter', m, [[4, '4'], [3, '3'], [2, '2'], [6, '6']])}</label>
+    <label>${t('bar_off')}${sel('a.barOff', ((Au.barOff % m) + m) % m, [...Array(m)].map((_, k) => [k, String(k + 1)]))}</label>
+    ${Au.mode === 'grid' ? `<label>${t('grid_off')}${num('a.gridOff', Au.gridOff, 0.001, 0)}</label>` : ''}
+  </div>
+  <div class="row"><button type="button" class="btn small" data-act="tap">${t('tap')}</button></div>
+  <p class="note" id="beat-info">${esc(info)}</p></section>
+  <div class="row"><label class="btn small file"><input type="file" accept="audio/*" data-act="replace" hidden>${t('replace')}</label><span class="grow"></span><button type="button" class="btn small danger" data-act="del">${t('remove_song')}</button></div>`;
+}
+
+// modifica di un campo del pannello
+const insp = $('#insp');
+insp.addEventListener('focusin', (e) => { if (e.target.matches('input[type=text], textarea')) remember(); });
+insp.addEventListener('input', (e) => {
+  const f = e.target.dataset.f;
+  if (f === 'p.title') { S.P.title = e.target.value; saveLocal(); need = true; }
+  if (f === 'v.caption' && S.sel?.kind === 'v') { S.P.video[S.sel.i].caption = e.target.value; saveLocal(); need = true; }
 });
-const num = (id, fn) => $(id).addEventListener('change', (e) => { const v = parseFloat(e.target.value); if (Number.isFinite(v)) { fn(v); fillSong(); need = true; saveLocal(); } });
-num('#bpm', (v) => { P.song.bpm = Math.max(40, Math.min(240, v)); P.song.mode = 'grid'; });
-num('#grid-off', (v) => { P.song.gridOff = Math.max(0, v); });
-num('#song-start', (v) => { P.song.start = v; clampStart(); });
-num('#trim-in', (v) => { P.song.trimIn = Math.max(0, Math.min(songOut() - 1, v)); clampStart(); });
-num('#trim-out', (v) => { P.song.trimOut = Math.max(songIn() + 1, Math.min(song.buffer ? song.buffer.duration : v, v)); clampStart(); });
-$('#trim-auto').addEventListener('click', () => {
-  if (!song.trimAuto) return;
-  P.song.trimIn = +song.trimAuto.start.toFixed(2); P.song.trimOut = +song.trimAuto.end.toFixed(2);
-  clampStart(); fillSong(); need = true; saveLocal();
-  $('#beat-info').textContent = MSG.trimmed(P.song.trimIn.toFixed(2), P.song.trimOut.toFixed(2));
+insp.addEventListener('change', async (e) => {
+  const el = e.target, f = el.dataset.f;
+  if (el.dataset.act === 'replace') { const file = el.files[0]; if (file) importFile(file); return; }
+  if (!f || f === 'p.title' || f === 'v.caption') return;
+  remember();
+  const P = S.P, val = el.type === 'checkbox' ? el.checked : el.value, n = parseFloat(val);
+  const [o, k] = f.split('.');
+  let relang = false;
+  if (o === 'o') P.overlay[k] = val;
+  else if (o === 'p') {
+    if (k === 'lang') { P.lang = val; relang = true; }
+    else if (Number.isFinite(n)) P[k] = { fps: n, rate: Math.max(4, Math.min(40, n)), globeY: Math.max(0, Math.min(700, n)), legendScale: Math.max(40, Math.min(130, n)), fadeIn: Math.max(0, n), fadeOut: Math.max(0, n) }[k] ?? n;
+  } else if (o === 'v') {
+    const c = P.video[S.sel.i];
+    if (k === 'view') {
+      const v = A.views[val];
+      Object.assign(c, { view: val, variant: 0, caption: '', particles: SEA_PARTICLES.includes(val), from: A.frames[v.first].t, to: A.frames[v.last].t });
+    } else if (k === 'variant') c.variant = +val;
+    else if (k === 'from' || k === 'to' || k === 'sync') c[k] = val;
+    else if (k === 'particles') c.particles = val;
+    else if (Number.isFinite(n)) {
+      if (k === 'dur') c.dur = Math.max(0.5, n);
+      if (k === 'hold') c.hold = Math.max(0, Math.min(c.dur - 0.2, n));
+      if (k === 'fade') c.fade = Math.max(0, Math.min(3, n));
+      if (k === 'spin') c.spin = n;
+    }
+  } else if (o === 'a') {
+    const Au = P.audio, dur = S.song.buffer ? S.song.buffer.duration : Au.out;
+    if (k === 'mute') Au.mute = val;
+    else if (k === 'mode') Au.mode = val;
+    else if (k === 'meter') { Au.meter = +val; Au.barOff = ((Au.barOff % Au.meter) + Au.meter) % Au.meter; }
+    else if (k === 'barOff') Au.barOff = +val;
+    else if (Number.isFinite(n)) {
+      if (k === 'gainPct') Au.gain = Math.max(0, Math.min(2, n / 100));
+      if (k === 'offset') Au.offset = Math.max(0, n);
+      if (k === 'in') Au.in = Math.max(0, Math.min(Au.out - 0.5, n));
+      if (k === 'out') Au.out = Math.max(Au.in + 0.5, Math.min(dur, n));
+      if (k === 'fadeIn') Au.fadeIn = Math.max(0, n);
+      if (k === 'fadeOut') Au.fadeOut = Math.max(0, n);
+      if (k === 'bpm') { Au.bpm = Math.max(40, Math.min(240, n)); Au.mode = 'grid'; }
+      if (k === 'gridOff') Au.gridOff = Math.max(0, n);
+    }
+  }
+  changed();
+  if (relang) { pause(); await startAtlas(); }
 });
+insp.addEventListener('click', (e) => {
+  const b = e.target.closest('[data-act]');
+  if (!b || b.tagName === 'INPUT') return;
+  const act = b.dataset.act, P = S.P;
+  if (S.sel?.kind === 'v') {
+    const i = S.sel.i, c = P.video[i];
+    if (act === 'cam0' || act === 'cam1') {
+      remember();
+      const lt = Math.max(0, Math.min(c.dur, S.t - clipStart(i)));
+      c[act] = { lon: wrapLon(A.oe.camera.lon - c.spin * lt), lat: A.oe.camera.lat, dist: A.oe.camera.dist };
+      changed();
+    }
+    if (act === 'go0') seek(clipStart(i) + 0.001);
+    if (act === 'go1') seek(clipStart(i) + c.dur - 0.001);
+    if (act === 'fit') fitBars(i, Math.max(1, Math.round(+$('#fit-n').value || 1)));
+    if (act === 'dup') { remember(); P.video.splice(i + 1, 0, JSON.parse(JSON.stringify(c))); S.sel = { kind: 'v', i: i + 1 }; changed(); }
+    if (act === 'split') splitAt();
+    if (act === 'del') deleteSel();
+  } else if (S.sel?.kind === 'a') {
+    const Au = P.audio;
+    if (act === 'trim' && S.song.trimAuto) {
+      remember();
+      Au.in = Math.max(Au.in, S.song.trimAuto.start); Au.out = Math.min(Au.out, S.song.trimAuto.end);
+      if (Au.out - Au.in < 0.5) { Au.in = S.song.trimAuto.start; Au.out = S.song.trimAuto.end; }
+      songMsg = t('trimmed', Au.in.toFixed(2), Au.out.toFixed(2)); changed(); songMsg = '';
+    }
+    if (act === 'firstbar') {
+      const bars = srcBeats().filter((_, k) => isBarIdx(k));
+      if (bars.length) { remember(); const b0 = bars.reduce((x, y) => (Math.abs(y - Au.in) < Math.abs(x - Au.in) ? y : x)); Au.in = Math.max(0, Math.min(Au.out - 0.5, b0)); changed(); }
+    }
+    if (act === 'half' || act === 'double') tempo(act === 'double' ? 2 : 0.5);
+    if (act === 'tap') tap();
+    if (act === 'del') deleteSel();
+  }
+});
+
 // tempo doppio o dimezzato: l'ambiguita' classica (80 o 160 BPM?)
-$('#bpm-double').addEventListener('click', () => {
-  const S = P.song, m = S.meter || 4;
-  S.bpm = +(S.bpm * 2).toFixed(2);
-  if (song.detected.length > 1) {
-    const d = song.detected, out = [];
-    d.forEach((b, k) => { out.push(b); if (k < d.length - 1) out.push(+((b + d[k + 1]) / 2).toFixed(4)); });
-    song.detected = out;
-    if (S.det) S.det.beats = out;
+function tempo(k) {
+  const Au = S.P.audio, m = Au.meter || 4, sg = S.song;
+  remember();
+  Au.bpm = +(Au.bpm * k).toFixed(2);
+  if (k === 2 && sg.detected.length > 1) {
+    const d = sg.detected, out = [];
+    d.forEach((b, i) => { out.push(b); if (i < d.length - 1) out.push(+((b + d[i + 1]) / 2).toFixed(4)); });
+    sg.detected = out; Au.barOff = (Au.barOff * 2) % m;
   }
-  S.barOff = (S.barOff * 2) % m;
-  fillSong(); need = true; saveLocal();
-});
-$('#bpm-half').addEventListener('click', () => {
-  const S = P.song, m = S.meter || 4;
-  S.bpm = +(S.bpm / 2).toFixed(2);
-  if (song.detected.length > 3) {
-    // si tengono i battiti allineati alle battute
-    const p = ((S.barOff % 2) + 2) % 2;
-    song.detected = song.detected.filter((_, k) => k % 2 === p);
-    if (S.det) S.det.beats = song.detected;
-    S.barOff = Math.floor(S.barOff / 2) % m;
+  if (k === 0.5 && sg.detected.length > 3) {
+    const p = ((Au.barOff % 2) + 2) % 2;
+    sg.detected = sg.detected.filter((_, i) => i % 2 === p); Au.barOff = Math.floor(Au.barOff / 2) % m;
   }
-  fillSong(); need = true; saveLocal();
-});
-$('#meter').addEventListener('change', (e) => { P.song.meter = +e.target.value; P.song.barOff %= P.song.meter; fillSong(); need = true; saveLocal(); });
-// i bordi fra le clip sulla battuta piu' vicina
-function snapBoundaries(ends) {
-  const all = songBeats(), s0 = P.song.start;
-  const bars = all.filter((_, k) => isBar(k)).map((b) => b - s0).filter((b) => b > 0.4);
+  if (Au.det) Au.det = { ...Au.det, beats: sg.detected };
+  changed();
+}
+// batti il tempo durante il play: griglia fissa ancorata ai colpi
+let taps = [];
+function tap() {
+  const Au = S.P.audio;
+  if (!Au) return;
+  if (!S.playing) { songMsg = t('tap_play'); renderInspector(); songMsg = ''; return; }
+  const wall = performance.now() / 1000, src = Au.in + (S.t - Au.offset);
+  if (taps.length && wall - taps[taps.length - 1].w > 2) taps = [];
+  taps.push({ w: wall, s: src });
+  if (taps.length < 4) { songMsg = t('tap_more', 4 - taps.length); renderInspector(); songMsg = ''; return; }
+  const step = (taps[taps.length - 1].w - taps[0].w) / (taps.length - 1);
+  remember();
+  Au.bpm = +(60 / step).toFixed(2); Au.mode = 'grid';
+  Au.gridOff = +(((src % step) + step) % step).toFixed(3);
+  changed();
+}
+
+// la clip i dura esattamente n battute, dalla battuta piu' vicina al suo inizio
+function fitBars(i, n) {
+  const bl = barLength();
+  if (!bl) return;
+  const bars = tlBeats().filter((b) => b.bar).map((b) => b.t);
+  const st = clipStart(i);
+  remember();
+  const k = bars.findIndex((b) => b >= st - 0.06);
+  let end = st + n * bl;
+  if (k >= 0 && bars[k + n] != null) end = bars[k + n] - (bars[k] - st);
+  S.P.video[i].dur = Math.max(0.5, end - st);
+  changed();
+}
+
+// ── strumenti della timeline ───────────────────────────────────────────────
+function splitAt() {
+  const info = clipAt(S.t);
+  if (!info) return;
+  const { c, i, lt } = info;
+  if (lt < 0.3 || c.dur - lt < 0.3) return;
+  remember();
+  const [a, b] = clipRange(c);
+  const active = Math.max(0.05, c.dur - c.hold);
+  const p = progressIn(c, info.t0, Math.min(lt, active));
+  const mid = Math.round(a + (b - a) * p);
+  const cm = camAt(c, lt);
+  const copy = () => JSON.parse(JSON.stringify(c));
+  const first = { ...copy(), dur: lt, hold: 0, to: A.frames[mid].t, cam1: { lon: wrapLon(cm.lon - c.spin * lt), lat: cm.lat, dist: cm.dist } };
+  const second = { ...copy(), dur: c.dur - lt, fade: 0, from: A.frames[mid].t, cam0: { lon: wrapLon(cm.lon), lat: cm.lat, dist: cm.dist } };
+  S.P.video.splice(i, 1, first, second);
+  S.sel = { kind: 'v', i: i + 1 };
+  changed();
+}
+function deleteSel() {
+  if (!S.sel) return;
+  remember();
+  if (S.sel.kind === 'v') { S.P.video.splice(S.sel.i, 1); S.sel = S.P.video.length ? { kind: 'v', i: Math.max(0, S.sel.i - 1) } : null; }
+  else { S.P.audio = null; S.sel = null; }
+  changed();
+}
+// confini fra le clip sulla battuta piu' vicina; fixLast: l'ultimo resta dov'e'
+function onBars(ends, fixLast = false) {
+  const bars = tlBeats().filter((b) => b.bar).map((b) => b.t).filter((b) => b > 0.4);
   let prev = 0;
   return ends.map((e, i) => {
     let best = e;
-    if (bars.length && i < ends.length - 1) {
+    if (bars.length && !(fixLast && i === ends.length - 1)) {
       let bd = Infinity;
       for (const b of bars) if (b > prev + 0.5 && Math.abs(b - e) < bd) { bd = Math.abs(b - e); best = b; }
     }
@@ -771,499 +506,259 @@ function snapBoundaries(ends) {
     return d;
   });
 }
-$('#clips-bars').addEventListener('click', () => {
+function setDurs(ds) { ds.forEach((d, i) => { const c = S.P.video[i]; c.dur = d; c.hold = Math.min(c.hold, Math.max(0, d - 0.2)); }); }
+$('#t-bars').addEventListener('click', () => {
+  if (!S.P.audio || !S.P.video.length) return;
+  remember();
   let acc = 0;
-  const ends = P.clips.map((c) => (acc += c.dur));
-  // anche l'ultima clip finisce su una battuta
-  const all = songBeats().filter((_, k) => isBar(k)).map((b) => b - P.song.start);
-  const last = ends[ends.length - 1];
-  const lb = all.reduce((best, b) => (b > 0.5 && Math.abs(b - last) < Math.abs(best - last) ? b : best), last);
-  ends[ends.length - 1] = lb;
-  snapBoundaries(ends).forEach((d, i) => { P.clips[i].dur = d; P.clips[i].hold = Math.min(P.clips[i].hold, Math.max(0, d - 0.2)); });
+  setDurs(onBars(S.P.video.map((c) => (acc += c.dur))));
   changed();
 });
-$('#clips-fill').addEventListener('click', () => {
-  if (!song.buffer) return;
-  const target = songOut() - P.song.start;
+$('#t-fill').addEventListener('click', () => {
+  if (!S.P.audio || !S.P.video.length) return;
+  const target = audioEnd();
   if (target < 1) return;
+  remember();
   const k = target / total();
   let acc = 0;
-  const ends = P.clips.map((c) => (acc += c.dur * k));
+  const ends = S.P.video.map((c) => (acc += c.dur * k));
   ends[ends.length - 1] = target;                       // la musica finisce col reel
-  snapBoundaries(ends).forEach((d, i) => { P.clips[i].dur = d; P.clips[i].hold = Math.min(P.clips[i].hold, Math.max(0, d - 0.2)); });
+  setDurs(onBars(ends, true));
   changed();
 });
-num('#fade-in', (v) => { P.song.fadeIn = Math.max(0, v); });
-num('#fade-out', (v) => { P.song.fadeOut = Math.max(0, v); });
-$('#beat-mode').addEventListener('change', (e) => { P.song.mode = e.target.value; fillSong(); need = true; saveLocal(); });
-$('#bar-off').addEventListener('change', (e) => { P.song.barOff = +e.target.value; saveLocal(); });
-$('#snap').addEventListener('change', (e) => { P.song.snap = e.target.value; saveLocal(); });
-$('#start-beat').addEventListener('click', () => {
-  const all = songBeats();
-  if (!all.length) return;
-  let best = all[0];
-  all.forEach((b, k) => { if ((P.song.snap !== 'bar' || isBar(k)) && Math.abs(b - P.song.start) < Math.abs(best - P.song.start)) best = b; });
-  P.song.start = best; clampStart(); fillSong(); need = true; saveLocal();
-});
-// batti il tempo: griglia fissa dal tempo battuto, il primo colpo e' l'ancora
-let taps = [];
-function tap() {
-  if (!song.buffer) return;
-  const now = playing ? P.song.start + playTime() : null;
-  const wall = performance.now() / 1000;
-  if (taps.length && wall - taps[taps.length - 1].w > 2) taps = [];
-  taps.push({ w: wall, s: now });
-  if (taps.length < 4) { $('#beat-info').textContent = MSG.tap_more(4 - taps.length); return; }
-  const iv = (taps[taps.length - 1].w - taps[0].w) / (taps.length - 1);
-  P.song.bpm = +(60 / iv).toFixed(2);
-  P.song.mode = 'grid';
-  if (now != null) { const step = 60 / P.song.bpm; P.song.gridOff = +(((now % step) + step) % step).toFixed(3); }
-  fillSong(); need = true; saveLocal();
-}
-$('#tap').addEventListener('click', tap);
+$('#t-split').addEventListener('click', splitAt);
+$('#t-del').addEventListener('click', deleteSel);
+const SNAPS = ['bar', 'beat', 'off'];
+function showSnapMode() { $('#t-snap-l').textContent = t(`snap_${S.P.snap}`); $('#t-snap').classList.toggle('on', S.P.snap !== 'off'); }
+$('#t-snap').addEventListener('click', () => { S.P.snap = SNAPS[(SNAPS.indexOf(S.P.snap) + 1) % 3]; showSnapMode(); saveLocal(); renderTimeline(); });
+$('#mute').addEventListener('click', () => { if (!S.P.audio) return; remember(); S.P.audio.mute = !S.P.audio.mute; $('#mute').classList.toggle('off', S.P.audio.mute); changed(); if (S.playing) { pause(); play(); } });
+// annullando si torna anche ai battiti salvati nel progetto
+function reloadSongState() { const Au = S.P.audio; if (Au?.det?.beats && S.song.name === Au.name) S.song.detected = Au.det.beats; }
+$('#undo').addEventListener('click', () => { if (undo()) { reloadSongState(); changed(); } });
+$('#redo').addEventListener('click', () => { if (redo()) { reloadSongState(); changed(); } });
 
-// ── clip ───────────────────────────────────────────────────────────────────
-function stampOptions(selEl, lo, hi, value) {
-  const fmt = new Intl.DateTimeFormat(LOCALE[UI_LANG] || 'it-IT', { month: 'short', year: 'numeric', timeZone: 'UTC' });
-  selEl.innerHTML = '';
-  for (let i = lo; i <= hi; i++) {
-    const t = frames[i].t;
-    const o = new Option(fmt.format(new Date(Date.UTC(+t.slice(0, 4), +t.slice(5, 7) - 1, 1))), t);
-    selEl.add(o);
+// ── anteprima e trasporto ──────────────────────────────────────────────────
+const out = $('#out'), ctx = out.getContext('2d');
+let src = null, playT0 = 0, lastInfo = null, exporting = false;
+function play() {
+  if (!A.oe || exporting || !S.P.video.length) return;
+  if (S.t >= total() - 0.05) S.t = 0;
+  const a = audioCtx();
+  a.resume();
+  const when = a.currentTime + 0.05;
+  src = scheduleSong(a, a.destination, S.t, when);
+  playT0 = when - S.t;
+  S.playing = true;
+  A.oe.preview(true);
+  $('#play').textContent = '❚❚';
+}
+function pause() {
+  if (src) { try { src.stop(); } catch (e) { /* gia' fermo */ } src = null; }
+  S.playing = false;
+  A.oe?.preview(false);
+  $('#play').textContent = '▶';
+  need = true;
+}
+function seek(tt) {
+  S.t = Math.max(0, Math.min(total(), tt));
+  need = true; camNeed = true;
+  if (S.playing) { pause(); play(); }
+  movePlayhead();
+}
+initTimeline({
+  changed, seek, addView, importFile,
+  select(s) {
+    S.sel = s;
+    if (s?.kind === 'v') { const st = clipStart(s.i), c = S.P.video[s.i]; if (S.t < st || S.t > st + c.dur) seek(st + 0.01); }
+    renderInspector(); renderTimeline();
+  },
+  label: () => t('total', total().toFixed(2), S.P.video.length),
+  text: (k) => t(k),
+});
+
+let lastNow = performance.now();
+function fmtTC(s) { const m = Math.floor(s / 60), r = s - m * 60; return `${String(m).padStart(2, '0')}:${r.toFixed(2).padStart(5, '0')}`; }
+function frame(now) {
+  const dt = Math.min(100, now - lastNow);
+  lastNow = now;
+  if (A.oe && !exporting) {
+    if (S.playing) {
+      S.t = Math.max(0, audioCtx().currentTime - playT0);
+      if (S.t >= total()) { S.t = total(); pause(); }
+      lastInfo = applyAt(S.t);
+      // i prossimi due secondi: scaricati in anticipo
+      for (let k = 1; k <= 8; k++) { const f = peekPos(S.t + k * 0.25); if (f != null) { A.oe.want(Math.floor(f)); A.oe.want(Math.floor(f) + 1); } }
+    } else if (need || !lastInfo) {
+      lastInfo = applyAt(S.t, camNeed);
+      need = false; camNeed = false;
+    }
+    A.clock.step(dt);
+    compose(ctx, lastInfo, S.t);
+    movePlayhead();
+    $('#clock').textContent = fmtTC(S.t);
+    const bs = tlBeats().filter((b) => b.t <= S.t + 1e-3);
+    const lastBar = [...bs].reverse().find((b) => b.bar);
+    $('#bar-pos').textContent = lastBar ? t('bar_pos', lastBar.n, bs.length - bs.indexOf(lastBar)) : '';
   }
-  selEl.value = value;
-  if (selEl.value !== value) selEl.value = value < frames[lo].t ? frames[lo].t : frames[hi].t;
-  return selEl.value;
+  requestAnimationFrame(frame);
+}
+$('#play').addEventListener('click', () => (S.playing ? pause() : play()));
+$('#go-start').addEventListener('click', () => { seek(0); scrollToT(0); });
+$('#go-end').addEventListener('click', () => { seek(total()); scrollToT(total()); });
+function stepBar(dir) {
+  const bars = tlBeats().filter((b) => b.bar).map((b) => b.t);
+  if (!bars.length) { seek(S.t + dir); return; }
+  const nxt = dir > 0 ? bars.find((b) => b > S.t + 0.02) : [...bars].reverse().find((b) => b < S.t - 0.02);
+  seek(nxt ?? (dir > 0 ? total() : 0));
+  scrollToT(S.t);
+}
+$('#go-prev').addEventListener('click', () => stepBar(-1));
+$('#go-next').addEventListener('click', () => stepBar(1));
+$('#safe-on').addEventListener('change', (e) => { S.P.safe = e.target.checked; $('#safe').hidden = !S.P.safe; saveLocal(); });
+
+// trascinare l'anteprima gira il globo (a pausa), la rotella avvicina
+{
+  let drag = null;
+  out.addEventListener('pointerdown', (e) => { if (!A.oe || S.playing) return; drag = { x: e.clientX, y: e.clientY }; out.setPointerCapture(e.pointerId); });
+  out.addEventListener('pointermove', (e) => {
+    if (!drag) return;
+    const k = ((A.oe.camera.dist - 1) * 40) / out.clientHeight;
+    A.oe.camera.lon -= (e.clientX - drag.x) * k * 1.8;
+    A.oe.camera.lat = Math.max(-85, Math.min(85, A.oe.camera.lat + (e.clientY - drag.y) * k * 1.8));
+    drag = { x: e.clientX, y: e.clientY };
+  });
+  out.addEventListener('pointerup', () => { drag = null; });
+  out.addEventListener('wheel', (e) => { if (!A.oe || S.playing) return; e.preventDefault(); A.oe.camera.dist = Math.max(1.3, Math.min(6, A.oe.camera.dist * Math.exp(e.deltaY * 0.0012))); }, { passive: false });
 }
 
-function fillForms() {
-  if (!oe) return;
-  sel = Math.max(0, Math.min(P.clips.length - 1, sel));
-  const c = P.clips[sel];
-  const vs = $('#c-view');
-  vs.innerHTML = '';
-  for (const v of VIEWS) if (views[v]) vs.add(new Option(views[v].name, v));
-  if (!views[c.view]) c.view = Object.keys(views)[0];
-  vs.value = c.view;
-  const vr = VARIANTS[c.view];
-  $('#c-variant-l').hidden = !vr;
-  if (vr) { $('#c-variant').innerHTML = vr[UI_LANG].map(([v, l]) => `<option value="${v}">${l}</option>`).join(''); $('#c-variant').value = String(c.variant); }
-  const v = views[c.view];
-  c.from = stampOptions($('#c-from'), v.first, v.last, c.from);
-  c.to = stampOptions($('#c-to'), v.first, v.last, c.to);
-  $('#c-avail').textContent = MSG.avail(frames[v.first].t, frames[v.last].t);
-  $('#c-dur').value = +c.dur.toFixed(2); $('#c-sync').value = c.sync; $('#c-hold').value = c.hold; $('#c-spin').value = c.spin; $('#c-fade').value = c.fade;
-  $('#c-particles').checked = !!c.particles; $('#c-caption').value = c.caption;
-  $('#c-caption').placeholder = c.view === (viewKey.split('/')[0]) ? (legendCache[viewKey]?.caption || '') : '';
-  $('#c-fade').disabled = sel === 0;
-  $('#clip-del').disabled = P.clips.length < 2;
-  $('#clip-left').disabled = sel === 0; $('#clip-right').disabled = sel === P.clips.length - 1;
-  $('#p-title').value = P.title; $('#p-lang').value = P.lang; $('#p-fps').value = String(P.fps); $('#p-globey').value = P.globeY; $('#p-legend').value = P.legendScale || 100; $('#p-rate').value = P.rate;
-  for (const k of ['date', 'legend', 'caption', 'credits']) $(`#o-${k}`).checked = !!P.overlay[k];
-  $('#safe-on').checked = !!P.safe; $('#safe').hidden = !P.safe;
-  showCams();
-  fillSong();
-}
-const fmtCam = (k) => `${k.lon.toFixed(1)}°, ${k.lat.toFixed(1)}°, ×${k.dist.toFixed(2)}`;
-function showCams() {
-  const c = P.clips[sel];
-  $('#c-cam0').textContent = fmtCam(c.cam0);
-  $('#c-cam1').textContent = fmtCam(c.cam1);
-}
-
-function changed(cam = false) { need = true; camNeed = camNeed || cam; saveLocal(); fillForms(); }
-const cl = () => P.clips[sel];
-$('#c-view').addEventListener('change', (e) => { cl().view = e.target.value; cl().variant = 0; cl().caption = ''; cl().particles = ['sst', 'anom', 'speed', 'mix', 'sla', 'ice'].includes(e.target.value); const v = views[e.target.value]; cl().from = frames[v.first].t; cl().to = frames[v.last].t; changed(); });
-$('#c-variant').addEventListener('change', (e) => { cl().variant = +e.target.value; changed(); });
-$('#c-from').addEventListener('change', (e) => { cl().from = e.target.value; changed(); });
-$('#c-to').addEventListener('change', (e) => { cl().to = e.target.value; changed(); });
-$('#c-sync').addEventListener('change', (e) => { cl().sync = e.target.value; changed(); });
-$('#c-particles').addEventListener('change', (e) => { cl().particles = e.target.checked; changed(); });
-$('#c-caption').addEventListener('input', (e) => { cl().caption = e.target.value; need = true; saveLocal(); });
-const cnum = (id, fn, cam) => $(id).addEventListener('change', (e) => { const v = parseFloat(e.target.value); if (Number.isFinite(v)) { fn(v); changed(cam); } });
-cnum('#c-dur', (v) => { cl().dur = Math.max(0.5, v); });
-cnum('#c-hold', (v) => { cl().hold = Math.max(0, Math.min(cl().dur - 0.2, v)); });
-cnum('#c-spin', (v) => { cl().spin = v; }, true);
-cnum('#c-fade', (v) => { cl().fade = Math.max(0, Math.min(3, v)); });
-// l'inquadratura vista ora diventa quella iniziale o finale della clip; la
-// rotazione automatica (°/s) si toglie, perche' camAt la riaggiunge
-const wrapLon = (l) => ((l % 360) + 540) % 360 - 180;
-$('#c-set0').addEventListener('click', () => {
-  if (!oe) return;
-  const c = cl(), lt = Math.max(0, Math.min(c.dur, tNow - clipStart(sel)));
-  c.cam0 = { lon: wrapLon(oe.camera.lon - c.spin * lt), lat: oe.camera.lat, dist: oe.camera.dist };
-  if (lt < 0.05) c.cam1 = c.cam1 || { ...c.cam0 };
-  changed();
+// tastiera
+addEventListener('keydown', (e) => {
+  if (e.target.closest('input, textarea, select') || $('#exp').open) return;
+  const ctrl = e.ctrlKey || e.metaKey;
+  if (ctrl && e.key.toLowerCase() === 'z') { e.preventDefault(); $(e.shiftKey ? '#redo' : '#undo').click(); return; }
+  if (ctrl && e.key.toLowerCase() === 'y') { e.preventDefault(); $('#redo').click(); return; }
+  if (ctrl) return;
+  if (e.code === 'Space') { e.preventDefault(); S.playing ? pause() : play(); }
+  else if (e.key === 's' || e.key === 'S') splitAt();
+  else if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); deleteSel(); }
+  else if (e.key === 't' || e.key === 'T') tap();
+  else if (e.key === 'Home') seek(0);
+  else if (e.key === 'End') seek(total());
+  else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+    e.preventDefault();
+    const dir = e.key === 'ArrowRight' ? 1 : -1;
+    if (e.shiftKey) stepBar(dir); else seek(S.t + dir / S.P.fps);
+  } else if (e.key === '+' || e.key === '=') setZoom(+$('#zoom').value + 0.08);
+  else if (e.key === '-') setZoom(+$('#zoom').value - 0.08);
+  else if (e.key === 'Escape') { S.sel = null; renderInspector(); renderTimeline(); }
 });
-$('#c-set1').addEventListener('click', () => {
-  if (!oe) return;
-  const c = cl(), lt = Math.max(0, Math.min(c.dur, tNow - clipStart(sel)));
-  c.cam1 = { lon: wrapLon(oe.camera.lon - c.spin * lt), lat: oe.camera.lat, dist: oe.camera.dist };
-  changed();
+// un file audio lasciato sulla pagina
+addEventListener('dragover', (e) => { if (e.dataTransfer.types.includes('Files')) e.preventDefault(); });
+addEventListener('drop', (e) => {
+  const f = [...(e.dataTransfer?.files || [])].find((x) => x.type.startsWith('audio/'));
+  if (!f || e.defaultPrevented) return;
+  e.preventDefault();
+  importFile(f);
 });
-// adatta: la clip dura esattamente N battute del brano, dal punto in cui comincia
-$('#c-fit').addEventListener('click', () => {
-  const n = Math.max(1, Math.round(+$('#c-bars').value || 1));
-  const t0 = clipStart(sel), s0 = P.song.start + t0;
-  const all = songBeats();
-  if (!all.length) return;
-  let k = 0, bd = Infinity;
-  all.forEach((b, i) => { const d = Math.abs(b - s0); if (d < bd) { bd = d; k = i; } });
-  const m = P.song.meter || 4;
-  const end = all[k + n * m] ?? all[k] + (n * m * 60) / P.song.bpm;
-  cl().dur = Math.max(0.5, end - s0);
-  changed();
-});
-$('#clip-add').addEventListener('click', () => { const c = cl(); P.clips.splice(sel + 1, 0, newClip({ view: c.view, variant: c.variant, particles: c.particles, cam0: { ...c.cam1 }, cam1: { ...c.cam1 }, from: c.from, to: c.to, dur: 8 })); sel++; changed(); seek(clipStart(sel) + 0.01); });
-$('#clip-dup').addEventListener('click', () => { P.clips.splice(sel + 1, 0, JSON.parse(JSON.stringify(cl()))); sel++; changed(); });
-$('#clip-del').addEventListener('click', () => { if (P.clips.length < 2) return; P.clips.splice(sel, 1); sel = Math.max(0, sel - 1); changed(true); seek(Math.min(tNow, total())); });
-$('#clip-left').addEventListener('click', () => { if (sel < 1) return; [P.clips[sel - 1], P.clips[sel]] = [P.clips[sel], P.clips[sel - 1]]; sel--; changed(true); });
-$('#clip-right').addEventListener('click', () => { if (sel >= P.clips.length - 1) return; [P.clips[sel + 1], P.clips[sel]] = [P.clips[sel], P.clips[sel + 1]]; sel++; changed(true); });
 
-// testi e formato
-$('#p-title').addEventListener('input', (e) => { P.title = e.target.value; saveLocal(); });
-$('#p-lang').addEventListener('change', async (e) => { P.lang = e.target.value; saveLocal(); pause(); await bootAtlas(); });
-$('#p-fps').addEventListener('change', (e) => { P.fps = +e.target.value; saveLocal(); });
-$('#p-legend').addEventListener('change', (e) => { P.legendScale = Math.max(40, Math.min(130, +e.target.value || 100)); saveLocal(); });
-$('#p-globey').addEventListener('change', (e) => { P.globeY = Math.max(0, Math.min(700, +e.target.value || 0)); saveLocal(); });
-$('#p-rate').addEventListener('change', (e) => { P.rate = Math.max(4, Math.min(40, +e.target.value || 14)); saveLocal(); });
-for (const k of ['date', 'legend', 'caption', 'credits']) $(`#o-${k}`).addEventListener('change', (e) => { P.overlay[k] = e.target.checked; saveLocal(); });
-$('#safe-on').addEventListener('change', (e) => { P.safe = e.target.checked; $('#safe').hidden = !P.safe; saveLocal(); });
-
-// progetto su file
+// ── progetto su file ───────────────────────────────────────────────────────
+const slug = () => (S.P.title || 'atlante').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 $('#proj-save').addEventListener('click', () => {
   const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob([JSON.stringify(P, null, 1)], { type: 'application/json' }));
-  a.download = `reel-${(P.title || 'atlante').toLowerCase().replace(/[^a-z0-9]+/g, '-')}.json`;
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(S.P, null, 1)], { type: 'application/json' }));
+  a.download = `reel-${slug()}.json`;
   a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 5000);
 });
 $('#proj-open').addEventListener('change', async (e) => {
   const f = e.target.files[0];
-  if (!f) return;
-  try {
-    const p = JSON.parse(await f.text());
-    if (!valid(p)) throw new Error('x');
-    const langChanged = p.lang !== P.lang;
-    P = { ...defaultProject(), ...p, overlay: { ...defaultProject().overlay, ...p.overlay }, song: { ...defaultProject().song, ...p.song } };
-    sel = 0; saveLocal();
-    if (P.song.name && P.song.name !== song.name) $('#beat-info').textContent = MSG.song_missing(P.song.name);
-    if (langChanged) await bootAtlas(); else { fillForms(); seek(0); }
-  } catch (err) { alert(MSG.bad_project); }
   e.target.value = '';
+  if (!f) return;
+  let p = null;
+  try { p = migrate(JSON.parse(await f.text())); } catch (err) { p = null; }
+  if (!p) { alert(t('bad_project')); return; }
+  remember();
+  const relang = p.lang !== S.P.lang;
+  S.P = { ...defaultProject(UI), ...p, overlay: { ...defaultProject(UI).overlay, ...p.overlay } };
+  S.sel = null; S.t = 0;
+  reloadSongState();
+  showSnapMode();
+  changed();
+  if (relang) { pause(); await startAtlas(); }
 });
 
-$('#play').addEventListener('click', () => (playing ? pause() : play()));
-addEventListener('keydown', (e) => {
-  if (e.target.closest('input, textarea, select')) return;
-  if (e.code === 'Space') { e.preventDefault(); playing ? pause() : play(); }
-  if (e.key === 't' || e.key === 'T') tap();
-});
-
-// ── timeline ───────────────────────────────────────────────────────────────
-const tl = $('#timeline'), ov = $('#overview');
-const TL = { wave: [6, 56], clips: [70, 128], ruler: 140 };
-let tlDrag = null;
-function tlScale() { const w = tl.clientWidth; return { w, pps: (w - 20) / Math.max(5, total()), x0: 10 }; }
-function sizeCanvas(c) { const d = devicePixelRatio || 1; const w = Math.round(c.clientWidth * d), h = Math.round(+c.getAttribute('height') * d); if (c.width !== w || c.height !== h) { c.width = w; c.height = h; } c.style.height = c.getAttribute('height') + 'px'; return d; }
-
-function drawTimeline() {
-  const d = sizeCanvas(tl), g = tl.getContext('2d');
-  g.setTransform(d, 0, 0, d, 0, 0);
-  const { w, pps, x0 } = tlScale(), Hh = +tl.getAttribute('height');
-  g.clearRect(0, 0, w, Hh);
-  const X = (t) => x0 + t * pps;
-  // forma d'onda della parte di brano usata
-  if (song.peaks) {
-    const n = song.peaks.length, dur = song.buffer.duration, [y0, y1] = TL.wave, mid = (y0 + y1) / 2, hh = (y1 - y0) / 2;
-    g.fillStyle = '#35556b';
-    for (let x = 0; x < w - 20; x++) {
-      const s = P.song.start + x / pps;
-      if (s > dur) break;
-      const p = song.peaks[Math.min(n - 1, Math.floor((s / dur) * n))];
-      g.fillRect(x0 + x, mid - p * hh, 1, Math.max(1, 2 * p * hh));
-    }
-    // battiti; le battute piu' marcate
-    const all = songBeats();
-    let bar = 0, lastLabel = -99;
-    all.forEach((b, k) => {
-      const t = b - P.song.start;
-      if (t < 0 || t > total()) return;
-      g.fillStyle = isBar(k) ? 'rgba(255,214,102,.9)' : 'rgba(255,214,102,.35)';
-      g.fillRect(X(t) - 0.5, TL.wave[0], isBar(k) ? 2 : 1, TL.clips[1] - TL.wave[0]);
-      if (isBar(k)) {
-        bar++;
-        // numero della battuta, se c'e' spazio
-        if (X(t) - lastLabel > 22) { g.fillStyle = '#ffd666'; g.font = '10px "IBM Plex Mono"'; g.textAlign = 'left'; g.fillText(String(bar), X(t) + 3, TL.wave[0] + 9); lastLabel = X(t); }
-      }
-    });
-  } else {
-    g.fillStyle = '#6f8592'; g.font = '12px Archivo'; g.textAlign = 'left';
-    g.fillText(UI_LANG === 'it' ? 'Scegli un brano: qui compaiono forma d’onda e battiti' : 'Choose a song: waveform and beats appear here', x0, 36);
-  }
-  // clip
-  let s = 0;
-  P.clips.forEach((c, i) => {
-    const x = X(s), cw = c.dur * pps, [y0, y1] = TL.clips;
-    g.fillStyle = i === sel ? '#3f84bb' : '#24506f';
-    roundRect(g, x + 1, y0, cw - 2, y1 - y0, 6); g.fill();
-    if (c.hold > 0) { g.fillStyle = 'rgba(0,0,0,.22)'; g.fillRect(x + cw - c.hold * pps, y0 + 1, c.hold * pps - 2, y1 - y0 - 2); }
-    g.fillStyle = '#e8f0f4'; g.font = '600 12px Archivo'; g.textAlign = 'left';
-    g.save(); g.beginPath(); g.rect(x + 4, y0, cw - 14, y1 - y0); g.clip();
-    g.fillText(views[c.view]?.name || c.view, x + 8, y0 + 18);
-    g.font = '11px "IBM Plex Mono"'; g.fillStyle = '#bcd0db';
-    g.fillText(`${c.from} → ${c.to}`, x + 8, y0 + 34);
-    g.fillText(`${c.dur.toFixed(2)} s`, x + 8, y0 + 49);
-    g.restore();
-    // maniglia per allungare
-    g.fillStyle = i === sel ? '#e8f0f4' : '#9fb9c9';
-    g.fillRect(x + cw - 6, y0 + 14, 3, y1 - y0 - 28);
-    s += c.dur;
-  });
-  // righello
-  g.fillStyle = '#6f8592'; g.font = '10px "IBM Plex Mono"'; g.textAlign = 'center';
-  const step = total() > 60 ? 10 : 5;
-  for (let t = 0; t <= total() + 0.01; t += step) { g.fillRect(X(t), TL.ruler - 8, 1, 4); g.fillText(fmtTime(t).replace(/\.0$/, ''), X(t), TL.ruler + 4); }
-  // indicatore
-  g.fillStyle = '#ff5d5d';
-  g.fillRect(X(tNow) - 1, 0, 2, TL.clips[1] + 4);
-  drawOverview();
-}
-
-function drawOverview() {
-  const d = sizeCanvas(ov), g = ov.getContext('2d');
-  g.setTransform(d, 0, 0, d, 0, 0);
-  const w = ov.clientWidth, h = +ov.getAttribute('height');
-  g.clearRect(0, 0, w, h);
-  if (!song.peaks) return;
-  const dur = song.buffer.duration, n = song.peaks.length;
-  g.fillStyle = '#35556b';
-  for (let x = 0; x < w; x++) { const p = song.peaks[Math.floor((x / w) * n)]; g.fillRect(x, h / 2 - p * (h / 2 - 3), 1, Math.max(1, 2 * p * (h / 2 - 3))); }
-  // fuori dal brano utile: in grigio, con le maniglie per spostare i tagli
-  const ti = (songIn() / dur) * w, to = (songOut() / dur) * w;
-  g.fillStyle = 'rgba(0,0,0,.55)'; g.fillRect(0, 0, ti, h); g.fillRect(to, 0, w - to, h);
-  g.fillStyle = '#ffb347';
-  for (const x of [ti, to]) { g.fillRect(x - 1, 0, 2, h); g.fillRect(x - 4, h / 2 - 9, 8, 18); }
-  const a = (P.song.start / dur) * w, b = ((P.song.start + total()) / dur) * w;
-  g.fillStyle = 'rgba(232,240,244,.16)'; g.fillRect(a, 0, b - a, h);
-  g.strokeStyle = '#e8f0f4'; g.lineWidth = 1.5; g.strokeRect(a + 0.5, 0.5, Math.max(2, b - a - 1), h - 1);
-  if (playing) { g.fillStyle = '#ff5d5d'; g.fillRect(((P.song.start + tNow) / dur) * w - 1, 0, 2, h); }
-}
-
-tl.addEventListener('pointerdown', (e) => {
-  if (!oe) return;
-  const r = tl.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
-  const { pps, x0 } = tlScale();
-  const t = (x - x0) / pps;
-  // bordo destro di una clip: si allunga
-  let s = 0;
-  for (let i = 0; i < P.clips.length; i++) {
-    s += P.clips[i].dur;
-    if (y >= TL.clips[0] && y <= TL.clips[1] && Math.abs(x - (x0 + s * pps)) < 8) {
-      tlDrag = { kind: 'edge', i, start: s - P.clips[i].dur, pps };
-      sel = i; fillForms();
-      tl.setPointerCapture(e.pointerId);
-      return;
-    }
-  }
-  if (y >= TL.clips[0] && y <= TL.clips[1]) { const k = clipAt(Math.max(0, t)).i; if (k !== sel) { sel = k; fillForms(); } }
-  tlDrag = { kind: 'seek' };
-  tl.setPointerCapture(e.pointerId);
-  seek(t);
-});
-tl.addEventListener('pointermove', (e) => {
-  const r = tl.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
-  const { pps, x0 } = tlScale();
-  if (!tlDrag) {
-    let s = 0, edge = false;
-    for (const c of P.clips) { s += c.dur; if (y >= TL.clips[0] && y <= TL.clips[1] && Math.abs(x - (x0 + s * pps)) < 8) edge = true; }
-    tl.style.cursor = edge ? 'ew-resize' : 'pointer';
-    return;
-  }
-  if (tlDrag.kind === 'seek') { seek((x - x0) / pps); return; }
-  // la scala resta quella di quando si e' preso il bordo: il bordo segue il puntatore
-  const tEnd = snapTime((x - x0) / tlDrag.pps);
-  const c = P.clips[tlDrag.i];
-  c.dur = Math.max(0.5, tEnd - tlDrag.start);
-  c.hold = Math.min(c.hold, Math.max(0, c.dur - 0.2));
-  need = true;
-  $('#c-dur').value = +c.dur.toFixed(2);
-});
-tl.addEventListener('pointerup', () => { if (tlDrag?.kind === 'edge') { saveLocal(); fillForms(); } tlDrag = null; });
-
-{
-  let drag = null;
-  ov.addEventListener('pointerdown', (e) => {
-    if (!song.buffer) return;
-    const r = ov.getBoundingClientRect(), x = e.clientX - r.left, dur = song.buffer.duration;
-    const s = (x / r.width) * dur;
-    ov.setPointerCapture(e.pointerId);
-    // vicino a una maniglia: si sposta il taglio
-    const px = (t) => (t / dur) * r.width;
-    if (Math.abs(x - px(songIn())) < 7) { drag = { trim: 'in' }; return; }
-    if (Math.abs(x - px(songOut())) < 7) { drag = { trim: 'out' }; return; }
-    drag = { off: s >= P.song.start && s <= P.song.start + total() ? s - P.song.start : 0 };
-    move(e);
-  });
-  const move = (e) => {
-    const r = ov.getBoundingClientRect();
-    if (!drag) {
-      if (song.buffer) { const dur = song.buffer.duration, x = e.clientX - r.left; ov.style.cursor = [songIn(), songOut()].some((t) => Math.abs(x - (t / dur) * r.width) < 7) ? 'ew-resize' : 'grab'; }
-      return;
-    }
-    const dur = song.buffer.duration, at = ((e.clientX - r.left) / r.width) * dur;
-    if (drag.trim === 'in') { P.song.trimIn = +Math.max(0, Math.min(songOut() - 1, at)).toFixed(2); clampStart(); fillSong(); need = true; return; }
-    if (drag.trim === 'out') { P.song.trimOut = +Math.max(songIn() + 1, Math.min(dur, at)).toFixed(2); clampStart(); fillSong(); need = true; return; }
-    P.song.start = at - drag.off;
-    clampStart();
-    $('#song-start').value = +P.song.start.toFixed(2);
-    need = true;
-  };
-  ov.addEventListener('pointermove', move);
-  ov.addEventListener('pointerup', () => {
-    if (!drag) return;
-    const wasTrim = drag.trim;
-    drag = null;
-    if (wasTrim) { saveLocal(); return; }
-    // aggancia l'inizio a un battito (o a una battuta)
-    if (P.song.snap !== 'none') {
-      const all = songBeats();
-      let best = P.song.start, bd = Infinity;
-      all.forEach((b, k) => { if (P.song.snap === 'bar' && !isBar(k)) return; const d = Math.abs(b - P.song.start); if (d < bd) { bd = d; best = b; } });
-      P.song.start = best;
-    }
-    clampStart();
-    fillSong(); need = true; saveLocal();
-    if (playing) { pause(); play(); }
-  });
-}
-
-// ── esportazione MP4 ───────────────────────────────────────────────────────
+// ── esportazione ───────────────────────────────────────────────────────────
 let cancelExport = false;
-async function pickCodecs() {
-  if (!('VideoEncoder' in window)) return null;
-  const fps = P.fps, bitrate = P.rate * 1e6;
-  let video = null;
-  for (const codec of ['avc1.640028', 'avc1.4d0028', 'avc1.420028', 'avc1.640032']) {
-    const cfg = { codec, width: W, height: H, bitrate, framerate: fps, avc: { format: 'avc' } };
-    try { if ((await VideoEncoder.isConfigSupported(cfg)).supported) { video = cfg; break; } } catch (e) { /* prossimo */ }
-  }
-  if (!video) return null;
-  let audio = null;
-  if (song.buffer && 'AudioEncoder' in window) {
-    for (const [codec, mux] of [['mp4a.40.2', 'aac'], ['opus', 'opus']]) {
-      const cfg = { codec, sampleRate: 48000, numberOfChannels: 2, bitrate: 192000 };
-      try { if ((await AudioEncoder.isConfigSupported(cfg)).supported) { audio = { cfg, mux }; break; } } catch (e) { /* prossimo */ }
-    }
-  }
-  return { video, audio };
-}
-
-async function renderAudio() {
-  const T = total(), sr = 48000;
-  const oc = new OfflineAudioContext(2, Math.ceil(T * sr), sr);
-  const s = oc.createBufferSource(), gain = oc.createGain();
-  s.buffer = song.buffer;
-  s.connect(gain).connect(oc.destination);
-  envelope(gain.gain, 0, 0);
-  s.start(0, P.song.start, T);
-  return oc.startRendering();
-}
-
-function fmtDur(s) { s = Math.max(0, Math.round(s)); const m = Math.floor(s / 60); return m ? `${m} min ${s % 60} s` : `${s} s`; }
-
-async function exportMp4() {
-  if (!oe || exporting) return;
+const fmtDur = (s) => { s = Math.max(0, Math.round(s)); const m = Math.floor(s / 60); return m ? `${m} min ${s % 60} s` : `${s} s`; };
+$('#export').addEventListener('click', async () => {
+  if (!A.oe || exporting) return;
+  if (!S.P.video.length) { alert(t('no_clips')); return; }
   pause();
   const dlg = $('#exp'), info = $('#exp-info'), bar = $('#exp-bar'), status = $('#exp-status'), dl = $('#exp-dl');
   dl.hidden = true; bar.value = 0; status.textContent = '';
-  $('#exp-cancel').textContent = UI_LANG === 'it' ? 'Annulla' : 'Cancel';
+  $('#exp-cancel').textContent = t('cancel');
   dlg.showModal();
-  const codecs = await pickCodecs();
-  if (!codecs) { info.textContent = MSG.no_webcodecs; return; }
-  info.textContent = MSG.codec_info(`H.264 ${W}×${H} ${P.fps} fps`, codecs.audio ? (codecs.audio.mux === 'aac' ? 'AAC' : 'Opus') : null) + (codecs.audio?.mux === 'opus' ? ' ' + MSG.opus_note : '');
+  const withAudio = !!(S.P.audio && S.song.buffer && S.song.name === S.P.audio.name && !S.P.audio.mute);
+  const codecs = await pickCodecs(withAudio);
+  if (!codecs) { info.textContent = t('no_webcodecs'); return; }
+  info.textContent = t('codec_info', `H.264 ${W}×${H} ${S.P.fps} fps`, codecs.audio ? (codecs.audio.mux === 'aac' ? 'AAC' : 'Opus') : null) + (codecs.audio?.mux === 'opus' ? ' ' + t('opus_note') : '');
   exporting = true; cancelExport = false;
-  const fps = P.fps, N = Math.round(total() * fps);
-  const muxer = new Muxer({
-    target: new ArrayBufferTarget(),
-    video: { codec: 'avc', width: W, height: H, frameRate: fps },
-    audio: codecs.audio ? { codec: codecs.audio.mux, numberOfChannels: 2, sampleRate: 48000 } : undefined,
-    fastStart: 'in-memory',
-  });
-  let failed = null;
-  const venc = new VideoEncoder({ output: (ch, meta) => muxer.addVideoChunk(ch, meta), error: (e) => { failed = e; } });
-  venc.configure(codecs.video);
-  const t0 = performance.now();
   try {
-    oe.preview(false);
-    // le scie partono gia' formate: un po' di simulazione prima del primo fotogramma
-    let inf = applyAt(0);
-    await until(() => oe.ready(), 120000, 20);
-    for (let k = 0; k < 150; k++) clock.step(1000 / fps);
-    for (let f = 0; f < N; f++) {
-      if (cancelExport) throw new Error('cancel');
-      if (failed) throw failed;
-      const t = f / fps;
-      inf = applyAt(t);
-      if (!oe.ready()) {
-        status.textContent = MSG.wait_data;
-        try { await until(() => oe.ready(), 90000, 15); } catch (e) { throw new Error(MSG.timeout); }
-      }
-      clock.step(1000 / fps);
-      compose(inf, t);
-      const vf = new VideoFrame(out, { timestamp: Math.round((f * 1e6) / fps), duration: Math.round(1e6 / fps) });
-      venc.encode(vf, { keyFrame: f % (fps * 2) === 0 });
-      vf.close();
-      if (venc.encodeQueueSize > 6) await new Promise((r) => { const w = () => (venc.encodeQueueSize > 2 ? setTimeout(w, 5) : r()); w(); });
-      if (f % 5 === 0) {
-        bar.value = (f + 1) / N;
-        const el = (performance.now() - t0) / 1000;
-        status.textContent = MSG.frame(f + 1, N, fmtDur((el / (f + 1)) * (N - f - 1)));
-        drawTimelineAt(t);
-        await new Promise((r) => setTimeout(r, 0));     // lascia aggiornare la pagina
-      }
-    }
-    await venc.flush();
-    if (codecs.audio) {
-      const buf = await renderAudio();
-      const aenc = new AudioEncoder({ output: (ch, meta) => muxer.addAudioChunk(ch, meta), error: (e) => { failed = e; } });
-      aenc.configure(codecs.audio.cfg);
-      const L = buf.getChannelData(0), R = buf.getChannelData(1), step = 4800;
-      for (let i = 0; i < buf.length; i += step) {
-        const n = Math.min(step, buf.length - i), data = new Float32Array(n * 2);
-        data.set(L.subarray(i, i + n), 0); data.set(R.subarray(i, i + n), n);
-        const ad = new AudioData({ format: 'f32-planar', sampleRate: 48000, numberOfFrames: n, numberOfChannels: 2, timestamp: Math.round((i * 1e6) / 48000), data });
-        aenc.encode(ad); ad.close();
-      }
-      await aenc.flush();
-      if (failed) throw failed;
-    }
-    muxer.finalize();
-    const blob = new Blob([muxer.target.buffer], { type: 'video/mp4' });
-    dl.href = URL.createObjectURL(blob);
-    dl.download = `reel-${(P.title || 'atlante').toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${new Date().toISOString().slice(0, 10)}.mp4`;
+    const r = await exportMp4(out, codecs, (p) => {
+      if (p.wait) { status.textContent = t('wait_data'); return; }
+      bar.value = p.f / p.N;
+      status.textContent = t('frame', p.f, p.N, fmtDur((p.elapsed / p.f) * (p.N - p.f)));
+      S.t = p.t; movePlayhead();
+    }, () => cancelExport);
+    dl.href = URL.createObjectURL(r.blob);
+    dl.download = `reel-${slug()}-${new Date().toISOString().slice(0, 10)}.mp4`;
     dl.hidden = false;
     bar.value = 1;
-    status.textContent = MSG.done((blob.size / 1e6).toFixed(1), fmtDur((performance.now() - t0) / 1000));
-    $('#exp-cancel').textContent = UI_LANG === 'it' ? 'Chiudi' : 'Close';
-    window.__reelBlob = blob;                            // per i test automatici
-  } catch (e) {
-    status.textContent = e.message === 'cancel' ? MSG.cancelled : String(e.message || e);
-    try { venc.close(); } catch (err) { /* gia' chiuso */ }
+    status.textContent = t('done', (r.blob.size / 1e6).toFixed(1), fmtDur(r.seconds));
+    $('#exp-cancel').textContent = t('close');
+    window.__reelBlob = r.blob;                          // per i test automatici
+  } catch (err) {
+    status.textContent = err.message === 'cancel' ? t('cancelled') : err.message === 'timeout' ? t('timeout') : String(err.message || err);
   } finally {
     exporting = false;
     need = true; camNeed = true;
   }
-}
-function drawTimelineAt(t) { const k = tNow; tNow = t; drawTimeline(); tNow = k; }
-$('#export').addEventListener('click', exportMp4);
+});
 $('#exp-cancel').addEventListener('click', () => { if (exporting) cancelExport = true; else $('#exp').close(); });
 
 // ── avvio ──────────────────────────────────────────────────────────────────
-window.__reel = { get P() { return P; }, set P(p) { P = p; fillForms(); need = true; camNeed = true; }, seek, play, pause, exportMp4, setSong, get song() { return song; }, get oe() { return oe; }, get t() { return tNow; } };
-requestAnimationFrame(tick);
-await bootAtlas();
+async function startAtlas() {
+  const boot = $('#boot');
+  boot.hidden = false; boot.classList.remove('error');
+  try {
+    await bootAtlas($('#atlas'), S.P.lang);
+  } catch (err) {
+    boot.textContent = t('atlas_fail'); boot.classList.add('error');
+    return;
+  }
+  await document.fonts.load('700 40px "IBM Plex Mono"').catch(() => {});
+  await document.fonts.load('900 40px Archivo').catch(() => {});
+  // clip di viste che qui non hanno dati: alla prima vista disponibile
+  for (const c of S.P.video) if (!A.views[c.view]) c.view = Object.keys(A.views)[0];
+  boot.hidden = true;
+  $('#play').disabled = false;
+  renderLibrary();
+  changed();
+}
+
+window.__reel = {
+  get P() { return S.P; }, set P(p) { S.P = p; changed(); }, get S() { return S; }, get oe() { return A.oe; }, get t() { return S.t; },
+  seek, play, pause, loadSong, addView, splitAt, fitBars, select: (s) => { S.sel = s; renderInspector(); renderTimeline(); },
+};
+$('#safe-on').checked = !!S.P.safe; $('#safe').hidden = !S.P.safe;
+$('#mute').classList.toggle('off', !!S.P.audio?.mute);
+showSnapMode();
+renderInspector();
+renderTimeline();
+requestAnimationFrame(frame);
+await startAtlas();
 const stored = await loadStoredSong();
-if (stored && stored.name === P.song.name) {
-  try { song.name = stored.name; await setSong(stored.name, stored.bytes, true); } catch (e) { /* il brano salvato non si legge piu': si sceglie di nuovo */ }
-} else if (P.song.name) $('#beat-info').textContent = MSG.song_missing(P.song.name);
+if (S.P.audio && stored && stored.name === S.P.audio.name) {
+  try { await loadSong(stored.name, stored.bytes, true); } catch (err) { /* si reimporta */ }
+}
+renderInspector();
