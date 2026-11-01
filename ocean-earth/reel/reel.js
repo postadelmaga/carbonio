@@ -53,7 +53,7 @@ const TX = {
     tl_help: 'Drag edges to stretch or trim (they snap to bars) · drag a clip to move it · song pieces: Shift + edge stretches without changing pitch, Alt + drag chooses which part plays · space play · S split · Ctrl+Z undo · Ctrl+wheel zoom',
     exporting: 'Export', cancel: 'Cancel', download: 'Download the video', wait: 'loading data…',
     undo: 'Undo (Ctrl+Z)', redo: 'Redo (Ctrl+Shift+Z)', go_start: 'Start (Home)', go_prev: 'Previous bar (Shift+←)', go_next: 'Next bar (Shift+→)', go_end: 'End (End)',
-    snap_t: 'Snap', split_t: 'Split the clip at the playhead (S)', del_t: 'Delete (Del)', bars_t: 'Move every clip boundary to the nearest bar', fill_t: 'Stretch the clips to the end of the song', mute: 'mute',
+    snap_t: 'Snap', split_t: 'Split the selected clip or song piece at the playhead (S)', del_t: 'Delete (Del)', bars_t: 'Move every clip boundary to the nearest bar', fill_t: 'Stretch the clips to the end of the song', mute: 'mute',
     project: 'Project', texts: 'Texts', format: 'Format', title: 'Title', lang: 'Text language', o_date: 'date', o_legend: 'legend', o_caption: 'title and caption', o_credits: 'data sources',
     fps: 'Frames/s', rate: 'Quality (Mbit/s)', globe_y: 'Globe lower (px)', legend_size: 'Legend size (%)', black_in: 'Black at the start (s)', black_out: 'Black at the end (s)',
     proj_note: (n, d) => `${n} clips, ${d} s. Select a clip or the song in the timeline to edit it.`,
@@ -110,6 +110,7 @@ function changed(o = {}) {
   if (o.light) { if (!inspT) inspT = requestAnimationFrame(() => { inspT = 0; renderInspector(true); }); } else renderInspector();
   need = true; camNeed = true;
   $('#undo').disabled = !canUndo(); $('#redo').disabled = !canRedo();
+  $('#mute').classList.toggle('off', !!S.P.audio?.mute);
   $('#export').disabled = !A.oe || !S.P.video.length;
 }
 
@@ -150,8 +151,15 @@ async function loadSong(name, bytes, fromProject = false) {
   sg.peaks = new Float32Array(n);
   for (let i = 0; i < n; i++) { let m = 0; for (let k = i * per; k < (i + 1) * per && k < buf.length; k += 3) m = Math.max(m, Math.abs(d0[k]), Math.abs(d1[k])); sg.peaks[i] = m; }
   const Au = S.P.audio;
-  if (fromProject && Au?.det?.name === name && Au.det.beats?.length) {
+  // lo stesso brano del progetto (salvato o reimportato): pezzi e battiti restano
+  const same = Au?.name === name && Au.clips?.length;
+  if (same && Au.det?.name === name && Au.det.beats?.length) {
     sg.detected = Au.det.beats; sg.trimAuto = Au.det.trim || { start: 0, end: buf.duration };
+  } else if (same) {
+    const r = await analyzeSong(buf);
+    sg.detected = r.beats.map((b) => +b.toFixed(4)); sg.trimAuto = r.trim;
+    Au.det = { name, beats: sg.detected, trim: r.trim };
+    if (Au.mode === 'detected') Object.assign(Au, { bpm: +r.bpm.toFixed(2), meter: r.meter, barOff: r.barOff });
   } else {
     if (!fromProject) remember();
     const keep = S.P.audio;
@@ -482,7 +490,8 @@ function tap() {
   if (taps.length && wall - taps[taps.length - 1].w > 2) taps = [];
   taps.push({ w: wall, s: src });
   if (taps.length < 4) { songMsg = t('tap_more', 4 - taps.length); renderInspector(); songMsg = ''; return; }
-  const step = (taps[taps.length - 1].w - taps[0].w) / (taps.length - 1);
+  // un pezzo allungato suona piu' lento: il tempo del brano e' quello battuto per la velocita'
+  const step = ((taps[taps.length - 1].w - taps[0].w) / (taps.length - 1)) * (Au.clips[si].rate || 1);
   remember();
   Au.bpm = +(60 / step).toFixed(2); Au.mode = 'grid';
   Au.gridOff = +(((src % step) + step) % step).toFixed(3);
@@ -620,7 +629,7 @@ $('#t-del').addEventListener('click', deleteSel);
 const SNAPS = ['bar', 'beat', 'off'];
 function showSnapMode() { $('#t-snap-l').textContent = t(`snap_${S.P.snap}`); $('#t-snap').classList.toggle('on', S.P.snap !== 'off'); }
 $('#t-snap').addEventListener('click', () => { S.P.snap = SNAPS[(SNAPS.indexOf(S.P.snap) + 1) % 3]; showSnapMode(); saveLocal(); renderTimeline(); });
-$('#mute').addEventListener('click', () => { if (!S.P.audio) return; remember(); S.P.audio.mute = !S.P.audio.mute; $('#mute').classList.toggle('off', S.P.audio.mute); changed(); if (S.playing) { pause(); play(); } });
+$('#mute').addEventListener('click', () => { if (!S.P.audio) return; remember(); S.P.audio.mute = !S.P.audio.mute; changed(); if (S.playing) { pause(); play(); } });
 // annullando si torna anche ai battiti salvati nel progetto
 function reloadSongState() { const Au = S.P.audio; if (Au?.det?.beats && S.song.name === Au.name) S.song.detected = Au.det.beats; }
 $('#undo').addEventListener('click', () => { if (undo()) { reloadSongState(); changed(); } });

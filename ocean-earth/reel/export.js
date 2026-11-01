@@ -89,7 +89,7 @@ export async function exportMp4(out, codecs, onProgress, cancelled) {
     // le scie partono gia' formate: un po' di simulazione prima del primo fotogramma
     let inf = applyAt(0);
     await until(() => oe.ready(), 120000, 20);
-    for (let k = 0; k < 150; k++) A.clock.step(1000 / fps);
+    for (let k = 0, n = Math.round(fps * 5); k < n; k++) A.clock.step(1000 / fps);
     for (let f = 0; f < N; f++) {
       if (cancelled()) throw new Error('cancel');
       if (failed) throw failed;

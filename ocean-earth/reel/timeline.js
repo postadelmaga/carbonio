@@ -20,7 +20,9 @@ export const viewGradient = (v) => (PALETTE_OF[v] ? cssGradient(PALETTE_OF[v]) :
 
 const contentLen = () => Math.max(5, total(), audioEnd()) + 2;
 function fitPps() { return Math.max(4, ($('#tl-scroll').clientWidth - 20) / contentLen()); }
+let heldPps = null;         // durante un trascinamento la scala non cambia
 function updatePps() {
+  if (heldPps) { pps = heldPps; return; }
   const lo = fitPps(), hi = 320;
   pps = lo * Math.pow(Math.max(1.0001, hi / lo), zoomZ);
   // le tele non possono superare ~32k px
@@ -186,6 +188,9 @@ export function initTimeline(hooks) {
     const r = inner.getBoundingClientRect(), x = e.clientX - r.left;
     const vClip = e.target.closest('.clip:not(.audio)'), aClip = e.target.closest('.clip.audio');
     inner.setPointerCapture(e.pointerId);
+    // spostando un pezzo oltre la fine la timeline si allunga: senza fermare la
+    // scala, il pezzo scapperebbe piu' veloce del puntatore
+    heldPps = pps;
     if (e.target.id === 'tl-ruler' || (!vClip && !aClip)) {
       drag = { kind: 'seek' };
       if (!e.target.closest('#tl-ruler')) H.select(null);
@@ -308,6 +313,7 @@ export function initTimeline(hooks) {
     }
     const was = drag;
     drag = null;
+    heldPps = null;
     $('#drop').hidden = true;
     $('#snapline').hidden = true;
     if (was.kind !== 'seek') H.changed({});
