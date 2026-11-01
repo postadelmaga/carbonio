@@ -12,8 +12,9 @@ export function stretchBuffer(buf, a, b, rate) {
   const ch = [...Array(nch)].map((_, c) => buf.getChannelData(c));
   const s0 = Math.max(0, Math.floor(a * sr)), s1 = Math.min(buf.length, Math.ceil(b * sr));
   const outLen = Math.max(1, Math.round((s1 - s0) / rate));
-  // si legge dal pezzo e, alla fine, un po' oltre (l'ultima finestra), se il file continua
-  const e1 = Math.min(buf.length, s1 + N + TOL), last = Math.max(s0, e1 - N);
+  // si legge solo dentro il pezzo: oltre ci sarebbe gia' il colpo della battuta dopo
+  // (le ultime finestre restano corte, e la normalizzazione le riporta al volume giusto)
+  const e1 = s1, last = Math.max(s0, s1 - HS);
   // canale unico (solo il tratto che serve) per cercare dove le finestre combaciano
   const mono = new Float32Array(e1 - s0);
   for (const d of ch) for (let i = s0; i < e1; i++) mono[i - s0] += d[i];
