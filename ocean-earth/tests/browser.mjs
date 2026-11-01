@@ -121,6 +121,32 @@ async function open(w, h, mobile, theme) {
     return out;
   });
   check('viste livello del mare e ghiaccio', views.tier === 'monthly' && Math.abs(views.sla) < 60 && views.icePole > 50 && !(views.iceEq > 0) && views.status, JSON.stringify(views));
+  // aria (CAMS, 1°): CO₂ e flussi di giugno 1994 (presenti anche con la serie parziale)
+  const airv = await page.evaluate(async () => {
+    const wait = async (ok) => { for (let k = 0; k < 60 && !ok(); k++) await new Promise((r) => setTimeout(r, 250)); };
+    const b = document.querySelector('.quick-mode button[data-mode=emis]');
+    if (!b || b.hidden) return { skip: true };
+    const tl = __oe.timeline, out = {};
+    b.click();
+    tl.seek(tl.findStamp('1994-06'));
+    await wait(() => __oe.shown()?.airF?.co2foss?.[0] && __oe.shown().A.t === '1994-06');
+    let c = __oe.shown();
+    const cell = (lat, lon) => Math.floor(90 - lat) * 360 + Math.floor(lon + 180);
+    const val = (f, lat, lon) => +__oe.store.scalarValue(f.codes, cell(lat, lon), f.off).toFixed(2);
+    out.ruhr = val(c.airF.co2foss[0], 51.5, 7.2);            // fossili nella Ruhr
+    out.pacific = val(c.airF.co2foss[0], -20.5, -150.5);     // nessuna fonte fossile in mezzo al Pacifico
+    document.querySelector('.quick-mode button[data-mode=co2]').click();
+    await wait(() => __oe.shown()?.airF?.co2?.[0] && __oe.shown().A.t === '1994-06');
+    c = __oe.shown();
+    out.mean = +__oe.globe.state.airMean.toFixed(1);
+    out.status = /CAMS/.test(document.querySelector('#status').innerText);
+    document.querySelector('.quick-mode button[data-mode=sst]').click();
+    await new Promise((r) => setTimeout(r, 500));
+    tl.setTier('daily');
+    await new Promise((r) => setTimeout(r, 1500));
+    return out;
+  });
+  check('aria: CO₂ ed emissioni', airv.skip || (airv.ruhr > 1 && Math.abs(airv.pacific) < 0.05 && airv.mean > 350 && airv.mean < 365 && airv.status), JSON.stringify(airv));
   // il pannello laterale parte chiuso: lo si apre come farebbe chi usa la pagina
   check('pannello laterale chiuso all\'avvio', await page.evaluate(() => !document.body.classList.contains('side-open')));
   await page.click('#side-btn');

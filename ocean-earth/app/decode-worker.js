@@ -106,10 +106,11 @@ async function decodeBlob(blob, kind) {
     for (let i = 0; i < n; i++) g[i] = data[i * 4];
     return { w, h, gray: g };
   }
-  if (kind === 'scalar' || kind === 'series' || kind === 'sla') {
-    // il livello del mare ha il suo zero (manifest: encoding.scalar.offsets)
+  if (kind === 'scalar' || kind === 'series' || kind.startsWith('v:')) {
+    // 'v:<variabile>': una variabile col suo zero (manifest: encoding.scalar.offsets),
+    // come il livello del mare o i flussi di CO₂
     const { step } = ENC.scalar;
-    const offset = kind === 'sla' ? ENC.scalar.offsets.sla : ENC.scalar.offset;
+    const offset = kind.startsWith('v:') ? ENC.scalar.offsets[kind.slice(2)] : ENC.scalar.offset;
     const codes = new Uint16Array(n);
     for (let i = 0; i < n; i++) codes[i] = (data[i * 4] << 8) | data[i * 4 + 1];
     if (kind === 'series') return { w, h, codes };

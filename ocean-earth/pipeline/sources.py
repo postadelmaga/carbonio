@@ -69,6 +69,11 @@ DATASETS = {
     'cmems_obs-sl_glo_phy-ssh_nrt_allsat-l4-duacs-0.125deg_P1D': dict(
         product='SEALEVEL_GLO_PHY_L4_NRT_008_046', name='DUACS multi-mission altimetry (near real time), monthly mean of daily maps',
         kind='observation', res='0.125°', freq='P1M', var='sla', depth=False, aggregate='P1M'),
+    # aria (pipeline/co2.py): Copernicus Atmosphere Monitoring Service, Atmosphere Data Store
+    'cams-global-greenhouse-gas-inversion': dict(
+        product='cams-global-greenhouse-gas-inversion', name='CAMS greenhouse gas inversion (CO₂, surface stations)',
+        kind='model', res='1°', freq='P1M', var='carbon_dioxide', depth=False,
+        cds=True, ads=True, doi='10.24381/ed2851d2'),
     # terraferma (pipeline/land.py): Copernicus Climate Change Service, Climate
     # Data Store; non passano da copernicusmarine, il DOI e' scritto qui
     'reanalysis-era5-single-levels-monthly-means': dict(

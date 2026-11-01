@@ -28,6 +28,8 @@ Atlas du climat, 气候地图集.
 | Hotspots | months above the 1993–2020 90th percentile of the same month (monthly time step only) | — |
 | Sea level | sea level anomaly from the 1993–2012 mean, satellite altimetry (monthly time step only) | cm |
 | Sea ice | sea ice concentration, drawn from 15% (monthly time step only) | % |
+| CO₂ in the air | column-mean CO₂ (XCO2), in ppm or as the difference from the global mean of the month, CAMS inversion, 1° (monthly time step only) | ppm |
+| Carbon fluxes | surface CO₂ flux: total, fossil or natural (land with fires, and ocean), CAMS inversion, 1° (monthly time step only) | g C/m²/day |
 | Land | precipitation or soil moisture (0–7 cm) as a percentage of the 1993–2020 normal of the same month, ERA5 (monthly time step only) | % |
 
 Time steps: **month** (1993 → last complete month), **day** (since 1 January
@@ -102,6 +104,27 @@ of September 2024 from the frame is 4.34 million km² (NSIDC: 4.38); September
 `validate.py` section 7c checks every March and September extent and the
 1993–1998 → 2020–2025 rise of the global mean. Monthly instants are the ones
 that have temperature or currents: a month with only sea level waits.
+
+**Air** (`pipeline/co2.py`), from the Copernicus Atmosphere Monitoring
+Service, Atmosphere Data Store (same personal token as the CDS, site terms and
+dataset licence accepted once): `cams-global-greenhouse-gas-inversion`,
+version `latest`, surface-station observations (the longest homogeneous
+series), DOI 10.24381/ed2851d2, CC BY 4.0, 1979 → end of 2025 on 1°.
+- `co2`: monthly mean of the 3-hourly column-mean CO₂ (`XCO2`), ppm. The
+  column-mean exists only as instantaneous fields; one month is 62 MB.
+- `co2foss`, `co2nat`: monthly surface fluxes, fossil (`flux_foss`) and natural
+  (`flux_apos_bio + flux_apos_ocean`, fires included), converted from kg C/m² in
+  the month to g C/m² per day so that the city maxima (~40) fit the 16-bit code
+  (own zero −50, `encode.SCALAR_OFFSETS`).
+
+Frames stay on the native 1° grid (180 × 360) and go into one 6-layer texture
+array on the GPU (A/B for each field). The service queues every request and
+rejects parallel ones, so `co2.py` asks for a whole year per request.
+Checks (`validate.py` section 7d) against the Global Carbon Budget 2025 CSV:
+yearly fossil totals within 10%, and the rise of the global mean CO₂ against
+the GCB cumulative atmospheric growth (1 ppm = 2.124 GtC) within 10%. First
+look: March 1993 fossil flux, annualised, 6.18 GtC/yr against GCB 6.21; north of
+30° N 358.5 ppm against 354 south of 30° S.
 
 **Land** (`pipeline/land.py`), from the Copernicus Climate Change Service
 Climate Data Store, not Copernicus Marine:

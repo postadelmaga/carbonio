@@ -20,6 +20,8 @@ const ui = {
   regionMode: false, region: null,
   compare: false, compareIndex: null,
   landVar: 'precip',           // terraferma: precip | soil (solo serie mensile)
+  airMode: 1,                  // CO₂: 0 ppm, 1 rispetto alla media globale del mese
+  fluxMode: 0,                 // flussi: 0 totale, 1 fossili, 2 naturali
 };
 
 const camera = new Camera();
@@ -147,7 +149,7 @@ function previewMode() {
 }
 
 // variabili senza anteprima: gia' leggere (Mediterraneo, terraferma)
-const NO_PREVIEW = new Set(['med', 'precip', 'soil', 'sla', 'ice']);
+const NO_PREVIEW = new Set(['med', 'precip', 'soil', 'sla', 'ice', 'co2', 'co2foss', 'co2nat']);
 
 function keyFor(frame, v, prev = previewMode()) {
   return `${prev && !NO_PREVIEW.has(v) ? 'p:' : ''}${timeline.tierName}/${v}/${frame.t}`;
@@ -157,7 +159,8 @@ function keyFor(frame, v, prev = previewMode()) {
 function fileOf(frame, v, prev) {
   const tier = timeline.tierName;
   if (prev && !NO_PREVIEW.has(v)) return [store.previewPath(tier, v, frame.t), v === 'cur' ? 'pcur' : 'psst'];
-  return [store.framePath(tier, v, frame.t), v === 'cur' ? 'vector' : v === 'sla' ? 'sla' : 'scalar'];
+  const off = manifest.encoding.scalar.offsets || {};
+  return [store.framePath(tier, v, frame.t), v === 'cur' ? 'vector' : off[v] != null ? 'v:' + v : 'scalar'];
 }
 
 function request(frame, v, prev = previewMode()) {
@@ -170,9 +173,35 @@ function needed(f) {
   const need = [sstVar(f), 'cur'];
   if (medOn()) need.push('med');
   if (landOn()) need.push(ui.landVar);
-  need.push(...oceanVars());
+  need.push(...oceanVars(), ...airVars());
   return need.filter((v) => f[v] != null);
 }
+
+// aria (CO₂ a 1°): solo serie mensile, fino all'ultimo anno pubblicato da CAMS
+function airVars() {
+  const L = globe.state.layers, out = [];
+  if (L.co2 > 0) out.push('co2');
+  if (L.flux > 0) out.push('co2foss', 'co2nat');
+  return out.filter(monthlyHas);
+}
+// media globale pesata sull'area di un campo a 1° (per "rispetto alla media")
+const airMeanCache = new WeakMap();
+function airMean(f) {
+  if (!f) return NaN;
+  if (airMeanCache.has(f)) return airMeanCache.get(f);
+  let s = 0, w = 0;
+  for (let r = 0; r < 180; r++) {
+    const cw = Math.cos((89.5 - r) * DEG);
+    for (let c = 0; c < 360; c++) {
+      const v = store.scalarValue(f.codes, r * 360 + c, f.off);
+      if (Number.isFinite(v)) { s += v * cw; w += cw; }
+    }
+  }
+  const m = w ? s / w : NaN;
+  airMeanCache.set(f, m);
+  return m;
+}
+const airCell = (lat, lon) => Math.min(179, Math.floor(90 - lat)) * 360 + Math.min(359, Math.floor(wrapLon(lon) + 180));
 
 // livello del mare e ghiaccio: serie mensile
 function monthlyHas(v) {
@@ -247,6 +276,7 @@ async function applyFrames() {
   const svA = sstVar(A), svB = sstVar(B);
   const med = medOn(), lv = landOn() ? ui.landVar : null, ov = oceanVars();
   const slaOn = ov.includes('sla'), iceOn = ov.includes('ice');
+  const av = airVars();
   const got = (p) => (p ? p.catch(() => null) : null);
   // tutti i file prima di toccare il globo: temperatura, correnti e
   // Mediterraneo cambiano insieme, con l'interpolazione e la climatologia
@@ -256,8 +286,11 @@ async function applyFrames() {
     lv ? request(A, lv) : null, lv ? request(B, lv) : null,
     slaOn ? request(A, 'sla') : null, slaOn ? request(B, 'sla') : null,
     iceOn ? request(A, 'ice') : null, iceOn ? request(B, 'ice') : null,
+    ...av.flatMap((v) => [request(A, v), request(B, v)]),
   ].map(got));
-  const [qA, qB, gA, gB] = rest;
+  const [qA, qB, gA, gB, ...airGot] = rest;
+  const airF = {}, airK = {};
+  av.forEach((v, k) => { airF[v] = [airGot[2 * k], airGot[2 * k + 1] || airGot[2 * k]]; airK[v] = [keyFor(A, v), keyFor(airGot[2 * k + 1] ? B : A, v)]; });
   if (token !== applyToken) return;
   const st = globe.state;
   st.sstA = globe.frameTexture(keyFor(A, svA), sA, 'scalar');
@@ -274,7 +307,9 @@ async function applyFrames() {
   st.oceanA = ov.length ? globe.oceanTexture(okey(A), qA, gA) : null;
   st.oceanB = ov.length ? globe.oceanTexture(okey(B), qB, gB) || st.oceanA : null;
   st.landB = lv ? globe.frameTexture(keyFor(B, lv), lB, 'scalar') || st.landA : null;
-  current = { A, B, sA, sB, cA, cB, svA, svB, mA, mB, lA, lB, lv, qA, qB, gA, gB, ov, preview: previewMode(), missing: !sA && A[svA] != null };
+  globe.setAir(airF, airK);
+  st.air = av.some((v) => airF[v][0]);
+  current = { A, B, sA, sB, cA, cB, svA, svB, mA, mB, lA, lB, lv, qA, qB, gA, gB, ov, av, airF, preview: previewMode(), missing: !sA && A[svA] != null };
   syncShown();
   syncTimeUI(false);
   loadClim();
@@ -322,6 +357,9 @@ function syncShown() {
   }
   st.climSel = mixClim(climSelection(current.A.t), climSelection(current.B.t), st.mix);
   st.biasW = anfcShare(current.A, current.B, current.svA, st.mix);
+  const co2 = current.airF?.co2;
+  st.airMode = ui.airMode; st.fluxMode = ui.fluxMode;
+  st.airMean = co2 && co2[0] ? airMean(co2[0]) + (airMean(co2[1]) - airMean(co2[0])) * st.mix : 0;
 }
 
 // il globo mostra ancora altri istanti (si sta caricando quello scelto)
@@ -611,7 +649,9 @@ function pointValues(p) {
   const land = current.lv ? valueAt(current.lA, current.lB, c.i, 'scalar') : NaN;
   const sla = current.qA ? valueAt(current.qA, current.qB, c.i, 'scalar') : NaN;
   const ice = current.gA ? valueAt(current.gA, current.gB, c.i, 'scalar') : NaN;
-  return { c, sst, anom: model - cl, u, v, speed, dirDeg, med, land, sla, ice };
+  const ai = airCell(p.lat, p.lon), af = current.airF || {};
+  const air = (v) => (af[v] && af[v][0] ? valueAt(af[v][0], af[v][1], ai, 'scalar') : NaN);
+  return { c, sst, anom: model - cl, u, v, speed, dirDeg, med, land, sla, ice, co2: air('co2'), foss: air('co2foss'), nat: air('co2nat') };
 }
 
 
@@ -629,6 +669,8 @@ function refreshPoint() {
     const extra = [];
     if (Number.isFinite(v.sla)) extra.push(`<dt>${t('sla_short')}</dt><dd><b>${v.sla >= 0 ? '+' : ''}${fmtNum(v.sla, 1)} cm</b> <span class="muted">${t('sla_ref')}</span></dd>`);
     if (Number.isFinite(v.ice) && v.ice >= 0.5) extra.push(`<dt>${t('ice_short')}</dt><dd><b>${fmtNum(v.ice, 0)}%</b> <span class="muted">${t('ice_conc')}</span></dd>`);
+    if (Number.isFinite(v.co2)) extra.push(`<dt>${t('co2_short')}</dt><dd><b>${fmtNum(v.co2, 1)} ppm</b> <span class="muted">${(() => { const d = v.co2 - globe.state.airMean; return `${d >= 0 ? '+' : ''}${fmtNum(d, 1)} ${t('vs_global')}`; })()}</span></dd>`);
+    if (Number.isFinite(v.foss) || Number.isFinite(v.nat)) extra.push(`<dt>${t('flux_short')}</dt><dd>${t('flux_foss')} <b>${fmtNum(v.foss, 2)}</b> · ${t('flux_nat')} <b>${fmtNum(v.nat, 2)}</b> <span class="muted">g C/m² ${t('per_day')}</span></dd>`);
     if (extra.length) rows.push(`<dl class="vals">${extra.join('')}</dl>`);
     if (!Number.isFinite(v.sst) && !Number.isFinite(v.speed)) { if (!Number.isFinite(v.land)) rows.push(`<div class="muted">${t('no_data')}</div>`); return; }
     const dir = compass(v.dirDeg);
@@ -657,6 +699,7 @@ function freqLabel(s) {
 
 // pagina del prodotto: Copernicus Marine, oppure Climate Data Store per ERA5
 function srcUrl(s) {
+  if (s.ads) return `https://ads.atmosphere.copernicus.eu/datasets/${s.product}`;
   return s.cds ? `https://cds.climate.copernicus.eu/datasets/${s.product}` : `https://data.marine.copernicus.eu/product/${s.product}/description`;
 }
 
@@ -988,11 +1031,15 @@ function updateStatus() {
   const parts = [];
   if (sS) parts.push(`<b>${t('temp')}</b> ${sS.name} <span class="muted">(${t(sS.kind)}, ${freqLabel(sS)}, ${sS.res})</span>`);
   if (sC) parts.push(`<b>${t('cur_speed')}</b> ${sC.name} <span class="muted">(${t(sC.kind)}, ${freqLabel(sC)}, ${sC.res})</span>`);
+  if (current.av?.length) {
+    const s = store.source(current.A[current.av[0]]);
+    if (s) parts.push(`<b>${t('group_air')}</b> ${s.name} <span class="muted">(${t(s.kind)}, ${freqLabel(s)}, ${s.res})</span>`);
+  } else if ((globe.state.layers.co2 > 0 || globe.state.layers.flux > 0) && timeline.tierName === 'monthly') notes.push(t('air_until'));
   for (const v of current.ov || []) {
     const s = store.source(current.A[v]);
     if (s) parts.push(`<b>${t(v + '_short')}</b> ${s.name} <span class="muted">(${t(s.kind)}, ${freqLabel(s)}, ${s.res})</span>`);
   }
-  if (timeline.tierName !== 'monthly' && ['sla', 'ice'].some((v) => globe.state.layers[v] > 0)) notes.push(t('monthly_only'));
+  if (timeline.tierName !== 'monthly' && ['sla', 'ice', 'co2', 'flux'].some((v) => globe.state.layers[v] > 0)) notes.push(t('monthly_only'));
   if (current.lv) {
     const l = store.source(current.A[current.lv]);
     if (l) parts.push(`<b>${t(current.lv + '_short')}</b> ${l.name} <span class="muted">(${t(l.kind)}, ${freqLabel(l)}, ${l.res})</span>`);
@@ -1061,10 +1108,16 @@ function bindControls() {
   });
 
   // livelli
+  // viste i cui dati non sono ancora pubblicati (manifest): nascoste
+  const mv = manifest.tiers.monthly?.vars || [];
+  const NEEDS = { sla: ['sla'], ice: ['ice'], drought: ['soil'], co2: ['co2'], emis: ['co2foss', 'co2nat'] };
+  $$('.quick-mode button').forEach((b) => { b.hidden = !(NEEDS[b.dataset.mode] || []).every((v) => mv.includes(v)); });
   $$('.quick-mode button').forEach((b) => b.addEventListener('click', () => setMode(b.dataset.mode)));
   bindMixer();
   try {
     const saved = JSON.parse(localStorage.getItem('oe-layers') || 'null');
+    const air = JSON.parse(localStorage.getItem('oe-air') || 'null');
+    if (Array.isArray(air) && [0, 1].includes(air[0]) && [0, 1, 2].includes(air[1])) [ui.airMode, ui.fluxMode] = air;
     const lv = localStorage.getItem('oe-land');
     if (lv === 'precip' || lv === 'soil') ui.landVar = lv;
     for (const k of MONTHLY_ONLY) if (saved && !(typeof saved[k] === 'number' && saved[k] >= 0 && saved[k] <= 1)) saved[k] = 0;
@@ -1195,18 +1248,23 @@ function autoRange() {
 // in alto sono scorciatoie: un livello solo, oppure "Mix" con tutti e tre.
 // Viste pronte: ognuna fissa tutti i pesi. Quelle con livello del mare,
 // ghiaccio o terraferma esistono solo nella serie mensile e ci portano.
-const OFF = { sst: 0, anom: 0, speed: 0, land: 0, sla: 0, ice: 0 };
+const OFF = { sst: 0, anom: 0, speed: 0, land: 0, sla: 0, ice: 0, co2: 0, flux: 0 };
 const PRESETS = {
   sst: { ...OFF, sst: 1 }, anom: { ...OFF, anom: 1 }, speed: { ...OFF, speed: 1 },
   sla: { ...OFF, sla: 1 }, ice: { ...OFF, anom: 1, ice: 1 },
   drought: { ...OFF, anom: 1, land: 1, landVar: 'soil' },
+  co2: { ...OFF, co2: 1, airMode: 1 }, emis: { ...OFF, flux: 1, fluxMode: 0 },
   mix: { ...OFF, sst: 1, anom: 0.7, speed: 0.6 },
 };
 const LAYERS = ['sst', 'anom', 'speed'];      // quelli del mare: decidono il livello principale
-const ALL_LAYERS = [...LAYERS, 'sla', 'ice', 'land'];
-const MONTHLY_ONLY = ['sla', 'ice', 'land'];
+const ALL_LAYERS = [...LAYERS, 'sla', 'ice', 'land', 'co2', 'flux'];
+const MONTHLY_ONLY = ['sla', 'ice', 'land', 'co2', 'flux'];
+function saveAir() { try { localStorage.setItem('oe-air', JSON.stringify([ui.airMode, ui.fluxMode])); } catch (e) { /* niente */ } }
 function setMode(mode) {
-  const { landVar, ...w } = PRESETS[mode];
+  const { landVar, airMode, fluxMode, ...w } = PRESETS[mode];
+  if (airMode != null) ui.airMode = airMode;
+  if (fluxMode != null) ui.fluxMode = fluxMode;
+  if (airMode != null || fluxMode != null) saveAir();
   if (landVar) { ui.landVar = landVar; try { localStorage.setItem('oe-land', landVar); } catch (e) { /* niente */ } }
   const needMonthly = MONTHLY_ONLY.some((k) => w[k] > 0) && timeline.tierName !== 'monthly' && manifest.tiers.monthly;
   setLayers(w);
@@ -1234,7 +1292,8 @@ function setLayers(w) {
 
 function syncModeButtons() {
   const L = globe.state.layers;
-  const same = (p) => ALL_LAYERS.every((k) => Math.abs((L[k] || 0) - (p[k] || 0)) < 1e-6) && (!p.landVar || p.landVar === ui.landVar);
+  const same = (p) => ALL_LAYERS.every((k) => Math.abs((L[k] || 0) - (p[k] || 0)) < 1e-6) && (!p.landVar || p.landVar === ui.landVar)
+    && (p.airMode == null || p.airMode === ui.airMode) && (p.fluxMode == null || p.fluxMode === ui.fluxMode);
   $$('.quick-mode button').forEach((b) => b.classList.toggle('on', same(PRESETS[b.dataset.mode])));
   const st = globe.state;
   const r = ui.mode === 'anom' ? st.rangeAnom : ui.mode === 'speed' ? st.rangeSpeed : st.rangeSst;
@@ -1295,6 +1354,17 @@ function drawLegend() {
     row('land', t('land_label'), `<div class="lg-bar" style="background:${cssGradient('precip')}"></div><div class="lg-ticks">${ticks}</div><div class="lg-ends"><span>${t('drier')}</span><span>${t('wetter')}</span></div>`,
       `<div class="mx-var"><select id="land-var" aria-label="${t('land_label')}">${opt('precip')}${opt('soil')}</select> <span class="muted">% ${t('of_normal')} ${manifest.land?.clim_years.join('–') || '1993–2020'}</span></div>`);
   }
+  if (vars.includes('co2')) {
+    L.push(`<div class="lg-group">${t('group_air')}</div>`);
+    const sel = (id, cur, opts) => `<select id="${id}">${opts.map(([v, k]) => `<option value="${v}"${cur === v ? ' selected' : ''}>${t(k)}</option>`).join('')}</select>`;
+    const r = ui.airMode ? st.rangeCo2Rel : st.rangeCo2;
+    row('co2', `${t('co2_label')} · ppm`, scale(ui.airMode ? 'anomaly' : 'co2', r[0], r[1], 0),
+      `<div class="mx-var">${sel('air-mode', ui.airMode, [[1, 'co2_rel'], [0, 'co2_abs']])}</div>`);
+    // flussi: la stessa scala simmetrica logaritmica dello shader
+    const ft = [-30, -1, 0, 1, 30].map((v, i) => `<span style="left:${i * 25}%">${v > 0 ? '+' : ''}${v}</span>`).join('');
+    row('flux', t('flux_label'), `<div class="lg-bar" style="background:${cssGradient('flux')}"></div><div class="lg-ticks">${ft}</div><div class="lg-ends"><span>${t('absorbs')}</span><span>${t('emits')}</span></div>`,
+      `<div class="mx-var">${sel('flux-mode', ui.fluxMode, [[0, 'flux_total'], [1, 'flux_foss'], [2, 'flux_nat']])} <span class="muted">g C/m² ${t('per_day')}</span></div>`);
+  }
   if ((st.particles || st.arrows) && !(st.layers.speed > 0)) L.push(`<div class="lg"><div class="lg-t">${t('particles')} · ${t('speed_label')}</div>${scale('speed', st.rangeSpeed[0], st.rangeSpeed[1], 1)}</div>`);
   if (st.hotspot) L.push(`<div class="lg"><span class="hatch"></span> ${t('hotspot')}</div>`);
   $('#legend').innerHTML = L.join('');
@@ -1312,6 +1382,14 @@ function bindMixer() {
   });
   // a cursore rilasciato la legenda si aggiorna (scala delle particelle, ecc.)
   $('#legend').addEventListener('change', (e) => {
+    if (e.target.id === 'air-mode' || e.target.id === 'flux-mode') {
+      if (e.target.id === 'air-mode') ui.airMode = +e.target.value; else ui.fluxMode = +e.target.value;
+      saveAir();
+      const k = e.target.id === 'air-mode' ? 'co2' : 'flux';
+      if (!(globe.state.layers[k] > 0)) setLayers({ [k]: 1 });
+      syncShown(); syncModeButtons(); refreshPoint(); drawLegend();
+      return;
+    }
     if (e.target.id === 'land-var') {
       ui.landVar = e.target.value;
       try { localStorage.setItem('oe-land', ui.landVar); } catch (err) { /* niente */ }

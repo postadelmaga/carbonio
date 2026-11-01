@@ -32,6 +32,14 @@ export const PALETTES = {
   sla: { kind: 'sla', stops: [
     [0.00, '#1d2f6f'], [0.18, '#2f6db3'], [0.36, '#8fbfe0'], [0.50, '#f4f4f2'],
     [0.64, '#e8a3c6'], [0.82, '#b03a8c'], [1.00, '#5b0a4d']] },
+  // CO₂ nell'aria: dal blu notte al giallo (anche per lo scarto dalla media)
+  co2: { kind: 'co2', stops: [
+    [0.00, '#0d1b3e'], [0.20, '#2c3f87'], [0.40, '#7b4f9d'], [0.60, '#c9577c'],
+    [0.80, '#f39a4c'], [1.00, '#fde68a']] },
+  // flussi di carbonio: verde = la superficie assorbe, arancio-rosso = emette
+  flux: { kind: 'flux', stops: [
+    [0.00, '#00441b'], [0.20, '#1b8a4a'], [0.40, '#9fd8a8'], [0.50, '#f5f5f0'],
+    [0.62, '#fdbf6f'], [0.80, '#e8551c'], [1.00, '#7f0000']] },
   precip: { kind: 'land', stops: [
     [0.00, '#543005'], [0.14, '#8c510a'], [0.28, '#bf812d'], [0.42, '#e6cf98'],
     [0.50, '#f5f2ea'], [0.58, '#a8ddd5'], [0.72, '#35978f'], [0.86, '#01665e'], [1.00, '#003c30']] },

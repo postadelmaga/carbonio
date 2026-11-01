@@ -44,6 +44,12 @@ uniform sampler2D uOceanA, uOceanB;  // livello del mare (R/G, cm) e ghiaccio (B
 uniform bool uOceanOn, uHasP90;
 uniform vec2 uRangeSla;
 uniform vec2 uLayers2;               // pesi: livello del mare, ghiaccio marino
+// aria, griglia 1°: strati 0/1 CO₂ (ppm) A/B, 2/3 fossili, 4/5 naturali (g C/m² al giorno)
+uniform sampler2DArray uAir;
+uniform bool uAirOn;
+uniform vec2 uLayers3;               // pesi: CO₂ nell'aria, flussi
+uniform vec3 uAirOpt;                // modo CO₂ (0 ppm, 1 rispetto alla media), modo flussi (0 totale, 1 fossili, 2 naturali), media globale
+uniform vec2 uRangeCo2;
 uniform float uBiasW, uBiasWCmp;     // quanto del dato mostrato viene da anfc (0…1)
 uniform sampler2D uLand;
 uniform sampler2D uMedA, uMedB;      // Mediterraneo 1/16° (griglia sua)
@@ -63,7 +69,11 @@ uniform vec2 uRangeSst, uRangeAnom, uRangeSpeed;
 uniform float uOpacity;
 uniform vec3 uBg, uLandCol, uNoData, uCoastGlow;
 
-vec3 lut(float t, float row) { return texture(uLuts, vec2(clamp(t, 0.0, 1.0), (row + 0.5) / 5.0)).rgb; }
+vec3 lut(float t, float row) { return texture(uLuts, vec2(clamp(t, 0.0, 1.0), (row + 0.5) / 7.0)).rgb; }
+vec2 air(vec2 uv, float layer) {
+  vec2 x = mix(texture(uAir, vec3(uv, layer)).rg, texture(uAir, vec3(uv, layer + 1.0)).rg, uMix);
+  return vec2(x.g > 0.5 ? x.r / x.g : 0.0, x.g);
+}
 vec2 sampleSst(sampler2D a, sampler2D b, vec2 uv, float m) {
   vec2 x = mix(texture(a, uv).rg, texture(b, uv).rg, m);
   return vec2(x.g > 0.5 ? x.r / x.g : 0.0, x.g);
@@ -196,6 +206,28 @@ void main() {
     if (r.y > 0.5) landCol = mix(uLandCol, lut(log2(max(r.x, 1.0) / 100.0) / (2.0 * uLandSpan) + 0.5, 3.0), uLayers.w);
   }
   col = mix(col, landCol, smoothstep(0.35, 0.65, land));
+  // aria: sopra mare e terra. Prima i flussi (dove la CO₂ esce o entra), poi
+  // la concentrazione, velata, cosi' i continenti restano leggibili
+  if (uAirOn && !cmpSide) {
+    if (uLayers3.y > 0.0) {
+      vec2 fo = air(uv, 2.0), na = air(uv, 4.0);
+      float f = uAirOpt.y < 0.5 ? fo.x + na.x : uAirOpt.y < 1.5 ? fo.x : na.x;
+      if (fo.y > 0.5 || na.y > 0.5) {
+        // scala simmetrica logaritmica: 0,05 … 30 g C/m² al giorno
+        float k = sign(f) * log(1.0 + abs(f) / 0.05) / log(1.0 + 30.0 / 0.05);
+        col = mix(col, lut(0.5 + 0.5 * k, 6.0), uLayers3.y * smoothstep(0.04, 0.3, abs(k)));
+      }
+    }
+    if (uLayers3.x > 0.0) {
+      vec2 c = air(uv, 0.0);
+      if (c.y > 0.5) {
+        float v = c.x - (uAirOpt.x > 0.5 ? uAirOpt.z : 0.0);
+        float t = (v - uRangeCo2.x) / (uRangeCo2.y - uRangeCo2.x);
+        // rispetto alla media: la scala divergente dell'anomalia; in ppm la sua
+        col = mix(col, lut(t, uAirOpt.x > 0.5 ? 1.0 : 5.0), uLayers3.x * 0.82);
+      }
+    }
+  }
   outColor = vec4(col * shade, 1.0);
   if (uCompare && abs(gl_FragCoord.x - uSplit) < 1.0) outColor = vec4(1.0);
 }`;

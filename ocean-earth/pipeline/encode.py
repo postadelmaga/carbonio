@@ -18,7 +18,7 @@ SCALAR_OFFSET = -5.0      # °C
 SCALAR_STEP = 0.01        # °C: risoluzione del dato pubblicato
 # variabili con un altro zero (stesso passo): il livello del mare in cm scende
 # sotto -5. Il browser somma (offset della variabile - SCALAR_OFFSET) al valore.
-SCALAR_OFFSETS = {'sla': -200.0}
+SCALAR_OFFSETS = {'sla': -200.0, 'co2foss': -50.0, 'co2nat': -50.0}
 VECTOR_STEP = 0.002       # m/s
 VECTOR_ZERO = 2048        # codice di velocita' nulla; validi 1..4095 → ±4,09 m/s
 

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Atlante del clima · CO₂·info</title>
-<meta name="description" content="Il mare e la terra dal 1993 a oggi su un globo interattivo: temperatura e anomalia del mare, correnti, livello del mare, ghiaccio marino, pioggia e umidità del suolo, con i dati Copernicus. Sea, ice and land since 1993 on an interactive globe.">
+<meta name="description" content="Il mare e la terra dal 1993 a oggi su un globo interattivo: temperatura e anomalia del mare, correnti, livello del mare, ghiaccio marino, pioggia, umidità del suolo e CO₂ nell’aria, con i dati Copernicus. Sea, ice and land since 1993 on an interactive globe.">
 <link rel="canonical" href="__ROOT__/atlante/">
 <meta property="og:title" content="Atlante del clima · CO₂·info">
 <meta property="og:description" content="Mare, ghiaccio e terra dal 1993 a oggi su un globo interattivo, dati Copernicus.">
@@ -44,6 +44,8 @@
     <button type="button" data-mode="sla" data-i18n-title="sla_title"><span class="l" data-i18n="mode_sla">Livello del mare</span><span class="s" data-i18n="mode_sla_s"></span></button>
     <button type="button" data-mode="ice" data-i18n-title="ice_title"><span class="l" data-i18n="mode_ice">Ghiaccio</span><span class="s" data-i18n="mode_ice_s"></span></button>
     <button type="button" data-mode="drought" data-i18n-title="drought_title"><span class="l" data-i18n="mode_drought">Siccità</span><span class="s" data-i18n="mode_drought_s"></span></button>
+    <button type="button" data-mode="co2" data-i18n-title="co2_title"><span class="l">CO₂</span><span class="s">CO₂</span></button>
+    <button type="button" data-mode="emis" data-i18n-title="emis_title"><span class="l" data-i18n="mode_emis">Emissioni</span><span class="s" data-i18n="mode_emis_s"></span></button>
     <button type="button" data-mode="mix" data-i18n-title="mix_title"><span class="l" data-i18n="mode_mix">Mix</span><span class="s" data-i18n="mode_mix">Mix</span></button>
   </div>
   <div class="top-r">
@@ -174,6 +176,8 @@
     </ul>
     <h3>Livello del mare, ghiaccio e terraferma (solo serie mensile)</h3>
     <p>Il <b>livello del mare</b> è l’anomalia rispetto alla media 1993–2012 misurata dall’altimetria satellitare multi-missione (DUACS, 0,125°); dopo la fine della serie riprocessata, la media del mese è calcolata dalle mappe giornaliere in tempo quasi reale, che nei mesi in comune differiscono in media di meno di 1 cm. Il Mar Caspio è escluso: è un lago. Il <b>ghiaccio marino</b> è la frazione di superficie coperta secondo GLORYS12 e poi l’analisi operativa; sotto il 15% per convenzione non si disegna. <b>Pioggia</b> e <b>umidità del suolo</b> (strato 0–7 cm) vengono dalle rianalisi ERA5 ed ERA5-Land del Copernicus Climate Change Service e sono la percentuale del normale 1993–2020 dello stesso mese: dove il normale è quasi zero (deserti, ghiacciai) restano grigie.</p>
+    <h3>Aria: CO₂ e flussi di carbonio (solo serie mensile)</h3>
+    <p>La <b>CO₂ nell’aria</b> è la media su tutta la colonna d’aria (XCO2), in parti per milione, dall’inversione dei gas serra del Copernicus Atmosphere Monitoring Service (CAMS): un modello dei venti che parte dalle misure delle stazioni al suolo e ricostruisce sia le concentrazioni sia i <b>flussi</b> alla superficie. La griglia è di 1°, molto più grossa di quella del mare. Poiché la CO₂ si rimescola in fretta, da un luogo all’altro cambia di pochi ppm mentre negli anni cresce di decine: per questo la vista mostra di solito lo scarto dalla media globale del mese. I flussi sono in grammi di carbonio per m² al giorno: positivi dove la superficie emette (combustibili fossili, incendi), negativi dove assorbe (foreste in crescita, oceani). La serie CAMS si aggiorna una o poche volte l’anno: i mesi più recenti arrivano dopo.</p>
     <h3>Interpolazione</h3>
     <p>Durante la riproduzione, fra un fotogramma e il successivo i campi vengono <b>mescolati linearmente</b> per rendere fluido il movimento. È un’interpolazione visiva, non un dato: quando la si vede, la data nella barra e la riga delle fonti dicono <span class="interp">interpolato</span>. Da fermi si vede sempre il dato originale.</p>
     <h3>Anomalie e hotspot</h3>
@@ -192,6 +196,8 @@
     </ul>
     <h3>Sea level, sea ice and land (monthly series only)</h3>
     <p><b>Sea level</b> is the anomaly from the 1993–2012 mean measured by multi-mission satellite altimetry (DUACS, 0.125°); after the end of the reprocessed series the monthly mean is computed from the near-real-time daily maps, which differ on average by less than 1 cm over the shared months. The Caspian Sea is left out: it is a lake. <b>Sea ice</b> is the fraction of the surface covered according to GLORYS12 and then the operational analysis; below 15% it is not drawn, by convention. <b>Rainfall</b> and <b>soil moisture</b> (0–7 cm layer) come from the ERA5 and ERA5-Land reanalyses of the Copernicus Climate Change Service and are a percentage of the 1993–2020 normal of the same month: where the normal is almost zero (deserts, ice sheets) they stay grey.</p>
+    <h3>Air: CO₂ and carbon fluxes (monthly series only)</h3>
+    <p><b>CO₂ in the air</b> is the mean over the whole air column (XCO2), in parts per million, from the greenhouse gas inversion of the Copernicus Atmosphere Monitoring Service (CAMS): a model of the winds that starts from ground-station measurements and reconstructs both concentrations and surface <b>fluxes</b>. The grid is 1°, much coarser than the sea’s. Since CO₂ mixes quickly, it differs by a few ppm from place to place while it grows by tens over the years: so the view usually shows the difference from the global mean of the month. Fluxes are in grams of carbon per m² per day: positive where the surface emits (fossil fuels, fires), negative where it absorbs (growing forests, oceans). The CAMS series is updated once or a few times a year: the latest months come later.</p>
     <h3>Interpolation</h3>
     <p>During playback the fields are <b>blended linearly</b> between one frame and the next to make motion smooth. This is a visual interpolation, not data: whenever it is on screen, the date and the source line say <span class="interp">interpolated</span>. When paused you always see the original data.</p>
     <h3>Anomalies and hotspots</h3>
@@ -210,6 +216,8 @@
     </ul>
     <h3>Nivel del mar, hielo y tierra firme (solo serie mensual)</h3>
     <p>El <b>nivel del mar</b> es la anomalía respecto a la media 1993–2012 medida por la altimetría satelital multimisión (DUACS, 0,125°); tras el final de la serie reprocesada, la media del mes se calcula con los mapas diarios en tiempo casi real, que en los meses comunes difieren en promedio menos de 1 cm. Se excluye el mar Caspio: es un lago. El <b>hielo marino</b> es la fracción de superficie cubierta según GLORYS12 y luego el análisis operativo; por debajo del 15 % por convención no se dibuja. La <b>lluvia</b> y la <b>humedad del suelo</b> (capa de 0–7 cm) vienen de los reanálisis ERA5 y ERA5-Land del Copernicus Climate Change Service y son el porcentaje de lo normal 1993–2020 del mismo mes: donde lo normal es casi cero (desiertos, glaciares) quedan en gris.</p>
+    <h3>Aire: CO₂ y flujos de carbono (solo serie mensual)</h3>
+    <p>El <b>CO₂ en el aire</b> es la media de toda la columna de aire (XCO2), en partes por millón, de la inversión de gases de efecto invernadero del Copernicus Atmosphere Monitoring Service (CAMS): un modelo de los vientos que parte de las mediciones de las estaciones en tierra y reconstruye tanto las concentraciones como los <b>flujos</b> en la superficie. La malla es de 1°, mucho más gruesa que la del mar. Como el CO₂ se mezcla rápido, de un lugar a otro cambia pocos ppm mientras con los años crece decenas: por eso la vista suele mostrar la diferencia respecto a la media global del mes. Los flujos están en gramos de carbono por m² al día: positivos donde la superficie emite (combustibles fósiles, incendios), negativos donde absorbe (bosques en crecimiento, océanos). La serie CAMS se actualiza una o pocas veces al año: los meses más recientes llegan después.</p>
     <h3>Interpolación</h3>
     <p>Durante la reproducción, entre un fotograma y el siguiente los campos se <b>mezclan linealmente</b> para que el movimiento sea fluido. Es una interpolación visual, no un dato: cuando se ve, la fecha en la barra y la línea de fuentes dicen <span class="interp">interpolado</span>. En pausa se ve siempre el dato original.</p>
     <h3>Anomalías y puntos calientes</h3>
@@ -228,6 +236,8 @@
     </ul>
     <h3>Niveau de la mer, glace et terres (série mensuelle seulement)</h3>
     <p>Le <b>niveau de la mer</b> est l’anomalie par rapport à la moyenne 1993–2012 mesurée par l’altimétrie satellitaire multi-missions (DUACS, 0,125°) ; après la fin de la série retraitée, la moyenne du mois est calculée à partir des cartes journalières en temps quasi réel, qui diffèrent en moyenne de moins de 1 cm sur les mois communs. La mer Caspienne est exclue : c’est un lac. La <b>glace de mer</b> est la fraction de surface couverte selon GLORYS12 puis l’analyse opérationnelle ; sous 15 %, par convention, elle n’est pas dessinée. La <b>pluie</b> et l’<b>humidité du sol</b> (couche 0–7 cm) viennent des réanalyses ERA5 et ERA5-Land du Copernicus Climate Change Service et sont un pourcentage de la normale 1993–2020 du même mois : là où la normale est presque nulle (déserts, calottes) elles restent grises.</p>
+    <h3>Air : CO₂ et flux de carbone (série mensuelle seulement)</h3>
+    <p>Le <b>CO₂ dans l’air</b> est la moyenne sur toute la colonne d’air (XCO2), en parties par million, issue de l’inversion des gaz à effet de serre du Copernicus Atmosphere Monitoring Service (CAMS) : un modèle des vents qui part des mesures des stations au sol et reconstruit à la fois les concentrations et les <b>flux</b> à la surface. La grille est de 1°, bien plus grossière que celle de la mer. Comme le CO₂ se mélange vite, il varie de quelques ppm d’un lieu à l’autre alors qu’il augmente de plusieurs dizaines au fil des ans : la vue montre donc d’ordinaire l’écart à la moyenne mondiale du mois. Les flux sont en grammes de carbone par m² et par jour : positifs là où la surface émet (combustibles fossiles, incendies), négatifs là où elle absorbe (forêts en croissance, océans). La série CAMS est mise à jour une ou quelques fois par an : les mois les plus récents arrivent plus tard.</p>
     <h3>Interpolation</h3>
     <p>Pendant la lecture, les champs sont <b>mélangés linéairement</b> entre une image et la suivante pour rendre le mouvement fluide. C’est une interpolation visuelle, pas une donnée : quand elle est à l’écran, la date dans la barre et la ligne des sources indiquent <span class="interp">interpolé</span>. En pause, on voit toujours la donnée originale.</p>
     <h3>Anomalies et points chauds</h3>
@@ -246,6 +256,8 @@
     </ul>
     <h3>海平面、海冰与陆地（仅月度序列）</h3>
     <p><b>海平面</b>是相对 1993–2012 年平均的距平，来自多任务卫星测高（DUACS，0.125°）；再处理序列结束后，月平均由近实时的逐日地图计算，两者在共同月份的平均差异小于 1 厘米。里海不计入：它是湖泊。<b>海冰</b>是 GLORYS12（之后为业务化分析）给出的海面覆盖比例；按惯例低于 15% 不绘制。<b>降水</b>和<b>土壤湿度</b>（0–7 厘米层）来自哥白尼气候变化服务的 ERA5 与 ERA5-Land 再分析，表示为同月 1993–2020 年常年值的百分比：常年值接近零的地方（沙漠、冰盖）保持灰色。</p>
+    <h3>大气：二氧化碳与碳通量（仅月度序列）</h3>
+    <p><b>空气中的二氧化碳</b>是整个气柱的平均值（XCO2），单位为百万分之一（ppm），来自哥白尼大气监测服务（CAMS）的温室气体反演：这是一个风场模式，从地面站的观测出发，同时重建浓度和地表<b>通量</b>。网格为 1°，比海洋数据粗得多。由于二氧化碳混合很快，各地之间只差几个 ppm，而多年来增长了几十 ppm：因此该视图通常显示相对于当月全球平均的差值。通量单位为每天每平方米的碳克数：地表排放处（化石燃料、火灾）为正，吸收处（生长中的森林、海洋）为负。CAMS 序列每年更新一次或几次：最近的月份会稍后才有。</p>
     <h3>插值</h3>
     <p>播放时，相邻两帧之间的场会被<b>线性混合</b>，使运动更流畅。这是视觉上的插值，不是数据：出现插值时，时间栏中的日期和数据源一行会标注<span class="interp">插值</span>。暂停时显示的始终是原始数据。</p>
     <h3>距平与热点</h3>
@@ -257,7 +269,7 @@
   <h3>Copernicus</h3>
   <div id="about-sources" class="about-table"></div>
   <ul id="about-tiers"></ul>
-  <p class="fine">Generated using E.U. Copernicus Marine Service Information<span data-lang-only="it"> (informazioni del Copernicus Marine Service dell’Unione europea)</span><span data-lang-only="es"> (información del Copernicus Marine Service de la Unión Europea)</span><span data-lang-only="fr"> (informations du Copernicus Marine Service de l’Union européenne)</span><span data-lang-only="zh">（使用欧盟哥白尼海洋服务信息生成）</span>. · Generated using Copernicus Climate Change Service information (ERA5, ERA5-Land; CC BY 4.0). · Natural Earth (public domain) · <span data-i18n="updated">updated</span> <span id="about-updated" class="mono"></span> · <a href="https://github.com/postadelmaga/carbonio/tree/main/ocean-earth" target="_blank" rel="noopener">GitHub</a></p>
+  <p class="fine">Generated using E.U. Copernicus Marine Service Information<span data-lang-only="it"> (informazioni del Copernicus Marine Service dell’Unione europea)</span><span data-lang-only="es"> (información del Copernicus Marine Service de la Unión Europea)</span><span data-lang-only="fr"> (informations du Copernicus Marine Service de l’Union européenne)</span><span data-lang-only="zh">（使用欧盟哥白尼海洋服务信息生成）</span>. · Generated using Copernicus Climate Change Service information (ERA5, ERA5-Land) and Copernicus Atmosphere Monitoring Service information (CAMS greenhouse gas inversion); CC BY 4.0. · Natural Earth (public domain) · <span data-i18n="updated">updated</span> <span id="about-updated" class="mono"></span> · <a href="https://github.com/postadelmaga/carbonio/tree/main/ocean-earth" target="_blank" rel="noopener">GitHub</a></p>
   <p class="fine cer-line"><span data-lang-only="it">Un progetto della <a href="/cer/">Comunità Energetica Rinnovabile</a>.</span><span data-lang-only="en">A project of the <a href="/cer/">Renewable Energy Community</a>.</span><span data-lang-only="es">Un proyecto de la <a href="/cer/">Comunidad Energética Renovable</a>.</span><span data-lang-only="fr">Un projet de la <a href="/cer/">Communauté d’énergie renouvelable</a>.</span><span data-lang-only="zh"><a href="/cer/">可再生能源社区</a>的项目。</span></p>
 </dialog>
 

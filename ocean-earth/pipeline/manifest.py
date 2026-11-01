@@ -25,7 +25,8 @@ import sources  # noqa: E402
 TIERS = {
     # precip e soil: terraferma da ERA5 (pipeline/land.py), percentuale del normale
     # sla: livello del mare (altimetria), ice: ghiaccio marino (GLORYS12 → analisi)
-    'monthly': dict(step='P1M', vars=['sst', 'cur', 'precip', 'soil', 'sla', 'ice']),
+    # co2, co2foss, co2nat: aria (pipeline/co2.py), griglia 1°
+    'monthly': dict(step='P1M', vars=['sst', 'cur', 'precip', 'soil', 'sla', 'ice', 'co2', 'co2foss', 'co2nat']),
     'daily': dict(step='P1D', vars=['sst', 'cur', 'ostia', 'med']),
     'hourly': dict(step='PT1H', vars=['sst', 'cur']),
 }
@@ -86,7 +87,8 @@ def build():
                     row[v] = src(per_var[v][s])
             rows.append(row)
         tiers[tier] = {
-            'dir': frames.TIER_DIR[tier], 'step': conf['step'], 'vars': conf['vars'],
+            # solo le variabili che hanno fotogrammi: la pagina nasconde le altre
+            'dir': frames.TIER_DIR[tier], 'step': conf['step'], 'vars': [v for v in conf['vars'] if per_var[v]],
             'first': stamps[0], 'last': stamps[-1], 'frames': rows,
         }
 

@@ -409,6 +409,57 @@ def check_sea_level_ice():
     log('')
 
 
+GCB_CSV = 'https://openclimatedata.github.io/global-carbon-budget/data/global-carbon-budget-2025-historical-budget.csv'
+
+
+def check_co2():
+    """Aria (CAMS): le emissioni fossili sommate sul globo e su ogni anno contro il
+    Global Carbon Budget 2025 (entro il 10%), e la salita della CO₂ media contro la
+    crescita atmosferica cumulata del GCB (1 ppm = 2,124 GtC, entro il 10%)."""
+    import csv, io, urllib.request
+    log('## 7d. CO₂ nell\'aria e flussi (CAMS)\n')
+    idx = sorted(frames.load_index('monthly', 'co2foss'))
+    if not idx:
+        log('- nessun fotogramma (ADS non configurato?)\n')
+        return
+    try:
+        txt = urllib.request.urlopen(GCB_CSV, timeout=30).read().decode()
+        rows = list(csv.DictReader(l for l in io.StringIO(txt) if not l.startswith('#')))
+        gcb = {int(r['Year']): r for r in rows}
+    except Exception as e:
+        log(f'- Global Carbon Budget non raggiungibile ({e}): controllo saltato\n')
+        return
+    lat = 89.5 - np.arange(180)
+    area = (6371e3 * np.radians(1)) ** 2 * np.cos(np.radians(lat))[:, None] * np.ones((1, 360))
+    # anni completi che il GCB ha gia' (l'ultima edizione arriva all'anno prima)
+    years = sorted({int(s[:4]) for s in idx if sum(t[:4] == s[:4] for t in idx) == 12} & set(gcb))
+    if len(years) < 2:
+        log('- meno di due anni completi: controllo rimandato\n')
+        return
+    worst, ok = 0.0, True
+    for y in years:
+        tot = 0.0
+        for m in range(1, 13):
+            f = published('monthly', 'co2foss', f'{y}-{m:02d}')
+            days = (dt.date(y + m // 12, m % 12 + 1, 1) - dt.date(y, m, 1)).days
+            tot += float(np.nansum(f * area)) * days / 1e15            # g C → Gt C
+        ref = float(gcb[y]['fossil emissions excluding carbonation'])
+        worst = max(worst, abs(tot / ref - 1))
+    ok = worst < 0.10
+    log(f'- emissioni fossili {years[0]}–{years[-1]}: scarto massimo dal GCB {worst * 100:.1f}% → **{"OK" if ok else "FALLITO"}**')
+    summary['co2 fossili vs GCB'] = ok
+    w = np.cos(np.radians(lat))[:, None]
+    def ann(y):
+        v = [published('monthly', 'co2', f'{y}-{m:02d}') for m in range(1, 13)]
+        return float(np.mean([np.nansum(f * w) / np.nansum(w * np.isfinite(f)) for f in v]))
+    a, b = years[0], years[-1]
+    rise = ann(b) - ann(a)
+    ref = sum(float(gcb[y]['atmospheric growth']) for y in range(a + 1, b + 1)) / 2.124
+    ok2 = abs(rise / ref - 1) < 0.10
+    log(f'- CO₂ media {a} → {b}: +{rise:.1f} ppm; crescita atmosferica GCB +{ref:.1f} ppm → **{"OK" if ok2 else "FALLITO"}**\n')
+    summary['co2 salita vs GCB'] = ok2
+
+
 def check_anomaly():
     log('## 7. Anomalie\n')
     idx = sorted(frames.load_index('monthly', 'sst'))
@@ -475,7 +526,7 @@ def check_bias(idx, clim):
 def main():
     log(f'# Ocean Earth: validazione dei dati\n\nEseguita il {dt.datetime.now(dt.timezone.utc):%Y-%m-%d %H:%M} UTC '
         f'con `pipeline/validate.py`.\n')
-    for fn in (check_continuity, check_ranges, check_land, check_orientation, check_anomaly, check_era5_land, check_sea_level_ice, check_points, check_seams):
+    for fn in (check_continuity, check_ranges, check_land, check_orientation, check_anomaly, check_era5_land, check_sea_level_ice, check_co2, check_points, check_seams):
         try:
             fn()
         except Exception as e:  # una verifica che non parte e' un fallimento, non un silenzio

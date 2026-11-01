@@ -41,6 +41,11 @@ if [ -f "$HOME/.cdsapirc" ]; then
   $PY pipeline/land.py 2>&1 | grep -v -E '^(INFO|WARNING)' > "$LOG/land.log" || echo "terraferma non aggiornata: vedi $LOG/land.log" >&2
 fi
 
+# aria (CAMS, Atmosphere Data Store, stessa chiave): si aggiorna poche volte l'anno
+if [ -f "$HOME/.cdsapirc" ]; then
+  $PY pipeline/co2.py 2>&1 | grep -v -E '^(INFO|WARNING)' > "$LOG/co2.log" || echo "aria non aggiornata: vedi $LOG/co2.log" >&2
+fi
+
 $PY pipeline/derived.py 2>&1 | tee "$LOG/derived.log"
 $PY pipeline/bias.py 2>&1 | grep -v -E '^(INFO|WARNING)' | tee "$LOG/bias.log"
 $PY pipeline/preview.py 2>&1 | tee "$LOG/preview.log"
