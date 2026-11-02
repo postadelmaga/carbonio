@@ -71,10 +71,10 @@ for (const k of r.impianti) {
 const voci = csv('economia_voci.csv').filter((x) => x.perspective === 'configurazione' && x.year === '1');
 for (const k of r.impianti) {
   const v = voci.find((x) => x.item === 'tariffa_premio' && x.subject === k.id);
-  confronta(`tariffa di ${k.id}, €`, k.tariffa, v ? Number(v.amount_eur) : 0, 1);
+  confronta(`tariffa di ${k.id}, €`, k.tariffa, v ? Number(v.amount_eur) : 0, 0.01);
 }
 const contributo = voci.filter((x) => x.item === 'contributo_valorizzazione').reduce((s, x) => s + Number(x.amount_eur), 0);
-confronta('contributo, €', r.comunita.contributo, contributo, 1);
+confronta('contributo, €', r.comunita.contributo, contributo, 0.01);
 const riparto = csv('riparto.csv').filter((x) => x.year === '1');
 const perSoggetto = new Map();
 for (const x of riparto) if (x.subject && x.subject !== 'cer') perSoggetto.set(x.subject, (perSoggetto.get(x.subject) ?? 0) + Number(x.assigned_eur));
@@ -84,10 +84,10 @@ for (const s of soci) {
   sitoPerSoggetto.set(sogg, (sitoPerSoggetto.get(sogg) ?? 0) + v.quotaProduttore + v.quotaTariffa + v.quotaContributo + v.quotaEccedentaria);
 }
 for (const sogg of new Set([...perSoggetto.keys(), ...sitoPerSoggetto.keys()])) {
-  confronta(`riparto a ${sogg}, €`, sitoPerSoggetto.get(sogg) ?? 0, perSoggetto.get(sogg) ?? 0, 1);
+  confronta(`riparto a ${sogg}, €`, sitoPerSoggetto.get(sogg) ?? 0, perSoggetto.get(sogg) ?? 0, 0.01);
 }
 const fondoCersim = riparto.filter((x) => x.recipient === 'cer').reduce((s, x) => s + Number(x.assigned_eur), 0);
-confronta('alla CER, €', r.comunita.fondo, fondoCersim, 1);
+confronta('alla CER, €', r.comunita.fondo, fondoCersim, 0.01);
 
 console.table(confronti.map((c) => ({ ...c, sito: c.sito.toFixed(3), cersim: c.cersim.toFixed(3), scarto: c.scarto.toFixed(3) })));
 const ko = confronti.filter((c) => !c.ok);

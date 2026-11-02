@@ -32,5 +32,18 @@ uscita di `cersim esegui`:
     CERSIM_USCITA=<cartella> node cer-sviluppo/test/confronto_cersim.mjs
 
 Senza la variabile la prova si salta. Il motore riceve i prelievi e le immesse di `cersim`, con gli impianti fuori dai
-POD: il confronto esclude errori su condivisa, anzianità, tariffa, eccedentaria, contributo, κ e riparto, non sulle
-semplificazioni dichiarate.
+POD. A parità di questi ingressi il confronto esclude errori del motore su condivisa totale e per impianto (con
+l'ordine di anzianità), tariffa con il tetto attivo e il correttivo del Nord, contributo ARERA, corrispettivi del GSE e
+κ, riparto per soggetto e quota alla CER.
+
+Non esercita:
+
+- la quota eccedentaria, nulla nel caso (la condivisa è il 21,7% dell'immessa degli impianti incentivati, contro una
+  soglia del 55%);
+- la parte variabile della tariffa, perché il tetto è sempre attivo (con un prezzo zonale di 50 €/MWh il confronto passa
+  lo stesso);
+- il calcolo dell'anzianità da una data, perché l'impianto esistente è indicato nello script.
+
+Le righe di FV2 (tariffa) e di S_R3 (riparto) valgono zero in entrambi e non provano nulla. L'eccedentaria e la parte
+variabile della tariffa si provano in `test/economia.test.mjs`, sui valori della spec. Il confronto non dice nulla
+sulle semplificazioni dichiarate.
