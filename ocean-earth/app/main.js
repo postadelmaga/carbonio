@@ -1357,7 +1357,7 @@ function toDataTime(m) {
   if (k < 0) return;
   timeline.pause();
   timeline.seek(k);
-  note(`${t(k < i ? 'data_until' : 'data_from')} ${fmtStamp(F[k].t)}`);
+  note(`${t(k < i ? 'view_until' : 'view_from')} ${fmtStamp(F[k].t)}`);
 }
 const SWATCH = { sst: null, anom: 'anomaly', speed: 'speedField', sla: 'sla', ice: null, rain: 'precip', drought: 'precip', co2: 'co2', emis: 'flux' };
 function swatch(m) {

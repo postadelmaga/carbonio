@@ -6,7 +6,7 @@
 export const TEXTS = {
   it: {
     vs_anom: 'Anomalia', vs_sst: 'Temp.', vs_speed: 'Correnti', vs_sla: 'Livello', vs_ice: 'Ghiaccio', vs_drought: 'Siccità', vs_rain: 'Pioggia', vs_co2: 'CO₂', vs_emis: 'Emissioni',
-    data_until: 'Questa vista ha dati fino a', data_from: 'Questa vista ha dati da',
+    view_until: 'Questa vista ha dati fino a', view_from: 'Questa vista ha dati da',
     d_anom: 'Più caldo o più freddo del normale', d_sst: 'Temperatura dell’acqua in superficie', d_speed: 'Correnti di superficie e scie', d_sla: 'Più alto o più basso della media', d_ice: 'Quanto mare è coperto dal ghiaccio', d_drought: 'Suolo più secco o più umido del normale', d_rain: 'Più o meno pioggia del normale', d_co2: 'Dove la CO₂ è sopra o sotto la media', d_emis: 'Dove la CO₂ esce e dove viene assorbita', go_sea: 'Mare', go_land: 'Terraferma', go_air: 'Aria', views_of_sea: 'Altre viste del mare', views_of_land: 'Altre viste della terraferma', views_of_air: 'Altre viste dell’aria',
     legend: 'Legenda', legend_show: 'Mostra la legenda', legend_hide: 'Nascondi la legenda',
     make_reel: 'Crea un reel',
@@ -57,7 +57,7 @@ export const TEXTS = {
   },
   en: {
     vs_anom: 'Anomaly', vs_sst: 'Temp.', vs_speed: 'Currents', vs_sla: 'Sea level', vs_ice: 'Ice', vs_drought: 'Drought', vs_rain: 'Rain', vs_co2: 'CO₂', vs_emis: 'Emissions',
-    data_until: 'This view has data up to', data_from: 'This view has data from',
+    view_until: 'This view has data up to', view_from: 'This view has data from',
     d_anom: 'Warmer or colder than normal', d_sst: 'Surface water temperature', d_speed: 'Surface currents and trails', d_sla: 'Higher or lower than the mean', d_ice: 'How much sea is covered by ice', d_drought: 'Soil drier or wetter than normal', d_rain: 'More or less rain than normal', d_co2: 'Where CO₂ is above or below the mean', d_emis: 'Where CO₂ is released and absorbed', go_sea: 'Sea', go_land: 'Land', go_air: 'Air', views_of_sea: 'More sea views', views_of_land: 'More land views', views_of_air: 'More air views',
     legend: 'Legend', legend_show: 'Show the legend', legend_hide: 'Hide the legend',
     make_reel: 'Make a reel',
@@ -108,7 +108,7 @@ export const TEXTS = {
   },
   es: {
     vs_anom: 'Anomalía', vs_sst: 'Temp.', vs_speed: 'Corrientes', vs_sla: 'Nivel', vs_ice: 'Hielo', vs_drought: 'Sequía', vs_rain: 'Lluvia', vs_co2: 'CO₂', vs_emis: 'Emisiones',
-    data_until: 'Esta vista tiene datos hasta', data_from: 'Esta vista tiene datos desde',
+    view_until: 'Esta vista tiene datos hasta', view_from: 'Esta vista tiene datos desde',
     d_anom: 'Más cálido o más frío de lo normal', d_sst: 'Temperatura del agua en superficie', d_speed: 'Corrientes superficiales y estelas', d_sla: 'Más alto o más bajo que la media', d_ice: 'Cuánto mar cubre el hielo', d_drought: 'Suelo más seco o más húmedo de lo normal', d_rain: 'Más o menos lluvia de lo normal', d_co2: 'Dónde el CO₂ está sobre o bajo la media', d_emis: 'Dónde se emite y dónde se absorbe el CO₂', go_sea: 'Mar', go_land: 'Tierra firme', go_air: 'Aire', views_of_sea: 'Más vistas del mar', views_of_land: 'Más vistas de la tierra', views_of_air: 'Más vistas del aire',
     legend: 'Leyenda', legend_show: 'Mostrar la leyenda', legend_hide: 'Ocultar la leyenda',
     make_reel: 'Crea un reel',
@@ -159,7 +159,7 @@ export const TEXTS = {
   },
   fr: {
     vs_anom: 'Anomalie', vs_sst: 'Temp.', vs_speed: 'Courants', vs_sla: 'Niveau', vs_ice: 'Glace', vs_drought: 'Sécheresse', vs_rain: 'Pluie', vs_co2: 'CO₂', vs_emis: 'Émissions',
-    data_until: 'Cette vue a des données jusqu’à', data_from: 'Cette vue a des données à partir de',
+    view_until: 'Cette vue a des données jusqu’à', view_from: 'Cette vue a des données à partir de',
     d_anom: 'Plus chaud ou plus froid que la normale', d_sst: 'Température de l’eau en surface', d_speed: 'Courants de surface et traînées', d_sla: 'Plus haut ou plus bas que la moyenne', d_ice: 'La part de mer couverte de glace', d_drought: 'Sol plus sec ou plus humide que la normale', d_rain: 'Plus ou moins de pluie que la normale', d_co2: 'Où le CO₂ est au-dessus ou au-dessous de la moyenne', d_emis: 'Où le CO₂ est émis et où il est absorbé', go_sea: 'Mer', go_land: 'Terres', go_air: 'Air', views_of_sea: 'Autres vues de la mer', views_of_land: 'Autres vues des terres', views_of_air: 'Autres vues de l’air',
     legend: 'Légende', legend_show: 'Afficher la légende', legend_hide: 'Masquer la légende',
     make_reel: 'Créer un reel',
@@ -210,7 +210,7 @@ export const TEXTS = {
   },
   zh: {
     vs_anom: '距平', vs_sst: '温度', vs_speed: '洋流', vs_sla: '海平面', vs_ice: '海冰', vs_drought: '干旱', vs_rain: '降水', vs_co2: 'CO₂', vs_emis: '排放',
-    data_until: '此视图的数据截至', data_from: '此视图的数据始于',
+    view_until: '此视图的数据截至', view_from: '此视图的数据始于',
     d_anom: '比常年偏暖或偏冷', d_sst: '表层海水温度', d_speed: '表层洋流及轨迹', d_sla: '比平均高或低', d_ice: '海面被冰覆盖的比例', d_drought: '土壤比常年偏干或偏湿', d_rain: '降水比常年偏多或偏少', d_co2: '二氧化碳高于或低于平均的地方', d_emis: '二氧化碳排放与吸收的地方', go_sea: '海洋', go_land: '陆地', go_air: '大气', views_of_sea: '更多海洋视图', views_of_land: '更多陆地视图', views_of_air: '更多大气视图',
     legend: '图例', legend_show: '显示图例', legend_hide: '隐藏图例',
     make_reel: '制作短视频',
