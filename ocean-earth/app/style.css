@@ -98,7 +98,8 @@ button { cursor: pointer; }
 .top {
   position: fixed; top: 8px; left: 8px; right: 8px; height: 46px;
   display: flex; align-items: center; gap: 12px; padding: 0 8px 0 10px;
-  border-radius: 10px; z-index: 5;
+  /* sopra gli avvisi (.note) e il pannello: i menu delle viste non restano coperti */
+  border-radius: 10px; z-index: 7;
 }
 .back { display: inline-flex; align-items: center; gap: 4px; text-decoration: none; color: var(--ink-2); font-weight: 600; font-size: 12px; white-space: nowrap; }
 .back:hover { color: var(--ink); }
@@ -229,14 +230,25 @@ dialog.about p, dialog.about li { line-height: 1.5; }
 .about-table td, .about-table th { border-bottom: 1px solid var(--rule); padding: 4px 6px; text-align: left; vertical-align: top; }
 .about-table code { font-size: 10px; color: var(--ink-3); }
 
-@media (max-width: 480px) {
-  .brand { display: none; }
+/* schermi strettissimi: il nome corto della vista accesa */
+@media (max-width: 400px) {
+  .dd.on .dd-cur { display: none; }
+  .dd.on .dd-cs { display: inline; }
 }
+/* tablet: barra in alto piu' compatta, cosi' schede e pulsanti non si accavallano */
+@media (min-width: 721px) and (max-width: 1100px) {
+  .top { gap: 8px; }
+  .back .mark-co2 { display: none; }
+  .brand { font-size: 12px; letter-spacing: .06em; }
+}
+@media (min-width: 721px) and (max-width: 860px) { .brand { display: none; } }
 /* telefono */
 @media (max-width: 720px) {
   .top { gap: 6px; padding: 0 6px; }
   .brand { font-size: 12px; letter-spacing: .06em; }
   .back .mark-co2, #world-btn, #med-btn { display: none; }
+  /* telefono: la lingua e' una sigla di due lettere, senza freccia; meno spazio fra i pulsanti */
+  .top-r { gap: 4px; }
   .side { top: auto; bottom: calc(var(--time-h) + 16px); left: 8px; right: 8px; width: auto; max-height: 55%; transform: translateY(calc(100% + var(--time-h) + 40px)); }
   .panel { top: auto; bottom: calc(var(--time-h) + 16px); left: 8px; right: 8px; width: auto; max-height: 48%; z-index: 6; }
   .info:not([hidden]) ~ .region { bottom: calc(var(--time-h) + 16px); max-height: 48%; }
@@ -308,34 +320,65 @@ html.reel body > :not(#globe) { display: none !important; }
 a.link.reel-link { color: var(--accent); padding: 2px 4px; font-size: 12px; font-weight: 600; text-decoration: none; }
 a.link.reel-link:hover { text-decoration: underline; }
 @media (max-width: 720px) { a.link.reel-link { display: none; } }
-/* viste: tre menu a tendina (Mare, Terra, Aria) e per ultimo il Mix */
-.views { display: flex; align-items: center; gap: 4px; margin-left: auto; min-width: 0; }
-.dd { position: relative; }
-.dd-btn, .mix-btn { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--rule); background: transparent; border-radius: 7px; padding: 5px 10px; font-weight: 700; font-size: 12.5px; color: var(--ink-2); white-space: nowrap; cursor: pointer; }
-.dd-btn:hover, .mix-btn:hover { color: var(--ink); border-color: var(--ink-3); }
-.dd.on .dd-btn, .mix-btn.on { background: var(--accent); border-color: var(--accent); color: #fff; }
-.dd-cur { font-weight: 600; opacity: .9; }
+/* viste: tre schede (Mare, Terra, Aria) e per ultimo il Mix. Ogni scheda e' un
+   pulsante doppio: il nome porta alla sua vista, la freccia apre il menu */
+.views { display: flex; align-items: center; gap: 5px; margin-left: auto; min-width: 0; }
+.dd { position: relative; display: inline-flex; }
+.dd-btn, .dd-tog, .mix-btn { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--rule); background: transparent; padding: 5px 10px; font-weight: 700; font-size: 12.5px; line-height: 1.2; color: var(--ink-2); white-space: nowrap; cursor: pointer; transition: background .12s, color .12s, border-color .12s; }
+.dd-btn { border-radius: 7px 0 0 7px; border-right: 0; }
+.dd-tog { border-radius: 0 7px 7px 0; padding: 5px 6px; }
+.dd-tog svg { transition: transform .15s; opacity: .8; }
+.dd-tog[aria-expanded=true] svg { transform: rotate(180deg); }
+.mix-btn { border-radius: 7px; }
+.dd:hover .dd-btn, .dd:hover .dd-tog, .mix-btn:hover { color: var(--ink); border-color: var(--ink-3); }
+.dd.on .dd-btn, .dd.on .dd-tog, .mix-btn.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+.dd.on .dd-tog { box-shadow: inset 1px 0 0 rgba(255, 255, 255, .3); }
+.dd-btn:focus-visible, .dd-tog:focus-visible, .mix-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; position: relative; z-index: 1; }
+.dd-cur { font-weight: 600; opacity: .92; }
 .dd-cur:not(:empty)::before { content: '· '; }
-.dd-car { transition: transform .15s; }
-.dd-btn[aria-expanded=true] .dd-car { transform: rotate(180deg); }
-.dd-menu { position: absolute; top: calc(100% + 6px); left: 0; min-width: 190px; z-index: 8; display: flex; flex-direction: column; padding: 4px; border: 1px solid var(--rule); border-radius: 9px; background: var(--surface-solid); box-shadow: var(--shadow); }
+.dd-cs { display: none; }
+.dd-menu { position: absolute; top: calc(100% + 6px); left: 0; width: max-content; min-width: 240px; max-width: min(320px, calc(100vw - 16px)); z-index: 8; display: flex; flex-direction: column; gap: 1px; padding: 5px; border: 1px solid var(--rule); border-radius: 10px; background: var(--surface-solid); box-shadow: var(--shadow); }
 .dd-menu[hidden] { display: none; }
-.dd-menu button { display: flex; align-items: center; gap: 8px; border: 0; background: transparent; text-align: left; padding: 7px 10px; border-radius: 6px; font-size: 13px; font-weight: 600; color: var(--ink-2); cursor: pointer; }
+.dd-menu button { display: flex; align-items: center; gap: 10px; border: 0; background: transparent; text-align: left; padding: 7px 10px 7px 8px; border-radius: 7px; color: var(--ink-2); cursor: pointer; }
 .dd-menu button[hidden] { display: none; }
-.dd-menu button::before { content: ''; width: 6px; height: 6px; border-radius: 50%; flex: none; }
-.dd-menu button:hover, .dd-menu button:focus-visible { background: var(--rule); color: var(--ink); }
-.dd-menu button.on { color: var(--ink); }
-.dd-menu button.on::before { background: var(--accent); }
-.dd-menu .s { display: none; }
+.dd-menu .sw { flex: none; width: 28px; height: 12px; border-radius: 3px; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .15); }
+.dd-menu .tx { display: flex; flex-direction: column; gap: 1px; min-width: 0; flex: 1; }
+.dd-menu .l { font-size: 13px; font-weight: 700; color: var(--ink); }
+.dd-menu .d { font-size: 11.5px; font-weight: 400; color: var(--ink-3); white-space: normal; }
+.dd-menu button::after { content: ''; flex: none; width: 14px; text-align: center; font-size: 13px; font-weight: 700; color: var(--accent); }
+.dd-menu button.on::after { content: '✓'; }
+.dd-menu button:hover, .dd-menu button:focus-visible { background: var(--rule); outline: none; }
+.dd-menu button.on { background: color-mix(in srgb, var(--accent) 12%, transparent); }
 .dd[hidden] { display: none; }
-@media (max-width: 1100px) { .dd-cur { display: none; } }
-@media (max-width: 720px) {
-  .views { gap: 3px; margin-left: 0; flex: 1 1 auto; justify-content: flex-end; }
-  .dd-btn, .mix-btn { padding: 5px 7px; font-size: 11.5px; gap: 4px; }
-  .dd-menu { min-width: 160px; }
-  .dd:last-of-type .dd-menu { left: auto; right: 0; }
+/* meno spazio: la scheda accesa mostra solo il nome della vista */
+@media (max-width: 1100px) {
+  .dd.on .dd-l { display: none; }
+  .dd.on .dd-cur:not(:empty)::before { content: none; }
+  .dd:not(.on) .dd-cur { display: none; }
 }
-@media (max-width: 400px) { .dd-car { display: none; } }
+/* telefono: le schede hanno una riga tutta loro sotto la barra, a larghezza piena */
+@media (max-width: 720px) {
+  .top { height: auto; flex-wrap: wrap; row-gap: 6px; padding: 6px; }
+  .top .brand { display: block; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  .views { order: 3; flex: 1 0 100%; gap: 4px; margin: 0; }
+  .views > .dd, .views > .mix-btn { flex: 1 1 0; min-width: 0; }
+  .views > .mix-btn { flex: .7 1 0; justify-content: center; }
+  .views > .dd.on { flex: 1.7 1 0; }
+  .dd-btn { flex: 1; min-width: 0; justify-content: center; padding: 7px 6px; font-size: 12.5px; gap: 4px; }
+  .dd-btn > span { overflow: hidden; text-overflow: ellipsis; }
+  .dd-tog { padding: 7px 5px; }
+  .mix-btn { padding: 7px 6px; font-size: 12.5px; }
+  /* le schede spente non hanno la freccia: un tocco porta alla loro vista */
+  .dd:not(.on) .dd-tog { display: none; }
+  .dd:not(.on) .dd-btn { border-right: 1px solid var(--rule); border-radius: 7px; }
+  .dd:not(.on):hover .dd-btn { border-color: var(--ink-3); }
+  /* nel menu: a tutta larghezza sotto la barra (che fa da riferimento) */
+  .dd { position: static; }
+  .dd-menu { position: absolute; top: calc(100% + 6px); left: 0; right: 0; width: auto; max-width: none; min-width: 0; }
+  .dd-menu button { padding: 9px 10px 9px 8px; }
+  .note, .split span { top: 104px; }
+}
+}
 /* pulsante della legenda nella barra del tempo */
 .legend-btn { margin-left: auto; }
 .legend-btn[aria-pressed=true] { color: var(--ink); border-color: var(--ink-3); }

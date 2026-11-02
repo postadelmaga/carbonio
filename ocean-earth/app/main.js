@@ -26,7 +26,7 @@ const ui = {
   compare: false, compareIndex: null,
   landVar: 'precip',           // terraferma: precip | soil (solo serie mensile)
   domain: 'sea',               // menu della vista: sea | land | air | mix
-  view: 'sst',                 // vista scelta; 'mix' e' quella che si compone col mixer
+  view: null,                  // vista scelta; 'mix' e' quella che si compone col mixer (null: quella di partenza)
   // scelte del pannello: valgono nelle viste a cui appartengono (particelle e
   // frecce sono le correnti, gli hotspot la temperatura), sempre nel mix
   particles: true, arrows: false, hotspot: false,
@@ -82,7 +82,7 @@ async function start() {
   bindControls();
   buildAbout();
   timeline.setTier(manifest.tiers.monthly ? 'monthly' : Object.keys(manifest.tiers)[0], false);
-  if (REEL || !readHash()) setMode(!REEL && ui.view && viewAvailable(ui.view) ? ui.view : 'sst');
+  if (REEL || !readHash()) { setMode(!REEL && ui.view && viewAvailable(ui.view) ? ui.view : firstView('sea')); toDataTime(ui.view); }
   hashReady = true;
   $('#loading').hidden = true;
   // per i test automatici e per chi vuole curiosare dalla console
@@ -1160,7 +1160,11 @@ function bindControls() {
   const mv = manifest.tiers.monthly?.vars || [];
   const NEEDS = { sla: ['sla'], ice: ['ice'], drought: ['soil'], co2: ['co2'], emis: ['co2foss', 'co2nat'] };
   $$('.quick-mode button[data-mode]').forEach((b) => { b.hidden = !(NEEDS[b.dataset.mode] || []).every((v) => mv.includes(v)); });
-  $$('.quick-mode button[data-mode]').forEach((b) => b.addEventListener('click', () => { closeMenus(); setMode(b.dataset.mode); }));
+  $$('.quick-mode button[data-mode]').forEach((b) => b.addEventListener('click', () => { closeMenus(); chooseView(b.dataset.mode); }));
+  // i campioni di colore nei menu: la scala di ogni vista
+  $$('.dd-menu .sw').forEach((el) => { el.style.background = swatch(el.dataset.sw); });
+  // al passaggio del mouse la descrizione completa (la usa anche l'editor dei reel)
+  $$('.dd-menu button[data-mode]').forEach((b) => { b.title = t(CAPTION[b.dataset.mode]); });
   bindMenus();
   addEventListener('hashchange', () => readHash());
   bindMixer();
@@ -1169,9 +1173,13 @@ function bindControls() {
     if (Array.isArray(air) && [0, 1].includes(air[0]) && [0, 1, 2].includes(air[1])) [ui.airMode, ui.fluxMode] = air;
     const lv = localStorage.getItem('oe-land');
     if (lv === 'precip' || lv === 'soil') ui.landVar = lv;
-    const v = localStorage.getItem('oe-view');
+    // oe-view2: l'ultima vista scelta a mano (oe-view salvava anche quella di partenza)
+    const v = localStorage.getItem('oe-view2');
     if (v && PRESETS[v]) ui.view = v;
-    localStorage.removeItem('oe-layers');   // sostituito da oe-view e oe-mix
+    const dv = JSON.parse(localStorage.getItem('oe-dview') || '{}');
+    for (const [d, m] of Object.entries(dv || {})) if (DOMAIN[m] === d) lastView[d] = m;
+    localStorage.removeItem('oe-view');
+    localStorage.removeItem('oe-layers');   // sostituito da oe-view2 e oe-mix
     localStorage.removeItem('oe-legend-mini');
   } catch (e) { /* niente */ }
   $('#particles').addEventListener('change', (e) => { ui.particles = e.target.checked; applyOverlays(); });
@@ -1184,7 +1192,7 @@ function bindControls() {
   $('#p-speed').addEventListener('input', (e) => { st.particleSpeed = +e.target.value; });
   $('#p-width').addEventListener('input', (e) => { st.particleWidth = +e.target.value; });
   $('#a-density').addEventListener('input', (e) => { st.arrowDensity = +e.target.value; });
-  $('#palette').addEventListener('change', (e) => { st.paletteSst = e.target.value; globe.setPalette('sst', e.target.value); drawLegend(); });
+  $('#palette').addEventListener('change', (e) => { st.paletteSst = e.target.value; globe.setPalette('sst', e.target.value); drawLegend(); const sw = $('.dd-menu .sw[data-sw=sst]'); if (sw) sw.style.background = swatch('sst'); });
   $('#opacity').addEventListener('input', (e) => { st.opacity = +e.target.value; });
   const ranges = () => {
     const lo = parseFloat($('#r-min').value), hi = parseFloat($('#r-max').value);
@@ -1317,6 +1325,45 @@ const DOMAIN = { sst: 'sea', anom: 'sea', speed: 'sea', sla: 'sea', ice: 'sea', 
 const CAPTION = { sst: 'cap_sst', anom: 'cap_anom', speed: 'cap_speed', sla: 'sla_title', ice: 'ice_title', mix: 'mix_title', rain: 'rain_title', drought: 'drought_title', co2: 'co2_title', emis: 'emis_title' };
 // nell'indirizzo: nomi stabili, uguali in tutte le lingue
 const SLUG = { sst: 'temperatura', anom: 'anomalia', speed: 'correnti', sla: 'livello-mare', ice: 'ghiaccio', mix: 'mix', rain: 'pioggia', drought: 'siccita', co2: 'co2', emis: 'emissioni' };
+// la vista con cui si apre ogni scheda: la piu' eloquente sul clima che cambia
+// (prima voce di ogni menu); poi quella scelta l'ultima volta in quella scheda
+const DEFAULT_VIEW = { sea: 'anom', land: 'drought', air: 'co2' };
+const lastView = {};
+function firstView(d) {
+  for (const m of [lastView[d], DEFAULT_VIEW[d], ...Object.keys(DOMAIN).filter((k) => DOMAIN[k] === d)]) if (m && viewAvailable(m)) return m;
+  return null;
+}
+// una vista scelta da chi guarda: si ricorda (in generale e per la sua scheda)
+function chooseView(m) {
+  if (!viewAvailable(m)) return;
+  const d = DOMAIN[m];
+  if (d !== 'mix') { lastView[d] = m; keep('oe-dview', JSON.stringify(lastView)); }
+  keep('oe-view2', m);
+  setMode(m);
+  toDataTime(m);
+}
+// i dati che ogni vista deve avere nel mese mostrato
+const VIEW_VARS = { sst: ['sst'], anom: ['sst'], speed: ['cur'], sla: ['sla'], ice: ['ice'], rain: ['precip'], drought: ['soil'], co2: ['co2'], emis: ['co2foss', 'co2nat'] };
+// una vista senza dati nell'istante mostrato (la CO₂ arriva un anno dopo, il
+// suolo qualche mese dopo): si va al mese piu' vicino che li ha, prima indietro
+function toDataTime(m) {
+  const need = VIEW_VARS[m];
+  if (REEL || !need || !timeline?.frames.length) return;
+  const F = timeline.frames, i = Math.round(timeline.pos), has = (k) => need.every((v) => F[k]?.[v] != null);
+  if (has(i)) return;
+  let k = -1;
+  for (let j = i - 1; j >= 0 && k < 0; j--) if (has(j)) k = j;
+  for (let j = i + 1; j < F.length && k < 0; j++) if (has(j)) k = j;
+  if (k < 0) return;
+  timeline.pause();
+  timeline.seek(k);
+  note(`${t(k < i ? 'data_until' : 'data_from')} ${fmtStamp(F[k].t)}`);
+}
+const SWATCH = { sst: null, anom: 'anomaly', speed: 'speedField', sla: 'sla', ice: null, rain: 'precip', drought: 'precip', co2: 'co2', emis: 'flux' };
+function swatch(m) {
+  if (m === 'ice') return 'linear-gradient(90deg,#20364a,#b8d6ed 45%,#f7fcff)';
+  return cssGradient(m === 'sst' ? globe.state.paletteSst : SWATCH[m]);
+}
 const viewAvailable = (m) => { const b = $(`.quick-mode button[data-mode=${m}]`); return b && !b.hidden; };
 const viewName = (m) => $(`.quick-mode button[data-mode=${m}] .l`)?.textContent.trim() || '';
 
@@ -1328,6 +1375,12 @@ function setDomain(d) {
     const on = el.dataset.domain === d;
     el.classList.toggle('on', on);
     el.querySelector('.dd-cur').textContent = on && ui.view ? viewName(ui.view) : '';
+    el.querySelector('.dd-cs').textContent = on && ui.view ? t('vs_' + ui.view) : '';
+    const tog = el.querySelector('.dd-tog'), btn = el.querySelector('.dd-btn');
+    // la scheda accesa apre il menu; le altre portano alla loro vista
+    btn.setAttribute('aria-pressed', on);
+    if (on) btn.setAttribute('aria-haspopup', 'menu'); else btn.removeAttribute('aria-haspopup');
+    btn.title = on ? tog.getAttribute('aria-label') : `${t('go_' + el.dataset.domain)} · ${viewName(firstView(el.dataset.domain))}`;
   });
   $('.mix-btn')?.classList.toggle('on', d === 'mix');
 }
@@ -1335,24 +1388,32 @@ function setDomain(d) {
 // menu a tendina: uno aperto alla volta, si chiudono fuori, con Esc o scegliendo
 function closeMenus() {
   $$('.dd-menu').forEach((m) => { m.hidden = true; });
-  $$('.dd-btn').forEach((b) => b.setAttribute('aria-expanded', 'false'));
+  $$('.dd-tog').forEach((b) => b.setAttribute('aria-expanded', 'false'));
+}
+function toggleMenu(dd) {
+  const menu = dd.querySelector('.dd-menu'), open = menu.hidden;
+  closeMenus();
+  if (!open) return;
+  menu.hidden = false;
+  dd.querySelector('.dd-tog').setAttribute('aria-expanded', 'true');
+  (menu.querySelector('button.on') || menu.querySelector('button:not([hidden])'))?.focus();
 }
 function bindMenus() {
   // un menu senza viste con dati non si mostra
   $$('.dd').forEach((el) => { el.hidden = ![...el.querySelectorAll('button[data-mode]')].some((b) => !b.hidden); });
+  $$('.dd-tog').forEach((b) => b.addEventListener('click', (e) => { e.stopPropagation(); toggleMenu(b.closest('.dd')); }));
   $$('.dd-btn').forEach((b) => b.addEventListener('click', (e) => {
     e.stopPropagation();
-    const menu = b.nextElementSibling, open = menu.hidden;
+    const dd = b.closest('.dd');
+    if (dd.classList.contains('on')) { toggleMenu(dd); return; }
     closeMenus();
-    if (!open) return;
-    menu.hidden = false;
-    b.setAttribute('aria-expanded', 'true');
-    (menu.querySelector('button.on') || menu.querySelector('button:not([hidden])'))?.focus();
+    const m = firstView(dd.dataset.domain);
+    if (m) chooseView(m);
   }));
   document.addEventListener('click', (e) => { if (!e.target.closest('.dd')) closeMenus(); });
   document.addEventListener('keydown', (e) => {
     const menu = e.target.closest?.('.dd-menu');
-    if (e.key === 'Escape' && $$('.dd-menu:not([hidden])').length) { const b = $('.dd-btn[aria-expanded=true]'); closeMenus(); b?.focus(); return; }
+    if (e.key === 'Escape' && $$('.dd-menu:not([hidden])').length) { const b = $('.dd-tog[aria-expanded=true]'); closeMenus(); b?.focus(); return; }
     if (!menu || !['ArrowDown', 'ArrowUp'].includes(e.key)) return;
     e.preventDefault();
     const items = [...menu.querySelectorAll('button:not([hidden])')];
@@ -1394,7 +1455,6 @@ function readHash() {
 
 function setMode(mode) {
   ui.view = mode;
-  keep('oe-view', mode);
   setDomain(DOMAIN[mode]);
   let { landVar, airMode, fluxMode, ...w } = PRESETS[mode];
   // il mix riprende la combinazione lasciata l'ultima volta
