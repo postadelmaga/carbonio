@@ -112,7 +112,7 @@ def build():
         for f in sorted((frames.DATA / d).glob('*')):
             h.update(f.name.encode() + hashlib.sha1(f.read_bytes()).digest())
     # i fotogrammi non cambiano mai; le anteprime dipendono anche dalla codifica
-    frames_v = f'{CACHE_FRAMES}-' + hashlib.sha1(json.dumps(preview.META, sort_keys=True).encode()).hexdigest()[:6]
+    frames_v = f'{CACHE_FRAMES}-' + hashlib.sha1(json.dumps({k: preview.META[k] for k in ('sst', 'cur')}, sort_keys=True).encode()).hexdigest()[:6]
 
     out = {
         'generated': dt.datetime.now(dt.timezone.utc).strftime('%Y-%m-%dT%H:%MZ'),

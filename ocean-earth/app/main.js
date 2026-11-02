@@ -170,15 +170,18 @@ function previewMode() {
 
 // variabili senza anteprima: gia' leggere (Mediterraneo, terraferma)
 const NO_PREVIEW = new Set(['med', 'precip', 'soil', 'sla', 'ice', 'co2', 'co2foss', 'co2nat']);
+// ...salvo quelle che il manifest elenca con un'anteprima a 8 bit generica
+// (pipeline/preview.py, P8: pioggia, suolo, livello del mare, ghiaccio)
+const noPrev = (v) => NO_PREVIEW.has(v) && !manifest?.preview?.p8?.[v];
 
 function keyFor(frame, v, prev = previewMode()) {
-  return `${prev && !NO_PREVIEW.has(v) ? 'p:' : ''}${timeline.tierName}/${v}/${frame.t}`;
+  return `${prev && !noPrev(v) ? 'p:' : ''}${timeline.tierName}/${v}/${frame.t}`;
 }
 
 // percorso e tipo di decodifica di un file (anteprima durante il play)
 function fileOf(frame, v, prev) {
   const tier = timeline.tierName;
-  if (prev && !NO_PREVIEW.has(v)) return [store.previewPath(tier, v, frame.t), v === 'cur' ? 'pcur' : 'psst'];
+  if (prev && !noPrev(v)) return [store.previewPath(tier, v, frame.t), v === 'cur' ? 'pcur' : manifest.preview.p8?.[v] ? 'p8:' + v : 'psst'];
   const off = manifest.encoding.scalar.offsets || {};
   return [store.framePath(tier, v, frame.t), v === 'cur' ? 'vector' : off[v] != null ? 'v:' + v : 'scalar'];
 }
@@ -282,7 +285,7 @@ function aheadFrames() {
   if (!timeline.playing) return 1;
   const room = previewMode() ? store.maxPrev : store.maxCache;
   // i file che servono per istante: con meno livelli si scarica piu' avanti
-  const per = Math.max(1, needed(timeline.frameA || timeline.frames[0]).filter((v) => !NO_PREVIEW.has(v) || !previewMode()).length);
+  const per = Math.max(1, needed(timeline.frameA || timeline.frames[0]).filter((v) => !noPrev(v) || !previewMode()).length);
   return Math.max(2, Math.min(Math.floor(room / per) - 2, Math.ceil(timeline.fps * 3)));
 }
 
@@ -907,7 +910,7 @@ function drawRegionChart() {
 function playFiles(f) {
   const tier = timeline.tierName, out = [];
   const usePrev = manifest.preview && manifest.preview.available;
-  for (const v of needed(f)) out.push([v, usePrev && !NO_PREVIEW.has(v) ? store.previewPath(tier, v, f.t) : store.framePath(tier, v, f.t)]);
+  for (const v of needed(f)) out.push([v, usePrev && !noPrev(v) ? store.previewPath(tier, v, f.t) : store.framePath(tier, v, f.t)]);
   return out;
 }
 
@@ -925,7 +928,7 @@ function missing() {
     for (const [v, path] of playFiles(timeline.frames[i])) {
       if (store.saved.has(path)) continue;
       files.push(path);
-      bytes += sizes[v] || (NO_PREVIEW.has(v) ? 60e3 : 300e3);
+      bytes += sizes[v] || (noPrev(v) ? 60e3 : 300e3);
     }
   }
   return { files, bytes, frames: i1 - i0 + 1 };

@@ -10,6 +10,12 @@ la timeline scorre; da fermi, al clic e nei grafici si leggono i dati esatti.
   correnti     WebP senza perdita, RGB, griglia 0,5° (media 2×2 delle celle di mare)
                R = u, G = v, B = 0; 0 = nessun dato; 128 = fermo
                m/s = segno × 4 × ((|codice - 128| / 127))²   (radice: fine vicino a zero)
+  pioggia,     WebP senza perdita, scala di grigi, 0,25°, solo mensili
+  umidita' suolo   % del normale su scala logaritmica (come la mostra il globo):
+               % = 100 × 2^(lo + (codice - 1) × step), da 6 a 600 %
+  livello mare cm = -127 + (codice - 1) × 1
+  ghiaccio     % = (codice - 1) × 0.5
+  (tabella in META['p8'], letta dal browser: app/decode-worker.js)
 
     python preview.py          crea quelli che mancano o sono piu' vecchi dell'esatto
 """
@@ -28,7 +34,36 @@ import frames  # noqa: E402
 
 SST_OFFSET, SST_STEP = -2.5, 0.16
 CUR_MAX = 4.0
-VARS = {'monthly': ['sst', 'cur'], 'daily': ['sst', 'cur', 'ostia'], 'hourly': ['sst', 'cur']}
+VARS = {'monthly': ['sst', 'cur', 'precip', 'soil', 'sla', 'ice'], 'daily': ['sst', 'cur', 'ostia'], 'hourly': ['sst', 'cur']}
+
+# anteprime a 8 bit generiche: valore = f(offset + (codice − 1) × step), con
+# f = 100·2^x per le grandezze in % del normale (log), identita' per le altre
+P8 = {
+    'precip': {'offset': -4.0, 'step': (np.log2(6.0) + 4.0) / 254, 'log': True},
+    'soil': {'offset': -4.0, 'step': (np.log2(6.0) + 4.0) / 254, 'log': True},
+    'sla': {'offset': -127.0, 'step': 1.0, 'log': False},
+    'ice': {'offset': 0.0, 'step': 0.5, 'log': False},
+}
+SCALAR_OFFSET_OF = {'sla': encode.SCALAR_OFFSETS['sla']}
+
+
+def encode_p8(var, f):
+    e = P8[var]
+    ok = np.isfinite(f)
+    x = f[ok]
+    if e['log']:
+        x = np.log2(np.maximum(x, 1e-3) / 100.0)
+    c = np.zeros(f.shape, np.uint8)
+    c[ok] = np.clip(np.rint((x - e['offset']) / e['step']) + 1, 1, 255)
+    return c
+
+
+def decode_p8(var, c):
+    e = P8[var]
+    x = e['offset'] + (c.astype(np.float64) - 1) * e['step']
+    out = 100.0 * 2.0 ** x if e['log'] else x
+    out[c == 0] = np.nan
+    return out
 
 
 def preview_path(tier, var, stamp):
@@ -86,6 +121,9 @@ def make(job):
             u, v = half_grid(u), half_grid(v)
         cu, cv = encode_cur8(u), encode_cur8(v)
         im = Image.fromarray(np.dstack([cu, cv, np.zeros_like(cu)]), 'RGB')
+    elif var in P8:
+        f = encode.decode_scalar(rgb, offset=SCALAR_OFFSET_OF.get(var, encode.SCALAR_OFFSET))
+        im = Image.fromarray(encode_p8(var, f), 'L')
     else:
         im = Image.fromarray(encode_sst8(encode.decode_scalar(rgb)), 'L')
     tmp = dst.with_suffix('.tmp.webp')
@@ -123,7 +161,8 @@ def main(workers=2):
 
 
 META = {'sst': {'offset': SST_OFFSET, 'step': SST_STEP},
-        'cur': {'max': CUR_MAX, 'zero': 128, 'scale': 127, 'grid': 0.5}}
+        'cur': {'max': CUR_MAX, 'zero': 128, 'scale': 127, 'grid': 0.5},
+        'p8': P8}
 
 if __name__ == '__main__':
     main(int(sys.argv[1]) if len(sys.argv) > 1 else 2)

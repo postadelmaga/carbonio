@@ -162,7 +162,7 @@ export class DataStore {
     }
   }
 
-  cacheFor(kind) { return kind === 'psst' || kind === 'pcur' ? this.prevCache : this.cache; }
+  cacheFor(kind) { return kind === 'psst' || kind === 'pcur' || kind.startsWith('p8:') ? this.prevCache : this.cache; }
 
   // il valore se e' gia' arrivato; 'failed' se il file manca da poco; altrimenti null
   peek(path, kind) {

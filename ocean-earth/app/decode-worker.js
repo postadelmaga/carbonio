@@ -145,6 +145,17 @@ async function decodeBlob(blob, kind) {
     }
     return { w, h, gpu, preview: true };
   }
+  // anteprime a 8 bit generiche (pipeline/preview.py, P8): una tabella di 256 valori
+  if (kind.startsWith('p8:')) {
+    const v = kind.slice(3), e = PREV.p8[v];
+    const L = lut(kind, 256, (c) => { const x = e.offset + (c - 1) * e.step; return e.log ? 100 * 2 ** x : x; });
+    const gpu = new Uint16Array(n * 2);
+    for (let i = 0; i < n; i++) {
+      const c = data[i * 4];
+      if (c) { gpu[i * 2] = L[c]; gpu[i * 2 + 1] = HALF_ONE; }
+    }
+    return { w, h, gpu, preview: true };
+  }
   if (kind === 'pcur') {
     const { max, zero, scale } = PREV.cur;
     const gpu = new Uint16Array(n * 4);
