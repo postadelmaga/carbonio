@@ -8,7 +8,6 @@ const BASE = META_BASE ? new URL(META_BASE, globalThis.document.baseURI) : new U
 // byte occupati da un fotogramma decodificato (gli array che contiene)
 function sizeOf(v) {
   let n = 0;
-  if (v?.bitmap) n += v.w * v.h * 4;           // anteprima ancora da convertire (RGBA a 8 bit)
   if (v) for (const x of Object.values(v)) if (x && ArrayBuffer.isView(x)) n += x.byteLength;
   return Math.max(n, 1024);
 }
@@ -159,9 +158,7 @@ export class DataStore {
       const k = cache.keys().next().value, e = cache.get(k);
       total -= e.bytes;
       cache.delete(k);
-      // l'immagine di un'anteprima tiene memoria finche' non la si chiude (la
-      // texture fatta da lei resta nella cache del globo)
-      e.v?.bitmap?.close();
+
     }
   }
 

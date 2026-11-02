@@ -149,7 +149,7 @@ export class Globe {
       this.frameTex.set(key, t);
       return t;
     }
-    if (frame.bitmap) t = this.previewTexture(frame, regional);
+    if (frame.bytes) t = this.previewTexture(frame, regional);
     else t = kind === 'vector'
       ? this.makeTex(frame.w, frame.h, gl.RGBA16F, gl.RGBA, gl.HALF_FLOAT, frame.gpu)
       : this.makeTex(frame.w, frame.h, gl.RG16F, gl.RG, gl.HALF_FLOAT, frame.gpu, null, regional);
@@ -159,16 +159,17 @@ export class Globe {
     return t;
   }
 
-  // un'anteprima arrivata come immagine (frame.bitmap, codici a 8 bit): la si
-  // carica cosi' com'e' e uno shader scrive la texture dei valori. Sulla CPU
-  // erano una copia dei pixel e un ciclo su milioni di punti per fotogramma.
+  // un'anteprima arrivata come codici a 8 bit (frame.bytes: 1 canale per la
+  // temperatura, 2 per le correnti): si caricano cosi' come sono e uno shader
+  // scrive la texture dei valori, invece del ciclo sulla CPU a 16 bit.
   previewTexture(frame, regional = false) {
-    const gl = this.gl, P = this.progPrev, { w, h, bitmap, pk } = frame;
-    if (!P || !bitmap || !bitmap.width) return null;
+    const gl = this.gl, P = this.progPrev, { w, h, bytes, pk } = frame;
+    if (!P || !bytes) return null;
     const src = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, src);
     gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, gl.RGBA, gl.UNSIGNED_BYTE, bitmap);
+    if (pk === 'pcur') gl.texImage2D(gl.TEXTURE_2D, 0, gl.RG8, w, h, 0, gl.RG, gl.UNSIGNED_BYTE, bytes);
+    else gl.texImage2D(gl.TEXTURE_2D, 0, gl.R8, w, h, 0, gl.RED, gl.UNSIGNED_BYTE, bytes);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
     const vec = pk === 'pcur';

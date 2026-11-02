@@ -99,11 +99,16 @@ async function decode({ url, kind }) {
 
 async function decodeBlob(blob, kind) {
   if (kind === 'json') return { json: JSON.parse(await blob.text()) };
-  // anteprime con la scheda video: solo la decodifica dell'immagine (nativa del
-  // browser), la conversione dei codici la fa uno shader (Globe.previewTexture)
+  // anteprime con la scheda video: qui solo la decodifica dell'immagine e i
+  // canali che servono come byte (1 per la temperatura, 2 per le correnti);
+  // la conversione in valori la fa uno shader (Globe.previewTexture). I byte
+  // si caricano sulla scheda in un terzo del tempo di un'immagine.
   if (GPU_PREV && (kind === 'psst' || kind === 'pcur')) {
-    const bitmap = await createImageBitmap(blob, { premultiplyAlpha: 'none', colorSpaceConversion: 'none' });
-    return { w: bitmap.width, h: bitmap.height, bitmap, pk: kind, enc: kind === 'psst' ? PREV.sst : PREV.cur, preview: true };
+    const { width: w, height: h, data } = await pixels(blob);
+    const n = w * h, ch = kind === 'pcur' ? 2 : 1, bytes = new Uint8Array(n * ch);
+    if (ch === 1) for (let i = 0; i < n; i++) bytes[i] = data[i * 4];
+    else for (let i = 0; i < n; i++) { bytes[i * 2] = data[i * 4]; bytes[i * 2 + 1] = data[i * 4 + 1]; }
+    return { w, h, bytes, pk: kind, enc: kind === 'psst' ? PREV.sst : PREV.cur, preview: true };
   }
   const img = await pixels(blob);
   const { width: w, height: h, data } = img;
@@ -186,7 +191,6 @@ self.onmessage = async (ev) => {
     const out = await decode(msg);
     out.net.total = performance.now() - t0;
     const transfer = Object.values(out).filter((v) => v && v.buffer).map((v) => v.buffer);
-    if (out.bitmap) transfer.push(out.bitmap);
     self.postMessage({ id: msg.id, ok: true, out }, transfer);
   } catch (e) {
     self.postMessage({ id: msg.id, ok: false, error: String(e && e.message || e) });
