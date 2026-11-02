@@ -8,6 +8,7 @@ const BASE = META_BASE ? new URL(META_BASE, globalThis.document.baseURI) : new U
 // byte occupati da un fotogramma decodificato (gli array che contiene)
 function sizeOf(v) {
   let n = 0;
+  if (v?.bitmap) n += v.w * v.h * 4;           // anteprima ancora da convertire (RGBA a 8 bit)
   if (v) for (const x of Object.values(v)) if (x && ArrayBuffer.isView(x)) n += x.byteLength;
   return Math.max(n, 1024);
 }
@@ -34,6 +35,7 @@ export class DataStore {
     this.saved = new Set();               // percorsi gia' nella cache del browser
     this.failed = new Map();              // chiave → quando e' fallito
     this.onSaved = null;
+    this.gpuPrev = false;                 // anteprime come immagini, convertite dalla scheda video
   }
 
   async init() {
@@ -47,7 +49,7 @@ export class DataStore {
     const n = Math.min(6, Math.max(1, (navigator.hardwareConcurrency || 2) - 1));
     for (let i = 0; i < n; i++) {
       const w = new Worker(new URL('./decode-worker.js', import.meta.url));
-      w.postMessage({ type: 'init', encoding: this.manifest.encoding, preview: this.manifest.preview, cache: this.cacheNames });
+      w.postMessage({ type: 'init', encoding: this.manifest.encoding, preview: this.manifest.preview, cache: this.cacheNames, gpuPrev: this.gpuPrev });
       w.onmessage = (ev) => {
         const p = this.pending.get(ev.data.id);
         if (!p) return;
@@ -154,9 +156,12 @@ export class DataStore {
     let total = 0;
     for (const e of cache.values()) total += e.bytes;
     while (cache.size > 1 && (total > budget || cache.size > this.maxCount)) {
-      const k = cache.keys().next().value;
-      total -= cache.get(k).bytes;
+      const k = cache.keys().next().value, e = cache.get(k);
+      total -= e.bytes;
       cache.delete(k);
+      // l'immagine di un'anteprima tiene memoria finche' non la si chiude (la
+      // texture fatta da lei resta nella cache del globo)
+      e.v?.bitmap?.close();
     }
   }
 

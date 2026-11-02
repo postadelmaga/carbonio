@@ -44,6 +44,7 @@ export class Globe {
     this.progLine = compile(gl, S.LINE_VS, S.LINE_FS);
     this.progArrow = compile(gl, S.ARROW_VS, S.ARROW_FS);
     if (this.floatTargets) {
+      this.progPrev = compile(gl, S.QUAD_VS, S.PREV_FS);
       this.progUpdate = compile(gl, S.QUAD_VS, S.UPDATE_FS);
       this.progTrail = compile(gl, S.TRAIL_VS, S.TRAIL_FS);
     }
@@ -148,11 +149,46 @@ export class Globe {
       this.frameTex.set(key, t);
       return t;
     }
-    t = kind === 'vector'
+    if (frame.bitmap) t = this.previewTexture(frame, regional);
+    else t = kind === 'vector'
       ? this.makeTex(frame.w, frame.h, gl.RGBA16F, gl.RGBA, gl.HALF_FLOAT, frame.gpu)
       : this.makeTex(frame.w, frame.h, gl.RG16F, gl.RG, gl.HALF_FLOAT, frame.gpu, null, regional);
+    if (!t) return null;
     this.frameTex.set(key, t);
     this.trimFrames();
+    return t;
+  }
+
+  // un'anteprima arrivata come immagine (frame.bitmap, codici a 8 bit): la si
+  // carica cosi' com'e' e uno shader scrive la texture dei valori. Sulla CPU
+  // erano una copia dei pixel e un ciclo su milioni di punti per fotogramma.
+  previewTexture(frame, regional = false) {
+    const gl = this.gl, P = this.progPrev, { w, h, bitmap, pk } = frame;
+    if (!P || !bitmap || !bitmap.width) return null;
+    const src = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, src);
+    gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, gl.RGBA, gl.UNSIGNED_BYTE, bitmap);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    const vec = pk === 'pcur';
+    const t = vec ? this.makeTex(w, h, gl.RGBA16F, gl.RGBA, gl.HALF_FLOAT, null) : this.makeTex(w, h, gl.RG16F, gl.RG, gl.HALF_FLOAT, null, null, regional);
+    this.prevFbo = this.prevFbo || gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.prevFbo);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, t, 0);
+    gl.viewport(0, 0, w, h);
+    gl.disable(gl.BLEND);
+    gl.useProgram(P.p);
+    this.bind(P, 'uSrc', 0, src);
+    const e = frame.enc || {};
+    gl.uniform1i(P.u.uKind, vec ? 1 : 0);
+    gl.uniform1f(P.u.uOffset, e.offset ?? 0); gl.uniform1f(P.u.uStep, e.step ?? 1);
+    gl.uniform1f(P.u.uMax, e.max ?? 1); gl.uniform1f(P.u.uZero, e.zero ?? 0); gl.uniform1f(P.u.uScale, e.scale ?? 1);
+    gl.bindVertexArray(this.emptyVao);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.deleteTexture(src);
+    gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
     return t;
   }
 

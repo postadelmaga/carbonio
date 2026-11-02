@@ -67,6 +67,8 @@ async function start() {
   bindInput(canvas);
   requestAnimationFrame(loop);
 
+  // le anteprime del play si decodificano sulla scheda video, se sa scrivere texture a 16 bit
+  store.gpuPrev = globe.floatTargets;
   try {
     manifest = await store.init();
   } catch (e) {

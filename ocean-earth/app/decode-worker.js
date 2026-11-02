@@ -4,6 +4,7 @@
 
 let ENC = null;
 let PREV = null;
+let GPU_PREV = false;                // anteprime decodificate dalla scheda video
 
 const f32 = new Float32Array(1);
 const u32 = new Uint32Array(f32.buffer);
@@ -98,6 +99,12 @@ async function decode({ url, kind }) {
 
 async function decodeBlob(blob, kind) {
   if (kind === 'json') return { json: JSON.parse(await blob.text()) };
+  // anteprime con la scheda video: solo la decodifica dell'immagine (nativa del
+  // browser), la conversione dei codici la fa uno shader (Globe.previewTexture)
+  if (GPU_PREV && (kind === 'psst' || kind === 'pcur')) {
+    const bitmap = await createImageBitmap(blob, { premultiplyAlpha: 'none', colorSpaceConversion: 'none' });
+    return { w: bitmap.width, h: bitmap.height, bitmap, pk: kind, enc: kind === 'psst' ? PREV.sst : PREV.cur, preview: true };
+  }
   const img = await pixels(blob);
   const { width: w, height: h, data } = img;
   const n = w * h;
@@ -168,7 +175,7 @@ async function decodeBlob(blob, kind) {
 self.onmessage = async (ev) => {
   const msg = ev.data;
   if (msg.type === 'init') {
-    ENC = msg.encoding; PREV = msg.preview;
+    ENC = msg.encoding; PREV = msg.preview; GPU_PREV = !!msg.gpuPrev;
     if (msg.cache && self.caches) {
       CACHES = { frames: caches.open(msg.cache.frames), static: caches.open(msg.cache.static) };
     }
@@ -179,6 +186,7 @@ self.onmessage = async (ev) => {
     const out = await decode(msg);
     out.net.total = performance.now() - t0;
     const transfer = Object.values(out).filter((v) => v && v.buffer).map((v) => v.buffer);
+    if (out.bitmap) transfer.push(out.bitmap);
     self.postMessage({ id: msg.id, ok: true, out }, transfer);
   } catch (e) {
     self.postMessage({ id: msg.id, ok: false, error: String(e && e.message || e) });

@@ -259,6 +259,25 @@ void main() {
 // Lo stato di ogni particella e' un texel RGBA32F: (lon, lat, eta', velocita').
 // Le ultime TRAIL posizioni stanno negli strati di una texture array usata ad
 // anello: ogni passo legge lo strato precedente e scrive il successivo.
+// Anteprime per la riproduzione decodificate sulla scheda video: l'immagine
+// a 8 bit (codici) diventa la stessa texture a 16 bit che il worker scriveva
+// sulla CPU. psst: R = codice → offset + (c − 1)·step, maschera 1 dove c > 0.
+// pcur: R, G = codici delle due componenti → ±max·(|c − zero| / scale)², e
+// maschera in B dove ci sono tutte e due.
+export const PREV_FS = /* glsl */`#version 300 es
+precision highp float;
+uniform sampler2D uSrc;
+uniform int uKind;
+uniform float uOffset, uStep, uMax, uZero, uScale;
+out vec4 o;
+float cur(float c) { float d = c - uZero; return sign(d) * uMax * pow(abs(d) / uScale, 2.0); }
+void main() {
+  vec4 t = texelFetch(uSrc, ivec2(gl_FragCoord.xy), 0);
+  float a = floor(t.r * 255.0 + 0.5), b = floor(t.g * 255.0 + 0.5);
+  if (uKind == 0) o = a > 0.5 ? vec4(uOffset + (a - 1.0) * uStep, 1.0, 0.0, 0.0) : vec4(0.0);
+  else o = a > 0.5 && b > 0.5 ? vec4(cur(a), cur(b), 1.0, 0.0) : vec4(0.0);
+}`;
+
 export const QUAD_VS = /* glsl */`#version 300 es
 void main() {
   vec2 p = vec2((gl_VertexID << 1) & 2, gl_VertexID & 2) * 2.0 - 1.0;
