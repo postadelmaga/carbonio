@@ -79,6 +79,7 @@ export const S = {
   song: { buffer: null, peaks: null, name: '', detected: [], trimAuto: null },
   t: 0,                 // istante del reel mostrato
   playing: false,
+  tool: 'v',            // strumento della timeline: v selezione, c lama, r allunga, y scorri
 };
 
 // ── tempi della traccia video ──────────────────────────────────────────────
@@ -221,6 +222,8 @@ export function remember() {
   if (undoStack.length > 80) undoStack.shift();
   redoStack.length = 0;
 }
+// un comando che alla fine non ha cambiato nulla: via l'ultimo stato salvato
+export function forget() { undoStack.pop(); }
 export function undo() { if (!undoStack.length) return false; redoStack.push(JSON.stringify(S.P)); S.P = JSON.parse(undoStack.pop()); return true; }
 export function redo() { if (!redoStack.length) return false; undoStack.push(JSON.stringify(S.P)); S.P = JSON.parse(redoStack.pop()); return true; }
 export const canUndo = () => undoStack.length > 0, canRedo = () => redoStack.length > 0;

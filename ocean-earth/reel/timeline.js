@@ -3,10 +3,15 @@
 // V1: clip una dopo l'altra. Bordo destro = allunga o accorcia la clip e sposta
 // le seguenti; bordo sinistro = sposta il confine con la clip prima (la durata
 // totale non cambia); trascinare il corpo = cambiare l'ordine.
-// A1: pezzi del brano. Bordi = tagliare l'inizio o la fine del pezzo;
-// Maiuscolo + bordo = allungarlo o accorciarlo (cambia la velocita', non
-// l'intonazione), come una clip video; corpo = spostarlo nel tempo; Alt + corpo
-// = scegliere quale parte del brano suona; i pallini in alto = dissolvenze.
+// A1: pezzi del brano. Bordi = tagliare l'inizio o la fine del pezzo; corpo =
+// spostarlo nel tempo; i pallini in alto = dissolvenze.
+//
+// Strumenti come in Premiere (S.tool): V selezione, C lama (un clic divide la
+// clip in quel punto), R allunga (i bordi di un pezzo cambiano la velocita', non
+// l'intonazione; anche Maiusc + bordo), Y scorri (cambia quale parte del brano
+// suona, o quali mesi mostra la clip, senza spostarla). Alt + trascina duplica.
+// Un clic sul righello sposta l'indicatore; uno nel vuoto toglie la selezione.
+// Tasto destro: menu della clip, del pezzo, dello spazio vuoto o del righello.
 
 import { S, total, clipStart, segLen, segEnd, audioEnd, tlBeats, snapPoints, snapTo, remember, PALETTE_OF } from './model.js';
 import { A } from './atlas.js';
@@ -183,40 +188,74 @@ export function initTimeline(hooks) {
   const inner = $('#tl-inner');
   let drag = null;
 
-  inner.addEventListener('pointerdown', (e) => {
-    if (e.button !== 0) return;
+  // dove si trova un punto della timeline: clip, pezzo, righello o vuoto
+  const where = (e) => {
     const r = inner.getBoundingClientRect(), x = e.clientX - r.left;
     const vClip = e.target.closest('.clip:not(.audio)'), aClip = e.target.closest('.clip.audio');
+    if (e.target.closest('#tl-ruler')) return { kind: 'ruler', x, t: Math.max(0, T(x)) };
+    if (vClip) return { kind: 'v', i: +vClip.dataset.i, x, t: T(x), el: vClip };
+    if (aClip) return { kind: 'a', i: +aClip.dataset.a, x, t: T(x), el: aClip };
+    return { kind: e.target.closest('#lane-a') ? 'gap-a' : 'gap', x, t: Math.max(0, T(x)) };
+  };
+  // punto della lama: agganciato come i bordi (battute, confini, indicatore)
+  const razorT = (w) => snapTo(w.t, tol(), snapPoints());
+
+  inner.addEventListener('pointerdown', (e) => {
+    if (e.button !== 0) return;
+    const w = where(e), x = w.x, tool = S.tool || 'v';
     inner.setPointerCapture(e.pointerId);
     // spostando un pezzo oltre la fine la timeline si allunga: senza fermare la
     // scala, il pezzo scapperebbe piu' veloce del puntatore
     heldPps = pps;
-    if (e.target.id === 'tl-ruler' || (!vClip && !aClip)) {
+    if (w.kind === 'ruler') {
       drag = { kind: 'seek' };
-      if (!e.target.closest('#tl-ruler')) H.select(null);
-      H.seek(Math.max(0, T(x)));
+      H.seek(w.t);
       return;
     }
-    if (vClip) {
-      const i = +vClip.dataset.i, hnd = e.target.dataset.h;
+    if (w.kind === 'gap' || w.kind === 'gap-a') { H.select(null); return; }
+    if (tool === 'c') { H.razor({ kind: w.kind, i: w.i }, razorT(w)); return; }
+    if (w.kind === 'v') {
+      const i = w.i, hnd = e.target.dataset.h;
       H.select({ kind: 'v', i });
       const st = clipStart(i), c = S.P.video[i];
       const all = snapPoints();
       // si escludono i punti che si muovono insieme al bordo
       if (hnd === 'r') drag = { kind: 'v-r', i, st, x0: x, d0: c.dur, pts: all.filter((p) => !(p.kind === 'b' && p.t >= st + c.dur - 1e-6)) };
       else if (hnd === 'l') drag = { kind: 'v-l', i, st, x0: x, prev: S.P.video[i - 1].dur, d0: c.dur, pts: all.filter((p) => !(p.kind === 'b' && Math.abs(p.t - st) < 1e-6)) };
-      else drag = { kind: 'v-move', i, x0: x, moved: false };
+      else if (tool === 'y') drag = { kind: 'v-slip', i, x0: x, from: c.from, to: c.to };
+      else drag = { kind: 'v-move', i, x0: x, moved: false, copy: e.altKey };
       return;
     }
-    const si = +aClip.dataset.a, c = S.P.audio.clips[si];
+    const si = w.i, c = S.P.audio.clips[si];
     H.select({ kind: 'a', i: si });
     const f = e.target.dataset.f, hnd = e.target.dataset.h;
     // i punti del pezzo stesso si muovono con lui (spostandolo anche i suoi battiti)
     const all = snapPoints().filter((p) => !(p.kind === 'a' && p.s === si));
     const base = { si, x0: x, off: c.offset, in: c.in, out: c.out, rate: c.rate || 1, fi: c.fadeIn, fo: c.fadeOut, pts: all };
+    const stretch = tool === 'r' || e.shiftKey;
     if (f) drag = { kind: f === 'in' ? 'a-fi' : 'a-fo', ...base };
-    else if (hnd) drag = { kind: (e.shiftKey ? 'a-s' : 'a-') + hnd, ...base, pts: e.shiftKey ? all.filter((p) => !(p.kind === 'beat' && p.s === si)) : all };
-    else drag = { kind: e.altKey ? 'a-slip' : 'a-move', ...base, pts: all.filter((p) => !(p.kind === 'beat' && p.s === si)) };
+    else if (hnd) drag = { kind: (stretch ? 'a-s' : 'a-') + hnd, ...base, pts: stretch ? all.filter((p) => !(p.kind === 'beat' && p.s === si)) : all };
+    else drag = { kind: tool === 'y' ? 'a-slip' : 'a-move', copy: e.altKey && tool !== 'y', ...base, pts: all.filter((p) => !(p.kind === 'beat' && p.s === si)) };
+  });
+
+  // la lama: una linea segue il puntatore sulle clip, agganciata
+  inner.addEventListener('pointermove', (e) => {
+    if (drag || (S.tool || 'v') !== 'c') return;
+    const w = where(e);
+    const s = $('#snapline');
+    if (w.kind !== 'v' && w.kind !== 'a') { s.hidden = true; return; }
+    s.hidden = false; s.classList.add('razor');
+    s.style.left = `${X(razorT(w))}px`;
+  });
+  inner.addEventListener('pointerleave', () => { if (!drag) $('#snapline').hidden = true; });
+
+  // tasto destro: prima si seleziona quello che c'e' sotto, poi il suo menu
+  inner.addEventListener('contextmenu', (e) => {
+    e.preventDefault();
+    if (drag) return;
+    const w = where(e);
+    if (w.kind === 'v' || w.kind === 'a') H.select({ kind: w.kind, i: w.i });
+    H.context(w, e.clientX, e.clientY);
   });
 
   inner.addEventListener('pointermove', (e) => {
@@ -244,14 +283,26 @@ export function initTimeline(hooks) {
       case 'v-move': {
         if (!drag.moved && Math.abs(x - drag.x0) < 5) return;
         drag.moved = true;
-        drag.to = insertIndex(T(x), drag.i);
+        drag.to = insertIndex(T(x), drag.copy ? -1 : drag.i);
         const d = $('#drop');
         d.hidden = false;
         d.style.left = `${X(clipStart(drag.to))}px`;
         inner.querySelector(`.clip[data-i="${drag.i}"]`)?.classList.add('drag');
         return;
       }
+      case 'v-slip': {
+        // gli stessi mesi in meno o in piu' spostati nel tempo dei dati (la durata non cambia)
+        const c = V[drag.i], F = A.frames, a = F.findIndex((f) => f.t === drag.from), b = F.findIndex((f) => f.t === drag.to), v = A.views[c.view];
+        if (a < 0 || b < 0 || !v) break;
+        const span = Math.max(1, b - a);
+        let k = Math.round((-dt / Math.max(0.5, c.dur)) * span);
+        k = Math.max(v.first - Math.min(a, b), Math.min(v.last - Math.max(a, b), k));
+        c.from = F[a + k].t; c.to = F[b + k].t;
+        break;
+      }
       case 'a-move': {
+        // Alt + trascina: al primo movimento nasce la copia, ed e' lei che si sposta
+        if (drag.copy) { Au.clips.push({ ...Au.clips[drag.si] }); drag.si = Au.clips.length - 1; drag.copy = false; H.select({ kind: 'a', i: drag.si }); }
         const c = Au.clips[drag.si], len = segLen(c), raw = drag.off + dt;
         // si aggancia l'inizio del pezzo oppure la sua fine
         let t = snapTo(raw, tol(), drag.pts);
@@ -301,14 +352,23 @@ export function initTimeline(hooks) {
   });
 
   const end = () => {
+    heldPps = null;
     if (!drag) return;
     if (drag.kind === 'v-move' && drag.moved && drag.to != null) {
-      const from = drag.i, to = drag.to > from ? drag.to - 1 : drag.to;
-      if (to !== from) {
+      const from = drag.i;
+      if (drag.copy) {
+        // Alt + trascina: una copia dove si lascia, l'originale resta
         remember();
-        const [c] = S.P.video.splice(from, 1);
-        S.P.video.splice(to, 0, c);
-        S.sel = { kind: 'v', i: to };
+        S.P.video.splice(drag.to, 0, JSON.parse(JSON.stringify(S.P.video[from])));
+        S.sel = { kind: 'v', i: drag.to };
+      } else {
+        const to = drag.to > from ? drag.to - 1 : drag.to;
+        if (to !== from) {
+          remember();
+          const [c] = S.P.video.splice(from, 1);
+          S.P.video.splice(to, 0, c);
+          S.sel = { kind: 'v', i: to };
+        }
       }
     }
     const was = drag;
@@ -316,15 +376,22 @@ export function initTimeline(hooks) {
     heldPps = null;
     $('#drop').hidden = true;
     $('#snapline').hidden = true;
+    $('#snapline').classList.remove('razor');
     if (was.kind !== 'seek') H.changed({});
   };
   inner.addEventListener('pointerup', end);
   inner.addEventListener('pointercancel', end);
 
   // zoom: cursore e Ctrl+rotella (attorno al puntatore)
+  // il cursore parte dove sta lo zoom vero (il browser lo mette a meta')
+  $('#zoom').value = zoomZ;
   $('#zoom').addEventListener('input', (e) => setZoom(+e.target.value));
   $('#tl-scroll').addEventListener('wheel', (e) => {
-    if (!e.ctrlKey && !e.metaKey) return;
+    // come in Premiere: la rotella scorre la timeline, Alt (o Ctrl) + rotella fa zoom
+    if (!e.ctrlKey && !e.metaKey && !e.altKey) {
+      if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) { e.preventDefault(); $('#tl-scroll').scrollLeft += e.deltaY; }
+      return;
+    }
     e.preventDefault();
     const r = inner.getBoundingClientRect();
     setZoom(zoomZ - e.deltaY * 0.0015, T(e.clientX - r.left));
@@ -371,6 +438,10 @@ function insertIndex(t, skip) {
   }
   return V.length;
 }
+
+export const tlX = X;
+export function zoomFit() { setZoom(0, 0); $('#tl-scroll').scrollLeft = 0; }
+export function zoomBy(d) { setZoom(zoomZ + d); }
 
 export function scrollToT(t) {
   const sc = $('#tl-scroll'), x = X(t);

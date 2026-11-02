@@ -5,11 +5,12 @@
 import { analyze, downbeats, silence } from './beats.js';
 import {
   S, W, H, VIEWS, DOMAIN, SEA_PARTICLES, newClip, defaultProject, newAudio, migrate, total, clipStart, clipAt,
-  audioEnd, srcBars, tlBeats, newSeg, segLen, segEnd, segAt, srcAt, camAt, progressIn, wrapLon, remember, undo, redo, canUndo, canRedo,
+  audioEnd, srcBars, tlBeats, newSeg, segLen, segEnd, segAt, srcAt, camAt, progressIn, wrapLon, remember, forget, undo, redo, canUndo, canRedo,
 } from './model.js';
 import { A, bootAtlas, applyAt, feed, clipRange } from './atlas.js';
 import { compose, LOCALE } from './render.js';
-import { initTimeline, renderTimeline, movePlayhead, setZoom, scrollToT, viewGradient } from './timeline.js';
+import { initTimeline, renderTimeline, movePlayhead, setZoom, scrollToT, viewGradient, zoomFit, zoomBy } from './timeline.js';
+import { showMenu, menuOpen } from './menu.js';
 import { pickCodecs, exportMp4, scheduleSong } from './export.js';
 
 const $ = (s) => document.querySelector(s);
@@ -21,6 +22,75 @@ const UI = (() => {
 })();
 const TX = {
   it: {
+    kg_play: 'Riproduzione',
+    kg_move: 'Spostarsi',
+    kg_edit: 'Montaggio',
+    kg_tools: 'Strumenti',
+    kg_view: 'Timeline',
+    kg_file: 'Progetto',
+    k_play: 'Play / pausa',
+    k_l: 'Avanti (di nuovo: 2×, 4×, 8×)',
+    k_j: 'Indietro (di nuovo: 2×, 4×, 8×)',
+    k_k: 'Ferma (tenuto + J o L: un fotogramma)',
+    k_tap: 'Batti il tempo durante il play',
+    k_frame: 'Un fotogramma',
+    k_frame5: 'Cinque fotogrammi',
+    k_edit: 'Punto di montaggio precedente / successivo',
+    k_bar: 'Battuta precedente / successiva (Logic)',
+    k_home: 'Inizio del reel',
+    k_end: 'Fine del reel',
+    k_split: 'Dividi all’indicatore (la traccia scelta; senza selezione tutte e due)',
+    k_split_all: 'Dividi tutte e due le tracce',
+    k_trim: 'Rifila l’inizio / la fine fino all’indicatore, a catena',
+    k_del: 'Elimina (sulla musica resta lo spazio)',
+    k_ripple: 'Elimina a catena (chiude lo spazio)',
+    k_clip: 'Copia / taglia / incolla all’indicatore',
+    k_dup: 'Duplica subito dopo',
+    k_altdrag: 'Duplica dove lasci la copia',
+    k_nudge: 'Sposta il pezzo di un fotogramma (con Maiusc 5)',
+    k_undo: 'Annulla / ripeti',
+    k_tool_v: 'Selezione',
+    k_tool_c: 'Lama: un clic divide la clip',
+    k_tool_r: 'Allunga: i bordi del pezzo cambiano la velocità, non l’intonazione',
+    k_tool_y: 'Scorri: la parte del brano o i mesi, senza spostare la clip',
+    k_snap: 'Aggancio sì / no',
+    k_zoom: 'Zoom avanti / indietro',
+    k_fit: 'Tutto il reel nella timeline',
+    k_wheel: 'Zoom (la rotella da sola scorre)',
+    k_esc: 'Togli la selezione, torna a Selezione',
+    k_help: 'Questo pannello',
+    k_save: 'Salva il progetto',
+    k_open: 'Apri un progetto',
+    k_import: 'Importa un brano',
+    k_export: 'Esporta MP4',
+    m_split_here: 'Dividi qui',
+    m_split_ph: 'Dividi all’indicatore',
+    m_split_bars: 'Dividi a ogni battuta',
+    m_cut: 'Taglia',
+    m_copy: 'Copia',
+    m_paste: 'Incolla',
+    m_trim_in: 'Rifila l’inizio fino all’indicatore',
+    m_trim_out: 'Rifila la fine fino all’indicatore',
+    m_fit_bar: 'Durata alla battuta più vicina',
+    m_stretch_bar: 'Allunga alla battuta più vicina',
+    m_speed1: 'Velocità normale (100%)',
+    m_cam0: 'Vista attuale come inquadratura iniziale',
+    m_cam1: 'Vista attuale come inquadratura finale',
+    m_go_start: 'Vai all’inizio della clip',
+    m_go_end: 'Vai alla fine della clip',
+    m_del_gap: 'Elimina (resta lo spazio)',
+    m_del_ripple: 'Elimina e chiudi lo spazio',
+    m_close_gap: 'Chiudi questo spazio',
+    m_seek_here: 'Sposta qui l’indicatore',
+    m_zoom_fit: 'Zoom su tutto il reel',
+    m_zoom_in: 'Zoom avanti',
+    m_zoom_out: 'Zoom indietro',
+    m_play: 'Play',
+    m_pause: 'Pausa',
+    snap_t: 'Aggancio',
+    import_song: 'Importa un brano',
+    safe: 'zone coperte da Instagram',
+    keys: 'Scorciatoie',
     project: 'Progetto', texts: 'Testi', format: 'Formato', title: 'Titolo', lang: 'Lingua dei testi', o_date: 'data', o_legend: 'legenda', o_caption: 'titolo e didascalia', o_credits: 'fonti dei dati',
     fps: 'Fotogrammi/s', rate: 'Qualità (Mbit/s)', globe_y: 'Globo più in basso (px)', legend_size: 'Dimensione legenda (%)', black_in: 'Nero all’inizio (s)', black_out: 'Nero alla fine (s)',
     proj_note: (n, d) => `${n} clip, ${d} s. Seleziona una clip o il brano nella timeline per modificarli.`,
@@ -30,7 +100,7 @@ const TX = {
     avail: (a, b) => `Dati di questa vista: ${a} – ${b}.`, dup: 'Duplica', split: 'Dividi', del: 'Elimina',
     song: 'Brano', replace: 'Sostituisci', remove_song: 'Rimuovi il brano', volume: 'Volume del brano (%)', mute: 'muto', offset: 'Entra al secondo del reel', in: 'Suona dal secondo del brano', out: 'fino al secondo', fade_in: 'Dissolvenza in entrata (s)', fade_out: 'Dissolvenza in uscita (s)',
     seg: (i, n) => `Pezzo ${i} di ${n}`, seg_gain: 'Volume del pezzo (%)', speed: 'Velocità (%)', seg_len: 'Durata nel reel (s)', stretch_bars: 'Allunga a battute', split_every: 'Dividi ogni … battute', close_gaps: 'Accoda i pezzi',
-    seg_note: 'S divide il pezzo all’indicatore (Maiusc+←/→ salta di battuta in battuta). Trascina i bordi per tagliare, Maiusc + bordo per allungare o accorciare senza cambiare l’intonazione, il corpo per spostarlo. Duplica mette la copia subito dopo e sposta avanti i pezzi seguenti.',
+    seg_note: 'Ctrl+K divide il pezzo all’indicatore (, e . saltano di battuta in battuta). Trascina i bordi per tagliare; con lo strumento Allunga (R) o Maiusc + bordo cambi la velocità senza cambiare l’intonazione; Alt + trascina duplica. Tasto destro sul pezzo per tutti i comandi.',
     trim: 'Togli i silenzi', first_bar: 'Parti dalla battuta più vicina', rhythm: 'Ritmo', bpm: 'Tempo (BPM)', beats: 'Battiti', detected: 'rilevati', grid: 'griglia fissa', meter: 'Battiti per battuta', bar_off: 'La battuta parte dal battito', grid_off: 'Primo battito (s)', tap: 'Batti il tempo (T)',
     bpm_det: (b, n, m) => `${n} battiti rilevati, ${b} BPM, battute da ${m}. Se la griglia non cade sui colpi usa ÷2 o ×2, cambia il primo battito della battuta o batti il tempo con T durante il play.`,
     bpm_grid: (b) => `Griglia fissa a ${b} BPM.`, analyzing: (s) => `Analizzo il brano… ${s}`, song_missing: (n) => `Il progetto usa «${n}»: importalo di nuovo (resta nel browser).`, tap_more: (n) => `Batti ancora (${n})…`, tap_play: 'Avvia il play e batti a tempo.',
@@ -46,14 +116,88 @@ const TX = {
     fossil: 'fossili', natural: 'naturali',
   },
   en: {
+    kg_play: 'Playback',
+    kg_move: 'Navigate',
+    kg_edit: 'Editing',
+    kg_tools: 'Tools',
+    kg_view: 'Timeline',
+    kg_file: 'Project',
+    k_play: 'Play / pause',
+    k_l: 'Forward (again: 2×, 4×, 8×)',
+    k_j: 'Reverse (again: 2×, 4×, 8×)',
+    k_k: 'Stop (held + J or L: one frame)',
+    k_tap: 'Tap the tempo while playing',
+    k_frame: 'One frame',
+    k_frame5: 'Five frames',
+    k_edit: 'Previous / next edit point',
+    k_bar: 'Previous / next bar (Logic)',
+    k_home: 'Start of the reel',
+    k_end: 'End of the reel',
+    k_split: 'Split at the playhead (selected track; with no selection both)',
+    k_split_all: 'Split both tracks',
+    k_trim: 'Ripple trim start / end to the playhead',
+    k_del: 'Delete (leaves a gap on the music)',
+    k_ripple: 'Ripple delete (closes the gap)',
+    k_clip: 'Copy / cut / paste at the playhead',
+    k_dup: 'Duplicate right after',
+    k_altdrag: 'Duplicate where you drop the copy',
+    k_nudge: 'Nudge the piece one frame (Shift: 5)',
+    k_undo: 'Undo / redo',
+    k_tool_v: 'Selection',
+    k_tool_c: 'Razor: one click splits the clip',
+    k_tool_r: 'Rate stretch: piece edges change speed, not pitch',
+    k_tool_y: 'Slip: which part of the song or which months, without moving the clip',
+    k_snap: 'Snapping on / off',
+    k_zoom: 'Zoom in / out',
+    k_fit: 'Whole reel in the timeline',
+    k_wheel: 'Zoom (the wheel alone scrolls)',
+    k_esc: 'Deselect, back to Selection',
+    k_help: 'This panel',
+    k_save: 'Save the project',
+    k_open: 'Open a project',
+    k_import: 'Import a song',
+    k_export: 'Export MP4',
+    m_split_here: 'Split here',
+    m_split_ph: 'Split at the playhead',
+    m_split_bars: 'Split at every bar',
+    m_cut: 'Cut',
+    m_copy: 'Copy',
+    m_paste: 'Paste',
+    m_trim_in: 'Trim start to the playhead',
+    m_trim_out: 'Trim end to the playhead',
+    m_fit_bar: 'Length to the nearest bar',
+    m_stretch_bar: 'Stretch to the nearest bar',
+    m_speed1: 'Normal speed (100%)',
+    m_cam0: 'Current view as start framing',
+    m_cam1: 'Current view as end framing',
+    m_go_start: 'Go to clip start',
+    m_go_end: 'Go to clip end',
+    m_del_gap: 'Delete (leave the gap)',
+    m_del_ripple: 'Delete and close the gap',
+    m_close_gap: 'Close this gap',
+    m_seek_here: 'Move the playhead here',
+    m_zoom_fit: 'Zoom to the whole reel',
+    m_zoom_in: 'Zoom in',
+    m_zoom_out: 'Zoom out',
+    m_play: 'Play',
+    m_pause: 'Pause',
+    keys: 'Shortcuts',
+    keys_h: 'Keyboard shortcuts',
+    keys_note: 'As in Premiere Pro (editing) and Logic Pro (bars). Right-click clips, song pieces, empty space, the ruler and the preview for commands at that point.',
+    keys_t: 'Keyboard shortcuts (?)',
+    snap_tt: 'Snapping (S)',
+    tool_v_t: 'Selection (V)',
+    tool_c_t: 'Razor: one click splits the clip (C)',
+    tool_r_t: 'Rate stretch: a song piece’s edges change speed, not pitch (R)',
+    tool_y_t: 'Slip: which part of the song plays, or which months the clip shows, without moving it (Y)',
     back: '‹ Climate Atlas', brand: 'Reel editor', open: 'Open project', save: 'Save project', export: 'Export MP4', loading: 'Loading the atlas…',
     views: 'Views', lib_hint: 'Drag a view onto track V1, or click to add it after the selected clip.', music: 'Music', import_song: 'Import a song',
     song_local: 'The song stays in your browser, it is not uploaded anywhere. To publish the reel you need the rights to the music.', safe: 'areas covered by Instagram',
     split: 'Split', del: 'Delete', on_bars: 'Clips on the bars', fill: 'To the end of the song', zoom: 'Zoom', track_v: 'Globe', track_a: 'Music',
-    tl_help: 'Drag edges to stretch or trim (they snap to bars) · drag a clip to move it · song pieces: Shift + edge stretches without changing pitch, Alt + drag chooses which part plays · space play · S split · Ctrl+Z undo · Ctrl+wheel zoom',
+    tl_help: 'Space play · J K L forward and reverse · Ctrl+K split · Q W trim · right-click for clip commands · Alt + drag duplicates · wheel scrolls, Alt + wheel zooms · ? all shortcuts',
     exporting: 'Export', cancel: 'Cancel', download: 'Download the video', wait: 'loading data…',
-    undo: 'Undo (Ctrl+Z)', redo: 'Redo (Ctrl+Shift+Z)', go_start: 'Start (Home)', go_prev: 'Previous bar (Shift+←)', go_next: 'Next bar (Shift+→)', go_end: 'End (End)',
-    snap_t: 'Snap', split_t: 'Split the selected clip or song piece at the playhead (S)', del_t: 'Delete (Del)', bars_t: 'Move every clip boundary to the nearest bar', fill_t: 'Stretch the clips to the end of the song', mute: 'mute',
+    undo: 'Undo (Ctrl+Z)', redo: 'Redo (Ctrl+Shift+Z)', go_start: 'Start (Home)', go_prev: 'Previous bar (,)', go_next: 'Next bar (.)', go_end: 'End (End)',
+    snap_t: 'Snap', split_t: 'Split at the playhead (Ctrl+K)', del_t: 'Delete (Del) · ripple (Shift+Del)', bars_t: 'Move every clip boundary to the nearest bar', fill_t: 'Stretch the clips to the end of the song', mute: 'mute',
     project: 'Project', texts: 'Texts', format: 'Format', title: 'Title', lang: 'Text language', o_date: 'date', o_legend: 'legend', o_caption: 'title and caption', o_credits: 'data sources',
     fps: 'Frames/s', rate: 'Quality (Mbit/s)', globe_y: 'Globe lower (px)', legend_size: 'Legend size (%)', black_in: 'Black at the start (s)', black_out: 'Black at the end (s)',
     proj_note: (n, d) => `${n} clips, ${d} s. Select a clip or the song in the timeline to edit it.`,
@@ -63,7 +207,7 @@ const TX = {
     avail: (a, b) => `Data for this view: ${a} – ${b}.`, dup: 'Duplicate',
     song: 'Song', replace: 'Replace', remove_song: 'Remove the song', volume: 'Song volume (%)',
     seg: (i, n) => `Piece ${i} of ${n}`, seg_gain: 'Piece volume (%)', speed: 'Speed (%)', seg_len: 'Length in the reel (s)', stretch_bars: 'Stretch to bars', split_every: 'Split every … bars', close_gaps: 'Line up the pieces',
-    seg_note: 'S splits the piece at the playhead (Shift+←/→ jumps bar to bar). Drag the edges to trim, Shift + edge to stretch or shorten without changing the pitch, the body to move it. Duplicate puts the copy right after and pushes the following pieces forward.', no_bars_in: 'There are no bars inside the piece to split at.', offset: 'Enters at reel second', in: 'Plays from song second', out: 'to second', fade_in: 'Fade in (s)', fade_out: 'Fade out (s)',
+    seg_note: 'Ctrl+K splits the piece at the playhead (, and . jump bar to bar). Drag the edges to trim; with the Rate stretch tool (R) or Shift + edge you change speed without changing pitch; Alt + drag duplicates. Right-click the piece for every command.', no_bars_in: 'There are no bars inside the piece to split at.', offset: 'Enters at reel second', in: 'Plays from song second', out: 'to second', fade_in: 'Fade in (s)', fade_out: 'Fade out (s)',
     trim: 'Remove silences', first_bar: 'Start on the nearest bar', rhythm: 'Rhythm', bpm: 'Tempo (BPM)', beats: 'Beats', detected: 'detected', grid: 'fixed grid', meter: 'Beats per bar', bar_off: 'Bar starts on beat', grid_off: 'First beat (s)', tap: 'Tap the tempo (T)',
     bpm_det: (b, n, m) => `${n} beats detected, ${b} BPM, bars of ${m}. If the grid does not land on the hits use ÷2 or ×2, change the first beat of the bar or tap the tempo with T while playing.`,
     bpm_grid: (b) => `Fixed grid at ${b} BPM.`, analyzing: (s) => `Analysing the song… ${s}`, song_missing: (n) => `The project uses “${n}”: import it again (it stays in the browser).`, tap_more: (n) => `Keep tapping (${n})…`, tap_play: 'Start playback and tap along.',
@@ -553,42 +697,172 @@ function closeGaps() {
   changed();
 }
 
-function splitAt() {
-  if (S.sel?.kind === 'a' && S.P.audio) {
-    // il pezzo scelto se l'indicatore ci sta dentro, altrimenti quello che suona li'
-    const C = S.P.audio.clips, i = C[S.sel.i] && S.t > C[S.sel.i].offset && S.t < segEnd(C[S.sel.i]) ? S.sel.i : segAt(S.t);
-    if (i < 0) return;
-    remember();
-    if (!splitSeg(i, S.t)) return;
-    S.sel = { kind: 'a', i: i + 1 };
-    changed();
-    return;
-  }
-  const info = clipAt(S.t);
-  if (!info) return;
-  const { c, i, lt } = info;
-  if (lt < 0.3 || c.dur - lt < 0.3) return;
-  remember();
+// ── comandi di montaggio (gli stessi da tastiera, pulsanti e menu) ─────────
+// divide la clip video i all'istante t del reel: i mesi e l'inquadratura
+// proseguono dalla prima meta' alla seconda
+function splitVideo(i, t) {
+  const c = S.P.video[i], t0 = clipStart(i), lt = t - t0;
+  if (!c || lt < 0.3 || c.dur - lt < 0.3) return false;
   const [a, b] = clipRange(c);
   const active = Math.max(0.05, c.dur - c.hold);
-  const p = progressIn(c, info.t0, Math.min(lt, active));
+  const p = progressIn(c, t0, Math.min(lt, active));
   const mid = Math.round(a + (b - a) * p);
   const cm = camAt(c, lt);
   const copy = () => JSON.parse(JSON.stringify(c));
   const first = { ...copy(), dur: lt, hold: 0, to: A.frames[mid].t, cam1: { lon: wrapLon(cm.lon - c.spin * lt), lat: cm.lat, dist: cm.dist } };
   const second = { ...copy(), dur: c.dur - lt, fade: 0, from: A.frames[mid].t, cam0: { lon: wrapLon(cm.lon), lat: cm.lat, dist: cm.dist } };
   S.P.video.splice(i, 1, first, second);
-  S.sel = { kind: 'v', i: i + 1 };
+  return true;
+}
+const vAt = (t) => { const k = clipAt(t); return k && t > k.t0 + 0.3 && t < k.t0 + k.c.dur - 0.3 ? k.i : -1; };
+const aAt = (t) => { const i = segAt(t); const c = S.P.audio?.clips[i]; return c && t > c.offset + 0.1 && t < segEnd(c) - 0.1 ? i : -1; };
+
+// Ctrl+K (Premiere): divide all'indicatore la traccia della clip scelta; senza
+// selezione, o con Maiusc (Ctrl+Maiusc+K), tutte e due le tracce
+function splitAt(all = false) {
+  const t = S.t, kind = all || !S.sel ? 'both' : S.sel.kind;
+  remember();
+  let did = false, sel = null;
+  if (kind !== 'a') { const i = vAt(t); if (i >= 0 && splitVideo(i, t)) { did = true; sel = { kind: 'v', i: i + 1 }; } }
+  if (kind !== 'v' && S.P.audio) {
+    const C = S.P.audio.clips;
+    const i = S.sel?.kind === 'a' && C[S.sel.i] && t > C[S.sel.i].offset + 0.1 && t < segEnd(C[S.sel.i]) - 0.1 ? S.sel.i : aAt(t);
+    if (i >= 0 && splitSeg(i, t)) { did = true; sel = sel || { kind: 'a', i: i + 1 }; }
+  }
+  if (!did) { forget(); return; }
+  S.sel = sel;
   changed();
 }
-function deleteSel() {
+// la lama: divide la clip o il pezzo nel punto cliccato
+function razor(target, t) {
+  remember();
+  const ok = target.kind === 'v' ? splitVideo(target.i, t) : splitSeg(target.i, t);
+  if (!ok) { forget(); return; }
+  S.sel = { kind: target.kind, i: target.i + 1 };
+  changed();
+}
+
+// Canc: elimina (sulla traccia della musica resta lo spazio); Maiusc+Canc:
+// eliminazione a catena, i pezzi dopo si spostano indietro (la traccia video
+// non ha mai buchi: li' e' sempre a catena)
+function deleteSel(ripple = false) {
   if (!S.sel) return;
   remember();
   if (S.sel.kind === 'v') { S.P.video.splice(S.sel.i, 1); S.sel = S.P.video.length ? { kind: 'v', i: Math.max(0, S.sel.i - 1) } : null; }
-  else if (S.P.audio.clips.length > 1) { S.P.audio.clips.splice(S.sel.i, 1); S.sel = { kind: 'a', i: Math.max(0, S.sel.i - 1) }; }
-  else { S.P.audio = null; S.sel = null; }
+  else if (S.P.audio.clips.length > 1) {
+    const C = S.P.audio.clips, [c] = C.splice(S.sel.i, 1), end = segEnd(c), len = segLen(c);
+    if (ripple) for (const o of C) if (o.offset >= end - 1e-3) o.offset = Math.max(0, o.offset - len);
+    S.sel = { kind: 'a', i: Math.max(0, S.sel.i - 1) };
+  } else { S.P.audio = null; S.sel = null; }
   changed();
 }
+// lo spazio vuoto sulla traccia della musica all'istante t: i pezzi dopo tornano indietro
+function closeGapAt(t) {
+  const C = S.P.audio?.clips || [];
+  const prev = Math.max(0, ...C.filter((c) => segEnd(c) <= t + 1e-3).map(segEnd));
+  const nexts = C.filter((c) => c.offset >= t - 1e-3).map((c) => c.offset);
+  if (!nexts.length) return;
+  const gap = Math.min(...nexts) - prev;
+  if (gap < 1e-3) return;
+  remember();
+  for (const c of C) if (c.offset >= t - 1e-3) c.offset -= gap;
+  changed();
+}
+
+// Q / W (Premiere): rifila a catena l'inizio o la fine della clip sotto
+// l'indicatore fino all'indicatore; quello che segue si sposta indietro
+function rippleTrim(end) {
+  const t = S.t, kind = S.sel?.kind || 'v';
+  remember();
+  let ok = false;
+  if (kind === 'v') {
+    const i = vAt(t);
+    if (i >= 0 && splitVideo(i, t)) { S.P.video.splice(end ? i + 1 : i, 1); S.sel = { kind: 'v', i }; ok = true; if (!end) S.t = clipStart(i); }
+  } else if (S.P.audio) {
+    const C = S.P.audio.clips, i = S.sel?.kind === 'a' && C[S.sel.i] && t > C[S.sel.i].offset + 0.1 && t < segEnd(C[S.sel.i]) - 0.1 ? S.sel.i : aAt(t);
+    if (i >= 0) {
+      const c = C[i], end0 = segEnd(c);
+      if (end) {
+        c.out = srcAt(c, t);
+        for (const o of C) if (o !== c && o.offset >= end0 - 1e-3) o.offset -= end0 - t;
+      } else {
+        const cut = t - c.offset;
+        c.in = srcAt(c, t);
+        for (const o of C) if (o !== c && o.offset >= end0 - 1e-3) o.offset -= cut;
+        S.t = c.offset;
+      }
+      S.sel = { kind: 'a', i }; ok = true;
+    }
+  }
+  if (!ok) { forget(); return; }
+  changed();
+  need = true; camNeed = true;
+}
+
+// appunti: Ctrl+C / Ctrl+X / Ctrl+V
+let clip = null;
+function copySel() {
+  if (S.sel?.kind === 'v') clip = { kind: 'v', data: JSON.parse(JSON.stringify(S.P.video[S.sel.i])) };
+  else if (S.sel?.kind === 'a' && curSeg()) clip = { kind: 'a', data: { ...curSeg() } };
+  return !!clip;
+}
+function cutSel() { if (copySel()) deleteSel(clip.kind === 'v'); }
+// incolla all'indicatore: una clip si inserisce (se l'indicatore e' a meta' di
+// una clip, la divide), un pezzo del brano si sovrappone da quell'istante
+function paste(at = S.t) {
+  if (!clip) return;
+  remember();
+  if (clip.kind === 'v') {
+    const V = S.P.video;
+    let idx = V.length;
+    const k = clipAt(at);
+    if (k) {
+      if (at - k.t0 < 0.15) idx = k.i;
+      else if (k.t0 + k.c.dur - at < 0.15) idx = k.i + 1;
+      else if (splitVideo(k.i, at)) idx = k.i + 1;
+    }
+    V.splice(idx, 0, JSON.parse(JSON.stringify(clip.data)));
+    S.sel = { kind: 'v', i: idx };
+  } else {
+    if (!S.P.audio) { forget(); return; }
+    S.P.audio.clips.push({ ...clip.data, offset: Math.max(0, at) });
+    S.sel = { kind: 'a', i: S.P.audio.clips.length - 1 };
+  }
+  changed();
+}
+function dupSel() {
+  if (S.sel?.kind === 'v') { remember(); S.P.video.splice(S.sel.i + 1, 0, JSON.parse(JSON.stringify(S.P.video[S.sel.i]))); S.sel = { kind: 'v', i: S.sel.i + 1 }; changed(); }
+  else if (S.sel?.kind === 'a') dupSeg(S.sel.i);
+}
+// Alt+←/→ (Premiere): sposta il pezzo scelto di un fotogramma (con Maiusc 5)
+function nudge(frames) {
+  const c = curSeg();
+  if (!c) return;
+  remember();
+  c.offset = Math.max(0, c.offset + frames / S.P.fps);
+  changed();
+}
+// ↑ / ↓ (Premiere): al punto di montaggio prima o dopo (inizi e fini di clip e pezzi)
+function editPoints() {
+  const pts = [0, total()];
+  for (let i = 1; i < S.P.video.length; i++) pts.push(clipStart(i));
+  for (const c of S.P.audio?.clips || []) pts.push(c.offset, segEnd(c));
+  return [...new Set(pts.map((x) => +x.toFixed(4)))].sort((a, b) => a - b);
+}
+function stepEdit(dir) {
+  const p = editPoints(), n = dir > 0 ? p.find((x) => x > S.t + 1e-3) : [...p].reverse().find((x) => x < S.t - 1e-3);
+  if (n == null) return;
+  seek(n); scrollToT(S.t);
+}
+// strumenti (Premiere): V selezione, C lama, R allunga, Y scorri
+function setTool(k) {
+  S.tool = k;
+  document.querySelectorAll('[data-tool]').forEach((b) => { b.classList.toggle('on', b.dataset.tool === k); b.setAttribute('aria-pressed', b.dataset.tool === k); });
+  $('#tl-inner').dataset.tool = k;
+  if (k !== 'c') $('#snapline').hidden = true;
+}
+function setSnap(m) { S.P.snap = m; showSnapMode(); saveLocal(); renderTimeline(); }
+
 // confini fra le clip sulla battuta piu' vicina; fixLast: l'ultimo resta dov'e'
 function onBars(ends, fixLast = false) {
   const bars = tlBeats().filter((b) => b.bar).map((b) => b.t).filter((b) => b > 0.4);
@@ -624,11 +898,11 @@ $('#t-fill').addEventListener('click', () => {
   setDurs(onBars(ends, true));
   changed();
 });
-$('#t-split').addEventListener('click', splitAt);
-$('#t-del').addEventListener('click', deleteSel);
+$('#t-split').addEventListener('click', () => splitAt());
+$('#t-del').addEventListener('click', () => deleteSel());
 const SNAPS = ['bar', 'beat', 'off'];
 function showSnapMode() { $('#t-snap-l').textContent = t(`snap_${S.P.snap}`); $('#t-snap').classList.toggle('on', S.P.snap !== 'off'); }
-$('#t-snap').addEventListener('click', () => { S.P.snap = SNAPS[(SNAPS.indexOf(S.P.snap) + 1) % 3]; showSnapMode(); saveLocal(); renderTimeline(); });
+$('#t-snap').addEventListener('click', () => setSnap(SNAPS[(SNAPS.indexOf(S.P.snap) + 1) % 3]));
 $('#mute').addEventListener('click', () => { if (!S.P.audio) return; remember(); S.P.audio.mute = !S.P.audio.mute; changed(); if (S.playing) { pause(); play(); } });
 // annullando si torna anche ai battiti salvati nel progetto
 function reloadSongState() { const Au = S.P.audio; if (Au?.det?.beats && S.song.name === Au.name) S.song.detected = Au.det.beats; }
@@ -638,6 +912,21 @@ $('#redo').addEventListener('click', () => { if (redo()) { reloadSongState(); ch
 // ── anteprima e trasporto ──────────────────────────────────────────────────
 const out = $('#out'), ctx = out.getContext('2d');
 let src = null, playT0 = 0, lastInfo = null, exporting = false;
+// J K L (Premiere): shuttle avanti e indietro a 1×, 2×, 4×, 8× (senza audio
+// fuori dalla velocita' normale); K ferma; K tenuto + J o L = un fotogramma
+let shuttle = 0, kHeld = false;
+function setRate(r) {
+  if (r === 1) { if (!S.playing || shuttle) { pause(); play(); } return; }
+  if (!A.oe || exporting || !S.P.video.length) return;
+  if (S.playing) pause();
+  if (r > 0 && S.t >= total() - 0.05) S.t = 0;
+  shuttle = r;
+  S.playing = true;
+  A.oe.preview(true);
+  A.asked.clear();
+  $('#play').textContent = '❚❚';
+}
+const curRate = () => (!S.playing ? 0 : shuttle || 1);
 function play() {
   if (!A.oe || exporting || !S.P.video.length) return;
   if (S.t >= total() - 0.05) S.t = 0;
@@ -655,6 +944,7 @@ function pause() {
   for (const x of src || []) { try { x.stop(); } catch (e) { /* gia' fermo */ } }
   src = null;
   S.playing = false;
+  shuttle = 0;
   A.oe?.preview(false);
   $('#play').textContent = '▶';
   need = true;
@@ -667,22 +957,33 @@ function seek(tt) {
 }
 initTimeline({
   changed, seek, addView, importFile,
+  // come in Premiere: scegliere una clip non sposta l'indicatore
   select(s) {
     S.sel = s;
-    if (s?.kind === 'v') { const st = clipStart(s.i), c = S.P.video[s.i]; if (S.t < st || S.t > st + c.dur) seek(st + 0.01); }
     renderInspector(); renderTimeline();
   },
+  razor,
+  context: (w, x, y) => contextMenu(w, x, y),
   label: () => t('total', total().toFixed(2), S.P.video.length),
   text: (k) => t(k),
 });
 
 let lastNow = performance.now(), lateSince = 0;
-function fmtTC(s) { const m = Math.floor(s / 60), r = s - m * 60; return `${String(m).padStart(2, '0')}:${r.toFixed(2).padStart(5, '0')}`; }
+// timecode come nei programmi di montaggio: minuti:secondi:fotogrammi
+function fmtTC(s) {
+  const fps = S.P.fps, f = Math.floor(s * fps + 1e-6), sec = Math.floor(f / fps), m = Math.floor(sec / 60);
+  return `${String(m).padStart(2, '0')}:${String(sec % 60).padStart(2, '0')}:${String(f % fps).padStart(2, '0')}`;
+}
 function frame(now) {
   const dt = Math.min(100, now - lastNow);
   lastNow = now;
   if (A.oe && !exporting) {
-    if (S.playing) {
+    if (S.playing && shuttle) {
+      S.t += (dt / 1000) * shuttle;
+      if (S.t >= total()) { S.t = total(); pause(); } else if (S.t <= 0) { S.t = 0; pause(); }
+      if (shuttle > 0) feed(S.t);
+      lastInfo = applyAt(S.t, true, shuttle > 0);
+    } else if (S.playing) {
       S.t = Math.max(0, audioCtx().currentTime - playT0);
       if (S.t >= total()) { S.t = total(); pause(); }
       feed(S.t);
@@ -734,27 +1035,171 @@ $('#safe-on').addEventListener('change', (e) => { S.P.safe = e.target.checked; $
   out.addEventListener('wheel', (e) => { if (!A.oe || S.playing) return; e.preventDefault(); A.oe.camera.dist = Math.max(1.3, Math.min(6, A.oe.camera.dist * Math.exp(e.deltaY * 0.0012))); }, { passive: false });
 }
 
-// tastiera
+// ── scorciatoie ─────────────────────────────────────────────────────────────
+// Una tabella sola: la usano la tastiera e il pannello "Scorciatoie" (?).
+// Montaggio come Premiere Pro, battute come Logic Pro (, e .).
+const frameStep = (n) => { if (S.playing) pause(); seek(S.t + n / S.P.fps); scrollToT(S.t); };
+const KEYS = [
+  ['play', [
+    ['Spazio', 'k_play', (e) => e.code === 'Space', () => (S.playing ? pause() : play())],
+    ['L', 'k_l', (e) => e.key.toLowerCase() === 'l', () => (kHeld ? frameStep(1) : setRate(curRate() > 0 ? Math.min(8, curRate() * 2) : 1))],
+    ['J', 'k_j', (e) => e.key.toLowerCase() === 'j', () => (kHeld ? frameStep(-1) : setRate(curRate() < 0 ? Math.max(-8, curRate() * 2) : -1))],
+    ['K', 'k_k', (e) => e.key.toLowerCase() === 'k', () => { kHeld = true; if (S.playing) pause(); }],
+    ['T', 'k_tap', (e) => e.key.toLowerCase() === 't', () => tap()],
+  ]],
+  ['move', [
+    ['← / →', 'k_frame', (e) => !e.altKey && !e.shiftKey && (e.key === 'ArrowLeft' || e.key === 'ArrowRight'), (e) => frameStep(e.key === 'ArrowRight' ? 1 : -1)],
+    ['Maiusc + ← / →', 'k_frame5', (e) => !e.altKey && e.shiftKey && (e.key === 'ArrowLeft' || e.key === 'ArrowRight'), (e) => frameStep(e.key === 'ArrowRight' ? 5 : -5)],
+    ['↑ / ↓', 'k_edit', (e) => e.key === 'ArrowUp' || e.key === 'ArrowDown', (e) => stepEdit(e.key === 'ArrowDown' ? 1 : -1)],
+    [', / .', 'k_bar', (e) => e.key === ',' || e.key === '.', (e) => stepBar(e.key === '.' ? 1 : -1)],
+    ['Home / Invio', 'k_home', (e) => e.key === 'Home' || e.key === 'Enter', () => { seek(0); scrollToT(0); }],
+    ['Fine', 'k_end', (e) => e.key === 'End', () => { seek(total()); scrollToT(total()); }],
+  ]],
+  ['edit', [
+    ['Ctrl + K', 'k_split', (e) => e.ctrlKey && !e.shiftKey && e.key.toLowerCase() === 'k', () => splitAt()],
+    ['Ctrl + Maiusc + K', 'k_split_all', (e) => e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'k', () => splitAt(true)],
+    ['Q / W', 'k_trim', (e) => e.key.toLowerCase() === 'q' || e.key.toLowerCase() === 'w', (e) => rippleTrim(e.key.toLowerCase() === 'w')],
+    ['Canc', 'k_del', (e) => !e.shiftKey && (e.key === 'Delete' || e.key === 'Backspace'), () => deleteSel(false)],
+    ['Maiusc + Canc', 'k_ripple', (e) => e.shiftKey && (e.key === 'Delete' || e.key === 'Backspace'), () => deleteSel(true)],
+    ['Ctrl + C / X / V', 'k_clip', (e) => e.ctrlKey && ['c', 'x', 'v'].includes(e.key.toLowerCase()), (e) => ({ c: copySel, x: cutSel, v: () => paste() })[e.key.toLowerCase()]()],
+    ['Ctrl + D', 'k_dup', (e) => e.ctrlKey && e.key.toLowerCase() === 'd', () => dupSel()],
+    ['Alt + trascina', 'k_altdrag', null, null],
+    ['Alt + ← / →', 'k_nudge', (e) => e.altKey && (e.key === 'ArrowLeft' || e.key === 'ArrowRight'), (e) => nudge((e.key === 'ArrowRight' ? 1 : -1) * (e.shiftKey ? 5 : 1))],
+    ['Ctrl + Z / Ctrl + Maiusc + Z', 'k_undo', (e) => e.ctrlKey && (e.key.toLowerCase() === 'z' || e.key.toLowerCase() === 'y'), (e) => $(e.shiftKey || e.key.toLowerCase() === 'y' ? '#redo' : '#undo').click()],
+  ]],
+  ['tools', [
+    ['V', 'k_tool_v', (e) => e.key.toLowerCase() === 'v', () => setTool('v')],
+    ['C', 'k_tool_c', (e) => e.key.toLowerCase() === 'c', () => setTool('c')],
+    ['R', 'k_tool_r', (e) => e.key.toLowerCase() === 'r', () => setTool('r')],
+    ['Y', 'k_tool_y', (e) => e.key.toLowerCase() === 'y', () => setTool('y')],
+    ['S', 'k_snap', (e) => e.key.toLowerCase() === 's', () => setSnap(S.P.snap === 'off' ? 'bar' : 'off')],
+  ]],
+  ['view', [
+    ['= / −', 'k_zoom', (e) => ['=', '+', '-'].includes(e.key), (e) => zoomBy(e.key === '-' ? -0.08 : 0.08)],
+    ['\\', 'k_fit', (e) => e.key === '\\', () => zoomFit()],
+    ['Alt + rotella', 'k_wheel', null, null],
+    ['Esc', 'k_esc', (e) => e.key === 'Escape', () => { S.sel = null; setTool('v'); renderInspector(); renderTimeline(); }],
+    ['?', 'k_help', (e) => e.key === '?', () => showKeys()],
+  ]],
+  ['file', [
+    ['Ctrl + S', 'k_save', (e) => e.ctrlKey && e.key.toLowerCase() === 's', () => $('#proj-save').click()],
+    ['Ctrl + O', 'k_open', (e) => e.ctrlKey && e.key.toLowerCase() === 'o', () => $('#proj-open').click()],
+    ['Ctrl + I', 'k_import', (e) => e.ctrlKey && e.key.toLowerCase() === 'i', () => $('#song-file').click()],
+    ['Ctrl + M', 'k_export', (e) => e.ctrlKey && e.key.toLowerCase() === 'm', () => $('#export').click()],
+  ]],
+];
+const keyName = (k) => (UI === 'it' ? k : k.replace(/Maiusc/g, 'Shift').replace(/Spazio/g, 'Space').replace(/Invio/g, 'Return').replace(/Canc/g, 'Del').replace(/Fine/g, 'End').replace(/trascina/g, 'drag').replace(/rotella/g, 'wheel'));
+// la scorciatoia di un comando, per i menu e i suggerimenti
+const keyOf = (id) => { for (const [, rows] of KEYS) for (const r of rows) if (r[1] === id) return keyName(r[0]); return ''; };
+
 addEventListener('keydown', (e) => {
-  if (e.target.closest('input, textarea, select') || $('#exp').open) return;
-  const ctrl = e.ctrlKey || e.metaKey;
-  if (ctrl && e.key.toLowerCase() === 'z') { e.preventDefault(); $(e.shiftKey ? '#redo' : '#undo').click(); return; }
-  if (ctrl && e.key.toLowerCase() === 'y') { e.preventDefault(); $('#redo').click(); return; }
-  if (ctrl) return;
-  if (e.code === 'Space') { e.preventDefault(); S.playing ? pause() : play(); }
-  else if (e.key === 's' || e.key === 'S') splitAt();
-  else if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); deleteSel(); }
-  else if (e.key === 't' || e.key === 'T') tap();
-  else if (e.key === 'Home') seek(0);
-  else if (e.key === 'End') seek(total());
-  else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+  if (menuOpen() || $('#exp').open || $('#keys').open) return;
+  const typing = e.target.closest('input, textarea, select, [contenteditable]');
+  // in un campo valgono solo annulla/ripeti del campo stesso
+  if (typing) return;
+  const ev = { key: e.key, code: e.code, shiftKey: e.shiftKey, altKey: e.altKey, ctrlKey: e.ctrlKey || e.metaKey };
+  for (const [, rows] of KEYS) for (const [label, , test, run] of rows) {
+    // senza Ctrl le scorciatoie con Ctrl non scattano, e viceversa
+    if (!test || label.includes('Ctrl') !== ev.ctrlKey || !test(ev)) continue;
     e.preventDefault();
-    const dir = e.key === 'ArrowRight' ? 1 : -1;
-    if (e.shiftKey) stepBar(dir); else seek(S.t + dir / S.P.fps);
-  } else if (e.key === '+' || e.key === '=') setZoom(+$('#zoom').value + 0.08);
-  else if (e.key === '-') setZoom(+$('#zoom').value - 0.08);
-  else if (e.key === 'Escape') { S.sel = null; renderInspector(); renderTimeline(); }
+    run(ev);
+    return;
+  }
 });
+addEventListener('keyup', (e) => { if (e.key.toLowerCase() === 'k') kHeld = false; });
+addEventListener('blur', () => { kHeld = false; });
+
+// pannello delle scorciatoie
+function showKeys() {
+  const d = $('#keys');
+  $('#keys-body').innerHTML = KEYS.map(([g, rows]) => `<section><h4>${t('kg_' + g)}</h4><dl>${rows.map(([k, id]) => `<dt><kbd>${esc(keyName(k)).replace(/ \+ /g, '</kbd> + <kbd>').replace(/ \/ /g, '</kbd> / <kbd>')}</kbd></dt><dd>${t(id)}</dd>`).join('')}</dl></section>`).join('');
+  d.showModal();
+}
+$('#keys-btn').addEventListener('click', showKeys);
+$('#keys-close').addEventListener('click', () => $('#keys').close());
+document.querySelectorAll('[data-tool]').forEach((b) => b.addEventListener('click', () => setTool(b.dataset.tool)));
+
+// ── menu col tasto destro ─────────────────────────────────────────────────
+function contextMenu(w, x, y) {
+  const P = S.P, it = [];
+  const pasteItem = { label: t('m_paste'), key: keyOf('k_clip').replace(/.*\/ /, 'Ctrl + '), disabled: !clip || (clip.kind === 'a' && !P.audio), act: () => paste(w.kind === 'ruler' ? S.t : w.kind === 'v' || w.kind === 'a' ? S.t : w.t) };
+  const bl = barLength();
+  if (w.kind === 'v') {
+    const i = w.i, c = P.video[i], st = clipStart(i), inside = S.t > st + 0.3 && S.t < st + c.dur - 0.3;
+    it.push({ label: t('m_split_here'), act: () => razor({ kind: 'v', i }, w.t) },
+      { label: t('m_split_ph'), key: keyOf('k_split'), disabled: !inside, act: () => splitAt() },
+      '-',
+      { label: t('m_cut'), key: 'Ctrl + X', act: cutSel }, { label: t('m_copy'), key: 'Ctrl + C', act: copySel }, pasteItem,
+      { label: t('dup'), key: 'Ctrl + D', act: dupSel },
+      '-',
+      { label: t('m_trim_in'), key: 'Q', disabled: !inside, act: () => rippleTrim(false) }, { label: t('m_trim_out'), key: 'W', disabled: !inside, act: () => rippleTrim(true) },
+      { label: t('m_fit_bar'), disabled: !bl, act: () => fitBars(i, Math.max(1, Math.round(c.dur / bl))) },
+      '-',
+      { label: t('m_cam0'), act: () => { remember(); const lt = Math.max(0, Math.min(c.dur, S.t - st)); c.cam0 = { lon: wrapLon(A.oe.camera.lon - c.spin * lt), lat: A.oe.camera.lat, dist: A.oe.camera.dist }; changed(); } },
+      { label: t('m_cam1'), act: () => { remember(); const lt = Math.max(0, Math.min(c.dur, S.t - st)); c.cam1 = { lon: wrapLon(A.oe.camera.lon - c.spin * lt), lat: A.oe.camera.lat, dist: A.oe.camera.dist }; changed(); } },
+      { label: t('m_go_start'), act: () => seek(st + 0.001) }, { label: t('m_go_end'), act: () => seek(st + c.dur - 0.001) },
+      '-',
+      { label: t('del'), key: keyName('Canc'), danger: true, act: () => deleteSel() });
+  } else if (w.kind === 'a') {
+    const i = w.i, c = P.audio.clips[i], inside = S.t > c.offset + 0.1 && S.t < segEnd(c) - 0.1;
+    it.push({ label: t('m_split_here'), act: () => razor({ kind: 'a', i }, w.t) },
+      { label: t('m_split_ph'), key: keyOf('k_split'), disabled: !inside, act: () => splitAt() },
+      { label: t('m_split_bars'), disabled: !bl, act: () => splitEvery(i, 1) },
+      '-',
+      { label: t('m_cut'), key: 'Ctrl + X', act: cutSel }, { label: t('m_copy'), key: 'Ctrl + C', act: copySel }, pasteItem,
+      { label: t('dup'), key: 'Ctrl + D', act: dupSel },
+      '-',
+      { label: t('m_trim_in'), key: 'Q', disabled: !inside, act: () => rippleTrim(false) }, { label: t('m_trim_out'), key: 'W', disabled: !inside, act: () => rippleTrim(true) },
+      { label: t('m_stretch_bar'), disabled: !bl, act: () => { remember(); const n = Math.max(1, Math.round(segLen(c) / bl)); c.rate = Math.max(0.25, Math.min(4, (c.out - c.in) / (n * bl))); changed(); } },
+      { label: t('m_speed1'), disabled: Math.abs((c.rate || 1) - 1) < 1e-4, act: () => { remember(); c.rate = 1; changed(); } },
+      { label: t('first_bar'), act: () => { const bars = srcBars(); if (!bars.length) return; remember(); const b0 = bars.reduce((x, y) => (Math.abs(y - c.in) < Math.abs(x - c.in) ? y : x)); c.in = Math.max(0, Math.min(c.out - 0.25, b0)); changed(); } },
+      { label: t('close_gaps'), disabled: P.audio.clips.length < 2, act: closeGaps },
+      '-',
+      { label: t('mute'), checked: !!P.audio.mute, act: () => $('#mute').click() },
+      '-',
+      { label: t('m_del_gap'), key: keyName('Canc'), danger: true, act: () => deleteSel(false) },
+      { label: t('m_del_ripple'), key: keyName('Maiusc + Canc'), danger: true, act: () => deleteSel(true) });
+  } else if (w.kind === 'gap-a') {
+    it.push({ ...pasteItem, act: () => paste(w.t) },
+      { label: t('m_close_gap'), disabled: !P.audio || !P.audio.clips.some((c) => c.offset >= w.t - 1e-3) || P.audio.clips.some((c) => w.t > c.offset && w.t < segEnd(c)), act: () => closeGapAt(w.t) },
+      '-', { label: t('import_song'), key: 'Ctrl + I', act: () => $('#song-file').click() });
+  } else {
+    if (w.kind === 'ruler') it.push({ label: t('m_seek_here'), act: () => seek(w.t) }, '-');
+    else it.push(pasteItem, '-');
+    it.push({ label: `${t('snap_t')}: ${t('snap_bar')}`, checked: P.snap === 'bar', act: () => setSnap('bar') },
+      { label: `${t('snap_t')}: ${t('snap_beat')}`, checked: P.snap === 'beat', act: () => setSnap('beat') },
+      { label: `${t('snap_t')}: ${t('snap_off')}`, checked: P.snap === 'off', act: () => setSnap('off') },
+      '-',
+      { label: t('m_zoom_fit'), key: '\\', act: zoomFit }, { label: t('m_zoom_in'), key: '=', act: () => zoomBy(0.08) }, { label: t('m_zoom_out'), key: '−', act: () => zoomBy(-0.08) });
+  }
+  showMenu(x, y, it);
+}
+// sull'anteprima: l'inquadratura per la clip all'indicatore
+out.addEventListener('contextmenu', (e) => {
+  e.preventDefault();
+  if (!A.oe) return;
+  const k = clipAt(S.t);
+  const setCam = (key) => { if (!k) return; remember(); const lt = Math.max(0, Math.min(k.c.dur, S.t - k.t0)); k.c[key] = { lon: wrapLon(A.oe.camera.lon - k.c.spin * lt), lat: A.oe.camera.lat, dist: A.oe.camera.dist }; changed(); };
+  showMenu(e.clientX, e.clientY, [
+    { label: S.playing ? t('m_pause') : t('m_play'), key: keyName('Spazio'), act: () => (S.playing ? pause() : play()) },
+    '-',
+    { label: t('m_cam0'), disabled: !k || S.playing, act: () => setCam('cam0') },
+    { label: t('m_cam1'), disabled: !k || S.playing, act: () => setCam('cam1') },
+    '-',
+    { label: t('safe'), checked: !!S.P.safe, act: () => { $('#safe-on').click(); } },
+  ]);
+});
+// il tasto Menu della tastiera (o Maiusc+F10) apre il menu di quello che e' scelto
+addEventListener('keydown', (e) => {
+  if (!(e.key === 'ContextMenu' || (e.shiftKey && e.key === 'F10')) || menuOpen()) return;
+  if (e.target.closest('input, textarea, select')) return;
+  e.preventDefault();
+  const el = S.sel ? document.querySelector(S.sel.kind === 'v' ? `.clip[data-i="${S.sel.i}"]` : `.clip.audio[data-a="${S.sel.i}"]`) : $('#tl-ruler');
+  const r = el.getBoundingClientRect();
+  const w = S.sel ? { kind: S.sel.kind, i: S.sel.i, t: S.t } : { kind: 'ruler', t: S.t };
+  contextMenu(w, r.left + 12, r.top + r.height / 2);
+});
+
 // un file audio lasciato sulla pagina
 addEventListener('dragover', (e) => { if (e.dataTransfer.types.includes('Files')) e.preventDefault(); });
 addEventListener('drop', (e) => {
@@ -851,11 +1296,13 @@ async function startAtlas() {
 
 window.__reel = {
   get P() { return S.P; }, set P(p) { S.P = p; changed(); }, get S() { return S; }, get oe() { return A.oe; }, get t() { return S.t; },
-  seek, play, pause, loadSong, addView, splitAt, fitBars, select: (s) => { S.sel = s; renderInspector(); renderTimeline(); },
+  seek, play, pause, loadSong, addView, splitAt, fitBars, setTool, get tool() { return S.tool; }, select: (s) => { S.sel = s; renderInspector(); renderTimeline(); },
 };
 $('#safe-on').checked = !!S.P.safe; $('#safe').hidden = !S.P.safe;
 $('#mute').classList.toggle('off', !!S.P.audio?.mute);
 showSnapMode();
+setTool('v');
+if (UI !== 'it') $('#tools').setAttribute('aria-label', 'Tools');
 renderInspector();
 renderTimeline();
 requestAnimationFrame(frame);
