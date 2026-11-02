@@ -6,7 +6,7 @@ import { voce } from './economia.js';
 export const tonnellateCo2 = (kwh, gPerKwh) => (kwh * gPerKwh) / 1e6;
 
 // Σ_{t=0}^{anni-1} ((1 − degrado)(1 − calo))^t: produzione che cala e fattore che scende, anno per anno.
-export function fattoreVentiAnni(calo, degrado, anni = 20) {
+export function fattoreVentiAnni(calo, degrado, anni) {
   let s = 0;
   for (let t = 0; t < anni; t++) s += ((1 - degrado) * (1 - calo)) ** t;
   return s;
@@ -15,7 +15,7 @@ export function fattoreVentiAnni(calo, degrado, anni = 20) {
 export function emissioni(en, gruppi, impianti, c, principale = 'media') {
   const fMedia = voce(c, 'fattore_co2'), fAlto = voce(c, 'fattore_co2_alto');
   const f = principale === 'termoelettrico' ? fAlto : fMedia;
-  const venti = fattoreVentiAnni(voce(c, 'calo_fattore_co2'), voce(c, 'degrado'));
+  const venti = fattoreVentiAnni(voce(c, 'calo_fattore_co2'), voce(c, 'degrado'), voce(c, 'durata_tariffa_anni'));
   const membri = Object.fromEntries(gruppi.map((g) => [g.id, { evitata: 0, evitataAlta: 0, ventiAnni: 0, impronta: 0, copertura: null }]));
   let nuovi = 0, esistenti = 0;
   impianti.forEach((k, j) => {
@@ -26,7 +26,7 @@ export function emissioni(en, gruppi, impianti, c, principale = 'media') {
     const m = membri[k.titolare], perMembro = prod / en.impianti[j].copie;
     m.evitata += tonnellateCo2(perMembro, f);
     m.evitataAlta += tonnellateCo2(perMembro, fAlto);
-    m.ventiAnni += tonnellateCo2(perMembro, f) * venti;
+    m.ventiAnni += tonnellateCo2(perMembro, fMedia) * venti;
   });
   for (const g of en.gruppi) {
     membri[g.id].impronta = tonnellateCo2(g.prelievo, fMedia);
@@ -36,7 +36,7 @@ export function emissioni(en, gruppi, impianti, c, principale = 'media') {
   return {
     fattore: f, fattoreAlto: fAlto, principale,
     comunita: {
-      evitata, evitataAlta: tonnellateCo2(nuovi, fAlto), ventiAnni: evitata * venti,
+      evitata, evitataAlta: tonnellateCo2(nuovi, fAlto), ventiAnni: tonnellateCo2(nuovi, fMedia) * venti,
       esistenti: tonnellateCo2(esistenti, f), italiani: evitata / voce(c, 'co2_pro_capite'),
     },
     membri,

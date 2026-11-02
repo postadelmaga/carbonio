@@ -9,8 +9,8 @@ const serie = (...v) => Float64Array.from(v);
 
 test('fattori', () => {
   assert.ok(Math.abs(tonnellateCo2(1000, 199.6) - 0.1996) < 1e-12);
-  assert.ok(Math.abs(fattoreVentiAnni(0.029, 0.005) - 14.705) < 0.01);
-  assert.equal(fattoreVentiAnni(0, 0), 20);
+  assert.ok(Math.abs(fattoreVentiAnni(0.029, 0.005, 20) - 14.705) < 0.01);
+  assert.equal(fattoreVentiAnni(0, 0, 20), 20);
 });
 
 function caso() {
@@ -42,4 +42,21 @@ test('il fattore principale si può cambiare', () => {
   const r = emissioni(en, gruppi, impianti, c, 'termoelettrico');
   assert.equal(r.fattore, 366.5);
   assert.ok(Math.abs(r.comunita.evitata - tonnellateCo2(18, 366.5)) < 1e-12);
+});
+
+test('i 20 anni usano sempre il fattore medio, anche con il termoelettrico', () => {
+  const { en, gruppi, impianti } = caso();
+  const media = emissioni(en, gruppi, impianti, c, 'media');
+  const term = emissioni(en, gruppi, impianti, c, 'termoelettrico');
+  assert.ok(Math.abs(term.comunita.evitata - media.comunita.evitata) > 1e-9, 'l\'evitata cambia');
+  assert.ok(Math.abs(term.comunita.ventiAnni - media.comunita.ventiAnni) < 1e-12, 'ventiAnni della comunità non cambia');
+  assert.ok(Math.abs(term.membri.f.ventiAnni - media.membri.f.ventiAnni) < 1e-12, 'ventiAnni del titolare non cambia');
+});
+
+test('ventiAnni della comunità: media × fattore dei 20 anni, durata dalle costanti', () => {
+  const { en, gruppi, impianti } = caso();
+  const r = emissioni(en, gruppi, impianti, c);
+  const durata = c.voci.durata_tariffa_anni.valore;
+  const venti = fattoreVentiAnni(c.voci.calo_fattore_co2.valore, c.voci.degrado.valore, durata);
+  assert.ok(Math.abs(r.comunita.ventiAnni - r.comunita.evitata * venti) < 1e-12);
 });
