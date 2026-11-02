@@ -24,7 +24,19 @@
       "fonte": "DM MASE 414/2023, Allegato 1 §2; pagina GSE sulla tariffa massima (120, 124 e 130 €/MWh)",
       "url": "https://www.gse.it/documenti_site/Documenti%20GSE/Servizi%20per%20te/AUTOCONSUMO/Altri%20contenuti/Decreto%20CER.pdf",
       "consultato": "2026-10-18",
-      "note": "Nord: Emilia-Romagna, Friuli-Venezia Giulia, Liguria, Lombardia, Piemonte, Trentino-Alto Adige, Valle d'Aosta, Veneto. Centro: Lazio, Marche, Toscana, Umbria, Abruzzo."
+      "note": "Regioni per area nella voce aree_correttivo_fv."
+    },
+    "aree_correttivo_fv": {
+      "descrizione": "Regioni del Nord e del Centro per il correttivo della tariffa per il fotovoltaico; le altre sono Sud",
+      "valore": {
+        "nord": ["Emilia-Romagna", "Friuli-Venezia Giulia", "Liguria", "Lombardia", "Piemonte", "Trentino-Alto Adige", "Valle d'Aosta", "Veneto"],
+        "centro": ["Lazio", "Marche", "Toscana", "Umbria", "Abruzzo"]
+      },
+      "unita": "regioni",
+      "fonte": "DM MASE 414/2023, Allegato 1 §2",
+      "url": "https://www.gse.it/documenti_site/Documenti%20GSE/Servizi%20per%20te/AUTOCONSUMO/Altri%20contenuti/Decreto%20CER.pdf",
+      "consultato": "2026-10-18",
+      "note": "I nomi sono quelli delle regioni nell'elenco ISTAT dei comuni."
     },
     "durata_tariffa_anni": {
       "descrizione": "Durata della tariffa premio dall'entrata in esercizio dell'impianto",
