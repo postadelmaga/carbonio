@@ -73,22 +73,22 @@ function canvasFit(c, w, h) {
 }
 
 function drawRuler(width) {
-  const c = $('#tl-ruler'), h = 28, g = canvasFit(c, width, h);
+  const c = $('#tl-ruler'), h = 34, g = canvasFit(c, width, h);
   const steps = [0.25, 0.5, 1, 2, 5, 10, 15, 30, 60];
   const step = steps.find((s) => s * pps >= 64) || 60;
   g.fillStyle = '#6f8592'; g.font = '10px "IBM Plex Mono"'; g.textAlign = 'left';
   for (let t = 0; t <= contentLen(); t += step / 4) {
     const major = Math.abs(t / step - Math.round(t / step)) < 1e-6;
-    g.fillRect(Math.round(X(t)), major ? h - 10 : h - 5, 1, major ? 10 : 5);
-    if (major) g.fillText(step < 1 ? `${fmt(t)}.${String(Math.round((t % 1) * 100)).padStart(2, '0')}` : fmt(t), X(t) + 3, h - 12);
+    g.fillRect(Math.round(X(t)), major ? h - 7 : h - 4, 1, major ? 7 : 4);
+    if (major) g.fillText(step < 1 ? `${fmt(t)}.${String(Math.round((t % 1) * 100)).padStart(2, '0')}` : fmt(t), X(t) + 3, h - 8);
   }
   // numeri delle battute, se c'e' spazio
   let last = -99;
   g.fillStyle = '#ffd666'; g.font = '600 10px "IBM Plex Mono"';
   for (const b of tlBeats()) {
     if (!b.bar || X(b.t) - last < 26) continue;
-    g.fillText(String(b.n), X(b.t) + 2, 9);
-    g.fillRect(Math.round(X(b.t)), 0, 1, 11);
+    g.fillText(String(b.n), X(b.t) + 3, 10);
+    g.fillRect(Math.round(X(b.t)), 0, 1, 13);
     last = X(b.t);
   }
   // fine del reel
