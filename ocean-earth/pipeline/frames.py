@@ -217,9 +217,13 @@ def contiguous_blocks(missing, wanted, n):
     return blocks
 
 
-def run(tier, var, start, end):
+def run(tier, var, start, end, refresh=False):
+    """refresh: riscarica tutta la finestra e riscrive solo i fotogrammi che la
+    fonte ha cambiato (le osservazioni quasi in tempo reale vengono riviste
+    anche dopo giorni: senza, validate.py le trova diverse e blocca tutto)."""
     idx = load_index(tier, var)
     todo_total = 0
+    revised = 0
     for ds_id, lo, hi in sources.plan(tier, var, start, end):
         wanted = steps(tier, lo, hi)
         missing = [t for t in wanted if not frame_path(tier, var, stamp(tier, t)).exists()]
@@ -238,6 +242,8 @@ def run(tier, var, start, end):
                           f'(i browser hanno salvato la versione di prima)', flush=True)
                 else:
                     idx[s] = ds_id
+        if refresh:
+            missing = list(wanted)
         missing.sort()
         print(f'{tier}/{var}: {ds_id} {lo:%Y-%m-%d %H} → {hi:%Y-%m-%d %H}: '
               f'{len(wanted)} attesi, {len(missing)} da fare', flush=True)
@@ -267,7 +273,14 @@ def run(tier, var, start, end):
                         if not rgb.any():
                             print(f'  {s}: campo vuoto alla fonte, riprovo la prossima volta', flush=True)
                             continue
-                        encode.save_png(rgb, frame_path(tier, var, s))
+                        path = frame_path(tier, var, s)
+                        if refresh and path.exists():
+                            if np.array_equal(encode.load_png(path), rgb):
+                                idx[s] = ds_id
+                                continue
+                            revised += 1
+                            print(f'  {s}: rivisto dalla fonte, lo riscrivo', flush=True)
+                        encode.save_png(rgb, path)
                         idx[s] = ds_id
                         save_index(tier, var, idx)   # subito: file e fonte restano allineati
             finally:
@@ -275,7 +288,10 @@ def run(tier, var, start, end):
             save_index(tier, var, idx)
             print(f'  {stamp(tier, block[0])} … {stamp(tier, block[-1])}  ({time.time() - t0:.0f} s)', flush=True)
     save_index(tier, var, idx)
-    print(f'{tier}/{var}: fatto ({todo_total} fotogrammi nuovi)', flush=True)
+    if refresh:
+        print(f'{tier}/{var}: fatto ({revised} fotogrammi rivisti dalla fonte su {todo_total} ricontrollati)', flush=True)
+    else:
+        print(f'{tier}/{var}: fatto ({todo_total} fotogrammi nuovi)', flush=True)
 
 
 def prune(tier, var, start):
@@ -296,6 +312,7 @@ def main():
     ap.add_argument('--start')
     ap.add_argument('--end')
     ap.add_argument('--days', type=int, help='finestra mobile che finisce ieri')
+    ap.add_argument('--refresh', action='store_true', help='ricontrolla tutta la finestra con la fonte (dati rivisti)')
     a = ap.parse_args()
     end = dt.datetime.fromisoformat(a.end) if a.end else sources.yesterday_end()
     if a.tier == 'monthly':
@@ -305,7 +322,7 @@ def main():
         start = dt.datetime(y.year, y.month, y.day) - dt.timedelta(days=a.days - 1)
     else:
         start = dt.datetime.fromisoformat(a.start or '1993-01-01')
-    run(a.tier, a.var, start, end)
+    run(a.tier, a.var, start, end, refresh=a.refresh)
     if a.days:
         prune(a.tier, a.var, start)
 
