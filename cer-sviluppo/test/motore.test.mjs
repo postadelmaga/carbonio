@@ -123,3 +123,14 @@ test('avvisi: senza impianti e servono consumatori', () => {
   grande.impianti[0] = { ...grande.impianti[0], kwp: 900 };
   assert.ok(calcola(grande, dati).avvisi.some((x) => x.codice === 'servono_consumatori'));
 });
+
+test('validazione: le quote predefinite vengono dalle costanti', () => {
+  const copia = { ...costanti, voci: { ...costanti.voci, quote_riparto: { ...costanti.voci.quote_riparto, valore: { produttore: 0.7, consumatori: 0.4 } } } };
+  const ingressi = base({ parametri: { quota_consumatori: 0.4 } });
+  assert.deepEqual(valida(ingressi, costanti), []);
+  assert.ok(valida(ingressi, copia).some((m) => /oltre il 100%/.test(m)));
+});
+
+test('serie fotovoltaica: la lunghezza deve essere quella dell\'asse', () => {
+  assert.throws(() => calcola(base(), { ...dati, pv: dati.pv.slice(0, 100) }), /serie fotovoltaica di 100 ore/);
+});

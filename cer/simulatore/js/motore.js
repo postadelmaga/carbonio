@@ -17,7 +17,7 @@ export function valida(ingressi, c) {
   const err = [];
   const soci = ingressi.soci ?? [], impianti = ingressi.impianti ?? [];
   const perId = new Map();
-  const spMax = voce(c, 'spostamento_massimo');
+  const spMax = voce(c, 'spostamento_massimo'), quote = voce(c, 'quote_riparto');
   if (!['nord', 'centro', 'sud'].includes(ingressi.area)) err.push(`area «${ingressi.area}» non prevista`);
   for (const s of soci) {
     if (perId.has(s.id)) err.push(`socio ${s.id}: identificativo ripetuto`);
@@ -43,7 +43,7 @@ export function valida(ingressi, c) {
   }
   const p = ingressi.parametri ?? {};
   for (const q of ['quota_produttore', 'quota_consumatori']) if (p[q] != null && !fra(p[q], 0, 1)) err.push(`${q} fra 0 e 100%`);
-  if ((p.quota_produttore ?? 0.4) + (p.quota_consumatori ?? 0.4) > 1 + 1e-9) err.push('quota del produttore più quota dei consumatori oltre il 100%');
+  if ((p.quota_produttore ?? quote.produttore) + (p.quota_consumatori ?? quote.consumatori) > 1 + 1e-9) err.push('quota del produttore più quota dei consumatori oltre il 100%');
   if (p.prezzo_zonale != null && !fra(p.prezzo_zonale, 0, 1000)) err.push('prezzo zonale fra 0 e 1.000 €/MWh');
   if (p.fondatori != null && !(Number.isInteger(p.fondatori) && p.fondatori >= 1)) err.push('i fondatori sono almeno 1');
   if (p.fattore_principale != null && !['media', 'termoelettrico'].includes(p.fattore_principale)) err.push(`fattore principale «${p.fattore_principale}» non previsto`);
@@ -66,6 +66,7 @@ export function prepara(ingressi, dati) {
   const errori = valida(ingressi, dati.costanti);
   if (errori.length) throw new Error(errori.join('; '));
   const c = dati.costanti, a = asse(), par = parametri(ingressi, c), serie = ingressi.serie ?? {};
+  if (!dati.pv || dati.pv.length !== a.n) throw new Error(`serie fotovoltaica di ${dati.pv?.length ?? 0} ore invece di ${a.n}`);
   const gruppi = ingressi.soci.map((s) => {
     let consumo = serie.consumi?.[s.id];
     if (!consumo) {
