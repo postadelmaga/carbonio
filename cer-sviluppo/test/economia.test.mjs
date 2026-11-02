@@ -78,3 +78,23 @@ test('κ non tocca l\'eccedentaria e i costi non coperti si vedono', () => {
   assert.ok(y.ec.nonCoperti > 900);
   assert.equal(y.ec.membri.f.quotaTariffa, 0);
 });
+
+test('il limite di 1 MW della tariffa viene da costanti.json', () => {
+  const impianto = (kwp) => [{ id: 'k', kwp, titolare: 'f', esistente: false, perOgniMembro: false }];
+  // 700 kW: nelle costanti vere ricade nell'ultima fascia (1000); con l'ultima a 500 kW non ne ha nessuna
+  const gruppi = [{ id: 'f', tipo: 'famiglia', numero: 1 }];
+  const par = { prezzo_zonale: 115.94, area: 'nord', gestione_eur_anno: 0, quota_produttore: 0.4, quota_consumatori: 0.4, quota_associativa: 0, manutenzione: 20, costo_evitato: {} };
+  const esito = (cost) => {
+    const en = energia(
+      [{ ...gruppi[0], consumo: serie(200, 200, 200, 200) }],
+      [{ ...impianto(700)[0], sulPod: false, produzione: serie(100, 100, 100, 100) }],
+    );
+    return economiaAnno(en, gruppi, impianto(700), par, cost).voci[0];
+  };
+  const fasceCorte = structuredClone(c);
+  fasceCorte.voci.tariffa_fasce.valore.at(-1).fino_kw = 500;
+  const senzaTariffa = esito(fasceCorte);
+  assert.equal(senzaTariffa.incentivato, false);
+  assert.equal(senzaTariffa.tariffa, 0);
+  assert.equal(esito(c).incentivato, true);
+});

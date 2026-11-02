@@ -56,8 +56,8 @@ export function economiaAnno(en, gruppi, impianti, par, c) {
 
   const voci = impianti.map((k, j) => {
     const x = en.impianti[j];
-    const incentivato = !k.esistente && k.kwp <= 1000;
-    const unitaria = incentivato ? tip(k.kwp, pz, par.area, c) : 0;
+    const unitaria = k.esistente ? 0 : tip(k.kwp, pz, par.area, c);
+    const incentivato = unitaria > 0;
     return { id: k.id, incentivato, tip: unitaria, tariffa: (unitaria * x.condivisa) / 1000, condivisa: x.condivisa, immessa: x.immessa, copie: x.copie };
   });
   const inc = voci.filter((v) => v.incentivato);
