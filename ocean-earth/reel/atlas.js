@@ -205,8 +205,10 @@ export function applyAt(t, withCam = true, gated = false) {
 // mese, ma il globo mostra sempre dati veri e la data resta quella mostrata.
 // Chiederli tutti riempiva la coda e la cache dell'atlante li scartava prima
 // che servissero: il globo restava fermo mentre la data correva.
-export function feed(t, slots = 4) {
+export function feed(t, slots) {
   if (!A.oe?.has) return;
+  // tanti mesi in volo quanti i worker che li decodificano, piu' uno
+  slots ??= Math.max(4, (A.oe.store?.workers?.length || 3) + 1);
   const now = performance.now();
   for (const [k, at] of A.asked) if ((A.oe.has(k) && A.oe.has(k + 1)) || now - at > 8000) A.asked.delete(k);
   for (const lead of [0.3, 0.7, 1.1, 1.6, 2.2, 3]) {

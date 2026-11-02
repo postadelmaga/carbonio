@@ -707,7 +707,7 @@ function pointValues(p) {
 
 
 function refreshPoint() {
-  if (!ui.point || !current) return;
+  if (!ui.point || !current || REEL) return;
   const rows = [];
   const one = (p, tag) => {
     const v = pointValues(p);
@@ -934,7 +934,7 @@ const fmtMB = (b) => b >= 1e9 ? fmtNum(b / 1e9, 1) + ' GB' : Math.max(1, Math.ro
 let dl = null;                           // scaricamento in corso
 function syncDownload() {
   const btn = $('#dl');
-  if (!btn || !timeline) return;
+  if (!btn || !timeline || REEL) return;
   if (!store.cacheNames) { btn.hidden = true; return; }
   if (dl) {
     btn.textContent = t('dl_stop');
@@ -986,7 +986,7 @@ async function startDownload() {
 // barra sotto la timeline: quali istanti sono gia' nel browser
 let savedRaf = 0;
 function drawSaved() {
-  if (savedRaf) return;
+  if (savedRaf || REEL) return;
   savedRaf = requestAnimationFrame(() => {
     savedRaf = 0;
     const cv = $('#saved-bar');
@@ -1020,7 +1020,10 @@ function buildTimeUI() {
   }));
 }
 
+// nell'editor dei reel l'interfaccia dell'atlante e' nascosta: aggiornarla a
+// ogni mese costava piu' di un secondo ogni dieci di riproduzione
 function syncTimeUI(full) {
+  if (REEL) return;
   const n = timeline.frames.length;
   const slider = $('#slider');
   if (full) {
@@ -1066,7 +1069,7 @@ function syncTimeUI(full) {
 }
 
 function updateStatus() {
-  if (!current) return;
+  if (!current || REEL) return;
   const sS = current.sA ? store.source(current.A[current.svA]) : null;
   const sC = current.cA ? store.source(current.A.cur) : null;
   const notes = [];

@@ -164,15 +164,22 @@ function drawAudio() {
   });
 }
 
+// a ogni fotogramma: si scrive solo se cambia, e la geometria si legge prima di
+// scrivere (scrivere e poi leggere costringeva il browser a rifare il layout)
+let phX = null, scW = 0;
 export function movePlayhead() {
-  const ph = $('#playhead');
-  ph.style.left = `${X(S.t)}px`;
-  // durante il play la timeline segue l'indicatore
+  const x = Math.round(X(S.t) * 2) / 2;
   if (S.playing) {
-    const sc = $('#tl-scroll'), x = X(S.t);
-    if (x < sc.scrollLeft + 40 || x > sc.scrollLeft + sc.clientWidth - 60) sc.scrollLeft = x - 80;
+    const sc = $('#tl-scroll');
+    if (!scW) scW = sc.clientWidth;
+    const left = sc.scrollLeft;
+    if (x < left + 40 || x > left + scW - 60) sc.scrollLeft = x - 80;
   }
+  if (x === phX) return;
+  phX = x;
+  $('#playhead').style.left = `${x}px`;
 }
+addEventListener('resize', () => { scW = 0; });
 
 // ── interazioni ───────────────────────────────────────────────────────────
 function showSnap(t, raw) {
@@ -396,7 +403,7 @@ export function initTimeline(hooks) {
     const r = inner.getBoundingClientRect();
     setZoom(zoomZ - e.deltaY * 0.0015, T(e.clientX - r.left));
   }, { passive: false });
-  new ResizeObserver(() => renderTimeline()).observe($('#tl-scroll'));
+  new ResizeObserver(() => { scW = 0; renderTimeline(); }).observe($('#tl-scroll'));
 
   // dalla libreria: una vista trascinata sulla traccia V1
   const lane = $('#lane-v');

@@ -13,7 +13,14 @@ const DATA_WORD = { it: 'Dati', en: 'Data', es: 'Datos', fr: 'Données', zh: '�
 export const LOCALE = { en: 'en-GB', it: 'it-IT', es: 'es-ES', fr: 'fr-FR', zh: 'zh-CN' };
 const EMPTY = { it: 'Trascina una vista sulla traccia V1', en: 'Drag a view onto track V1', es: 'Arrastra una vista a la pista V1', fr: 'Glisse une vue sur la piste V1', zh: '把一个视图拖到 V1 轨道' };
 
+const monthMemo = new Map();
 function monthName(stamp) {
+  const k = S.P.lang + stamp;
+  let r = monthMemo.get(k);
+  if (r == null) { r = monthNameRaw(stamp); monthMemo.set(k, r); }
+  return r;
+}
+function monthNameRaw(stamp) {
   return new Date(Date.UTC(+stamp.slice(0, 4), +stamp.slice(5, 7) - 1, 1)).toLocaleDateString(LOCALE[S.P.lang] || 'en-GB', { month: 'long', timeZone: 'UTC' });
 }
 
@@ -60,7 +67,7 @@ export function compose(ctx, info, t) {
     // sopra il globo abbassato: il colore dello spazio, poi una sfumatura che
     // nasconde il bordo del disegno del globo
     if (dy > 0) {
-      const sp = spaceColor(gc);
+      const sp = spaceColor(gc, info?.c);
       g.fillStyle = sp; g.fillRect(0, 0, W, dy);
       const fade = g.createLinearGradient(0, dy, 0, dy + 160);
       fade.addColorStop(0, sp); fade.addColorStop(1, sp.replace('rgb(', 'rgba(').replace(')', ',0)'));
@@ -159,10 +166,23 @@ function drawLegendRow(g, r, top) {
   }
   g.textAlign = 'center';
 }
-// il colore dello spazio: il pixel piu' scuro della prima riga del globo
+// il colore dello spazio: il pixel piu' scuro della prima riga del globo.
+// Leggere i pixel della scheda video ferma tutto finche' il disegno non e'
+// finito (era il costo piu' grande dell'anteprima, piu' di 3 s ogni 10): lo
+// spazio non cambia coi mesi, quindi si rilegge solo cambiando clip o vista,
+// e da fermi al massimo due volte al secondo.
 const probe = document.createElement('canvas');
 probe.width = 64; probe.height = 1;
-function spaceColor(gc) {
+const space = { key: null, color: '#000', at: 0 };
+function spaceColor(gc, c) {
+  const key = c ? `${c.view}/${c.variant}/${c.particles}/${S.P.lang}/${gc.width}x${gc.height}` : '';
+  const now = performance.now();
+  if (key === space.key && (S.playing || now - space.at < 500)) return space.color;
+  space.key = key; space.at = now;
+  space.color = readSpace(gc);
+  return space.color;
+}
+function readSpace(gc) {
   const p = probe.getContext('2d', { willReadFrequently: true });
   p.drawImage(gc, 0, 0, gc.width, 1, 0, 0, 64, 1);
   const d = p.getImageData(0, 0, 64, 1).data;

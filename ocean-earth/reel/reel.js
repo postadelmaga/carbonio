@@ -969,6 +969,21 @@ initTimeline({
 });
 
 let lastNow = performance.now(), lateSince = 0;
+const shownText = new Map();
+function setText(sel, v) { if (shownText.get(sel) !== v) { shownText.set(sel, v); $(sel).textContent = v; } }
+// "battuta 7.2": i battiti si ricalcolano solo quando cambia il brano o i suoi pezzi
+let beatsMemo = { key: null, list: [] };
+function barPos(tt) {
+  const Au = S.P.audio, key = Au ? JSON.stringify([Au.clips, Au.mode, Au.bpm, Au.gridOff, Au.barOff, Au.meter]) + S.song.detected.length : '';
+  if (key !== beatsMemo.key) beatsMemo = { key, list: tlBeats() };
+  const L = beatsMemo.list;
+  let lo = 0, hi = L.length;                         // ultimo battito <= tt
+  while (lo < hi) { const m = (lo + hi) >> 1; if (L[m].t <= tt + 1e-3) lo = m + 1; else hi = m; }
+  let k = lo - 1;
+  if (k < 0) return '';
+  let j = k; while (j >= 0 && !L[j].bar) j--;
+  return j >= 0 ? t('bar_pos', L[j].n, k - j + 1) : '';
+}
 // timecode come nei programmi di montaggio: minuti:secondi:fotogrammi
 function fmtTC(s) {
   const fps = S.P.fps, f = Math.floor(s * fps + 1e-6), sec = Math.floor(f / fps), m = Math.floor(sec / 60);
@@ -997,12 +1012,12 @@ function frame(now) {
     // da fermi: il mese scelto non e' ancora sul globo (file in arrivo)
     const late = !S.playing && lastInfo && !A.oe.ready();
     if (!late) lateSince = 0; else if (!lateSince) lateSince = now;
-    $('#wait').hidden = !((S.playing && lastInfo?.waiting) || (late && now - lateSince > 400));
     movePlayhead();
-    $('#clock').textContent = fmtTC(S.t);
-    const bs = tlBeats().filter((b) => b.t <= S.t + 1e-3);
-    const lastBar = [...bs].reverse().find((b) => b.bar);
-    $('#bar-pos').textContent = lastBar ? t('bar_pos', lastBar.n, bs.length - bs.indexOf(lastBar)) : '';
+    // si scrive nella pagina solo quello che cambia (ogni scrittura costa un ricalcolo)
+    setText('#clock', fmtTC(S.t));
+    setText('#bar-pos', barPos(S.t));
+    const waitOff = !((S.playing && lastInfo?.waiting) || (late && now - lateSince > 400));
+    if ($('#wait').hidden !== waitOff) $('#wait').hidden = waitOff;
   }
   requestAnimationFrame(frame);
 }

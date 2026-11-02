@@ -42,7 +42,9 @@ export class DataStore {
     this.manifest = await res.json();
     const c = this.manifest.cache;
     this.cacheNames = c && self.caches ? { frames: `oe-frames-${c.frames}`, static: `oe-static-${c.static}` } : null;
-    const n = Math.min(3, Math.max(1, (navigator.hardwareConcurrency || 2) - 1));
+    // un worker per core (uno resta alla pagina), fino a 6: la decodifica dei
+    // fotogrammi e' quello che limita quanti mesi al secondo si vedono in play
+    const n = Math.min(6, Math.max(1, (navigator.hardwareConcurrency || 2) - 1));
     for (let i = 0; i < n; i++) {
       const w = new Worker(new URL('./decode-worker.js', import.meta.url));
       w.postMessage({ type: 'init', encoding: this.manifest.encoding, preview: this.manifest.preview, cache: this.cacheNames });

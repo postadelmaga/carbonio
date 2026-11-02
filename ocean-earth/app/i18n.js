@@ -297,7 +297,15 @@ export function applyStatic(root = globalThis.document) {
 
 // "2024-07" → "lug 2024"; "2024-07-03" → "3 lug 2024"; "2024-07-03T05" → "3 lug 2024 05:00 UTC"
 // (nel formato di ogni lingua: in cinese "2024年7月3日")
+// (crearne uno a ogni chiamata costava molto: si chiama a ogni fotogramma del play)
+const stampMemo = new Map();
 export function fmtStamp(s) {
+  const k = LANG + s;
+  let r = stampMemo.get(k);
+  if (r == null) { r = fmtStampRaw(s); if (stampMemo.size > 20000) stampMemo.clear(); stampMemo.set(k, r); }
+  return r;
+}
+function fmtStampRaw(s) {
   const y = +s.slice(0, 4), mo = +s.slice(5, 7) - 1;
   const d = s.length > 7 ? +s.slice(8, 10) : 1;
   const opt = s.length === 7 ? { year: 'numeric', month: 'short' } : { year: 'numeric', month: 'short', day: 'numeric' };
