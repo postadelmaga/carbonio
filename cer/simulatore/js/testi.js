@@ -30,7 +30,7 @@ export function ipotesi(r, loc, pvInfo, costanti) {
     `Riparto: ${perc(p.quota_produttore)} della tariffa al titolare dell'impianto, ${perc(p.quota_consumatori)} ai consumatori secondo quanto consumano nelle ore di produzione, ${perc(1 - p.quota_produttore - p.quota_consumatori)} al fondo sociale; il contributo ARERA ai consumatori. È l'esempio di CERS Eliodora, non il regolamento della nostra CER, che non è ancora scritto.`,
     `Costi della CER: ${euro(p.gestione_eur_anno)} l'anno di gestione più i corrispettivi del GSE, tolti dagli incentivi prima del riparto. La quota eccedentaria resta intera ai consumatori che non sono imprese: è la lettura prudente, perché le regole non dicono se possa coprire i costi.`,
     `Gli impianti nuovi entrano in esercizio dopo la costituzione della CER ed entro il ${voce(costanti, 'scadenza_esercizio').split('-').reverse().join('/')}.`,
-    `${anni} anni a prezzi costanti, senza inflazione né attualizzazione; i pannelli perdono il ${perc(voce(costanti, 'degrado'), 1)} di produzione l'anno.`,
+    `${anni} anni a prezzi costanti, senza inflazione né attualizzazione; degrado dei pannelli: ${perc(voce(costanti, 'degrado'), 1)} della produzione l'anno.`,
     `CO₂: ${numero(em.fattore, 1)} g per kWh (${media ? 'media dei consumi elettrici' : 'produzione termoelettrica'}, ISPRA, 2025 preliminare)${media ? `, fino a ${numero(em.fattoreAlto, 1)} con il termoelettrico` : ''}; sui ${anni} anni si usa la media dei consumi${media ? '' : `, ${numero(voce(costanti, 'fattore_co2'), 1)} g per kWh`}, che cala del ${perc(voce(costanti, 'calo_fattore_co2'), 1)} l'anno.`,
     'Fuori dal calcolo: imposte, agevolazioni (PNRR, detrazioni), accumuli, prezzo ora per ora, quarto d\'ora.',
   ];

@@ -23,6 +23,8 @@ test('le ipotesi dicono riparto d\'esempio, scelta prudente, anno meteo e fattor
   for (const parola of ['La Spezia (SP)', '2023', '33°', 'Eliodora', 'prudente', '130 €/MWh', '199,6', '366,5', '0,5%', '2,9%']) {
     assert.ok(t.includes(parola), parola);
   }
+  assert.ok(t.includes('degrado dei pannelli: 0,5% della produzione l\'anno'), 'frase del degrado');
+  assert.ok(!t.includes('il 0,5%'), 'nessun articolo davanti alla percentuale');
 });
 
 test('con il termoelettrico come numero principale, i 20 anni restano sulla media dei consumi', () => {
