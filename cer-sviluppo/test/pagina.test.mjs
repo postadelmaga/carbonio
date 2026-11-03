@@ -129,3 +129,15 @@ test('l\'impianto della CER ha il suo riquadro, che compare solo se la CER ha im
   assert.match(JS, /com\.investimentoCer > 0/);
   assert.match(CSS, /body:not\(\[data-impianto-cer\]\) \[data-solo-impianto-cer\]/);
 });
+
+test('«L\'impianto da solo» segue haImpianto, investimento e rientri seguono l\'investimento, «già pagato» segue soloEsistenti', () => {
+  const riga = (titolo) => HTML.match(new RegExp(`<div([^>]*)><dt>${titolo}</dt>`))?.[1] ?? null;
+  assert.equal(riga('L\'impianto da solo').trim(), 'data-solo-impianto');
+  for (const t of ['Investimento', 'Rientro con la CER', 'Rientro senza CER']) assert.equal(riga(t).trim(), 'data-solo-investimento', t);
+  assert.match(HTML, /<div data-solo-pagato><dt>Investimento<\/dt><dd>già pagato<\/dd><\/div>/);
+  assert.match(HTML, /<p data-solo-investimento>Il tuo impianto: /, 'la CO₂ del tuo impianto c\'è solo con un impianto nuovo: quelli esistenti non evitano CO₂ in più');
+  assert.match(JS, /if \(te\.haImpianto\) b\.impianto = ''; else delete b\.impianto;/);
+  assert.match(JS, /if \(te\.investimento > 0\) b\.investimento = ''; else delete b\.investimento;/);
+  assert.match(JS, /if \(te\.soloEsistenti\) b\.pagato = ''; else delete b\.pagato;/);
+  for (const a of ['impianto', 'investimento', 'pagato']) assert.ok(CSS.includes(`body:not([data-${a}]) [data-solo-${a}]`), `la CSS non nasconde [data-solo-${a}]`);
+});

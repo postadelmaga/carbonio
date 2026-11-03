@@ -124,8 +124,11 @@ export function calcola(ingressi, dati) {
   gruppi.forEach((g, gi) => {
     const f1 = flussi(ec1.membri[g.id]), f20 = flussi(a20.ec.membri[g.id]);
     const delAnno = (t, campo) => f1[campo] + (f20[campo] - f1[campo]) * peso(t, degrado, anni);
-    const inv = prep.impianti.filter((k) => k.titolare === g.id)
+    // Un impianto già in esercizio è già pagato: si tolgono dall'investimento, non dai flussi.
+    const propri = prep.impianti.filter((k) => k.titolare === g.id);
+    const inv = propri.filter((k) => !k.esistente)
       .reduce((s, k) => s + investimento(k.kwp, g.tipo, c, par.prezzo_impianto_eur_w), 0);
+    const haImpianto = propri.length > 0, soloEsistenti = haImpianto && propri.every((k) => k.esistente);
     let con = 0, senza = 0, cer = 0, rientroCon = null, rientroSenza = null;
     for (let t = 1; t <= anni; t++) {
       const da = delAnno(t, 'impiantoDaSolo'), ag = delAnno(t, 'cerAggiunge');
@@ -139,7 +142,7 @@ export function calcola(ingressi, dati) {
       tipo: g.tipo, numero: g.numero, consumo: e.consumo, autoconsumo: e.autoconsumo, prelievo: e.prelievo, condivisa: e.condivisa,
       voci: ec1.membri[g.id], impiantoDaSolo: f1.impiantoDaSolo, cerAggiunge: f1.cerAggiunge, totale: f1.impiantoDaSolo + f1.cerAggiunge,
       quotaSpesa: spesa > 0 ? f1.cerAggiunge / spesa : null,
-      investimento: inv, rientroConCer: rientroCon, rientroSenzaCer: rientroSenza, ventiAnni: con - inv, cerVentiAnni: cer,
+      haImpianto, soloEsistenti, investimento: inv, rientroConCer: rientroCon, rientroSenzaCer: rientroSenza, ventiAnni: con - inv, cerVentiAnni: cer,
       co2: co2.membri[g.id],
     };
   });
@@ -168,7 +171,7 @@ export function calcola(ingressi, dati) {
     costi: ec1.costi, kappa: ec1.kappa, nonCoperti: ec1.nonCoperti, fondo: ec1.cer.fondo, quote: ec1.cer.quote,
     quotaCer: ec1.cer.quotaCer, titolareCer: ec1.cer.titolare, fondoSociale: ec1.cer.fondoSociale,
     venditaCer: ec1.cer.vendita, manutenzioneCer: ec1.cer.manutenzione,
-    investimentoCer: prep.impianti.filter((k) => k.titolare === 'cer').reduce((s, k) => s + investimento(k.kwp, 'cer', c, par.prezzo_impianto_eur_w), 0),
+    investimentoCer: prep.impianti.filter((k) => k.titolare === 'cer' && !k.esistente).reduce((s, k) => s + investimento(k.kwp, 'cer', c, par.prezzo_impianto_eur_w), 0),
     incentivi,
     costituzionePerFondatore: par.costituzione_eur == null ? null : par.costituzione_eur / par.fondatori,
     membriTotali: gruppi.reduce((s, g) => s + g.numero, 0),

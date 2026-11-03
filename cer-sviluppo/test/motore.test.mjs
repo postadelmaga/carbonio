@@ -181,3 +181,61 @@ test('impianto di un socio: il fondo è solo la parte della CER, titolareCer e f
   assert.equal(c.investimentoCer, 0);
   quasi(c.fondo, c.quotaCer, 1e-9);
 });
+
+// Il ciclo dei 20 anni (spec §6.10), rifatto qui fuori da calcola: anno 1 e anno 20 esatti, gli altri interpolati con peso().
+function sommaVentiAnni(ingressi, id) {
+  const prep = prepara(ingressi, dati);
+  const f1 = flussi(anno(prep, 1).ec.membri[id]), f20 = flussi(anno(prep, (1 - prep.degrado) ** (prep.anni - 1)).ec.membri[id]);
+  let somma = 0;
+  for (let t = 1; t <= prep.anni; t++) {
+    const w = peso(t, prep.degrado, prep.anni);
+    for (const campo of ['impiantoDaSolo', 'cerAggiunge']) somma += f1[campo] + (f20[campo] - f1[campo]) * w;
+  }
+  return somma;
+}
+const conTuo = (esistente) => {
+  const ing = base();
+  ing.impianti.push({ id: 'tuo', kwp: 4.5, titolare: 'io', sul_pod_del_titolare: true, per_ogni_membro: false, esistente });
+  if (esistente) ing.impianti.reverse(); // gli esistenti sono i più anziani
+  return ing;
+};
+
+test('un impianto già in esercizio è già pagato: investimento 0, nessun rientro, i 20 anni sono la somma dei 20 anni', () => {
+  const ing = conTuo(true);
+  const m = calcola(ing, dati).perTe;
+  assert.equal(m.investimento, 0);
+  assert.equal(m.rientroConCer, null);
+  assert.equal(m.rientroSenzaCer, null);
+  assert.equal(m.haImpianto, true);
+  assert.equal(m.soloEsistenti, true);
+  quasi(m.ventiAnni, sommaVentiAnni(ing, 'io'), 1e-6, 'ventiAnni');
+  assert.ok(m.impiantoDaSolo > 0, 'l\'impianto già in esercizio fa risparmiare e vende');
+});
+
+test('un impianto nuovo si paga: investimento, rientro con la CER prima di quello senza, i 20 anni sono la somma meno l\'investimento', () => {
+  const ing = conTuo(false);
+  const m = calcola(ing, dati).perTe;
+  assert.ok(m.investimento > 0);
+  quasi(m.investimento, 6880.5, 1e-6, '4,5 kWp di una famiglia, IVA compresa');
+  assert.equal(m.haImpianto, true);
+  assert.equal(m.soloEsistenti, false);
+  assert.ok(m.rientroConCer != null && m.rientroSenzaCer != null, 'in 20 anni rientra');
+  assert.ok(m.rientroConCer <= m.rientroSenzaCer, `${m.rientroConCer} anni con la CER, ${m.rientroSenzaCer} senza`);
+  quasi(m.ventiAnni, sommaVentiAnni(ing, 'io') - m.investimento, 1e-6, 'ventiAnni');
+});
+
+test('chi non ha impianto non ha né investimento né impianto già pagato', () => {
+  const m = calcola(base(), dati).perTe;
+  assert.equal(m.haImpianto, false);
+  assert.equal(m.soloEsistenti, false);
+  assert.equal(m.investimento, 0);
+});
+
+test('l\'investimento della CER somma solo gli impianti nuovi', () => {
+  const ing = base({ impianti: [
+    { id: 'vecchio', kwp: 6, titolare: 'cer', sul_pod_del_titolare: false, per_ogni_membro: false, esistente: true },
+    { id: 'comune', kwp: 40, titolare: 'cer', sul_pod_del_titolare: false, per_ogni_membro: false, esistente: false },
+  ] });
+  ing.soci = ing.soci.filter((x) => x.id !== 'produttore');
+  quasi(calcola(ing, dati).comunita.investimentoCer, 51200, 1e-6, 'solo i 40 kWp nuovi, 1,28 €/W');
+});
