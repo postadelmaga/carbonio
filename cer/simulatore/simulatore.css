@@ -53,7 +53,7 @@ body:not([data-impianto]) [data-solo-impianto], body:not([data-fondatore]) [data
 .ris{background:var(--surface);border:1px solid var(--rule);border-radius:var(--r);padding:18px}
 .ris .kicker{margin-bottom:8px}
 .ris-emissioni{background:linear-gradient(135deg,var(--leaf-soft),var(--surface) 70%)}
-body[data-non-aggiornato] .sim-risultati .ris{opacity:.45}
+body[data-non-aggiornato] .sim-risultati .ris,body[data-non-aggiornato] .barra-riassunto,body[data-non-aggiornato] .sim-grafici{opacity:.45}
 .grande{margin:0 0 10px;font:800 2.2rem/1.1 Archivo,sans-serif}
 .grande small{display:block;margin-top:4px;font:400 .92rem/1.4 'Source Serif 4',serif;color:var(--ink-2)}
 .voci{display:grid;gap:6px;margin:0}

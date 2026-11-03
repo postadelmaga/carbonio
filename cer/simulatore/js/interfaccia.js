@@ -218,6 +218,8 @@ async function scegliLocalita(etichetta) {
     if (mia !== richiestaLocalita) return;
     const primo = dati == null;
     dati = nuovi; loc = trovata;
+    campo('localita').value = `${loc.nome} (${loc.sigla})`;
+    campo('localita').removeAttribute('aria-invalid');
     if (primo) preimposta();
     const resa = dati.pv.reduce((s, v) => s + v, 0) / 1000;
     $('#info-localita').textContent = `${trovata.regione}: ${numero(resa)} kWh per kWp l'anno (PVGIS, ${dati.pvInfo.anno_meteo}), pannelli a sud inclinati di ${numero(dati.pvInfo.inclinazione)}°.`;
