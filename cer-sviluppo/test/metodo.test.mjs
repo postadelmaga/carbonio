@@ -32,6 +32,10 @@ test('i numeri del testo di «Come calcoliamo» coincidono con costanti.json (es
     `supera i ${numero(sogliaPrezzo)} €/MWh`,
     `l'anno meteorologico ${PV.anno_meteo}`,
     `perdite del ${PV.parametri.loss}%`,
+    `non oltre ${fasce.at(-1).fino_kw / 1000} MW di potenza, fino a ${durata} anni`,
+    'se non ce ne sono, va al fondo della comunità',
+    'Se i costi superano gli incentivi, il simulatore lo segnala: vanno coperti in altro modo, per esempio con una quota associativa.',
+    'Sui 20 anni si usa sempre il fattore medio, che cala come ha fatto in media dal 1990 al 2024.',
   ];
   const mancanti = frasi.filter((f) => !HTML.includes(f));
   assert.deepEqual(mancanti, [], 'frasi da aggiornare in cer/simulatore/metodo/index.html');
@@ -41,4 +45,13 @@ test('i numeri del testo di «Come calcoliamo» coincidono con costanti.json (es
   assert.equal(durata, 20, 'durata_tariffa_anni non è più 20: vanno riscritte in pagina anche «Venti anni» e «il ventesimo anno»');
   assert.ok(HTML.includes('Venti anni'), 'nella pagina manca «Venti anni»');
   assert.ok(HTML.includes('il ventesimo anno'), 'nella pagina manca «il ventesimo anno»');
+});
+
+test('la pagina dice che i 20 anni usano sempre il fattore medio e come si leggono le fonti (esclude una pagina che dice il contrario del calcolo)', () => {
+  assert.ok(HTML.includes('si usa sempre il fattore medio'), 'nella pagina manca «si usa sempre il fattore medio»');
+  assert.ok(HTML.includes("unita === 'data'"), 'lo script non scrive le date in GG/MM/AAAA');
+  assert.ok(HTML.includes("join(', ')"), 'le liste della tabella non si uniscono con «, »');
+  assert.ok(HTML.includes('console.error(e)'), 'il ramo di errore non registra l\'errore');
+  assert.equal(C.correttivo_fv.note, 'Le regioni di ciascuna area sono nella riga seguente.');
+  assert.ok(leggi('simulatore.css').includes('.metodo .tabella th{text-align:left}'), 'manca lo stile delle intestazioni della tabella');
 });

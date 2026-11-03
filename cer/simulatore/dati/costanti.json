@@ -24,7 +24,7 @@
       "fonte": "DM MASE 414/2023, Allegato 1 §2; pagina GSE sulla tariffa massima (120, 124 e 130 €/MWh)",
       "url": "https://www.gse.it/documenti_site/Documenti%20GSE/Servizi%20per%20te/AUTOCONSUMO/Altri%20contenuti/Decreto%20CER.pdf",
       "consultato": "2026-10-18",
-      "note": "Regioni per area nella voce aree_correttivo_fv."
+      "note": "Le regioni di ciascuna area sono nella riga seguente."
     },
     "aree_correttivo_fv": {
       "descrizione": "Regioni del Nord e del Centro per il correttivo della tariffa per il fotovoltaico; le altre sono Sud",

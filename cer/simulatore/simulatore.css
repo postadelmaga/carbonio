@@ -111,3 +111,4 @@ table.tabella{width:100%;border-collapse:collapse;font-size:.86rem;margin-top:8p
 .metodo .tabella td{text-align:left;vertical-align:top}
 #fonti{overflow-x:auto}
 @media (max-width:560px){ .metodo{padding:28px 16px 48px} }
+.metodo .tabella th{text-align:left}
