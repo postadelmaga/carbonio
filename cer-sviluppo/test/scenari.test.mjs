@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { ingressiEntrare, ingressiFondare } from '../../cer/simulatore/js/scenari.js';
+import { ingressiEntrare, ingressiFondare, sceltaIo } from '../../cer/simulatore/js/scenari.js';
 import { valida } from '../../cer/simulatore/js/motore.js';
 
 const costanti = JSON.parse(readFileSync(new URL('../../cer/simulatore/dati/costanti.json', import.meta.url), 'utf8'));
@@ -61,4 +61,18 @@ test('quote 70% + 50% dalla pagina: gli ingressi non passano la validazione (la 
   const quote = (parametri) => ingressiEntrare({ area: 'nord', parametri, utente: utente(), comunita: {} }, costanti);
   assert.deepEqual(valida(quote({ quota_produttore: 0.7, quota_consumatori: 0.3 }), costanti), []);
   assert.deepEqual(valida(quote({ quota_produttore: 0.7, quota_consumatori: 0.5 }), costanti), ['quota del produttore più quota dei consumatori oltre il 100%']);
+});
+
+test('«Io sono»: le opzioni dei gruppi assenti si disabilitano e la scelta passa al gruppo che il calcolo usa davvero', () => {
+  const ids = ['famiglie', 'pannelli', 'attivita', 'enti', 'produttore'];
+  const cer = fonda({ io: 'produttore', comune: { kwp: 40, titolare: 'cer', esistente: false } });
+  assert.deepEqual(sceltaIo(cer, ids), { io: 'famiglie', disabilitati: ['produttore'] });
+  const senzaPannelli = fonda({ io: 'pannelli', pannelli: { ...fondo().pannelli, numero: 0 } });
+  assert.deepEqual(sceltaIo(senzaPannelli, ids), { io: 'famiglie', disabilitati: ['pannelli'] });
+  const tutti = fonda({ io: 'enti' });
+  assert.deepEqual(sceltaIo(tutti, ids), { io: 'enti', disabilitati: [] });
+  const solo = fonda({ io: 'famiglie', pannelli: { ...fondo().pannelli, numero: 0 }, attivita: { ...fondo().attivita, numero: 0 }, enti: { ...fondo().enti, numero: 0 }, comune: { kwp: 0, titolare: 'produttore', esistente: false } });
+  assert.deepEqual(sceltaIo(solo, ids), { io: 'famiglie', disabilitati: ['pannelli', 'attivita', 'enti', 'produttore'] });
+  const nessuno = ingressiFondare({ area: 'nord', parametri: {}, fondare: fondo({ famiglie: { numero: 0, classe: '1,5-3', consumo: null }, pannelli: { ...fondo().pannelli, numero: 0 }, attivita: { ...fondo().attivita, numero: 0 }, enti: { ...fondo().enti, numero: 0 }, comune: { kwp: 0, titolare: 'produttore', esistente: false } }) }, costanti);
+  assert.deepEqual(sceltaIo(nessuno, ids), { io: null, disabilitati: ids });
 });

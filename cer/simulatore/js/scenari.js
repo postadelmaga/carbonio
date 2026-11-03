@@ -56,3 +56,9 @@ export function ingressiFondare(stato, costanti) {
     io, fondatore: true,
   };
 }
+
+// «Io sono» nel modulo «fondare»: quali gruppi non ci sono nella comunità composta (le loro opzioni si disabilitano) e quale
+// gruppo usa davvero il calcolo come «io» (quello scelto se c'è, altrimenti il primo). `ids` sono le opzioni del campo.
+export function sceltaIo(ingressi, ids) {
+  return { io: ingressi.io, disabilitati: ids.filter((id) => !ingressi.soci.some((s) => s.id === id)) };
+}

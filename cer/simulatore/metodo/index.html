@@ -6,6 +6,11 @@
 <title>Come calcoliamo · Simulatore della CER</title>
 <meta name="description" content="Il metodo del simulatore della Comunità Energetica Rinnovabile: i passi del calcolo, le fonti di ogni valore, le ipotesi, i limiti e le licenze dei dati.">
 <link rel="canonical" href="https://co2-info.duckdns.org/cer/simulatore/metodo/">
+<meta property="og:title" content="Come calcoliamo · Simulatore della CER">
+<meta property="og:description" content="I passi del calcolo, le fonti di ogni valore, le ipotesi, i limiti e le licenze dei dati del simulatore.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://co2-info.duckdns.org/cer/simulatore/metodo/">
+<meta property="og:image" content="https://co2-info.duckdns.org/cer/img/social.png">
 <meta name="theme-color" content="#F4F2EC">
 <link rel="icon" href="/cer/img/logo.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -72,6 +77,7 @@
 
   <h2>Le fonti di ogni valore</h2>
   <p>La tabella si legge dallo stesso file che usa il calcolo.</p>
+  <p id="data-dati" class="aiuto">Leggo la data dei dati…</p>
   <div id="fonti"><p class="aiuto">Carico le fonti…</p></div>
 
   <h2>Licenze dei dati</h2>
@@ -102,6 +108,15 @@
     if (Array.isArray(v)) return v.map((x) => Object.entries(x).map(([k, y]) => `${k.replace(/_/g, ' ')} ${val(y)}`).join(', ')).join('; ') + u;
     if (typeof v === 'object') return Object.entries(v).map(([k, y]) => `${k.replace(/_/g, ' ')} ${val(y)}`).join(', ') + u;
     return `${val(v)}${u}`;
+  }
+  const dataDati = document.querySelector('#data-dati');
+  try {
+    // la data dello scarico viene dal file delle serie PVGIS, non è scritta a mano (tutte le serie sono scaricate lo stesso giorno)
+    const pv = await (await fetch('/cer/simulatore/dati/pv/011015.json')).json();
+    dataDati.textContent = `I dati del simulatore sono stati preparati il ${pv.scaricato_il.split('-').reverse().join('/')}, data dello scarico delle serie di produzione di PVGIS.`;
+  } catch (e) {
+    console.error(e);
+    dataDati.textContent = 'Non riesco a leggere la data dei dati: ricarica la pagina.';
   }
   const div = document.querySelector('#fonti');
   try {

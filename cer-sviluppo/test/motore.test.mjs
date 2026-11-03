@@ -239,3 +239,19 @@ test('l\'investimento della CER somma solo gli impianti nuovi', () => {
   ing.soci = ing.soci.filter((x) => x.id !== 'produttore');
   quasi(calcola(ing, dati).comunita.investimentoCer, 51200, 1e-6, 'solo i 40 kWp nuovi, 1,28 €/W');
 });
+
+test('costi non coperti: senza quota associativa invita a metterla, con una quota la conta e dice quanto manca ancora', () => {
+  const costi = (parametri) => calcola(base({ parametri: { gestione_eur_anno: 100000, ...parametri } }), dati);
+  const senza = costi({});
+  const avvisoSenza = senza.avvisi.find((x) => x.codice === 'costi_non_coperti');
+  assert.ok(avvisoSenza, 'senza quota l\'avviso c\'è');
+  assert.equal(avvisoSenza.testo, `Gli incentivi non coprono i costi della CER: mancano circa ${Math.round(senza.comunita.nonCoperti)} € l'anno, da coprire per esempio con una quota associativa.`);
+  const con = costi({ quota_associativa: 10 });
+  const avviso = con.avvisi.find((x) => x.codice === 'costi_non_coperti');
+  const quote = con.comunita.quote; // 34 soci per 10 €
+  quasi(quote, 340, 1e-9);
+  assert.equal(avviso.testo, `Gli incentivi e le quote associative non coprono i costi della CER: mancano circa ${Math.round(con.comunita.nonCoperti - quote)} € l'anno.`);
+  assert.ok(!avviso.testo.includes('da coprire per esempio'), 'con la quota già impostata non si invita a metterla');
+  // se le quote bastano, l'avviso sparisce
+  assert.ok(!costi({ quota_associativa: 100000 }).avvisi.some((x) => x.codice === 'costi_non_coperti'));
+});

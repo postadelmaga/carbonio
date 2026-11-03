@@ -194,8 +194,15 @@ export function calcola(ingressi, dati) {
   if (kwTot > 0 && kwEs / kwTot > voce(c, 'limite_potenza_esistenti')) {
     avvisi.push({ codice: 'esistenti_oltre_soglia', testo: `Gli impianti già in esercizio sono il ${Math.round((100 * kwEs) / kwTot)}% della potenza: le Regole li ammettono fino al ${Math.round(100 * voce(c, 'limite_potenza_esistenti'))}%.` });
   }
-  if (ec1.nonCoperti > 0) {
-    avvisi.push({ codice: 'costi_non_coperti', testo: `Gli incentivi non coprono i costi della CER: mancano circa ${Math.round(ec1.nonCoperti)} € l'anno, da coprire per esempio con una quota associativa.` });
+  // Con una quota associativa già impostata l'avviso la conta: manca solo ciò che incentivi e quote insieme non coprono.
+  const scoperto = par.quota_associativa > 0 ? ec1.nonCoperti - ec1.cer.quote : ec1.nonCoperti;
+  if (ec1.nonCoperti > 0 && scoperto > 0) {
+    avvisi.push({
+      codice: 'costi_non_coperti',
+      testo: par.quota_associativa > 0
+        ? `Gli incentivi e le quote associative non coprono i costi della CER: mancano circa ${Math.round(scoperto)} € l'anno.`
+        : `Gli incentivi non coprono i costi della CER: mancano circa ${Math.round(scoperto)} € l'anno, da coprire per esempio con una quota associativa.`,
+    });
   }
   if (t1.immessa > 0 && t1.condivisa / t1.immessa < 0.3) {
     avvisi.push({ codice: 'servono_consumatori', testo: 'Meno del 30% dell\'energia immessa viene consumata nelle stesse ore dai soci: per questa produzione servono più consumatori.' });

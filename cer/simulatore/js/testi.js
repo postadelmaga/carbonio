@@ -1,5 +1,5 @@
 // Testi generati dai risultati (spec §7.3, §8): le ipotesi di questa simulazione e la scadenza della tariffa.
-import { numero, euro, perc } from './formato.js';
+import { numero, euro, perc, tonnellate } from './formato.js';
 import { costoEvitato, voce } from './economia.js';
 
 export function mesiAllaScadenza(oggi, scadenza) {
@@ -25,6 +25,17 @@ export function testoEccedentaria(com) {
   if (!(com.quotaEccedentaria > 0)) return '';
   const base = `La quota eccedentaria della tariffa, ${euro(com.eccedentaria)} l'anno, va ai consumatori che non sono imprese (statuto, art. 12).`;
   return com.fondoSociale > 0 ? `${base} Senza consumatori che non siano imprese, va a finalità sociali: ${euro(com.fondoSociale)} l'anno.` : base;
+}
+
+// «, fino a X» dopo la CO₂ evitata: ha senso solo quando il numero principale è quello della media; col termoelettrico come
+// principale sarebbe lo stesso numero due volte.
+export const testoFinoA = (principale, evitataAlta) => (principale === 'media' ? `, fino a ${tonnellate(evitataAlta)}` : '');
+
+// La CO₂ evitata in italiani: se arrotondato fa 0 si dice «meno di un italiano», se fa 1 si dice al singolare.
+export function testoItaliani(italiani) {
+  const n = Math.round(italiani);
+  if (n === 0) return 'Sono meno delle emissioni di un italiano in un anno';
+  return n === 1 ? 'Sono le emissioni di un italiano in un anno' : `Sono le emissioni di ${numero(italiani)} italiani in un anno`;
 }
 
 export function ipotesi(r, loc, pvInfo, costanti) {

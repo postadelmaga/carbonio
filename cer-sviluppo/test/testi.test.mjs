@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { mesiAllaScadenza, testoScadenza, ipotesi, testoEccedentaria } from '../../cer/simulatore/js/testi.js';
+import { mesiAllaScadenza, testoScadenza, ipotesi, testoEccedentaria, testoFinoA, testoItaliani } from '../../cer/simulatore/js/testi.js';
 
 const costanti = JSON.parse(readFileSync(new URL('../../cer/simulatore/dati/costanti.json', import.meta.url), 'utf8'));
 
@@ -85,4 +85,21 @@ test('la frase sull\'eccedentaria compare solo se c\'è, e dice dove va', () => 
     testoEccedentaria({ quotaEccedentaria: 0.1, eccedentaria: 300, fondoSociale: 300 }),
     'La quota eccedentaria della tariffa, 300 € l\'anno, va ai consumatori che non sono imprese (statuto, art. 12). Senza consumatori che non siano imprese, va a finalità sociali: 300 € l\'anno.',
   );
+});
+
+test('«fino a …» compare solo quando il numero principale è la media: col termoelettrico sarebbe lo stesso numero due volte', () => {
+  assert.equal(testoFinoA('media', 36.8), ', fino a 36,8 t');
+  assert.equal(testoFinoA('media', 0.4), ', fino a 400 kg');
+  assert.equal(testoFinoA('termoelettrico', 20.2), '');
+});
+
+test('le emissioni in italiani: un numero che arrotondato è 0 non diventa «0 italiani»', () => {
+  assert.equal(testoItaliani(12.4), 'Sono le emissioni di 12 italiani in un anno');
+  assert.equal(testoItaliani(12345.4), 'Sono le emissioni di 12.345 italiani in un anno');
+  assert.equal(testoItaliani(0.3), 'Sono meno delle emissioni di un italiano in un anno');
+  assert.equal(testoItaliani(0), 'Sono meno delle emissioni di un italiano in un anno');
+  assert.equal(testoItaliani(0.49), 'Sono meno delle emissioni di un italiano in un anno');
+  assert.equal(testoItaliani(0.5), 'Sono le emissioni di un italiano in un anno', 'arrotondato fa 1: non «1 italiani»');
+  assert.equal(testoItaliani(1.4), 'Sono le emissioni di un italiano in un anno');
+  assert.equal(testoItaliani(1.5), 'Sono le emissioni di 2 italiani in un anno');
 });
