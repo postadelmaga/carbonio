@@ -52,7 +52,8 @@ function griglia(svg, max, y, unita) {
   const g = el('g', { class: 'asse' });
   for (const v of [0, max / 2, max]) {
     g.append(el('line', { x1: M.s, x2: W - M.d, y1: y(v), y2: y(v) }));
-    g.append(el('text', { x: M.s - 6, y: y(v) + 4, 'text-anchor': 'end' }, `${numero(v, v > 0 && v < 10 && v % 1 ? 1 : 0)} ${unita}`));
+    const dec = Number.isInteger(v) ? 0 : Number.isInteger(v * 10) ? 1 : 2;
+    g.append(el('text', { x: M.s - 6, y: y(v) + 4, 'text-anchor': 'end' }, `${numero(v, dec)} ${unita}`));
   }
   svg.append(g);
   return g;
@@ -156,26 +157,28 @@ export function incentivi(div, inc) {
 // Scena della comunità tipo: case, attività, ente e impianto, con «tu» in evidenza (spec §7.1).
 export function scenaComunita(div, c) {
   const svg = el('svg', { viewBox: '0 0 640 96', role: 'img' });
+  const larghezzaEtichetta = (t) => t.length * 6.5;
+  const conta = (n, uno, molti) => `${n} ${n === 1 ? uno : molti}`;
   let x = 8;
   const gruppo = (n, disegna, etichetta, max = 30) => {
     const inizio = x;
     for (let i = 0; i < Math.min(n, max); i++) { disegna(x, 30 + (i % 2) * 18); x += i % 2 ? 14 : 0; }
     if (n > max) { svg.append(el('text', { class: 'etichetta', x: x + 4, y: 52 }, `+${n - max}`)); x += 26; }
     svg.append(el('text', { class: 'etichetta', x: inizio, y: 90 }, etichetta));
-    x += 24;
+    x = Math.max(x + 24, inizio + larghezzaEtichetta(etichetta) + 12);
   };
   const casa = (colore) => (cx, cy) => svg.append(el('path', { d: `M${cx} ${cy + 6}L${cx + 6} ${cy}L${cx + 12} ${cy + 6}V${cy + 14}H${cx}Z`, fill: colore }));
   const negozio = (colore) => (cx, cy) => svg.append(el('rect', { x: cx, y: cy, width: 12, height: 14, rx: 2, fill: colore }));
   if (c.tu) gruppo(1, casa('var(--g-prod)'), 'tu');
-  gruppo(c.famiglie, casa('var(--ink-3)'), `${c.famiglie} famiglie`);
-  if (c.attivita) gruppo(c.attivita, negozio('var(--g-cons)'), `${c.attivita} attività`);
-  if (c.enti) gruppo(c.enti, negozio('var(--g-cond)'), `${c.enti} ${c.enti === 1 ? 'ente' : 'enti'}`);
+  if (c.famiglie > 0) gruppo(c.famiglie, casa('var(--ink-3)'), conta(c.famiglie, 'famiglia', 'famiglie'));
+  if (c.attivita) gruppo(c.attivita, negozio('var(--g-cons)'), conta(c.attivita, 'attività', 'attività'));
+  if (c.enti) gruppo(c.enti, negozio('var(--g-cond)'), conta(c.enti, 'ente', 'enti'));
   if (c.kwp > 0) {
     svg.append(el('rect', { x, y: 34, width: 34, height: 22, rx: 2, fill: 'none', stroke: 'var(--g-prod)', 'stroke-width': 2 }));
     svg.append(el('path', { d: `M${x + 11} 34V56M${x + 23} 34V56M${x} 45H${x + 34}`, stroke: 'var(--g-prod)', 'stroke-width': 1.5 }));
     svg.append(el('text', { class: 'etichetta', x, y: 90 }, `${numero(c.kwp, 1)} kWp`));
   }
-  svg.setAttribute('aria-label', `La comunità: ${c.tu ? 'tu, ' : ''}${c.famiglie} famiglie, ${c.attivita} attività, ${c.enti} enti, impianti per ${numero(c.kwp, 1)} kWp.`);
+  svg.setAttribute('aria-label', `La comunità: ${[c.tu && 'tu', c.famiglie > 0 && conta(c.famiglie, 'famiglia', 'famiglie'), c.attivita > 0 && conta(c.attivita, 'attività', 'attività'), c.enti > 0 && conta(c.enti, 'ente', 'enti'), c.kwp > 0 && `impianti per ${numero(c.kwp, 1)} kWp`].filter(Boolean).join(', ')}.`);
   div.replaceChildren(svg);
 }
 
