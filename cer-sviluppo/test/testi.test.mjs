@@ -87,19 +87,21 @@ test('la frase sull\'eccedentaria compare solo se c\'è, e dice dove va', () => 
   );
 });
 
-test('«fino a …» compare solo quando il numero principale è la media: col termoelettrico sarebbe lo stesso numero due volte', () => {
-  assert.equal(testoFinoA('media', 36.8), ', fino a 36,8 t');
-  assert.equal(testoFinoA('media', 0.4), ', fino a 400 kg');
-  assert.equal(testoFinoA('termoelettrico', 20.2), '');
+test('«fino a …» compare solo quando il numero principale è la media e la CO₂ evitata è positiva: né col termoelettrico (lo stesso numero due volte) né senza impianti nuovi («0 kg … fino a 0 kg»)', () => {
+  assert.equal(testoFinoA('media', 20.2, 36.8), ', fino a 36,8 t');
+  assert.equal(testoFinoA('media', 0.2, 0.4), ', fino a 400 kg');
+  assert.equal(testoFinoA('termoelettrico', 36.8, 36.8), '');
+  assert.equal(testoFinoA('media', 0, 0), '');
+  assert.equal(testoFinoA('termoelettrico', 0, 0), '');
 });
 
-test('le emissioni in italiani: un numero che arrotondato è 0 non diventa «0 italiani»', () => {
-  assert.equal(testoItaliani(12.4), 'Sono le emissioni di 12 italiani in un anno');
-  assert.equal(testoItaliani(12345.4), 'Sono le emissioni di 12.345 italiani in un anno');
-  assert.equal(testoItaliani(0.3), 'Sono meno delle emissioni di un italiano in un anno');
-  assert.equal(testoItaliani(0), 'Sono meno delle emissioni di un italiano in un anno');
-  assert.equal(testoItaliani(0.49), 'Sono meno delle emissioni di un italiano in un anno');
-  assert.equal(testoItaliani(0.5), 'Sono le emissioni di un italiano in un anno', 'arrotondato fa 1: non «1 italiani»');
-  assert.equal(testoItaliani(1.4), 'Sono le emissioni di un italiano in un anno');
-  assert.equal(testoItaliani(1.5), 'Sono le emissioni di 2 italiani in un anno');
+test('le emissioni in italiani: un numero che arrotondato è 0 non diventa «0 italiani», e senza CO₂ evitata la frase non c\'è', () => {
+  assert.equal(testoItaliani(12.4, 5.1), 'Sono le emissioni di 12 italiani in un anno (5,1 t a testa).');
+  assert.equal(testoItaliani(12345.4, 5.1), 'Sono le emissioni di 12.345 italiani in un anno (5,1 t a testa).');
+  assert.equal(testoItaliani(0.3, 5.1), 'Sono meno delle emissioni di un italiano in un anno (5,1 t a testa).');
+  assert.equal(testoItaliani(0.49, 5.1), 'Sono meno delle emissioni di un italiano in un anno (5,1 t a testa).');
+  assert.equal(testoItaliani(0.5, 5.1), 'Sono le emissioni di un italiano in un anno (5,1 t a testa).', 'arrotondato fa 1: non «1 italiani»');
+  assert.equal(testoItaliani(1.4, 5.1), 'Sono le emissioni di un italiano in un anno (5,1 t a testa).');
+  assert.equal(testoItaliani(1.5, 5.1), 'Sono le emissioni di 2 italiani in un anno (5,1 t a testa).');
+  assert.equal(testoItaliani(0, 5.1), '', 'senza CO₂ evitata non c\'è nessun confronto: «meno di un italiano» direbbe che qualcosa si evita');
 });

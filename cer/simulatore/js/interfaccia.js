@@ -176,10 +176,9 @@ function mostra(r, s, percorso, ingressi) {
   if (com.investimentoCer > 0) b.impiantoCer = ''; else delete b.impiantoCer;
   const vista = {
     te,
-    emissioni: { ...em, finoA: testoFinoA(r.emissioni.principale, em.evitataAlta), italianiTesto: testoItaliani(em.italiani), esistentiTesto: em.esistenti > 0 ? `Gli impianti già in esercizio evitano altre ${tonnellate(em.esistenti)} l'anno, già contate prima della CER.` : '' },
+    emissioni: { ...em, finoA: testoFinoA(r.emissioni.principale, em.evitata, em.evitataAlta), italianiTesto: testoItaliani(em.italiani, voce(dati.costanti, 'co2_pro_capite')), esistentiTesto: em.esistenti > 0 ? `Gli impianti già in esercizio evitano altre ${tonnellate(em.esistenti)} l'anno, già contate prima della CER.` : '' },
     com: { ...com, incentivi: com.tariffa + com.contributo, frazioneCer: 1 - p.quota_produttore - p.quota_consumatori, eccedentariaTesto: testoEccedentaria(com) },
     cost: {
-      proCapite: voce(dati.costanti, 'co2_pro_capite'),
       g1990: voce(dati.costanti, 'fattore_co2_1990')['1990'],
       g2024: voce(dati.costanti, 'fattore_co2_1990')['2024'],
       anni: voce(dati.costanti, 'durata_tariffa_anni'),

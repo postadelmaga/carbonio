@@ -33,7 +33,7 @@ test('i numeri del testo di «Come calcoliamo» coincidono con costanti.json (es
     `l'anno meteorologico ${PV.anno_meteo}`,
     `perdite del ${PV.parametri.loss}%`,
     `non oltre ${fasce.at(-1).fino_kw / 1000} MW di potenza, fino a ${durata} anni`,
-    'se non ce ne sono, va al fondo della comunità',
+    'se non ce ne sono, va a finalità sociali',
     'Se i costi superano gli incentivi, il simulatore lo segnala: vanno coperti in altro modo, per esempio con una quota associativa.',
     'Sui 20 anni si usa sempre il fattore medio, che cala come ha fatto in media dal 1990 al 2024.',
   ];
@@ -42,6 +42,7 @@ test('i numeri del testo di «Come calcoliamo» coincidono con costanti.json (es
   // il fondo contro la povertà energetica è una scelta del regolamento di Eliodora, non della nostra CER
   assert.ok(!HTML.includes('fondo sociale'), 'nella pagina c\'è ancora «fondo sociale»');
   assert.ok(!HTML.includes('povertà energetica'), 'nella pagina c\'è ancora «povertà energetica»');
+  assert.ok(!HTML.includes('fondo della comunità'), '«fondo della comunità» si confonde con il 20% che resta alla CER: la quota eccedentaria senza consumatori non imprese va a finalità sociali');
 
   // «Venti anni» e «il ventesimo anno» sono scritti a parole: valgono solo finché la durata è 20.
   // Se la durata cambia, vanno riscritte anche queste parole nella pagina.

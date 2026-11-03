@@ -27,15 +27,18 @@ export function testoEccedentaria(com) {
   return com.fondoSociale > 0 ? `${base} Senza consumatori che non siano imprese, va a finalità sociali: ${euro(com.fondoSociale)} l'anno.` : base;
 }
 
-// «, fino a X» dopo la CO₂ evitata: ha senso solo quando il numero principale è quello della media; col termoelettrico come
-// principale sarebbe lo stesso numero due volte.
-export const testoFinoA = (principale, evitataAlta) => (principale === 'media' ? `, fino a ${tonnellate(evitataAlta)}` : '');
+// «, fino a X» dopo la CO₂ evitata: ha senso solo quando il numero principale è quello della media (col termoelettrico come
+// principale sarebbe lo stesso numero due volte) e c'è CO₂ evitata (senza impianti nuovi sarebbe «0 kg … fino a 0 kg»).
+export const testoFinoA = (principale, evitata, evitataAlta) => (principale === 'media' && evitata > 0 ? `, fino a ${tonnellate(evitataAlta)}` : '');
 
-// La CO₂ evitata in italiani: se arrotondato fa 0 si dice «meno di un italiano», se fa 1 si dice al singolare.
-export function testoItaliani(italiani) {
+// La CO₂ evitata in italiani, con il pro capite. Senza CO₂ evitata non c'è nessun confronto da fare: la frase non c'è. Se
+// arrotondato fa 0 si dice «meno di un italiano», se fa 1 si dice al singolare.
+export function testoItaliani(italiani, proCapite) {
+  if (!(italiani > 0)) return '';
   const n = Math.round(italiani);
-  if (n === 0) return 'Sono meno delle emissioni di un italiano in un anno';
-  return n === 1 ? 'Sono le emissioni di un italiano in un anno' : `Sono le emissioni di ${numero(italiani)} italiani in un anno`;
+  const resto = `in un anno (${tonnellate(proCapite)} a testa).`;
+  if (n === 0) return `Sono meno delle emissioni di un italiano ${resto}`;
+  return n === 1 ? `Sono le emissioni di un italiano ${resto}` : `Sono le emissioni di ${numero(italiani)} italiani ${resto}`;
 }
 
 export function ipotesi(r, loc, pvInfo, costanti) {

@@ -178,9 +178,9 @@ test('gli avvisi si riscrivono solo se cambiano: una regione di stato non ripete
 
 test('testi che il visitatore vede sbagliati: «fino a» solo con la media, italiani, abitudini solo per le famiglie, «Io sono» senza gruppi assenti', () => {
   assert.match(HTML, /della comunità<span data-r="emissioni\.finoA"><\/span><\/small>/);
-  assert.match(HTML, /<p><span data-r="emissioni\.italianiTesto"><\/span> \(<span data-r="cost\.proCapite" data-f="t"><\/span> a testa\)\./);
-  assert.match(JS, /finoA: testoFinoA\(r\.emissioni\.principale, em\.evitataAlta\)/);
-  assert.match(JS, /italianiTesto: testoItaliani\(em\.italiani\)/);
+  assert.match(HTML, /<p><span data-r="emissioni\.italianiTesto"><\/span> In <span data-r="cost\.anni"><\/span> anni: /);
+  assert.match(JS, /finoA: testoFinoA\(r\.emissioni\.principale, em\.evitata, em\.evitataAlta\)/);
+  assert.match(JS, /italianiTesto: testoItaliani\(em\.italiani, voce\(dati\.costanti, 'co2_pro_capite'\)\)/);
   assert.match(HTML, /<fieldset class="passo" data-solo-percorso="entrare" data-solo-tipo="famiglia">\s*<legend><span class="n">6<\/span>Le tue abitudini<\/legend>/);
   assert.match(JS, /sceltaIo\(ingressi, \[\.\.\.selezione\.options\]\.map\(\(o\) => o\.value\)\)/);
   assert.match(JS, /o\.disabled = disabilitati\.includes\(o\.value\)/);
