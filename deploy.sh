@@ -162,7 +162,7 @@ done)
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
-$(for P in cer/ cer/statuto/; do
+$(for P in cer/ cer/statuto/ cer/simulatore/ cer/simulatore/metodo/; do
 cat <<UNA
   <url>
     <loc>${PUBLIC_URL}/${P}</loc>
