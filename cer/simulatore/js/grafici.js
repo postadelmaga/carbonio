@@ -1,6 +1,8 @@
 // Grafici SVG del simulatore (spec §7.3): giornata media del mese, dodici mesi, divisione degli incentivi, scena della
 // comunità. Colori dai token di simulatore.css; testi in inchiostro, mai nel colore della serie; legenda, etichette
 // dirette, suggerimento al passaggio del puntatore e tabella equivalente.
+// Si disegna in pixel reali: il viewBox è largo quanto l'elemento al momento del disegno, così il testo resta da 11-12 px
+// a ogni larghezza. Chi mostra la pagina ridisegna quando la larghezza cambia.
 import { numero, euro, kwh } from './formato.js';
 
 export const MESI = ['gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno', 'luglio', 'agosto', 'settembre', 'ottobre', 'novembre', 'dicembre'];
@@ -10,7 +12,24 @@ export const SERIE = [
   { chiave: 'condivisa', nome: 'Condivisa', colore: 'var(--g-cond)' },
 ];
 const NS = 'http://www.w3.org/2000/svg';
-const W = 640, H = 260, M = { s: 56, d: 12, a: 16, b: 28 };
+const H = 260, M = { s: 54, d: 12, a: 20, b: 28 };
+const LARGHEZZA_PREDEFINITA = 640, SOGLIA_STRETTA = 480;
+const RIGA_SCENA = 96; // altezza di una riga della scena
+
+
+// Larghezza del disegno: quella misurata, arrotondata; 640 se manca (Node, elemento nascosto).
+export function larghezzaDisegno(misurata) {
+  const w = Math.round(misurata);
+  return Number.isFinite(w) && w > 0 ? w : LARGHEZZA_PREDEFINITA;
+}
+
+// Indici dei mesi che portano l'etichetta: tutti, e uno sì e uno no sotto i 480 px. Le barre restano dodici.
+export function mesiEtichettati(W) {
+  return MESI.map((_, i) => i).filter((i) => W >= SOGLIA_STRETTA || i % 2 === 0);
+}
+
+// Quante figure si disegnano al più per gruppo nella scena; le altre diventano «+N».
+export const figureMassime = (W) => (W < SOGLIA_STRETTA ? 10 : 30);
 
 // Massimo «tondo» dell'asse: 1, 2 o 5 per una potenza di dieci.
 export function tetto(x) {
@@ -48,25 +67,28 @@ function mostraTip(tip, contenitore, evento, testo) {
   tip.style.top = `${Math.max(4, evento.clientY - r.top - 40)}px`;
 }
 
-function griglia(svg, max, y, unita) {
+// Griglia con tre tacche (solo i numeri) e l'unità una volta sola, in alto a sinistra.
+function griglia(svg, W, max, y, unita) {
   const g = el('g', { class: 'asse' });
+  g.append(el('text', { x: 2, y: 11 }, unita));
   for (const v of [0, max / 2, max]) {
     g.append(el('line', { x1: M.s, x2: W - M.d, y1: y(v), y2: y(v) }));
     const dec = Number.isInteger(v) ? 0 : Number.isInteger(v * 10) ? 1 : 2;
-    g.append(el('text', { x: M.s - 6, y: y(v) + 4, 'text-anchor': 'end' }, `${numero(v, dec)} ${unita}`));
+    g.append(el('text', { x: M.s - 6, y: y(v) + 4, 'text-anchor': 'end' }, numero(v, dec)));
   }
   svg.append(g);
   return g;
 }
 
 export function giornata(svg, g, mese) {
+  const W = larghezzaDisegno(svg.getBoundingClientRect().width);
   svg.replaceChildren();
   svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
   const dati = SERIE.map((s) => g[s.chiave][mese]);
   const max = tetto(Math.max(...dati.flat(), 0.001));
   const x = (i) => M.s + ((i + 0.5) * (W - M.s - M.d)) / 24;
   const y = (v) => H - M.b - (v / max) * (H - M.a - M.b);
-  const asse = griglia(svg, max, y, 'kWh');
+  const asse = griglia(svg, W, max, y, 'kWh');
   for (const h of [0, 6, 12, 18, 23]) asse.append(el('text', { x: x(h), y: H - 8, 'text-anchor': 'middle' }, `${h}`));
   svg.append(el('path', { d: percorso(dati[0], x, y, true), fill: 'var(--g-prod)', 'fill-opacity': 0.25, stroke: 'var(--g-prod)', 'stroke-width': 2 }));
   svg.append(el('path', { d: percorso(dati[2], x, y, true), fill: 'var(--g-cond)', 'fill-opacity': 0.5, stroke: 'var(--g-cond)', 'stroke-width': 2 }));
@@ -95,17 +117,18 @@ export function giornata(svg, g, mese) {
 }
 
 export function anno(svg, m) {
+  const W = larghezzaDisegno(svg.getBoundingClientRect().width);
   svg.replaceChildren();
   svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
   const max = tetto(Math.max(...SERIE.flatMap((s) => m[s.chiave]), 0.001));
-  const largo = (W - M.s - M.d) / 12, barra = (largo - 8) / 3;
+  const largo = (W - M.s - M.d) / 12, vuoto = Math.min(8, largo * 0.2), barra = (largo - vuoto) / 3;
   const y = (v) => H - M.b - (v / max) * (H - M.a - M.b);
-  const asse = griglia(svg, max, y, 'kWh');
-  MESI.forEach((nome, i) => asse.append(el('text', { x: M.s + largo * (i + 0.5), y: H - 8, 'text-anchor': 'middle' }, nome.slice(0, 3))));
+  const asse = griglia(svg, W, max, y, 'kWh');
+  for (const i of mesiEtichettati(W)) asse.append(el('text', { x: M.s + largo * (i + 0.5), y: H - 8, 'text-anchor': 'middle' }, MESI[i].slice(0, 3)));
   const contenitore = svg.parentElement, tip = suggerimento(contenitore);
   MESI.forEach((nome, i) => SERIE.forEach((s, k) => {
     const v = m[s.chiave][i];
-    const r = el('rect', { x: M.s + largo * i + 4 + k * barra, y: y(v), width: Math.max(1, barra - 2), height: Math.max(0, y(0) - y(v)), rx: 2, fill: s.colore });
+    const r = el('rect', { x: M.s + largo * i + vuoto / 2 + k * barra, y: y(v), width: Math.max(1, barra - 2), height: Math.max(0, y(0) - y(v)), rx: 2, fill: s.colore });
     r.addEventListener('pointerenter', (ev) => mostraTip(tip, contenitore, ev, `${nome}, ${s.nome.toLowerCase()}: ${kwh(v)}`));
     r.addEventListener('pointerleave', () => { tip.hidden = true; });
     svg.append(r);
@@ -154,32 +177,59 @@ export function incentivi(div, inc) {
   }
 }
 
+// Disposizione dei gruppi della scena in larghezza W, in pixel reali. Ogni gruppo è { n, etichetta } (figure in colonne da
+// due) o { fisso, etichetta } (un disegno solo, largo `fisso`). Le figure sono al più figureMassime(W), il resto è «+N».
+// Un gruppo largo quanto il più largo fra figure con «+N» ed etichetta; se non entra nella riga va a capo. `misura(testo)`
+// dà la larghezza del testo in pixel: il chiamante la misura sullo schermo, i test la stimano.
+export function disposizioneScena(gruppi, W, misura = (t) => t.length * 7) {
+  const massimo = figureMassime(W), bordo = 8, vuoto = 16;
+  let x = bordo, riga = 0;
+  const posti = gruppi.map((g) => {
+    const disegnate = g.fisso ? 0 : Math.min(g.n, massimo), resto = g.fisso ? 0 : g.n - disegnate;
+    const colonne = Math.ceil(disegnate / 2);
+    const figure = g.fisso ?? (colonne > 0 ? colonne * 14 - 2 : 0);
+    const larghezza = Math.max(figure + (resto > 0 ? 4 + misura(`+${resto}`) : 0), misura(g.etichetta));
+    if (x > bordo && x + larghezza > W - bordo) { riga++; x = bordo; }
+    const posto = { x, riga, disegnate, resto, colonne, larghezza };
+    x += larghezza + vuoto;
+    return posto;
+  });
+  return { posti, righe: riga + 1 };
+}
+
 // Scena della comunità tipo: case, attività, ente e impianto, con «tu» in evidenza (spec §7.1).
 export function scenaComunita(div, c) {
-  const svg = el('svg', { viewBox: '0 0 640 96', role: 'img' });
-  const larghezzaEtichetta = (t) => t.length * 6.5;
+  const svg = el('svg', { role: 'img' });
+  div.replaceChildren(svg);
+  const W = larghezzaDisegno(div.getBoundingClientRect().width);
+  svg.setAttribute('viewBox', `0 0 ${W} ${RIGA_SCENA}`);
+  const sonda = el('text', { class: 'etichetta', visibility: 'hidden' }); // per misurare le etichette in pixel reali
+  svg.append(sonda);
+  const misura = (t) => { sonda.textContent = t; return sonda.getComputedTextLength?.() || t.length * 7; };
   const conta = (n, uno, molti) => `${n} ${n === 1 ? uno : molti}`;
-  let x = 8;
-  const gruppo = (n, disegna, etichetta, max = 30) => {
-    const inizio = x;
-    for (let i = 0; i < Math.min(n, max); i++) { disegna(x, 30 + (i % 2) * 18); x += i % 2 ? 14 : 0; }
-    if (n > max) { svg.append(el('text', { class: 'etichetta', x: x + 4, y: 52 }, `+${n - max}`)); x += 26; }
-    svg.append(el('text', { class: 'etichetta', x: inizio, y: 90 }, etichetta));
-    x = Math.max(x + 24, inizio + larghezzaEtichetta(etichetta) + 12);
-  };
   const casa = (colore) => (cx, cy) => svg.append(el('path', { d: `M${cx} ${cy + 6}L${cx + 6} ${cy}L${cx + 12} ${cy + 6}V${cy + 14}H${cx}Z`, fill: colore }));
   const negozio = (colore) => (cx, cy) => svg.append(el('rect', { x: cx, y: cy, width: 12, height: 14, rx: 2, fill: colore }));
-  if (c.tu) gruppo(1, casa('var(--g-prod)'), 'tu');
-  if (c.famiglie > 0) gruppo(c.famiglie, casa('var(--ink-3)'), conta(c.famiglie, 'famiglia', 'famiglie'));
-  if (c.attivita) gruppo(c.attivita, negozio('var(--g-cons)'), conta(c.attivita, 'attività', 'attività'));
-  if (c.enti) gruppo(c.enti, negozio('var(--g-cond)'), conta(c.enti, 'ente', 'enti'));
-  if (c.kwp > 0) {
-    svg.append(el('rect', { x, y: 34, width: 34, height: 22, rx: 2, fill: 'none', stroke: 'var(--g-prod)', 'stroke-width': 2 }));
-    svg.append(el('path', { d: `M${x + 11} 34V56M${x + 23} 34V56M${x} 45H${x + 34}`, stroke: 'var(--g-prod)', 'stroke-width': 1.5 }));
-    svg.append(el('text', { class: 'etichetta', x, y: 90 }, `${numero(c.kwp, 1)} kWp`));
-  }
+  const impianto = (x, y0) => {
+    svg.append(el('rect', { x, y: y0 + 34, width: 34, height: 22, rx: 2, fill: 'none', stroke: 'var(--g-prod)', 'stroke-width': 2 }));
+    svg.append(el('path', { d: `M${x + 11} ${y0 + 34}V${y0 + 56}M${x + 23} ${y0 + 34}V${y0 + 56}M${x} ${y0 + 45}H${x + 34}`, stroke: 'var(--g-prod)', 'stroke-width': 1.5 }));
+  };
+  const gruppi = [];
+  if (c.tu) gruppi.push({ n: 1, etichetta: 'tu', figura: casa('var(--g-prod)') });
+  if (c.famiglie > 0) gruppi.push({ n: c.famiglie, etichetta: conta(c.famiglie, 'famiglia', 'famiglie'), figura: casa('var(--ink-3)') });
+  if (c.attivita) gruppi.push({ n: c.attivita, etichetta: conta(c.attivita, 'attività', 'attività'), figura: negozio('var(--g-cons)') });
+  if (c.enti) gruppi.push({ n: c.enti, etichetta: conta(c.enti, 'ente', 'enti'), figura: negozio('var(--g-cond)') });
+  if (c.kwp > 0) gruppi.push({ fisso: 34, etichetta: `${numero(c.kwp, 1)} kWp`, figura: impianto });
+  const { posti, righe } = disposizioneScena(gruppi, W, misura);
+  sonda.remove();
+  posti.forEach((p, k) => {
+    const g = gruppi[k], y0 = p.riga * RIGA_SCENA;
+    if (g.fisso) g.figura(p.x, y0);
+    for (let i = 0; i < p.disegnate; i++) g.figura(p.x + Math.floor(i / 2) * 14, y0 + 30 + (i % 2) * 18);
+    if (p.resto > 0) svg.append(el('text', { class: 'etichetta', x: p.x + p.colonne * 14 + 2, y: y0 + 52 }, `+${p.resto}`));
+    svg.append(el('text', { class: 'etichetta', x: p.x, y: y0 + 90 }, g.etichetta));
+  });
+  svg.setAttribute('viewBox', `0 0 ${W} ${righe * RIGA_SCENA}`);
   svg.setAttribute('aria-label', `La comunità: ${[c.tu && 'tu', c.famiglie > 0 && conta(c.famiglie, 'famiglia', 'famiglie'), c.attivita > 0 && conta(c.attivita, 'attività', 'attività'), c.enti > 0 && conta(c.enti, 'ente', 'enti'), c.kwp > 0 && `impianti per ${numero(c.kwp, 1)} kWp`].filter(Boolean).join(', ')}.`);
-  div.replaceChildren(svg);
 }
 
 export function tabella(div, intestazioni, righe) {

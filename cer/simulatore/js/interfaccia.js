@@ -17,7 +17,7 @@ const scelto = (nome) => document.querySelector(`input[name="${nome}"]:checked`)
 const FORMATI = { euro: (v) => euro(v), perc: (v) => perc(v), t: tonnellate, kwh, anni: (v) => anni(v, voce(dati.costanti, 'durata_tariffa_anni')), int: (v) => numero(v), g: (v) => numero(v, Number.isInteger(v) ? 0 : 1) };
 const NOMI = { famiglie: 'Famiglia', pannelli: 'Famiglia con pannelli', attivita: 'Attività', enti: 'Ente o associazione', produttore: 'Socio produttore' };
 const validi = {};
-let elenco = [], loc = null, dati = null, ultimo = null, richiestaLocalita = 0;
+let elenco = [], loc = null, dati = null, ultimo = null, scena = null, richiestaLocalita = 0;
 
 // Valore numerico di un campo: vuoto → predefinito; fuori intervallo → resta segnato e vale l'ultimo valido.
 function numeroDi(nome, predefinito) {
@@ -97,11 +97,21 @@ function mostraAvvisi(lista) {
   }));
 }
 
+// I grafici e la scena sono disegnati in pixel reali: si ridisegnano con l'ultimo risultato quando cambia la larghezza.
+function tracciaGrafici() {
+  if (!ultimo) return;
+  giornata($('#g-giornata'), ultimo.grafici.giornata, Number($('#mese').value));
+  anno($('#g-anno'), ultimo.grafici.mesi);
+}
+
+function tracciaScena() {
+  if (scena) scenaComunita($('#scena'), scena);
+}
+
 function disegnaGrafici() {
   if (!ultimo) return;
   const g = ultimo.grafici, mese = Number($('#mese').value);
-  giornata($('#g-giornata'), g.giornata, mese);
-  anno($('#g-anno'), g.mesi);
+  tracciaGrafici();
   incentivi($('#g-incentivi'), g.incentivi);
   const chiavi = ['produzione', 'consumo', 'condivisa'];
   tabella($('#t-giornata'), ['Ora', 'Produzione, kWh', 'Consumi, kWh', 'Condivisa, kWh'],
@@ -112,7 +122,8 @@ function disegnaGrafici() {
 function disegnaScena(ingressi) {
   const n = (id) => ingressi.soci.find((s) => s.id === id)?.numero ?? 0;
   const comune = ingressi.impianti.find((k) => k.id === 'comune')?.kwp ?? 0;
-  scenaComunita($('#scena'), { tu: true, famiglie: n('famiglie'), attivita: n('attivita'), enti: n('enti'), kwp: comune });
+  scena = { tu: true, famiglie: n('famiglie'), attivita: n('attivita'), enti: n('enti'), kwp: comune };
+  tracciaScena();
   $('#descrizione-comunita').textContent = comune > 0
     ? `Intorno a te: ${n('famiglie')} famiglie, ${n('attivita')} attività, ${n('enti')} ${n('enti') === 1 ? 'ente' : 'enti'} e un impianto da ${numero(comune, 1)} kWp di un socio produttore. I consumi di attività ed enti sono illustrativi.`
     : `Intorno a te: ${n('famiglie')} famiglie, ${n('attivita')} attività, ${n('enti')} enti, nessun impianto comune.`;
@@ -234,6 +245,23 @@ async function scegliLocalita(etichetta) {
   }
 }
 
+// Quando cambia la larghezza di un grafico o della scena si ridisegna (senza rifare il calcolo), una volta per fotogramma.
+function osservaLarghezze() {
+  if (typeof ResizeObserver !== 'function') return;
+  const larghezze = new Map();
+  let atteso = false;
+  const ridisegna = () => { atteso = false; tracciaGrafici(); tracciaScena(); };
+  const osservatore = new ResizeObserver((voci) => {
+    let cambiata = false;
+    for (const v of voci) {
+      const w = Math.round(v.contentRect.width);
+      if (w > 0 && larghezze.get(v.target) !== w) { larghezze.set(v.target, w); cambiata = true; }
+    }
+    if (cambiata && !atteso) { atteso = true; requestAnimationFrame(ridisegna); }
+  });
+  for (const e of $$('#g-giornata, #g-anno, #scena')) osservatore.observe(e);
+}
+
 async function avvia() {
   try {
     elenco = (await caricaLocalita()).localita;
@@ -257,6 +285,7 @@ async function avvia() {
   });
   for (const r of $$('input[name="modo"]')) r.addEventListener('change', aggiorna);
   $('#mese').addEventListener('change', disegnaGrafici);
+  osservaLarghezze();
   $('#ripristina').addEventListener('click', () => {
     if (!dati) return;
     form.reset();
