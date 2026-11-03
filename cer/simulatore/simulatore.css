@@ -22,7 +22,7 @@ body:not([data-impianto]) [data-solo-impianto], body:not([data-fondatore]) [data
 .modo label:has(input:focus-visible){outline:2px solid var(--ocean);outline-offset:2px}
 
 .sim-corpo{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:28px;align-items:start;padding-bottom:28px}
-.sim-risultati{position:sticky;top:76px;display:grid;gap:14px}
+.sim-risultati{position:sticky;top:76px;display:grid;gap:14px;max-height:calc(100vh - 92px);overflow-y:auto;overscroll-behavior:contain}
 .passo{border:1px solid var(--rule);border-radius:var(--r);background:var(--surface);padding:16px 18px;margin:0 0 14px;min-width:0}
 .passo legend,.passo summary{font:800 1.05rem/1.2 Archivo,sans-serif;padding:0 6px;cursor:default}
 .passo summary{cursor:pointer;padding:0}
@@ -62,7 +62,7 @@ body[data-non-aggiornato] .sim-risultati .ris,body[data-non-aggiornato] .barra-r
 .voci dd{margin:0;font:600 .98rem/1.3 'IBM Plex Mono',monospace;text-align:right;white-space:nowrap}
 .testo-emissioni,.nota-r{font-size:.92rem;color:var(--ink-2)}
 .testo-emissioni:empty{display:none}
-.avvertenza{font-size:.85rem;color:var(--ink-3);margin:0}
+.avvertenza{font-size:.85rem;color:var(--ink-2);margin:0}
 .avvisi p{margin:0 0 8px;padding:10px 12px;border-radius:12px;background:var(--ember-soft);color:var(--ink);font-size:.92rem}
 .avvisi p.errore{border:1px solid var(--ember)}
 
@@ -84,6 +84,7 @@ body[data-non-aggiornato] .sim-risultati .ris,body[data-non-aggiornato] .barra-r
 .barra-incentivi span{min-width:3px}
 .scena svg{display:block;width:100%;height:auto}
 table.tabella{width:100%;border-collapse:collapse;font-size:.86rem;margin-top:8px}
+#t-giornata,#t-anno{overflow-x:auto}
 .tabella th,.tabella td{text-align:right;padding:4px 6px;border-bottom:1px solid var(--rule)}
 .tabella th:first-child,.tabella td:first-child{text-align:left}
 .ris-comunita .tabella{margin-top:14px}
@@ -93,7 +94,7 @@ table.tabella{width:100%;border-collapse:collapse;font-size:.86rem;margin-top:8p
 
 @media (max-width:900px){
   .sim-corpo{grid-template-columns:minmax(0,1fr)}
-  .sim-risultati{position:static}
+  .sim-risultati{position:static;max-height:none;overflow-y:visible}
   .barra-riassunto{display:block;position:fixed;left:0;right:0;bottom:0;z-index:20;padding:10px 16px;background:var(--ink);color:var(--ground);font-size:.95rem;text-align:center}
   footer{padding-bottom:56px}
 }
