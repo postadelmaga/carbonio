@@ -136,14 +136,15 @@ export function anno(svg, m) {
   svg.setAttribute('aria-label', 'Dodici mesi: produzione, consumi ed energia condivisa della comunità, in kWh.');
 }
 
-// Le voci della barra degli incentivi. «Finalità sociali» c'è solo se è positiva. I quattro token --g-* sono già presi:
-// la voce nuova ha il colore di «Alla CER» e si distingue dall'etichetta, dal suggerimento e dalla tabella.
+// Le voci della barra degli incentivi. «Finalità sociali» c'è solo se è positiva, accanto ad «Alla CER»: ha un colore suo,
+// il viola della tavolozza di riferimento della skill dataviz, perché due voci vicine dello stesso colore non si
+// distinguono.
 export function vociIncentivi(inc) {
   return [
     { nome: 'Produttori', valore: inc.produttori, colore: 'var(--g-prod)' },
     { nome: 'Consumatori', valore: inc.consumatori, colore: 'var(--g-cons)' },
     { nome: 'Alla CER', valore: inc.cer, colore: 'var(--g-cond)' },
-    ...(inc.fondoSociale > 0 ? [{ nome: 'Finalità sociali', valore: inc.fondoSociale, colore: 'var(--g-cond)' }] : []),
+    ...(inc.fondoSociale > 0 ? [{ nome: 'Finalità sociali', valore: inc.fondoSociale, colore: 'var(--g-sociale)' }] : []),
     { nome: 'Costi della CER', valore: inc.costi, colore: 'var(--g-costi)' },
   ];
 }

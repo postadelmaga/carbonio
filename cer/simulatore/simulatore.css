@@ -1,9 +1,11 @@
 /* Simulatore della CER: stili propri sui token di cer.css. I colori dei grafici sono validati con lo script della
    skill dataviz, in chiaro e in scuro; i token scuri del sito escono dalla banda di luminosità, per questo i grafici
-   ne usano di propri. */
-:root{ --g-prod:#E8A317; --g-cons:#2A78D6; --g-cond:#1F9E6E; --g-costi:#E0602E; }
-@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){ --g-prod:#B9841A; --g-cons:#4C95EA; --g-cond:#22A070; --g-costi:#DC6A3A; } }
-:root[data-theme="dark"]{ --g-prod:#B9841A; --g-cons:#4C95EA; --g-cond:#22A070; --g-costi:#DC6A3A; }
+   ne usano di propri. --g-sociale è il viola della tavolozza di riferimento della skill (#6250d6, #9085e9): con le
+   cinque voci della barra degli incentivi il validatore non dà errori, in chiaro su #FFFFFF e in scuro su #16211C.
+   Resta in chiaro l'avviso di contrasto del giallo, che c'era già: lo coprono legenda e tabella. */
+:root{ --g-prod:#E8A317; --g-cons:#2A78D6; --g-cond:#1F9E6E; --g-sociale:#6250D6; --g-costi:#E0602E; }
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){ --g-prod:#B9841A; --g-cons:#4C95EA; --g-cond:#22A070; --g-sociale:#9085E9; --g-costi:#DC6A3A; } }
+:root[data-theme="dark"]{ --g-prod:#B9841A; --g-cons:#4C95EA; --g-cond:#22A070; --g-sociale:#9085E9; --g-costi:#DC6A3A; }
 
 /* visibilità per modo, percorso, ruolo, tipo */
 body[data-modo="semplice"] [data-solo-modo="esperto"], body[data-modo="esperto"] [data-solo-modo="semplice"]{display:none}

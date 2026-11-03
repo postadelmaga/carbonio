@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { tetto, percorso, MESI, SERIE, larghezzaDisegno, mesiEtichettati, figureMassime, disposizioneScena, vociIncentivi } from '../../cer/simulatore/js/grafici.js';
 
 test('massimo tondo dell\'asse', () => {
@@ -96,11 +97,21 @@ test('la barra degli incentivi: Alla CER tiene il colore del vecchio fondo, «Fi
   assert.equal(con.find((v) => v.nome === 'Finalità sociali').valore, 300);
 });
 
-test('la barra degli incentivi non inventa colori e non riusa quelli del fondo di prima', () => {
-  const token = new Set(SERIE.map((s) => s.colore).concat('var(--g-costi)'));
+test('la barra degli incentivi: cinque colori diversi, tutti token con il valore chiaro e i due scuri (esclude due voci dello stesso colore e un token senza tema scuro)', () => {
+  const css = readFileSync(new URL('../../cer/simulatore/simulatore.css', import.meta.url), 'utf8');
+  const blocchi = [
+    css.match(/^:root\{([^}]*)\}/m)?.[1],
+    css.match(/prefers-color-scheme: dark\)\{ :root:not\(\[data-theme="light"\]\)\{([^}]*)\}/)?.[1],
+    css.match(/^:root\[data-theme="dark"\]\{([^}]*)\}/m)?.[1],
+  ];
+  assert.ok(blocchi.every(Boolean), 'simulatore.css ha i token dei grafici in chiaro, in scuro di sistema e con data-theme="dark"');
   const voci = vociIncentivi(incentiviProva({ fondoSociale: 300 }));
-  for (const v of voci) assert.ok(token.has(v.colore), `${v.nome}: colore ${v.colore} fuori dai token --g-*`);
-  // tutti i token sono già presi: la voce nuova ha lo stesso colore di «Alla CER» e si legge dall'etichetta e dalla tabella
-  assert.equal(voci.find((v) => v.nome === 'Finalità sociali').colore, voci.find((v) => v.nome === 'Alla CER').colore);
+  for (const v of voci) {
+    const nome = v.colore.match(/^var\((--g-[a-z]+)\)$/)?.[1];
+    assert.ok(nome, `${v.nome}: il colore ${v.colore} non è un token --g-*`);
+    for (const b of blocchi) assert.match(b, new RegExp(`${nome}:#[0-9A-Fa-f]{6};`), `${v.nome}: ${nome} manca in un tema`);
+  }
+  assert.equal(new Set(voci.map((v) => v.colore)).size, voci.length, 'due voci della barra hanno lo stesso colore');
+  assert.equal(voci.find((v) => v.nome === 'Finalità sociali').colore, 'var(--g-sociale)');
   assert.ok(!voci.some((v) => /fondo sociale/i.test(v.nome)), 'la voce «Fondo sociale» non c\'è più');
 });
