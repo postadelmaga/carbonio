@@ -103,3 +103,11 @@ table.tabella{width:100%;border-collapse:collapse;font-size:.86rem;margin-top:8p
   .grande{font-size:1.9rem}
 }
 @media (prefers-reduced-motion: reduce){ *{scroll-behavior:auto!important;transition:none!important} }
+.metodo{padding:40px 24px 56px;max-width:calc(var(--prose) + 48px)}
+.metodo h1{font-size:clamp(2rem,4vw,3rem);font-weight:850}
+.metodo h2{font-size:1.5rem;font-weight:800;margin:32px 0 10px}
+.metodo li{margin:8px 0;color:var(--ink-2)}
+.metodo .tabella{font-size:.82rem}
+.metodo .tabella td{text-align:left;vertical-align:top}
+#fonti{overflow-x:auto}
+@media (max-width:560px){ .metodo{padding:28px 16px 48px} }
