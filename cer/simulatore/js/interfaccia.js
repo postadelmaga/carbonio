@@ -1,7 +1,7 @@
 // La pagina del simulatore (spec §7): legge i moduli, costruisce gli ingressi, chiama il motore a ogni movimento e
 // mostra risultati, grafici, avvisi e ipotesi. Con grafici.js e dati.js è l'unico modulo che tocca il DOM.
 import { caricaLocalita, caricaDati } from './dati.js';
-import { calcola, asse } from './motore.js';
+import { calcola, valida, asse } from './motore.js';
 import { ingressiEntrare, ingressiFondare } from './scenari.js';
 import { voce } from './economia.js';
 import { consumoMedioClasse } from './profili.js';
@@ -86,6 +86,12 @@ function aggiornaUscite() {
   campo('p-qp-valore').value = `${qp}%`;
   campo('p-qc-valore').value = `${qc}%`;
   campo('p-fondo-valore').value = qp + qc <= 100 ? `${100 - qp - qc}%` : 'quote oltre il 100%';
+}
+
+// Dati sbagliati di chi usa la pagina: risultati attenuati e un avviso, senza toccare la console.
+function segnalaErrore(messaggio) {
+  document.body.dataset.nonAggiornato = '';
+  mostraAvvisi([{ codice: 'errore', testo: `Controlla i dati: ${messaggio.replace(/(socio|impianto) [^:;]+: /g, '')}` }]);
 }
 
 function mostraAvvisi(lista) {
@@ -189,6 +195,8 @@ function aggiorna() {
   }
   try {
     const ingressi = percorso === 'entrare' ? ingressiEntrare(s, dati.costanti) : ingressiFondare(s, dati.costanti);
+    const errori = valida(ingressi, dati.costanti);
+    if (errori.length) { segnalaErrore(errori.join('; ')); return; }
     const t0 = performance.now();
     ultimo = calcola(ingressi, dati);
     document.body.dataset.ms = String(Math.round(performance.now() - t0));
@@ -196,8 +204,7 @@ function aggiorna() {
     mostra(ultimo, s, percorso, ingressi);
   } catch (e) {
     console.error(e);
-    document.body.dataset.nonAggiornato = '';
-    mostraAvvisi([{ codice: 'errore', testo: `Controlla i dati: ${e.message.replace(/(socio|impianto) [^:;]+: /g, '')}` }]);
+    segnalaErrore(e.message);
   }
 }
 

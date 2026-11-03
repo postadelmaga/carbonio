@@ -81,3 +81,17 @@ test('negli identificatori (classi, id, name, data-*, selettori, codice) non com
   assert.deepEqual(tutti(CSS, /([.#][\w-]*clima[\w-]*)/g), []);
   assert.doesNotMatch(JS, /clima/i);
 });
+
+test('aggiorna valida gli ingressi prima di calcolare: gli errori di validazione non arrivano a calcola né alla console', () => {
+  const da = JS.indexOf('function aggiorna()'), a = JS.indexOf('function preimposta()');
+  assert.ok(da >= 0 && a > da, 'aggiorna non si trova in interfaccia.js');
+  const corpo = JS.slice(da, a);
+  const valida = corpo.indexOf('valida(ingressi'), calcola = corpo.indexOf('calcola(ingressi');
+  assert.ok(valida >= 0, 'aggiorna non chiama valida');
+  assert.ok(calcola > valida, 'calcola viene prima di valida');
+  const fra = corpo.slice(valida, calcola);
+  assert.match(fra, /\breturn;/, 'fra valida e calcola manca l\'uscita');
+  assert.doesNotMatch(fra, /console\.error/, 'un errore di validazione non va in console');
+  assert.equal((corpo.match(/console\.error/g) ?? []).length, 1, 'console.error resta solo per le eccezioni vere');
+  assert.match(corpo.slice(calcola), /catch \(e\) \{\s*console\.error\(e\);/);
+});

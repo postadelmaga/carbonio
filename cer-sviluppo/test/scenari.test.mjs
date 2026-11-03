@@ -56,3 +56,9 @@ test('fondare: gruppi, impianti per anzianità, fondatore', () => {
   assert.ok(!es.soci.some((s) => s.id === 'produttore'));
   assert.equal(fonda({ io: 'produttore', comune: { kwp: 40, titolare: 'cer', esistente: false } }).io, 'famiglie');
 });
+
+test('quote 70% + 50% dalla pagina: gli ingressi non passano la validazione (la pagina non arriva a calcola)', () => {
+  const quote = (parametri) => ingressiEntrare({ area: 'nord', parametri, utente: utente(), comunita: {} }, costanti);
+  assert.deepEqual(valida(quote({ quota_produttore: 0.7, quota_consumatori: 0.3 }), costanti), []);
+  assert.deepEqual(valida(quote({ quota_produttore: 0.7, quota_consumatori: 0.5 }), costanti), ['quota del produttore più quota dei consumatori oltre il 100%']);
+});
