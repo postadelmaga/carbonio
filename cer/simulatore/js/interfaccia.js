@@ -17,7 +17,7 @@ const scelto = (nome) => document.querySelector(`input[name="${nome}"]:checked`)
 const FORMATI = { euro: (v) => euro(v), perc: (v) => perc(v), t: tonnellate, kwh, anni: (v) => anni(v, voce(dati.costanti, 'durata_tariffa_anni')), int: (v) => numero(v), g: (v) => numero(v, Number.isInteger(v) ? 0 : 1) };
 const NOMI = { famiglie: 'Famiglia', pannelli: 'Famiglia con pannelli', attivita: 'Attività', enti: 'Ente o associazione', produttore: 'Socio produttore' };
 const validi = {};
-let elenco = [], loc = null, dati = null, ultimo = null, scena = null, richiestaLocalita = 0;
+let elenco = [], loc = null, dati = null, ultimo = null, scena = null, richiestaLocalita = 0, avvisiMostrati = null;
 
 // Valore numerico di un campo: vuoto → predefinito; fuori intervallo → resta segnato e vale l'ultimo valido.
 function numeroDi(nome, predefinito) {
@@ -94,7 +94,11 @@ function segnalaErrore(messaggio) {
   mostraAvvisi([{ codice: 'errore', testo: `Controlla i dati: ${messaggio.replace(/(socio|impianto) [^:;]+: /g, '')}` }]);
 }
 
+// #avvisi è una regione di stato: si riscrive solo se gli avvisi cambiano, così lo stesso avviso non si ripete a ogni movimento.
 function mostraAvvisi(lista) {
+  const chiave = lista.map((a) => `${a.codice}:${a.testo}`).join('\n');
+  if (chiave === avvisiMostrati) return;
+  avvisiMostrati = chiave;
   $('#avvisi').replaceChildren(...lista.map((a) => {
     const p = document.createElement('p');
     p.textContent = a.testo;
@@ -179,7 +183,9 @@ function mostra(r, s, percorso, ingressi) {
   };
   for (const e of $$('[data-r]')) {
     const v = e.dataset.r.split('.').reduce((o, k) => o?.[k], vista);
-    e.textContent = e.dataset.f ? FORMATI[e.dataset.f](v) : (v ?? '');
+    // si scrive solo se il testo cambia: input e change rifanno entrambi il calcolo, e la regione viva annuncerebbe il totale due volte
+    const t = String(e.dataset.f ? FORMATI[e.dataset.f](v) : (v ?? ''));
+    if (e.textContent !== t) e.textContent = t;
   }
   mostraAvvisi(r.avvisi);
   disegnaGrafici();

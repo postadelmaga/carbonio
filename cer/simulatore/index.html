@@ -152,30 +152,30 @@
   <fieldset class="passo" data-solo-percorso="fondare">
     <legend><span class="n">3</span>Chi entra nella comunità</legend>
     <div class="righe">
-      <div class="riga"><b>Famiglie</b>
+      <div class="riga" role="group" aria-labelledby="riga-famiglie"><b id="riga-famiglie">Famiglie</b>
         <label>quante <input name="f-famiglie" type="number" min="0" max="500" step="1"></label>
         <label data-solo-modo="esperto">contatore <select name="f-famiglie-classe"><option value="1,5-3">3 kW</option><option value="3-4,5">4,5 kW</option><option value="4,5-6">6 kW</option><option value="oltre_6">oltre 6 kW</option></select></label>
         <label data-solo-modo="esperto">kWh l'anno <input name="f-famiglie-consumo" type="number" min="0" max="2000000" step="1" placeholder="media ARERA"></label>
       </div>
-      <div class="riga"><b>Famiglie con pannelli</b>
+      <div class="riga" role="group" aria-labelledby="riga-pannelli"><b id="riga-pannelli">Famiglie con pannelli</b>
         <label>quante <input name="f-pannelli" type="number" min="0" max="500" step="1"></label>
         <label>kWp ciascuna <input name="f-pannelli-kwp" type="number" min="0.5" max="50" step="0.5"></label>
         <label data-solo-modo="esperto">contatore <select name="f-pannelli-classe"><option value="1,5-3">3 kW</option><option value="3-4,5">4,5 kW</option><option value="4,5-6">6 kW</option><option value="oltre_6">oltre 6 kW</option></select></label>
         <label data-solo-modo="esperto" class="spunta"><input type="checkbox" name="f-pannelli-esistenti"> già in esercizio</label>
       </div>
-      <div class="riga"><b>Attività</b>
+      <div class="riga" role="group" aria-labelledby="riga-attivita"><b id="riga-attivita">Attività</b>
         <label>quante <input name="f-attivita" type="number" min="0" max="500" step="1"></label>
         <label>kWh l'anno ciascuna <input name="f-attivita-consumo" type="number" min="0" max="2000000" step="1"></label>
         <label data-solo-modo="esperto">tipo <select name="f-attivita-archetipo"><option value="com_orario_apertura">con orario</option><option value="com_carico_base">carico continuo</option></select></label>
         <label data-solo-modo="esperto">kWp ciascuna <input name="f-attivita-kwp" type="number" min="0" max="1000" step="0.5"></label>
       </div>
-      <div class="riga"><b>Enti e associazioni</b>
+      <div class="riga" role="group" aria-labelledby="riga-enti"><b id="riga-enti">Enti e associazioni</b>
         <label>quanti <input name="f-enti" type="number" min="0" max="500" step="1"></label>
         <label>kWh l'anno ciascuno <input name="f-enti-consumo" type="number" min="0" max="2000000" step="1"></label>
         <label data-solo-modo="esperto">tipo <select name="f-enti-archetipo"><option value="com_orario_apertura">con orario</option><option value="com_carico_base">carico continuo</option></select></label>
         <label data-solo-modo="esperto">kWp ciascuno <input name="f-enti-kwp" type="number" min="0" max="1000" step="0.5"></label>
       </div>
-      <div class="riga"><b>Impianto comune</b>
+      <div class="riga" role="group" aria-labelledby="riga-comune"><b id="riga-comune">Impianto comune</b>
         <label>kWp <input name="f-comune-kwp" type="number" min="0" max="1000" step="0.5"></label>
         <label>di chi <select name="f-comune-titolare"><option value="produttore">di un socio produttore</option><option value="cer">della CER</option></select></label>
         <label data-solo-modo="esperto" class="spunta"><input type="checkbox" name="f-comune-esistente"> già in esercizio</label>
@@ -230,7 +230,7 @@
 
 <aside class="sim-risultati" aria-label="Risultati">
   <p class="avvertenza">Stima indicativa: non è un'offerta né un preventivo; il regolamento della nostra CER non è ancora scritto e il riparto mostrato è un esempio.</p>
-  <div id="avvisi" class="avvisi"></div>
+  <div id="avvisi" class="avvisi" role="status"></div>
 
   <section class="ris ris-te">
     <p class="kicker">Per te</p>

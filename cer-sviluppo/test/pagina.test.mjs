@@ -141,3 +141,37 @@ test('«L\'impianto da solo» segue haImpianto, investimento e rientri seguono l
   assert.match(JS, /if \(te\.soloEsistenti\) b\.pagato = ''; else delete b\.pagato;/);
   for (const a of ['impianto', 'investimento', 'pagato']) assert.ok(CSS.includes(`body:not([data-${a}]) [data-solo-${a}]`), `la CSS non nasconde [data-solo-${a}]`);
 });
+
+test('ogni riga di «Chi entra nella comunità» è un gruppo con il suo nome: i campi «quante», «kWp ciascuna» non sono uguali su quattro righe', () => {
+  const da = HTML.indexOf('<div class="righe">');
+  assert.ok(da >= 0, 'manca il modulo «fondare»');
+  const modulo = HTML.slice(da, HTML.indexOf('</fieldset>', da));
+  const aperture = modulo.match(/<div class="riga"/g) ?? [];
+  const righe = [...modulo.matchAll(/<div class="riga"([^>]*)>\s*<b([^>]*)>([^<]+)<\/b>/g)];
+  assert.equal(aperture.length, 5, 'le righe del modulo sono cinque');
+  assert.equal(righe.length, aperture.length, 'ogni riga comincia con il suo nome in un <b>');
+  const id = [];
+  for (const [, riga, titolo, testo] of righe) {
+    assert.match(riga, /\brole="group"/, `«${testo}»: manca role="group"`);
+    const rif = riga.match(/\baria-labelledby="([^"]+)"/)?.[1];
+    assert.ok(rif, `«${testo}»: manca aria-labelledby`);
+    assert.equal(titolo.match(/\bid="([^"]+)"/)?.[1], rif, `«${testo}»: il nome non ha l'id che la riga indica`);
+    id.push(rif);
+  }
+  assert.equal(new Set(id).size, id.length, 'gli id dei nomi sono ripetuti');
+});
+
+test('i numeri della regione viva si riscrivono solo se il testo cambia, e gli avvisi sono una regione di stato', () => {
+  const da = JS.indexOf('function mostra('), a = JS.indexOf('function aggiorna()');
+  const corpo = JS.slice(da, a);
+  assert.match(corpo, /if \(e\.textContent !== t\) e\.textContent = t;/);
+  assert.doesNotMatch(corpo, /e\.textContent = e\.dataset\.f/, 'il ciclo dei data-r non scrive più senza confrontare');
+  assert.match(HTML, /<div id="avvisi" class="avvisi" role="status"><\/div>/);
+  assert.match(HTML, /<p class="grande" aria-live="polite"><b data-r="te\.totale"/, 'il totale resta nella regione viva');
+});
+
+test('gli avvisi si riscrivono solo se cambiano: una regione di stato non ripete lo stesso avviso a ogni movimento di cursore', () => {
+  const da = JS.indexOf('function mostraAvvisi('), a = JS.indexOf('// I grafici e la scena');
+  const corpo = JS.slice(da, a);
+  assert.match(corpo, /if \(chiave === avvisiMostrati\) return;/);
+});
