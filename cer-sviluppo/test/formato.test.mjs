@@ -17,7 +17,8 @@ test('numeri in italiano', () => {
 test('tonnellate e anni', () => {
   assert.equal(tonnellate(0.4), '400 kg');
   assert.equal(tonnellate(10.74), '10,7 t');
-  assert.equal(anni(null), 'non rientra in 20 anni');
+  assert.equal(anni(null, 20), 'non rientra in 20 anni');
+  assert.equal(anni(null, 25), 'non rientra in 25 anni');
   assert.equal(anni(1), '1 anno');
   assert.equal(anni(7), '7 anni');
 });

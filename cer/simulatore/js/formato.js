@@ -20,7 +20,7 @@ export function tonnellate(t) {
   if (!finito(t)) return '—';
   return Math.abs(t) < 1 ? `${numero(t * 1000)} kg` : `${numero(t, 1)} t`;
 }
-export const anni = (n) => (n == null ? 'non rientra in 20 anni' : n === 1 ? '1 anno' : `${n} anni`);
+export const anni = (n, durata) => (n == null ? `non rientra in ${durata} anni` : n === 1 ? '1 anno' : `${n} anni`);
 
 // Lo stesso algoritmo di slug() in prepara_dati.py: i nomi dei file delle regioni devono coincidere.
 export function slug(testo) {

@@ -14,10 +14,10 @@ const $$ = (s) => [...document.querySelectorAll(s)];
 const form = $('#moduli');
 const campo = (nome) => form.elements[nome];
 const scelto = (nome) => document.querySelector(`input[name="${nome}"]:checked`)?.value;
-const FORMATI = { euro: (v) => euro(v), perc: (v) => perc(v), t: tonnellate, kwh, anni, int: (v) => numero(v), g: (v) => numero(v, Number.isInteger(v) ? 0 : 1) };
+const FORMATI = { euro: (v) => euro(v), perc: (v) => perc(v), t: tonnellate, kwh, anni: (v) => anni(v, voce(dati.costanti, 'durata_tariffa_anni')), int: (v) => numero(v), g: (v) => numero(v, Number.isInteger(v) ? 0 : 1) };
 const NOMI = { famiglie: 'Famiglia', pannelli: 'Famiglia con pannelli', attivita: 'Attività', enti: 'Ente o associazione', produttore: 'Socio produttore' };
 const validi = {};
-let elenco = [], loc = null, dati = null, ultimo = null;
+let elenco = [], loc = null, dati = null, ultimo = null, richiestaLocalita = 0;
 
 // Valore numerico di un campo: vuoto → predefinito; fuori intervallo → resta segnato e vale l'ultimo valido.
 function numeroDi(nome, predefinito) {
@@ -141,13 +141,17 @@ function mostra(r, s, percorso, ingressi) {
   if (percorso === 'fondare') b.fondatore = ''; else delete b.fondatore;
   const vista = {
     te,
-    clima: { ...em, esistentiTesto: em.esistenti > 0 ? `Gli impianti già in esercizio evitano altre ${tonnellate(em.esistenti)} l'anno, già contate prima della CER.` : '' },
+    emissioni: { ...em, esistentiTesto: em.esistenti > 0 ? `Gli impianti già in esercizio evitano altre ${tonnellate(em.esistenti)} l'anno, già contate prima della CER.` : '' },
     com: { ...com, incentivi: com.tariffa + com.contributo, quotaFondo: 1 - p.quota_produttore - p.quota_consumatori },
     cost: {
       proCapite: voce(dati.costanti, 'co2_pro_capite'),
       g1990: voce(dati.costanti, 'fattore_co2_1990')['1990'],
       g2024: voce(dati.costanti, 'fattore_co2_1990')['2024'],
       anni: voce(dati.costanti, 'durata_tariffa_anni'),
+      fattore: voce(dati.costanti, 'fattore_co2'),
+      fattoreAlto: voce(dati.costanti, 'fattore_co2_alto'),
+      scadenza: voce(dati.costanti, 'scadenza_esercizio').split('-').reverse().join('/'),
+      budget: voce(dati.costanti, 'budget_1_5'),
     },
   };
   for (const e of $$('[data-r]')) {
@@ -159,7 +163,6 @@ function mostra(r, s, percorso, ingressi) {
   $('#ipotesi').replaceChildren(...ipotesi(r, loc, dati.pvInfo, dati.costanti).map((t) => Object.assign(document.createElement('li'), { textContent: t })));
   $('#scadenza').textContent = testoScadenza(new Date(), dati.costanti);
   if (percorso === 'entrare') disegnaScena(ingressi); else tabellaRuoli(r);
-  aggiornaAiuto(s);
 }
 
 function aggiorna() {
@@ -167,14 +170,23 @@ function aggiorna() {
   aggiornaCorpo();
   aggiornaUscite();
   const s = stato(), percorso = scelto('percorso');
+  aggiornaAiuto(s);
+  if (percorso === 'entrare' && s.utente.tipo !== 'famiglia' && s.utente.consumo == null) {
+    document.body.dataset.nonAggiornato = '';
+    mostraAvvisi([{ codice: 'consumo_mancante', testo: 'Per un\'attività o un ente serve il consumo annuo: lo trovi in bolletta.' }]);
+    return;
+  }
   try {
     const ingressi = percorso === 'entrare' ? ingressiEntrare(s, dati.costanti) : ingressiFondare(s, dati.costanti);
     const t0 = performance.now();
     ultimo = calcola(ingressi, dati);
     document.body.dataset.ms = String(Math.round(performance.now() - t0));
+    delete document.body.dataset.nonAggiornato;
     mostra(ultimo, s, percorso, ingressi);
   } catch (e) {
-    mostraAvvisi([{ codice: 'errore', testo: `Controlla i dati: ${e.message}` }]);
+    console.error(e);
+    document.body.dataset.nonAggiornato = '';
+    mostraAvvisi([{ codice: 'errore', testo: `Controlla i dati: ${e.message.replace(/(socio|impianto) [^:;]+: /g, '')}` }]);
   }
 }
 
@@ -199,29 +211,32 @@ async function scegliLocalita(etichetta) {
   const trovata = elenco.find((l) => `${l.nome} (${l.sigla})` === etichetta);
   if (!trovata) { campo('localita').setAttribute('aria-invalid', 'true'); return; }
   campo('localita').removeAttribute('aria-invalid');
+  const mia = ++richiestaLocalita;
   $('#info-localita').textContent = 'Carico i dati…';
   try {
     const nuovi = await caricaDati(trovata);
+    if (mia !== richiestaLocalita) return;
+    const primo = dati == null;
     dati = nuovi; loc = trovata;
+    if (primo) preimposta();
     const resa = dati.pv.reduce((s, v) => s + v, 0) / 1000;
-    $('#info-localita').textContent = `${trovata.regione}: ${numero(resa)} kWh per kWp l'anno (PVGIS, 2023), pannelli a sud inclinati di ${numero(dati.pvInfo.inclinazione)}°.`;
+    $('#info-localita').textContent = `${trovata.regione}: ${numero(resa)} kWh per kWp l'anno (PVGIS, ${dati.pvInfo.anno_meteo}), pannelli a sud inclinati di ${numero(dati.pvInfo.inclinazione)}°.`;
     aggiorna();
-  } catch {
-    $('#info-localita').textContent = '';
-    const p = document.createElement('p');
-    p.className = 'errore';
-    p.textContent = `Non riesco a caricare i dati di ${trovata.nome}. `;
+  } catch (e) {
+    console.error(e);
+    if (mia !== richiestaLocalita) return;
+    if (loc) campo('localita').value = `${loc.nome} (${loc.sigla})`;
     const bottone = Object.assign(document.createElement('button'), { type: 'button', className: 'btn', textContent: 'Riprova' });
     bottone.addEventListener('click', () => scegliLocalita(etichetta));
-    p.append(bottone);
-    $('#avvisi').replaceChildren(p);
+    $('#info-localita').replaceChildren(`Non riesco a caricare i dati di ${trovata.nome}. `, bottone);
   }
 }
 
 async function avvia() {
   try {
     elenco = (await caricaLocalita()).localita;
-  } catch {
+  } catch (e) {
+    console.error(e);
     $('#avvisi').textContent = 'Non riesco a caricare l\'elenco delle località: ricarica la pagina.';
     return;
   }
@@ -241,13 +256,13 @@ async function avvia() {
   for (const r of $$('input[name="modo"]')) r.addEventListener('change', aggiorna);
   $('#mese').addEventListener('change', disegnaGrafici);
   $('#ripristina').addEventListener('click', () => {
+    if (!dati) return;
     form.reset();
     preimposta();
     campo('localita').value = `${loc.nome} (${loc.sigla})`;
     aggiorna();
   });
   await scegliLocalita('La Spezia (SP)');
-  if (dati) { preimposta(); aggiorna(); }
 }
 
 avvia();

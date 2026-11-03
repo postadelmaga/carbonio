@@ -36,7 +36,7 @@ body:not([data-impianto]) [data-solo-impianto], body:not([data-fondatore]) [data
 .scelta:has(input:focus-visible){outline:2px solid var(--ocean);outline-offset:2px}
 .scelta span{font-size:.9rem;color:var(--ink-2)}
 .campo{display:grid;gap:6px;margin-top:12px;font-weight:600;font-size:.95rem}
-.campo input:not([type=range]):not([type=checkbox]),.campo select,.righe input,.righe select{font:inherit;font-weight:400;padding:9px 11px;border:1px solid var(--rule);border-radius:10px;background:var(--ground);color:var(--ink);width:100%;min-width:0}
+.campo input:not([type=range]):not([type=checkbox]),.campo select,.righe input:not([type=checkbox]),.righe select{font:inherit;font-weight:400;padding:9px 11px;border:1px solid var(--rule);border-radius:10px;background:var(--ground);color:var(--ink);width:100%;min-width:0}
 .campo input[type=range]{width:100%;accent-color:var(--sun-ink)}
 .campo output,.aiuto output{font:600 .9rem 'IBM Plex Mono',monospace;color:var(--ink-2);margin-left:6px}
 [aria-invalid="true"]{border-color:var(--ember)!important;outline:2px solid var(--ember)}
@@ -52,15 +52,16 @@ body:not([data-impianto]) [data-solo-impianto], body:not([data-fondatore]) [data
 
 .ris{background:var(--surface);border:1px solid var(--rule);border-radius:var(--r);padding:18px}
 .ris .kicker{margin-bottom:8px}
-.ris-clima{background:linear-gradient(135deg,var(--leaf-soft),var(--surface) 70%)}
+.ris-emissioni{background:linear-gradient(135deg,var(--leaf-soft),var(--surface) 70%)}
+body[data-non-aggiornato] .sim-risultati .ris{opacity:.45}
 .grande{margin:0 0 10px;font:800 2.2rem/1.1 Archivo,sans-serif}
 .grande small{display:block;margin-top:4px;font:400 .92rem/1.4 'Source Serif 4',serif;color:var(--ink-2)}
 .voci{display:grid;gap:6px;margin:0}
 .voci div{display:flex;justify-content:space-between;gap:12px;border-top:1px dashed var(--rule);padding-top:6px}
 .voci dt{color:var(--ink-2)}
 .voci dd{margin:0;font:600 .98rem/1.3 'IBM Plex Mono',monospace;text-align:right;white-space:nowrap}
-.testo-clima,.nota-r{font-size:.92rem;color:var(--ink-2)}
-.testo-clima:empty{display:none}
+.testo-emissioni,.nota-r{font-size:.92rem;color:var(--ink-2)}
+.testo-emissioni:empty{display:none}
 .avvertenza{font-size:.85rem;color:var(--ink-3);margin:0}
 .avvisi p{margin:0 0 8px;padding:10px 12px;border-radius:12px;background:var(--ember-soft);color:var(--ink);font-size:.92rem}
 .avvisi p.errore{border:1px solid var(--ember)}
