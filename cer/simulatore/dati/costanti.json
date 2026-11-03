@@ -183,9 +183,9 @@
     "costituzione": {
       "descrizione": "Costo di costituzione della CER come associazione (registrazione dell'atto e dello statuto)",
       "valore": 360, "unita": "€",
-      "fonte": "D.Lgs. 123/2025 (testo unico dell'imposta di registro, dal 1° gennaio 2026), Tariffa, parte I, art. 12; Agenzia delle Entrate, istruzioni del modello RAP (bollo per foglio)",
+      "fonte": "D.Lgs. 123/2025 (testo unico dell'imposta di registro e degli altri tributi indiretti, dal 1° gennaio 2026): registro, Tariffa, parte I, art. 12; bollo, allegato 3, Tariffa, parte I, art. 2, e art. 143 (foglio di quattro facciate); Agenzia delle Entrate, istruzioni del modello RAP (al massimo 100 righe per foglio)",
       "url": "https://www.gazzettaufficiale.it/eli/gu/2025/08/12/186/so/29/sg/pdf",
-      "consultato": "2026-11-02",
+      "consultato": "2026-11-03",
       "note": "Registro in misura fissa 200 € più bollo di 16 € per foglio (4 facciate, al massimo 100 righe) su due esemplari: con atto e statuto di 12 facciate da circa 40 righe sono 5 fogli per esemplare, 160 €. Da 10 a 15 facciate il totale va da 328 a 392 €. Non comprende il notaio (facoltativo), le consulenze né eventuali conferimenti di beni. Un ente del Terzo settore già iscritto al RUNTS paga 200 € (un'ODV nulla), art. 82 del D.Lgs. 117/2017; per chi non è ancora iscritto la prassi non è chiara e si tiene il valore pieno."
     },
     "quota_associativa": {
