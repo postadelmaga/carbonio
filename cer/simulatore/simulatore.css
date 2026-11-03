@@ -10,7 +10,7 @@ body[data-modo="semplice"] [data-solo-modo="esperto"], body[data-modo="esperto"]
 body:not([data-percorso="entrare"]) [data-solo-percorso="entrare"], body:not([data-percorso="fondare"]) [data-solo-percorso="fondare"]{display:none}
 body[data-ruolo="consumatore"] [data-solo-ruolo]{display:none}
 body:not([data-tipo="famiglia"]) [data-solo-tipo="famiglia"], body[data-tipo="famiglia"] [data-solo-tipo="altri"]{display:none}
-body:not([data-impianto]) [data-solo-impianto], body:not([data-fondatore]) [data-solo-fondatore]{display:none}
+body:not([data-impianto]) [data-solo-impianto], body:not([data-fondatore]) [data-solo-fondatore], body:not([data-impianto-cer]) [data-solo-impianto-cer]{display:none}
 
 .sim-testa{padding:44px 0 18px}
 .sim-testa h1{font-size:clamp(2rem,4.2vw,3.3rem);font-weight:850;font-stretch:108%;max-width:24ch}
@@ -84,7 +84,7 @@ body[data-non-aggiornato] .sim-risultati .ris,body[data-non-aggiornato] .barra-r
 .barra-incentivi span{min-width:3px}
 .scena svg{display:block;width:100%;height:auto}
 table.tabella{width:100%;border-collapse:collapse;font-size:.86rem;margin-top:8px}
-#t-giornata,#t-anno,#tabella-ruoli{overflow-x:auto}
+#t-giornata,#t-anno,#t-incentivi,#tabella-ruoli{overflow-x:auto}
 .tabella th,.tabella td{text-align:right;padding:4px 6px;border-bottom:1px solid var(--rule)}
 .tabella th:first-child,.tabella td:first-child{text-align:left}
 .ris-comunita .tabella{margin-top:14px}

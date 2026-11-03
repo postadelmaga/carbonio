@@ -212,7 +212,7 @@
         <input id="p-qp" name="p-qp" type="range" min="0" max="100" step="5"></label>
       <label class="campo" for="p-qc">Ai consumatori <output name="p-qc-valore"></output>
         <input id="p-qc" name="p-qc" type="range" min="0" max="100" step="5"></label>
-      <p class="aiuto">Al fondo sociale: <output name="p-fondo-valore"></output>.</p>
+      <p class="aiuto">Alla CER: <output name="p-fondo-valore"></output>.</p>
       <label class="campo">Manutenzione, € per kW l'anno <input name="p-om" type="number" min="0" max="200" step="1"></label>
       <label class="campo">Prezzo dell'impianto, €/W <input name="p-eurw" type="number" min="0.3" max="5" step="0.01" placeholder="per taglia"></label>
       <label class="campo">Costo evitato, famiglie, €/kWh <input name="p-ce-famiglia" type="number" min="0" max="2" step="0.001"></label>
@@ -268,10 +268,22 @@
       <div><dt>Dei prelievi, coperti dalla condivisa</dt><dd data-r="com.copertura" data-f="perc"></dd></div>
       <div><dt>Incentivi del GSE</dt><dd data-r="com.incentivi" data-f="euro"></dd></div>
       <div><dt>Costi della CER</dt><dd data-r="com.costi" data-f="euro"></dd></div>
-      <div><dt>Fondo sociale</dt><dd data-r="com.fondo" data-f="euro"></dd></div>
+      <div><dt>Alla CER</dt><dd data-r="com.quotaCer" data-f="euro"></dd></div>
     </dl>
-    <p class="testo-emissioni">Il <span data-r="com.quotaFondo" data-f="perc"></span> della tariffa resta alla comunità per la povertà energetica: in questa simulazione <b data-r="com.fondo" data-f="euro"></b> l'anno (statuto, artt. 2 e 12).</p>
+    <p class="testo-emissioni">Il <span data-r="com.frazioneCer" data-f="perc"></span> della tariffa resta alla CER: in questa simulazione <b data-r="com.quotaCer" data-f="euro"></b> l'anno. L'assemblea decide come usarlo.</p>
+    <p class="testo-emissioni" data-r="com.eccedentariaTesto"></p>
     <div data-solo-percorso="fondare" id="tabella-ruoli"></div>
+  </section>
+
+  <section class="ris ris-impianto-cer" data-solo-impianto-cer>
+    <p class="kicker">L'impianto della CER</p>
+    <dl class="voci">
+      <div><dt>Quota di titolare, l'anno</dt><dd data-r="com.titolareCer" data-f="euro"></dd></div>
+      <div><dt>Vendita dell'energia immessa, l'anno</dt><dd data-r="com.venditaCer" data-f="euro"></dd></div>
+      <div><dt>Manutenzione, l'anno</dt><dd data-r="com.manutenzioneCer" data-f="euro"></dd></div>
+      <div><dt>Investimento da finanziare</dt><dd data-r="com.investimentoCer" data-f="euro"></dd></div>
+    </dl>
+    <p class="testo-emissioni">L'impianto va pagato dalla CER: con contributi, quote dei soci o un prestito.</p>
   </section>
 </aside>
 </div>
@@ -293,6 +305,7 @@
   <figure>
     <figcaption>Dove vanno gli incentivi del primo anno</figcaption>
     <div id="g-incentivi"></div>
+    <details><summary>Tabella</summary><div id="t-incentivi"></div></details>
   </figure>
 </section>
 

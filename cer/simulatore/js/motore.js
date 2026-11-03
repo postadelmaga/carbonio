@@ -153,10 +153,11 @@ export function calcola(ingressi, dati) {
 
   const t1 = en1.totali;
   const somma1 = (campo) => gruppi.reduce((s, g) => s + g.numero * ec1.membri[g.id][campo], 0);
+  // La quota di titolare è dei produttori anche quando il titolare è la CER; alla CER resta solo la sua parte del riparto.
   const incentivi = {
-    produttori: somma1('quotaProduttore'),
+    produttori: somma1('quotaProduttore') + ec1.cer.titolare,
     consumatori: somma1('quotaTariffa') + somma1('quotaContributo') + somma1('quotaEccedentaria'),
-    fondo: ec1.cer.fondo, costi: ec1.costiTolti,
+    cer: ec1.cer.quotaCer, fondoSociale: ec1.cer.fondoSociale, costi: ec1.costiTolti,
   };
   const comunita = {
     produzione: t1.produzione, autoconsumo: t1.autoconsumo, immessa: t1.immessa, prelievo: t1.prelievo, consumo: t1.consumo,
@@ -165,7 +166,8 @@ export function calcola(ingressi, dati) {
     copertura: t1.prelievo > 0 ? t1.condivisa / t1.prelievo : null,
     tariffa: ec1.tariffa, eccedentaria: ec1.eccedentaria, quotaEccedentaria: ec1.e, contributo: ec1.contributo,
     costi: ec1.costi, kappa: ec1.kappa, nonCoperti: ec1.nonCoperti, fondo: ec1.cer.fondo, quote: ec1.cer.quote,
-    venditaCer: ec1.cer.vendita,
+    quotaCer: ec1.cer.quotaCer, titolareCer: ec1.cer.titolare, fondoSociale: ec1.cer.fondoSociale,
+    venditaCer: ec1.cer.vendita, manutenzioneCer: ec1.cer.manutenzione,
     investimentoCer: prep.impianti.filter((k) => k.titolare === 'cer').reduce((s, k) => s + investimento(k.kwp, 'cer', c, par.prezzo_impianto_eur_w), 0),
     incentivi,
     costituzionePerFondatore: par.costituzione_eur == null ? null : par.costituzione_eur / par.fondatori,

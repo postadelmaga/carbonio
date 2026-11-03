@@ -98,3 +98,44 @@ test('il limite di 1 MW della tariffa viene da costanti.json', () => {
   assert.equal(senzaTariffa.tariffa, 0);
   assert.equal(esito(c).incentivato, true);
 });
+
+// Impianto della CER (spec §6.7): le tre voci che finivano in un solo «fondo» restano separate.
+function casoCer(gruppi, par = {}) {
+  const impianti = [{ id: 'k', kwp: 10, titolare: 'cer', esistente: false, perOgniMembro: false }];
+  const en = energia(
+    gruppi.map((g) => ({ ...g, consumo: serie(200, 200, 200, 200) })),
+    [{ ...impianti[0], sulPod: false, produzione: serie(100, 100, 100, 100) }],
+  );
+  const p = { prezzo_zonale: 115.94, area: 'nord', gestione_eur_anno: 0, quota_produttore: 0.4, quota_consumatori: 0.4, quota_associativa: 0, manutenzione: 20, costo_evitato: {}, ...par };
+  return { en, gruppi, ec: economiaAnno(en, gruppi, impianti, p, c) };
+}
+
+test('impianto della CER: la parte della CER nel riparto, la quota di titolare e l\'eccedentaria restano separate, e il fondo è la loro somma', () => {
+  const x = casoCer([{ id: 'f', tipo: 'famiglia', numero: 2 }, { id: 'a', tipo: 'attivita', numero: 1 }]);
+  const netta = x.ec.tariffa * (1 - x.ec.e) * (1 - x.ec.kappa);
+  assert.ok(netta > 0);
+  quasi(x.ec.cer.quotaCer, 0.2 * netta, 1e-9, 'il 20% resta alla CER');
+  quasi(x.ec.cer.titolare, 0.4 * netta, 1e-9, 'il 40% è del titolare, che qui è la CER');
+  assert.equal(x.ec.cer.fondoSociale, 0, 'ci sono consumatori che non sono imprese: l\'eccedentaria va a loro');
+  quasi(x.ec.cer.fondo, x.ec.cer.quotaCer + x.ec.cer.titolare + x.ec.cer.fondoSociale, 1e-9, 'fondo = somma delle tre voci');
+  quasi(distribuito(x), x.ec.tariffa + x.ec.contributo, 0.005, 'i conti si chiudono');
+});
+
+test('impianto della CER, soci tutti imprese: l\'eccedentaria va a finalità sociali e non ai soci', () => {
+  const x = casoCer([{ id: 'a', tipo: 'attivita', numero: 2 }]);
+  assert.ok(x.ec.eccedentaria > 0);
+  quasi(x.ec.cer.fondoSociale, x.ec.eccedentaria, 1e-9);
+  assert.equal(x.ec.membri.a.quotaEccedentaria, 0);
+  quasi(x.ec.cer.fondo, x.ec.cer.quotaCer + x.ec.cer.titolare + x.ec.cer.fondoSociale, 1e-9);
+  quasi(distribuito(x), x.ec.tariffa + x.ec.contributo, 0.005, 'i conti si chiudono');
+});
+
+test('impianto di un socio: la CER ha solo la sua parte del riparto, e la quota di titolare va al socio', () => {
+  const x = caso(0);
+  const netta = x.ec.tariffa * (1 - x.ec.e) * (1 - x.ec.kappa);
+  quasi(x.ec.cer.quotaCer, 0.2 * netta, 1e-9);
+  assert.equal(x.ec.cer.titolare, 0);
+  assert.equal(x.ec.cer.fondoSociale, 0);
+  quasi(x.ec.cer.fondo, x.ec.cer.quotaCer, 1e-9);
+  quasi(x.ec.membri.a.quotaProduttore, 0.4 * netta, 1e-9);
+});

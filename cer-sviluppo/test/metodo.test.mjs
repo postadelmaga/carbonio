@@ -25,7 +25,7 @@ test('i numeri del testo di «Come calcoliamo» coincidono con costanti.json (es
     `supera il ${perc(v('soglia_eccedentaria'))}`,
     `Il ${perc(riparto.produttore)} della tariffa va al titolare`,
     `il ${perc(riparto.consumatori)} ai consumatori`,
-    `il ${perc(fondo)} a un fondo sociale`,
+    `il ${perc(fondo)} resta alla CER, che ne decide l'uso`,
     `lo ${perc(v('degrado'), 1)} di produzione l'anno`,
     `Sui ${durata} anni`,
     `entro il ${scadenza}`,
@@ -39,6 +39,9 @@ test('i numeri del testo di «Come calcoliamo» coincidono con costanti.json (es
   ];
   const mancanti = frasi.filter((f) => !HTML.includes(f));
   assert.deepEqual(mancanti, [], 'frasi da aggiornare in cer/simulatore/metodo/index.html');
+  // il fondo contro la povertà energetica è una scelta del regolamento di Eliodora, non della nostra CER
+  assert.ok(!HTML.includes('fondo sociale'), 'nella pagina c\'è ancora «fondo sociale»');
+  assert.ok(!HTML.includes('povertà energetica'), 'nella pagina c\'è ancora «povertà energetica»');
 
   // «Venti anni» e «il ventesimo anno» sono scritti a parole: valgono solo finché la durata è 20.
   // Se la durata cambia, vanno riscritte anche queste parole nella pagina.

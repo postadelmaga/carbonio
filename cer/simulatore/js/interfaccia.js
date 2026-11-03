@@ -6,8 +6,8 @@ import { ingressiEntrare, ingressiFondare } from './scenari.js';
 import { voce } from './economia.js';
 import { consumoMedioClasse } from './profili.js';
 import { numero, euro, kwh, perc, tonnellate, anni } from './formato.js';
-import { giornata, anno, incentivi, scenaComunita, tabella, MESI } from './grafici.js';
-import { ipotesi, testoScadenza } from './testi.js';
+import { giornata, anno, incentivi, vociIncentivi, scenaComunita, tabella, MESI } from './grafici.js';
+import { ipotesi, testoScadenza, testoEccedentaria } from './testi.js';
 
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => [...document.querySelectorAll(s)];
@@ -119,6 +119,8 @@ function disegnaGrafici() {
   const g = ultimo.grafici, mese = Number($('#mese').value);
   tracciaGrafici();
   incentivi($('#g-incentivi'), g.incentivi);
+  const voci = vociIncentivi(g.incentivi), totale = voci.reduce((s, v) => s + v.valore, 0);
+  tabella($('#t-incentivi'), ['Voce', 'Euro l\'anno', 'Quota'], voci.map((v) => [v.nome, euro(v.valore), perc(totale > 0 ? v.valore / totale : NaN)]));
   const chiavi = ['produzione', 'consumo', 'condivisa'];
   tabella($('#t-giornata'), ['Ora', 'Produzione, kWh', 'Consumi, kWh', 'Condivisa, kWh'],
     Array.from({ length: 24 }, (_, h) => [`${h}-${h + 1}`, ...chiavi.map((k) => numero(g.giornata[k][mese][h], 1))]));
@@ -156,10 +158,11 @@ function mostra(r, s, percorso, ingressi) {
   const te = r.perTe ?? {}, com = r.comunita, em = r.emissioni.comunita, p = r.parametri, b = document.body.dataset;
   if (te.investimento > 0) b.impianto = ''; else delete b.impianto;
   if (percorso === 'fondare') b.fondatore = ''; else delete b.fondatore;
+  if (com.investimentoCer > 0) b.impiantoCer = ''; else delete b.impiantoCer;
   const vista = {
     te,
     emissioni: { ...em, esistentiTesto: em.esistenti > 0 ? `Gli impianti già in esercizio evitano altre ${tonnellate(em.esistenti)} l'anno, già contate prima della CER.` : '' },
-    com: { ...com, incentivi: com.tariffa + com.contributo, quotaFondo: 1 - p.quota_produttore - p.quota_consumatori },
+    com: { ...com, incentivi: com.tariffa + com.contributo, frazioneCer: 1 - p.quota_produttore - p.quota_consumatori, eccedentariaTesto: testoEccedentaria(com) },
     cost: {
       proCapite: voce(dati.costanti, 'co2_pro_capite'),
       g1990: voce(dati.costanti, 'fattore_co2_1990')['1990'],

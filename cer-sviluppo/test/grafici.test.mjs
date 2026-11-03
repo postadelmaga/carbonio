@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { tetto, percorso, MESI, SERIE, larghezzaDisegno, mesiEtichettati, figureMassime, disposizioneScena } from '../../cer/simulatore/js/grafici.js';
+import { tetto, percorso, MESI, SERIE, larghezzaDisegno, mesiEtichettati, figureMassime, disposizioneScena, vociIncentivi } from '../../cer/simulatore/js/grafici.js';
 
 test('massimo tondo dell\'asse', () => {
   assert.equal(tetto(0), 1);
@@ -82,4 +82,25 @@ test('la larghezza di un gruppo copre le figure, il «+N» e l\'etichetta: vince
   assert.ok(posti[0].larghezza >= 5 * 14 - 2 + 4 + sette('+20'));
   assert.ok(posti[0].larghezza >= sette('30 famiglie'));
   assert.ok(posti[1].larghezza >= sette('un\'etichetta molto lunga'));
+});
+
+const incentiviProva = (x = {}) => ({ produttori: 1200, consumatori: 900, cer: 676, fondoSociale: 0, costi: 80, ...x });
+
+test('la barra degli incentivi: Alla CER tiene il colore del vecchio fondo, «Finalità sociali» c\'è solo se è positiva', () => {
+  const senza = vociIncentivi(incentiviProva());
+  assert.deepEqual(senza.map((v) => v.nome), ['Produttori', 'Consumatori', 'Alla CER', 'Costi della CER']);
+  assert.deepEqual(senza.map((v) => v.valore), [1200, 900, 676, 80]);
+  assert.equal(senza.find((v) => v.nome === 'Alla CER').colore, 'var(--g-cond)');
+  const con = vociIncentivi(incentiviProva({ fondoSociale: 300 }));
+  assert.deepEqual(con.map((v) => v.nome), ['Produttori', 'Consumatori', 'Alla CER', 'Finalità sociali', 'Costi della CER']);
+  assert.equal(con.find((v) => v.nome === 'Finalità sociali').valore, 300);
+});
+
+test('la barra degli incentivi non inventa colori e non riusa quelli del fondo di prima', () => {
+  const token = new Set(SERIE.map((s) => s.colore).concat('var(--g-costi)'));
+  const voci = vociIncentivi(incentiviProva({ fondoSociale: 300 }));
+  for (const v of voci) assert.ok(token.has(v.colore), `${v.nome}: colore ${v.colore} fuori dai token --g-*`);
+  // tutti i token sono già presi: la voce nuova ha lo stesso colore di «Alla CER» e si legge dall'etichetta e dalla tabella
+  assert.equal(voci.find((v) => v.nome === 'Finalità sociali').colore, voci.find((v) => v.nome === 'Alla CER').colore);
+  assert.ok(!voci.some((v) => /fondo sociale/i.test(v.nome)), 'la voce «Fondo sociale» non c\'è più');
 });

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { mesiAllaScadenza, testoScadenza, ipotesi } from '../../cer/simulatore/js/testi.js';
+import { mesiAllaScadenza, testoScadenza, ipotesi, testoEccedentaria } from '../../cer/simulatore/js/testi.js';
 
 const costanti = JSON.parse(readFileSync(new URL('../../cer/simulatore/dati/costanti.json', import.meta.url), 'utf8'));
 
@@ -60,4 +60,29 @@ test('l\'anno meteorologico viene dal file PV, non è scritto a mano', () => {
   const t = ipotesi(r, loc, { inclinazione: 33, anno_meteo: 2024, valori: [1000, 2000] }, costanti).join('\n');
   assert.ok(t.includes('anno meteorologico 2024'), 'anno meteorologico 2024');
   assert.ok(!t.includes('2023'), 'nessun 2023 scritto a mano');
+});
+
+test('le ipotesi dicono che il 20% resta alla CER, non che va a un fondo sociale (la scelta del fondo è del regolamento di Eliodora)', () => {
+  const r = {
+    parametri: { prezzo_zonale: 115.94, quota_produttore: 0.4, quota_consumatori: 0.4, gestione_eur_anno: 500, costo_evitato: {} },
+    impianti: [{ incentivato: true, tip: 130 }],
+    emissioni: { fattore: 199.6, fattoreAlto: 366.5, principale: 'media' },
+  };
+  const loc = { nome: 'La Spezia', sigla: 'SP', regione: 'Liguria' };
+  const riga = ipotesi(r, loc, { inclinazione: 33, anno_meteo: 2023, valori: [1000, 2000] }, costanti).find((l) => l.startsWith('Riparto:'));
+  assert.ok(riga.includes('20% alla CER'), riga);
+  assert.ok(!/fondo sociale/i.test(riga), riga);
+  assert.ok(riga.includes('40% della tariffa al titolare dell\'impianto, 40% ai consumatori'), riga);
+});
+
+test('la frase sull\'eccedentaria compare solo se c\'è, e dice dove va', () => {
+  assert.equal(testoEccedentaria({ quotaEccedentaria: 0, eccedentaria: 0, fondoSociale: 0 }), '');
+  assert.equal(
+    testoEccedentaria({ quotaEccedentaria: 0.1, eccedentaria: 300, fondoSociale: 0 }),
+    'La quota eccedentaria della tariffa, 300 € l\'anno, va ai consumatori che non sono imprese (statuto, art. 12).',
+  );
+  assert.equal(
+    testoEccedentaria({ quotaEccedentaria: 0.1, eccedentaria: 300, fondoSociale: 300 }),
+    'La quota eccedentaria della tariffa, 300 € l\'anno, va ai consumatori che non sono imprese (statuto, art. 12). Senza consumatori che non siano imprese, va a finalità sociali: 300 € l\'anno.',
+  );
 });

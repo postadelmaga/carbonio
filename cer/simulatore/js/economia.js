@@ -52,7 +52,9 @@ export function economiaAnno(en, gruppi, impianti, par, c) {
     quotaProduttore: 0, quotaTariffa: 0, quotaContributo: 0, quotaEccedentaria: 0,
     vendita: 0, risparmio: 0, manutenzione: 0, quotaAssociativa: par.quota_associativa,
   }]));
-  const cer = { fondo: 0, vendita: 0, manutenzione: 0, quote: 0 };
+  // La CER tiene separate tre cose: la sua parte del riparto (quotaCer), la quota di titolare degli impianti che possiede
+  // (titolare) e l'eccedentaria quando non ci sono consumatori non imprese (fondoSociale). `fondo` è la loro somma.
+  const cer = { fondo: 0, quotaCer: 0, titolare: 0, fondoSociale: 0, vendita: 0, manutenzione: 0, quote: 0 };
 
   const voci = impianti.map((k, j) => {
     const x = en.impianti[j];
@@ -71,7 +73,7 @@ export function economiaAnno(en, gruppi, impianti, par, c) {
   const qp = par.quota_produttore, qc = par.quota_consumatori;
 
   const alTitolare = (imp, j, campo, importo) => {
-    if (imp.titolare === 'cer') cer[campo === 'quotaProduttore' ? 'fondo' : campo] += importo;
+    if (imp.titolare === 'cer') cer[campo === 'quotaProduttore' ? 'titolare' : campo] += importo;
     else membri[imp.titolare][campo] += importo / voci[j].copie;
   };
   impianti.forEach((imp, j) => {
@@ -81,7 +83,7 @@ export function economiaAnno(en, gruppi, impianti, par, c) {
     if (v.condivisa > 0) {
       for (const g of en.gruppi) membri[g.id].quotaTariffa += (qc * netta * g.condivisaDa[imp.id]) / v.condivisa;
     }
-    cer.fondo += (1 - qp - qc) * netta;
+    cer.quotaCer += (1 - qp - qc) * netta;
     alTitolare(imp, j, 'vendita', (v.immessa * pz) / 1000);
     alTitolare(imp, j, 'manutenzione', imp.kwp * par.manutenzione * v.copie);
   });
@@ -91,10 +93,11 @@ export function economiaAnno(en, gruppi, impianti, par, c) {
   const nonImprese = en.gruppi.filter((g) => NON_IMPRESE.has(tipoDi[g.id]));
   const base = nonImprese.reduce((s, g) => s + g.condivisa * g.numero, 0);
   if (base > 0) for (const g of nonImprese) membri[g.id].quotaEccedentaria += (eccedentaria * g.condivisa) / base;
-  else cer.fondo += eccedentaria;
+  else cer.fondoSociale += eccedentaria;
 
   for (const g of en.gruppi) membri[g.id].risparmio = g.autoconsumo * costoEvitato(tipoDi[g.id], pz, c, par.costo_evitato ?? {});
   cer.quote = gruppi.reduce((s, g) => s + g.numero * par.quota_associativa, 0);
+  cer.fondo = cer.quotaCer + cer.titolare + cer.fondoSociale;
 
   return {
     e, tariffa, eccedentaria, contributo, costi, lorde, kappa: k,

@@ -53,7 +53,7 @@ test('validazione: errori in italiano, con il campo', () => {
 test('tutto torna: incentivi distribuiti = tariffa + contributo', () => {
   const r = calcola(base(), dati);
   const i = r.comunita.incentivi;
-  quasi(i.produttori + i.consumatori + i.fondo + i.costi, r.comunita.tariffa + r.comunita.contributo, 0.005);
+  quasi(i.produttori + i.consumatori + i.cer + i.fondoSociale + i.costi, r.comunita.tariffa + r.comunita.contributo, 0.005);
   assert.ok(r.comunita.condivisa > 0);
   assert.ok(r.perTe.cerAggiunge > 0, 'il consumatore riceve una quota');
   assert.equal(r.perTe.investimento, 0);
@@ -133,4 +133,51 @@ test('validazione: le quote predefinite vengono dalle costanti', () => {
 
 test('serie fotovoltaica: la lunghezza deve essere quella dell\'asse', () => {
   assert.throws(() => calcola(base(), { ...dati, pv: dati.pv.slice(0, 100) }), /serie fotovoltaica di 100 ore/);
+});
+
+// Impianto comune della CER (spec §6.7): il risultato tiene separate la parte della CER, la quota di titolare e la finalità sociale.
+const conImpiantoCer = (soci) => base({
+  soci: soci ?? base().soci.filter((x) => x.id !== 'produttore'),
+  impianti: [{ id: 'comune', kwp: 40, titolare: 'cer', sul_pod_del_titolare: false, per_ogni_membro: false, esistente: false }],
+});
+
+test('impianto della CER: quotaCer è il 20% della tariffa netta, titolareCer il 40%, e il fondo è la somma delle tre voci', () => {
+  const r = calcola(conImpiantoCer(), dati);
+  const c = r.comunita, netta = c.tariffa * (1 - c.quotaEccedentaria) * (1 - c.kappa);
+  assert.ok(netta > 0);
+  quasi(c.quotaCer, 0.2 * netta, 1e-9, 'quotaCer');
+  quasi(c.titolareCer, 0.4 * netta, 1e-9, 'titolareCer');
+  assert.equal(c.fondoSociale, 0);
+  quasi(c.fondo, c.quotaCer + c.titolareCer + c.fondoSociale, 1e-9, 'fondo');
+  quasi(c.venditaCer, (r.impianti[0].immessa * r.parametri.prezzo_zonale) / 1000, 1e-9, 'vendita dell\'immessa');
+  quasi(c.manutenzioneCer, 40 * r.parametri.manutenzione, 1e-9, 'manutenzione');
+  quasi(c.investimentoCer, 51200, 1e-6, 'investimento: 40 kWp a 1,28 €/W, senza IVA');
+  // gli incentivi: la quota di titolare della CER sta con i produttori, la parte della CER da sola
+  const i = c.incentivi;
+  quasi(i.produttori, c.titolareCer, 1e-9, 'i produttori sono solo la CER titolare');
+  quasi(i.cer, c.quotaCer, 1e-9);
+  assert.equal(i.fondoSociale, 0);
+  quasi(i.produttori + i.consumatori + i.cer + i.fondoSociale + i.costi, c.tariffa + c.contributo, 0.005);
+  assert.equal('fondo' in i, false, 'incentivi.fondo non c\'è più: la barra legge cer e fondoSociale');
+});
+
+test('impianto della CER e soci tutte imprese: l\'eccedentaria va a finalità sociali', () => {
+  const soloImprese = [
+    { id: 'io', tipo: 'attivita', numero: 1, consumo_kwh_anno: 100000, archetipo: 'com_orario_apertura', spostamento: 0 },
+    { id: 'attivita', tipo: 'attivita', numero: 2, consumo_kwh_anno: 100000, archetipo: 'com_orario_apertura', spostamento: 0 },
+  ];
+  const c = calcola(conImpiantoCer(soloImprese), dati).comunita;
+  assert.ok(c.eccedentaria > 0, 'con 40 kWp e molti consumi nelle ore di sole la condivisa supera il 55% dell\'immessa');
+  quasi(c.fondoSociale, c.eccedentaria, 1e-9);
+  quasi(c.fondo, c.quotaCer + c.titolareCer + c.fondoSociale, 1e-9);
+  quasi(c.incentivi.fondoSociale, c.eccedentaria, 1e-9);
+});
+
+test('impianto di un socio: il fondo è solo la parte della CER, titolareCer e fondoSociale sono zero', () => {
+  const c = calcola(base(), dati).comunita;
+  assert.equal(c.titolareCer, 0);
+  assert.equal(c.manutenzioneCer, 0);
+  assert.equal(c.fondoSociale, 0);
+  assert.equal(c.investimentoCer, 0);
+  quasi(c.fondo, c.quotaCer, 1e-9);
 });

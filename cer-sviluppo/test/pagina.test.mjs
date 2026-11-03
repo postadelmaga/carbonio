@@ -95,3 +95,37 @@ test('aggiorna valida gli ingressi prima di calcolare: gli errori di validazione
   assert.equal((corpo.match(/console\.error/g) ?? []).length, 1, 'console.error resta solo per le eccezioni vere');
   assert.match(corpo.slice(calcola), /catch \(e\) \{\s*console\.error\(e\);/);
 });
+
+const camel = (a) => a.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
+
+test('ogni attributo del body che la CSS usa per mostrare o nascondere è impostato dallo script', () => {
+  const attributi = unici(tutti(CSS, /body(?::not\()?\[data-([a-z-]+)/g));
+  assert.ok(attributi.includes('impianto-cer'), 'la CSS non nasconde il riquadro dell\'impianto della CER');
+  const mancanti = attributi.filter((a) => !new RegExp(`(?:dataset|\\bb)\\.${camel(a)}\\b`).test(JS));
+  assert.deepEqual(mancanti, [], 'attributi del body che lo script non imposta');
+});
+
+test('«Per la comunità» dice che il 20% resta alla CER, senza il fondo contro la povertà energetica (scelta di Eliodora) né gli articoli dello statuto', () => {
+  assert.doesNotMatch(HTML, /povertà energetica/);
+  assert.doesNotMatch(HTML, /artt\. 2 e 12/);
+  assert.doesNotMatch(HTML, /[Ff]ondo sociale/);
+  assert.match(HTML, /della tariffa resta alla CER: in questa simulazione <b data-r="com\.quotaCer" data-f="euro"><\/b> l'anno\. L'assemblea decide come usarlo\./);
+  assert.match(HTML, /<span data-r="com\.frazioneCer" data-f="perc"><\/span> della tariffa/);
+  assert.match(HTML, /<dt>Alla CER<\/dt><dd data-r="com\.quotaCer"/);
+  assert.match(HTML, /<p class="testo-emissioni" data-r="com\.eccedentariaTesto"><\/p>/);
+  assert.match(JS, /eccedentariaTesto: testoEccedentaria\(com\)/);
+  assert.match(HTML, /Alla CER: <output name="p-fondo-valore">/);
+});
+
+test('l\'impianto della CER ha il suo riquadro, che compare solo se la CER ha impianti nuovi da finanziare', () => {
+  const da = HTML.indexOf('data-solo-impianto-cer');
+  assert.ok(da >= 0, 'manca il riquadro con data-solo-impianto-cer');
+  const riquadro = HTML.slice(HTML.lastIndexOf('<section', da), HTML.indexOf('</section>', da));
+  assert.match(riquadro, /L'impianto della CER/);
+  for (const r of ['com.titolareCer', 'com.venditaCer', 'com.manutenzioneCer', 'com.investimentoCer']) {
+    assert.ok(riquadro.includes(`data-r="${r}"`), `il riquadro non mostra ${r}`);
+  }
+  assert.ok(riquadro.includes('L\'impianto va pagato dalla CER: con contributi, quote dei soci o un prestito.'));
+  assert.match(JS, /com\.investimentoCer > 0/);
+  assert.match(CSS, /body:not\(\[data-impianto-cer\]\) \[data-solo-impianto-cer\]/);
+});

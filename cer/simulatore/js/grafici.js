@@ -136,19 +136,26 @@ export function anno(svg, m) {
   svg.setAttribute('aria-label', 'Dodici mesi: produzione, consumi ed energia condivisa della comunità, in kWh.');
 }
 
-export function incentivi(div, inc) {
-  const voci = [
+// Le voci della barra degli incentivi. «Finalità sociali» c'è solo se è positiva. I quattro token --g-* sono già presi:
+// la voce nuova ha il colore di «Alla CER» e si distingue dall'etichetta, dal suggerimento e dalla tabella.
+export function vociIncentivi(inc) {
+  return [
     { nome: 'Produttori', valore: inc.produttori, colore: 'var(--g-prod)' },
     { nome: 'Consumatori', valore: inc.consumatori, colore: 'var(--g-cons)' },
-    { nome: 'Fondo sociale', valore: inc.fondo, colore: 'var(--g-cond)' },
+    { nome: 'Alla CER', valore: inc.cer, colore: 'var(--g-cond)' },
+    ...(inc.fondoSociale > 0 ? [{ nome: 'Finalità sociali', valore: inc.fondoSociale, colore: 'var(--g-cond)' }] : []),
     { nome: 'Costi della CER', valore: inc.costi, colore: 'var(--g-costi)' },
   ];
+}
+
+export function incentivi(div, inc) {
+  const voci = vociIncentivi(inc);
   const tot = voci.reduce((s, v) => s + v.valore, 0);
   div.replaceChildren();
   const barra = document.createElement('div');
   barra.className = 'barra-incentivi';
   barra.setAttribute('role', 'img');
-  barra.setAttribute('aria-label', `Incentivi del primo anno: ${voci.map((v) => `${v.nome.toLowerCase()} ${euro(v.valore)}`).join(', ')}.`);
+  barra.setAttribute('aria-label', `Incentivi del primo anno: ${voci.map((v) => `${v.nome} ${euro(v.valore)}`).join(', ')}.`);
   const tip = suggerimento(div);
   for (const v of voci) {
     if (!(v.valore > 0)) continue;

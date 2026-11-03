@@ -19,6 +19,14 @@ export function testoScadenza(oggi, costanti) {
   return `Per avere la tariffa premio gli impianti devono entrare in esercizio entro il ${data}, dopo la costituzione della CER: ${quando}.`;
 }
 
+// La quota eccedentaria della tariffa (statuto, art. 12): ai consumatori che non sono imprese, o a finalità sociali se non ce
+// ne sono. Vuota quando non c'è eccedentaria. `com` è `comunita` del risultato del calcolo.
+export function testoEccedentaria(com) {
+  if (!(com.quotaEccedentaria > 0)) return '';
+  const base = `La quota eccedentaria della tariffa, ${euro(com.eccedentaria)} l'anno, va ai consumatori che non sono imprese (statuto, art. 12).`;
+  return com.fondoSociale > 0 ? `${base} Senza consumatori che non siano imprese, va a finalità sociali: ${euro(com.fondoSociale)} l'anno.` : base;
+}
+
 export function ipotesi(r, loc, pvInfo, costanti) {
   const p = r.parametri, em = r.emissioni;
   const anni = voce(costanti, 'durata_tariffa_anni');
@@ -31,7 +39,7 @@ export function ipotesi(r, loc, pvInfo, costanti) {
     `Consumi delle famiglie: forme medie ARERA 2025 dei residenti in ${loc.regione}; una famiglia vera è più irregolare. Attività ed enti: profili illustrativi, non misurati.`,
     `Prezzo dell'energia: ${numero(p.prezzo_zonale, 2)} €/MWh, uguale tutto l'anno${tipFv != null ? `; tariffa premio ${numero(tipFv)} €/MWh` : ''}.`,
     `Costo evitato in bolletta per ogni kWh autoconsumato: ${ce('famiglia')} €/kWh per le famiglie, ${ce('attivita')} per le attività, ${ce('ente')} per gli enti.`,
-    `Riparto: ${perc(p.quota_produttore)} della tariffa al titolare dell'impianto, ${perc(p.quota_consumatori)} ai consumatori secondo quanto consumano nelle ore di produzione, ${perc(1 - p.quota_produttore - p.quota_consumatori)} al fondo sociale; il contributo ARERA ai consumatori. È l'esempio di CERS Eliodora, non il regolamento della nostra CER, che non è ancora scritto.`,
+    `Riparto: ${perc(p.quota_produttore)} della tariffa al titolare dell'impianto, ${perc(p.quota_consumatori)} ai consumatori secondo quanto consumano nelle ore di produzione, ${perc(1 - p.quota_produttore - p.quota_consumatori)} alla CER; il contributo ARERA ai consumatori. È l'esempio di CERS Eliodora, non il regolamento della nostra CER, che non è ancora scritto.`,
     `Costi della CER: ${euro(p.gestione_eur_anno)} l'anno di gestione più i corrispettivi del GSE, tolti dagli incentivi prima del riparto. La quota eccedentaria resta intera ai consumatori che non sono imprese: è la lettura prudente, perché le regole non dicono se possa coprire i costi.`,
     `Gli impianti nuovi entrano in esercizio dopo la costituzione della CER ed entro il ${dataIt(voce(costanti, 'scadenza_esercizio'))}.`,
     `${anni} anni a prezzi costanti, senza inflazione né attualizzazione; degrado dei pannelli: ${perc(voce(costanti, 'degrado'), 1)} della produzione l'anno.`,
