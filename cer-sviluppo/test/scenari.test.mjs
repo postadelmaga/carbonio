@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { ingressiEntrare, ingressiFondare, sceltaIo } from '../../cer/simulatore/js/scenari.js';
+import { ingressiEntrare, ingressiFondare, sceltaIo, limitaQuote } from '../../cer/simulatore/js/scenari.js';
 import { valida } from '../../cer/simulatore/js/motore.js';
 
 const costanti = JSON.parse(readFileSync(new URL('../../cer/simulatore/dati/costanti.json', import.meta.url), 'utf8'));
@@ -93,4 +93,11 @@ test('«Io sono»: le opzioni dei gruppi assenti si disabilitano e la scelta pas
   assert.deepEqual(sceltaIo(solo, ids), { io: 'famiglie', disabilitati: ['pannelli', 'pannelli_esistenti', 'attivita', 'enti', 'produttore'] });
   const nessuno = ingressiFondare({ area: 'nord', parametri: {}, fondare: fondo({ famiglie: { numero: 0, classe: '1,5-3', consumo: null }, pannelli: { ...fondo().pannelli, numero: 0 }, attivita: { ...fondo().attivita, numero: 0 }, enti: { ...fondo().enti, numero: 0 }, comune: { kwp: 0, titolare: 'produttore', stato: 'nuovo' } }) }, costanti);
   assert.deepEqual(sceltaIo(nessuno, ids), { io: null, disabilitati: ids });
+});
+
+test('cursori del riparto: se la somma supera 100 l\'altro cursore scende, mai sotto zero (esclude quote oltre il 100% e valori negativi)', () => {
+  assert.equal(limitaQuote(50, 40), 40, 'somma 90: nulla cambia');
+  assert.equal(limitaQuote(70, 40), 30, 'la parte alla CER è già a zero, scende l\'altra');
+  assert.equal(limitaQuote(100, 40), 0);
+  assert.equal(limitaQuote(60, 40), 40, 'somma 100: nulla cambia');
 });

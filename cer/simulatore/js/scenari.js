@@ -62,3 +62,7 @@ export function ingressiFondare(stato, costanti) {
 export function sceltaIo(ingressi, ids) {
   return { io: ingressi.io, disabilitati: ids.filter((id) => !ingressi.soci.some((s) => s.id === id)) };
 }
+
+// Cursori del riparto (revisione §10.2): la somma resta entro 100. La parte alla CER è il resto, quindi scende per prima;
+// quando è a zero scende l'altro cursore.
+export const limitaQuote = (mossa, altra) => (mossa + altra > 100 ? Math.max(0, 100 - mossa) : altra);

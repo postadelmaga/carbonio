@@ -242,3 +242,13 @@ test('ogni icona «i» è un pulsante con aria-expanded, aria-controls verso un 
   assert.match(HTML, /Il contatore non limita i pannelli: serve a stimare i consumi\./);
   assert.match(HTML, /La spesa variabile è la parte della bolletta che cresce con i kWh/);
 });
+
+test('menu del simulatore come quello dello statuto, «Avanzato», cursore delle abitudini di «fondare» nella sezione 3, quote del riparto legate (esclude il menu vecchio e il cursore nella sezione dei fondatori)', () => {
+  assert.match(HTML, /<nav aria-label="Sezioni">\s*<a href="\/cer\/">La comunità<\/a>\s*<a href="\/cer\/#progetti">Progetti<\/a>\s*<a href="\/cer\/simulatore\/" aria-current="page">Simulatore<\/a>\s*<a href="\/cer\/statuto\/">Statuto<\/a>\s*<\/nav>/);
+  assert.doesNotMatch(HTML, /Come funziona<\/a>/);
+  assert.match(HTML, /<label><input type="radio" name="modo" value="esperto"> Avanzato<\/label>/);
+  assert.doesNotMatch(HTML.replace(/(name|value|data-solo-modo)="esperto"/g, ''), /[Ee]spert/);
+  const sez3 = HTML.slice(HTML.indexOf('Chi entra nella comunità'), HTML.indexOf('Tu e i fondatori'));
+  assert.match(sez3, /<label class="campo" for="f-abitudini">Consumi spostati nelle ore di sole, per tutte le famiglie <output name="f-abitudini-valore"><\/output>/);
+  assert.match(JS, /limitaQuote\(/);
+});

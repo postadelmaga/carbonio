@@ -2,7 +2,7 @@
 // mostra risultati, grafici, avvisi e ipotesi. Con grafici.js e dati.js è l'unico modulo che tocca il DOM.
 import { caricaLocalita, caricaDati } from './dati.js';
 import { calcola, valida, asse } from './motore.js';
-import { ingressiEntrare, ingressiFondare, sceltaIo } from './scenari.js';
+import { ingressiEntrare, ingressiFondare, sceltaIo, limitaQuote } from './scenari.js';
 import { voce } from './economia.js';
 import { consumoMedioClasse } from './profili.js';
 import { numero, euro, kwh, perc, tonnellate, anni, circa } from './formato.js';
@@ -312,7 +312,13 @@ async function avvia() {
   $('#elenco-localita').replaceChildren(...elenco.map((l) => new Option(`${l.nome} (${l.sigla})`)));
   $('#mese').replaceChildren(...MESI.map((m, i) => new Option(m, String(i), i === 6, i === 6)));
   form.addEventListener('submit', (e) => e.preventDefault());
-  form.addEventListener('input', (e) => { if (e.target.name !== 'localita') aggiorna(); });
+  form.addEventListener('input', (e) => {
+    if (e.target.name === 'p-qp' || e.target.name === 'p-qc') {
+      const altro = campo(e.target.name === 'p-qp' ? 'p-qc' : 'p-qp');
+      altro.value = String(limitaQuote(Number(e.target.value), Number(altro.value)));
+    }
+    if (e.target.name !== 'localita') aggiorna();
+  });
   form.addEventListener('change', (e) => {
     if (e.target.name === 'localita') { scegliLocalita(e.target.value); return; }
     if (e.target.name === 'ruolo' && dati) {

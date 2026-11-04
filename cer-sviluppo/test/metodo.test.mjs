@@ -81,3 +81,8 @@ test('«Come calcoliamo» dice quando sono stati scaricati i dati, leggendo la d
   assert.equal(og('title'), 'Come calcoliamo · Simulatore della CER');
   assert.ok(og('description')?.length > 20, 'manca og:description');
 });
+
+test('il menu di «Come calcoliamo» è quello del simulatore, senza «Come funziona» (esclude due pagine con menu diversi)', () => {
+  assert.match(HTML, /<nav aria-label="Sezioni">\s*<a href="\/cer\/">La comunità<\/a>\s*<a href="\/cer\/#progetti">Progetti<\/a>\s*<a href="\/cer\/simulatore\/">Simulatore<\/a>\s*<a href="\/cer\/statuto\/">Statuto<\/a>\s*<\/nav>/);
+  assert.ok(!/[Ee]spert/.test(HTML), 'nella pagina c\'è ancora «esperto»');
+});

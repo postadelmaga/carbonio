@@ -38,6 +38,9 @@ export function tetto(x) {
   return (m <= 1 ? 1 : m <= 2 ? 2 : m <= 5 ? 5 : 10) * p;
 }
 
+// Massimo dell'asse della giornata (revisione §10.1): su tutti i mesi e tutte le serie, così cambiando mese la scala resta.
+export const massimoGiornata = (g) => tetto(Math.max(...SERIE.flatMap((s) => g[s.chiave].flat()), 0.001));
+
 // Linea, o area chiusa sulla base, per valori equidistanti.
 export function percorso(valori, x, y, area = false) {
   const linea = `M${valori.map((v, i) => `${x(i).toFixed(1)},${y(v).toFixed(1)}`).join('L')}`;
@@ -85,7 +88,7 @@ export function giornata(svg, g, mese) {
   svg.replaceChildren();
   svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
   const dati = SERIE.map((s) => g[s.chiave][mese]);
-  const max = tetto(Math.max(...dati.flat(), 0.001));
+  const max = massimoGiornata(g);
   const x = (i) => M.s + ((i + 0.5) * (W - M.s - M.d)) / 24;
   const y = (v) => H - M.b - (v / max) * (H - M.a - M.b);
   const asse = griglia(svg, W, max, y, 'kWh');

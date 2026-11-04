@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { tetto, percorso, MESI, SERIE, larghezzaDisegno, mesiEtichettati, figureMassime, disposizioneScena, vociIncentivi } from '../../cer/simulatore/js/grafici.js';
+import { tetto, percorso, MESI, SERIE, larghezzaDisegno, mesiEtichettati, figureMassime, disposizioneScena, vociIncentivi, massimoGiornata } from '../../cer/simulatore/js/grafici.js';
 
 test('massimo tondo dell\'asse', () => {
   assert.equal(tetto(0), 1);
@@ -114,4 +114,12 @@ test('la barra degli incentivi: cinque colori diversi, tutti token con il valore
   assert.equal(new Set(voci.map((v) => v.colore)).size, voci.length, 'due voci della barra hanno lo stesso colore');
   assert.equal(voci.find((v) => v.nome === 'Finalità sociali').colore, 'var(--g-sociale)');
   assert.ok(!voci.some((v) => /fondo sociale/i.test(v.nome)), 'la voce «Fondo sociale» non c\'è più');
+});
+
+test('l\'asse del grafico della giornata è lo stesso per ogni mese e contiene tutte e tre le serie (esclude la scala che cambia con il mese)', () => {
+  const mesi = (picco) => Array.from({ length: 12 }, (_, m) => Array.from({ length: 24 }, (_, h) => (m === 6 && h === 12 ? picco : 1)));
+  const g = { produzione: mesi(31), consumo: mesi(5), condivisa: mesi(4) };
+  assert.equal(massimoGiornata(g), 50, 'il picco di luglio, 31 kWh, dà 50 anche per gennaio');
+  const consumiAlti = { produzione: mesi(3), consumo: mesi(70), condivisa: mesi(2) };
+  assert.equal(massimoGiornata(consumiAlti), 100, 'conta anche la serie dei consumi');
 });
