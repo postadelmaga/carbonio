@@ -252,3 +252,7 @@ test('menu del simulatore come quello dello statuto, «Avanzato», cursore delle
   assert.match(sez3, /<label class="campo" for="f-abitudini">Consumi spostati nelle ore di sole, per tutte le famiglie <output name="f-abitudini-valore"><\/output>/);
   assert.match(JS, /limitaQuote\(/);
 });
+
+test('il campo del prezzo dell\'impianto dice che è IVA esclusa, come lo usa il calcolo, che aggiunge l\'IVA per famiglie ed enti (esclude un prezzo con l\'IVA inserito e poi tassato due volte)', () => {
+  assert.match(HTML, /<label class="campo">Prezzo dell'impianto, €\/W, IVA esclusa <input name="p-eurw"/);
+});
