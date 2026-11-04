@@ -67,7 +67,7 @@ test('forme ARERA: classe 1,5-3 in Liguria intorno a 1.480 kWh l\'anno', () => {
 });
 
 const comunitaTipo = (u = {}) => ingressiEntrare({ area: spezia.area, parametri: {}, comunita: {},
-  utente: { ruolo: 'consumatore', tipo: 'famiglia', classe: '1,5-3', consumo: null, archetipo: 'com_orario_apertura', kwp: 4.5, esistente: false, abitudini: 0, ...u } }, costanti);
+  utente: { ruolo: 'consumatore', tipo: 'famiglia', classe: '1,5-3', consumo: null, archetipo: 'com_orario_apertura', kwp: 4.5, stato: 'nuovo', abitudini: 0, ...u } }, costanti);
 
 test('taratura della comunità tipo sulla Spezia: contemporaneità fra 30% e 90%', () => {
   const r = calcola(comunitaTipo(), datiSpezia);

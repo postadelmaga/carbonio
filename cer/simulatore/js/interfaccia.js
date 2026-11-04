@@ -7,7 +7,7 @@ import { voce } from './economia.js';
 import { consumoMedioClasse } from './profili.js';
 import { numero, euro, kwh, perc, tonnellate, anni } from './formato.js';
 import { giornata, anno, incentivi, vociIncentivi, scenaComunita, tabella, MESI } from './grafici.js';
-import { ipotesi, testoScadenza, testoEccedentaria, testoFinoA, testoItaliani } from './testi.js';
+import { ipotesi, testoScadenza, testoEccedentaria, testoFinoA, testoItaliani, testoGiaInEsercizio } from './testi.js';
 
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => [...document.querySelectorAll(s)];
@@ -15,7 +15,7 @@ const form = $('#moduli');
 const campo = (nome) => form.elements[nome];
 const scelto = (nome) => document.querySelector(`input[name="${nome}"]:checked`)?.value;
 const FORMATI = { euro: (v) => euro(v), perc: (v) => perc(v), t: tonnellate, kwh, anni: (v) => anni(v, voce(dati.costanti, 'durata_tariffa_anni')), int: (v) => numero(v), g: (v) => numero(v, Number.isInteger(v) ? 0 : 1) };
-const NOMI = { famiglie: 'Famiglia', pannelli: 'Famiglia con pannelli', attivita: 'Attività', enti: 'Ente o associazione', produttore: 'Socio produttore' };
+const NOMI = { famiglie: 'Famiglia', pannelli: 'Famiglia con pannelli', pannelli_esistenti: 'Famiglia con pannelli già in esercizio', attivita: 'Attività', enti: 'Ente o associazione', produttore: 'Socio produttore' };
 const validi = {};
 let elenco = [], loc = null, dati = null, ultimo = null, scena = null, richiestaLocalita = 0, avvisiMostrati = null;
 
@@ -48,7 +48,7 @@ function stato() {
     parametri: esperto ? parametriEsperto() : {},
     utente: {
       ruolo: scelto('ruolo'), tipo: scelto('tipo'), classe: campo('classe').value, consumo: numeroDi('consumo', null),
-      archetipo: campo('archetipo').value, kwp: numeroDi('kwp', pred.kwp_prosumer), esistente: campo('esistente').checked,
+      archetipo: campo('archetipo').value, kwp: numeroDi('kwp', pred.kwp_prosumer), stato: campo('stato-impianto').value,
       abitudini: esperto ? numeroDi('abitudini-cursore', 0) : Number(scelto('abitudini')),
     },
     comunita: esperto ? {
@@ -59,10 +59,13 @@ function stato() {
     } : {},
     fondare: {
       famiglie: { numero: numeroDi('f-famiglie', tipo.famiglie), classe: campo('f-famiglie-classe').value, consumo: esperto ? numeroDi('f-famiglie-consumo', null) : null },
-      pannelli: { numero: numeroDi('f-pannelli', 0), classe: campo('f-pannelli-classe').value, consumo: null, kwp: numeroDi('f-pannelli-kwp', pred.kwp_prosumer), esistenti: esperto && campo('f-pannelli-esistenti').checked },
+      pannelli: { numero: numeroDi('f-pannelli', 0), classe: campo('f-pannelli-classe').value, consumo: null, kwp: numeroDi('f-pannelli-kwp', pred.kwp_prosumer) },
+      pannelliEsistenti: esperto
+        ? { numero: numeroDi('f-pannelli-es', 0), classe: campo('f-pannelli-es-classe').value, consumo: null, kwp: numeroDi('f-pannelli-es-kwp', pred.kwp_prosumer), stato: campo('f-pannelli-es-stato').value }
+        : { numero: 0, classe: '1,5-3', consumo: null, kwp: pred.kwp_prosumer, stato: 'precedente' },
       attivita: { numero: numeroDi('f-attivita', tipo.attivita), archetipo: esperto ? campo('f-attivita-archetipo').value : tipo.archetipo_attivita, consumo: numeroDi('f-attivita-consumo', tipo.consumo_attivita), kwp: esperto ? numeroDi('f-attivita-kwp', 0) : 0 },
       enti: { numero: numeroDi('f-enti', tipo.enti), archetipo: esperto ? campo('f-enti-archetipo').value : tipo.archetipo_ente, consumo: numeroDi('f-enti-consumo', tipo.consumo_ente), kwp: esperto ? numeroDi('f-enti-kwp', 0) : 0 },
-      comune: { kwp: numeroDi('f-comune-kwp', tipo.kwp_comune), titolare: campo('f-comune-titolare').value, esistente: esperto && campo('f-comune-esistente').checked },
+      comune: { kwp: numeroDi('f-comune-kwp', tipo.kwp_comune), titolare: campo('f-comune-titolare').value, stato: esperto ? campo('f-comune-stato').value : 'nuovo' },
       fondatori: numeroDi('f-fondatori', pred.fondatori), io: campo('f-io').value, abitudini: numeroDi('f-abitudini', 0),
     },
   };
@@ -73,7 +76,9 @@ function aggiornaCorpo() {
   b.modo = scelto('modo'); b.percorso = scelto('percorso'); b.ruolo = scelto('ruolo'); b.tipo = scelto('tipo');
   const esperto = b.modo === 'esperto';
   campo('kwp').max = String(b.ruolo === 'produttore' ? (esperto ? 1000 : 200) : (esperto ? 50 : 20));
-  $('[data-solo-esistente]').hidden = !campo('esistente').checked;
+  const aiuto = $('#aiuto-esercizio');
+  aiuto.textContent = testoGiaInEsercizio(campo('stato-impianto').value);
+  aiuto.hidden = aiuto.textContent === '';
 }
 
 function aggiornaUscite() {
@@ -233,7 +238,7 @@ function preimposta() {
   const valori = {
     'c-famiglie': tipo.famiglie, 'c-attivita': tipo.attivita, 'c-consumo-attivita': tipo.consumo_attivita, 'c-enti': tipo.enti,
     'c-consumo-ente': tipo.consumo_ente, 'c-kwp': tipo.kwp_comune, 'f-famiglie': tipo.famiglie, 'f-pannelli': 0,
-    'f-pannelli-kwp': pred.kwp_prosumer, 'f-attivita': tipo.attivita, 'f-attivita-consumo': tipo.consumo_attivita, 'f-attivita-kwp': 0,
+    'f-pannelli-kwp': pred.kwp_prosumer, 'f-pannelli-es': 0, 'f-pannelli-es-kwp': pred.kwp_prosumer, 'f-attivita': tipo.attivita, 'f-attivita-consumo': tipo.consumo_attivita, 'f-attivita-kwp': 0,
     'f-enti': tipo.enti, 'f-enti-consumo': tipo.consumo_ente, 'f-enti-kwp': 0, 'f-comune-kwp': tipo.kwp_comune,
     'f-fondatori': pred.fondatori, 'p-pz': voce(c, 'prezzo_zonale'), 'p-gestione': voce(c, 'gestione'),
     'p-quota': voce(c, 'quota_associativa'), 'p-qp': q.produttore * 100, 'p-qc': q.consumatori * 100, 'p-om': voce(c, 'manutenzione'),

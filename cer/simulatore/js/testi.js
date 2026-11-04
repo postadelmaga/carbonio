@@ -41,6 +41,14 @@ export function testoItaliani(italiani, proCapite) {
   return n === 1 ? `Sono le emissioni di un italiano ${resto}` : `Sono le emissioni di ${numero(italiani)} italiani ${resto}`;
 }
 
+// Accanto a un impianto già in esercizio (revisione §7.3). Vuota per un impianto nuovo; la frase del 30% solo per gli
+// esistenti fino al 15/12/2021, gli unici a cui le Regole applicano il limite.
+export function testoGiaInEsercizio(stato) {
+  if (stato !== 'precedente' && stato !== 'esistente') return '';
+  const base = 'Un impianto entrato in esercizio prima della costituzione della CER, con le regole di oggi, non riceve la tariffa premio: le eccezioni per gli impianti entrati in esercizio fra il 2021 e il 2024 avevano scadenze già passate. Resta nella comunità: la sua energia conta per la condivisa e riceve il contributo ARERA, e l\'energia che immette resta del titolare, che la vende con il ritiro dedicato del GSE o a un venditore. Il GSE attribuisce la condivisa prima agli impianti più vecchi: nelle ore in cui l\'energia immessa supera i consumi della comunità, un impianto già in esercizio riduce i kWh incentivati di quelli nuovi, e con loro la tariffa che arriva alla comunità. Se hai lo scambio sul posto, per entrare va chiuso.';
+  return stato === 'esistente' ? `${base} Un impianto entrato in esercizio fino al 15/12/2021 è un impianto «esistente»: la comunità può averne al massimo il 30% della potenza.` : base;
+}
+
 export function ipotesi(r, loc, pvInfo, costanti) {
   const p = r.parametri, em = r.emissioni;
   const anni = voce(costanti, 'durata_tariffa_anni');

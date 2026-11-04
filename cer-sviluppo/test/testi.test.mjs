@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { mesiAllaScadenza, testoScadenza, ipotesi, testoEccedentaria, testoFinoA, testoItaliani } from '../../cer/simulatore/js/testi.js';
+import { mesiAllaScadenza, testoScadenza, ipotesi, testoEccedentaria, testoFinoA, testoItaliani, testoGiaInEsercizio } from '../../cer/simulatore/js/testi.js';
 
 const costanti = JSON.parse(readFileSync(new URL('../../cer/simulatore/dati/costanti.json', import.meta.url), 'utf8'));
 
@@ -104,4 +104,14 @@ test('le emissioni in italiani: un numero che arrotondato è 0 non diventa «0 i
   assert.equal(testoItaliani(1.4, 5.1), 'Sono le emissioni di un italiano in un anno (5,1 t a testa).');
   assert.equal(testoItaliani(1.5, 5.1), 'Sono le emissioni di 2 italiani in un anno (5,1 t a testa).');
   assert.equal(testoItaliani(0, 5.1), '', 'senza CO₂ evitata non c\'è nessun confronto: «meno di un italiano» direbbe che qualcosa si evita');
+});
+
+test('il testo sugli impianti già in esercizio: vuoto per un impianto nuovo, la frase del 30% solo per gli esistenti fino al 15/12/2021 (esclude il limite detto agli impianti successivi)', () => {
+  assert.equal(testoGiaInEsercizio('nuovo'), '');
+  const p = testoGiaInEsercizio('precedente'), e = testoGiaInEsercizio('esistente');
+  assert.ok(p.startsWith('Un impianto entrato in esercizio prima della costituzione della CER, con le regole di oggi, non riceve la tariffa premio'));
+  assert.ok(p.includes('Se hai lo scambio sul posto, per entrare va chiuso.'));
+  assert.ok(p.includes('riduce i kWh incentivati di quelli nuovi'));
+  assert.ok(!p.includes('30%'));
+  assert.ok(e.endsWith('Un impianto entrato in esercizio fino al 15/12/2021 è un impianto «esistente»: la comunità può averne al massimo il 30% della potenza.'));
 });

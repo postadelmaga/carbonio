@@ -148,7 +148,7 @@ test('ogni riga di «Chi entra nella comunità» è un gruppo con il suo nome: i
   const modulo = HTML.slice(da, HTML.indexOf('</fieldset>', da));
   const aperture = modulo.match(/<div class="riga"/g) ?? [];
   const righe = [...modulo.matchAll(/<div class="riga"([^>]*)>\s*<b([^>]*)>([^<]+)<\/b>/g)];
-  assert.equal(aperture.length, 5, 'le righe del modulo sono cinque');
+  assert.equal(aperture.length, 6, 'le righe del modulo sono sei');
   assert.equal(righe.length, aperture.length, 'ogni riga comincia con il suo nome in un <b>');
   const id = [];
   for (const [, riga, titolo, testo] of righe) {
@@ -159,6 +159,15 @@ test('ogni riga di «Chi entra nella comunità» è un gruppo con il suo nome: i
     id.push(rif);
   }
   assert.equal(new Set(id).size, id.length, 'gli id dei nomi sono ripetuti');
+});
+
+test('lo stato dell\'impianto è un campo a tre scelte in «Voglio entrare», e in «fondare» la riga dei pannelli già in esercizio e lo stato del comune stanno in avanzato (esclude la spunta unica)', () => {
+  assert.doesNotMatch(HTML, /name="esistente"|name="f-pannelli-esistenti"|name="f-comune-esistente"/);
+  assert.match(HTML, /<select name="stato-impianto">\s*<option value="nuovo" selected>da costruire<\/option>\s*<option value="precedente">già in esercizio, dopo il 15\/12\/2021<\/option>\s*<option value="esistente">già in esercizio, fino al 15\/12\/2021<\/option>/);
+  assert.match(HTML, /<div class="riga" role="group" aria-labelledby="riga-pannelli-es" data-solo-modo="esperto"><b id="riga-pannelli-es">Famiglie con pannelli già in esercizio<\/b>/);
+  assert.match(HTML, /<option value="pannelli_esistenti">una delle famiglie con pannelli già in esercizio<\/option>/);
+  assert.match(HTML, /<label data-solo-modo="esperto">in esercizio <select name="f-comune-stato">/);
+  assert.match(JS, /testoGiaInEsercizio\(campo\('stato-impianto'\)\.value\)/);
 });
 
 test('i numeri della regione viva si riscrivono solo se il testo cambia, e gli avvisi sono una regione di stato', () => {

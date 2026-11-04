@@ -116,8 +116,14 @@
     <label class="campo" for="kwp">Potenza <output name="kwp-valore"></output>
       <input id="kwp" name="kwp" type="range" min="1" max="20" step="0.5" value="4.5">
     </label>
-    <label class="spunta"><input type="checkbox" name="esistente"> È già in esercizio, da prima della CER</label>
-    <p class="aiuto" data-solo-esistente hidden>Un impianto entrato in esercizio prima della costituzione della CER non riceve la tariffa premio. Conta per l'energia condivisa e la prende per primo, perché è il più anziano: così abbassa la tariffa degli altri.</p>
+    <label class="campo">L'impianto è
+      <select name="stato-impianto">
+        <option value="nuovo" selected>da costruire</option>
+        <option value="precedente">già in esercizio, dopo il 15/12/2021</option>
+        <option value="esistente">già in esercizio, fino al 15/12/2021</option>
+      </select>
+    </label>
+    <p class="aiuto" id="aiuto-esercizio" hidden></p>
   </fieldset>
 
   <fieldset class="passo" data-solo-percorso="entrare" data-solo-tipo="famiglia">
@@ -161,7 +167,12 @@
         <label>quante <input name="f-pannelli" type="number" min="0" max="500" step="1"></label>
         <label>kWp ciascuna <input name="f-pannelli-kwp" type="number" min="0.5" max="50" step="0.5"></label>
         <label data-solo-modo="esperto">contatore <select name="f-pannelli-classe"><option value="1,5-3">3 kW</option><option value="3-4,5">4,5 kW</option><option value="4,5-6">6 kW</option><option value="oltre_6">oltre 6 kW</option></select></label>
-        <label data-solo-modo="esperto" class="spunta"><input type="checkbox" name="f-pannelli-esistenti"> già in esercizio</label>
+      </div>
+      <div class="riga" role="group" aria-labelledby="riga-pannelli-es" data-solo-modo="esperto"><b id="riga-pannelli-es">Famiglie con pannelli già in esercizio</b>
+        <label>quante <input name="f-pannelli-es" type="number" min="0" max="500" step="1"></label>
+        <label>kWp ciascuna <input name="f-pannelli-es-kwp" type="number" min="0.5" max="50" step="0.5"></label>
+        <label>contatore <select name="f-pannelli-es-classe"><option value="1,5-3">3 kW</option><option value="3-4,5">4,5 kW</option><option value="4,5-6">6 kW</option><option value="oltre_6">oltre 6 kW</option></select></label>
+        <label>in esercizio <select name="f-pannelli-es-stato"><option value="precedente">dopo il 15/12/2021</option><option value="esistente">fino al 15/12/2021</option></select></label>
       </div>
       <div class="riga" role="group" aria-labelledby="riga-attivita"><b id="riga-attivita">Attività</b>
         <label>quante <input name="f-attivita" type="number" min="0" max="500" step="1"></label>
@@ -178,7 +189,7 @@
       <div class="riga" role="group" aria-labelledby="riga-comune"><b id="riga-comune">Impianto comune</b>
         <label>kWp <input name="f-comune-kwp" type="number" min="0" max="1000" step="0.5"></label>
         <label>di chi <select name="f-comune-titolare"><option value="produttore">di un socio produttore</option><option value="cer">della CER</option></select></label>
-        <label data-solo-modo="esperto" class="spunta"><input type="checkbox" name="f-comune-esistente"> già in esercizio</label>
+        <label data-solo-modo="esperto">in esercizio <select name="f-comune-stato"><option value="nuovo" selected>nuovo</option><option value="precedente">già, dopo il 15/12/2021</option><option value="esistente">già, fino al 15/12/2021</option></select></label>
       </div>
     </div>
   </fieldset>
@@ -189,6 +200,7 @@
       <select name="f-io">
         <option value="famiglie">una delle famiglie</option>
         <option value="pannelli">una delle famiglie con pannelli</option>
+        <option value="pannelli_esistenti">una delle famiglie con pannelli già in esercizio</option>
         <option value="attivita">una delle attività</option>
         <option value="enti">uno degli enti</option>
         <option value="produttore">il socio produttore</option>
