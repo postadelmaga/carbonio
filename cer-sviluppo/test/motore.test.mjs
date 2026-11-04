@@ -263,11 +263,12 @@ test('chi non ha impianto non ha né investimento né impianto già pagato', () 
 });
 
 test('«Per te»: in 20 anni dalla CER è la somma di ciò che porta la CER meno la quota della costituzione (esclude un conto che sommi ciò che l\'impianto dà comunque)', () => {
-  const ing = conTuo(true);
+  // con un impianto nuovo «io» ha sia la quota della CER sia l'impianto: con un impianto già in esercizio la CER a «io» è zero, e il confronto sarebbe 0 = 0
+  const ing = conTuo(false);
   const m = calcola(ing, dati).perTe;
-  assert.ok(m.impiantoDaSolo > 0, 'l\'impianto già in esercizio fa risparmiare: senza, il controllo non distingue');
+  assert.ok(m.cerAggiunge > 0 && m.impiantoDaSolo > 0, 'con un impianto nuovo «io» ha entrambe le voci: senza, il confronto sarebbe vuoto');
   quasi(m.cerVentiAnni, sommaVentiAnni(ing, 'io', ['cerAggiunge']), 1e-6, 'cerVentiAnni è solo ciò che porta la CER, senza l\'impianto');
-  assert.ok(m.cerVentiAnni <= sommaVentiAnni(ing, 'io') - 1, 'cerVentiAnni è minore della somma con l\'impianto di almeno 1 €');
+  assert.ok(m.cerVentiAnni < sommaVentiAnni(ing, 'io') - 1, 'cerVentiAnni è minore della somma con l\'impianto di almeno 1 €');
   quasi(m.cerVentiAnniNetto, m.cerVentiAnni, 1e-9, 'senza costituzione in «entrare»');
   const fondatore = { ...conTuo(false), fondatore: true, parametri: { fondatori: 4 } };
   const f = calcola(fondatore, dati).perTe;
