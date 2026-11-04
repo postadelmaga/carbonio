@@ -95,3 +95,8 @@ test('«Come calcoliamo» dice che decreto e statuto destinano l\'eccedentaria a
   assert.ok(HTML.includes('Quando l\'energia condivisa attribuita agli impianti incentivati supera il 55% di quella che immettono'), 'rapporto della soglia');
   assert.ok(!HTML.includes('la parte in più della tariffa va solo ai consumatori che non sono imprese'), 'la scelta del simulatore detta come regola');
 });
+
+test('«Come calcoliamo» dichiara che soci e impianti stanno sotto la stessa cabina primaria (esclude un perimetro della condivisa taciuto, che decide se tariffa e contributo spettano)', () => {
+  const fuori = HTML.slice(HTML.indexOf('<h2>Che cosa resta fuori</h2>'), HTML.indexOf('<h2>Le fonti di ogni valore</h2>'));
+  assert.ok(fuori.includes('<li>La cabina primaria: il calcolo assume che soci e impianti siano tutti sotto la stessa, come chiedono le regole per la tariffa premio e per il contributo ARERA. Una CER con soci sotto più cabine forma una configurazione per ciascuna, e la condivisa si conta dentro ognuna.</li>'), 'manca la voce della cabina primaria');
+});
