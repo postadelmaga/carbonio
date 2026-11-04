@@ -46,12 +46,12 @@
       "consultato": "2026-10-18", "note": ""
     },
     "scadenza_esercizio": {
-      "descrizione": "Ultima data per chiedere la tariffa premio",
+      "descrizione": "Ultima data per l'entrata in esercizio e, per prudenza, per la domanda della tariffa premio",
       "valore": "2027-12-31", "unita": "data",
-      "fonte": "DM MASE 414/2023, art. 1 c. 2",
+      "fonte": "DM MASE 414/2023, art. 1 c. 2; GSE, pagina CACER («può essere richiesta» non oltre il 31 dicembre 2027)",
       "url": "https://www.gse.it/documenti_site/Documenti%20GSE/Servizi%20per%20te/AUTOCONSUMO/Altri%20contenuti/Decreto%20CER.pdf",
-      "consultato": "2026-10-18",
-      "note": "O prima, se si raggiunge il contingente di 5 GW, lontano secondo i dati pubblicati. La simulazione assume impianti in esercizio dopo la costituzione e prima della scadenza."
+      "consultato": "2026-11-04",
+      "note": "O prima, se si raggiunge il contingente di 5 GW, lontano secondo i dati pubblicati. Nessuna proroga al 04/11/2026."
     },
     "soglia_eccedentaria": {
       "descrizione": "Soglia oltre la quale la tariffa va solo ai consumatori non imprese o a fini sociali (rapporto fra condivisa e immessa degli impianti incentivati)",

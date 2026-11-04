@@ -7,7 +7,7 @@ import { voce } from './economia.js';
 import { consumoMedioClasse } from './profili.js';
 import { numero, euro, kwh, perc, tonnellate, anni, circa } from './formato.js';
 import { giornata, anno, incentivi, vociIncentivi, scenaComunita, tabella, MESI } from './grafici.js';
-import { ipotesi, testoScadenza, testoEccedentaria, testoItaliani, testoStimaCo2, testoVentiAnniCo2, testoGiaInEsercizio } from './testi.js';
+import { ipotesi, testoScadenza, notaScadenza, testoEccedentaria, testoItaliani, testoStimaCo2, testoVentiAnniCo2, testoGiaInEsercizio } from './testi.js';
 
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => [...document.querySelectorAll(s)];
@@ -180,7 +180,7 @@ function mostra(r, s, percorso, ingressi) {
   if (percorso === 'fondare') b.fondatore = ''; else delete b.fondatore;
   if (com.investimentoCer > 0) b.impiantoCer = ''; else delete b.impiantoCer;
   const vista = {
-    te,
+    te: { ...te, notaScadenza: percorso === 'entrare' ? notaScadenza(s.utente.ruolo, new Date(), dati.costanti) : '' },
     emissioni: {
       ...em,
       stimaTesto: testoStimaCo2(r.emissioni.principale, em.evitataAltra, dati.costanti),
