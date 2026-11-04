@@ -180,7 +180,7 @@ function mostra(r, s, percorso, ingressi) {
   if (percorso === 'fondare') b.fondatore = ''; else delete b.fondatore;
   if (com.investimentoCer > 0) b.impiantoCer = ''; else delete b.impiantoCer;
   const vista = {
-    te: { ...te, notaScadenza: percorso === 'entrare' ? notaScadenza(s.utente.ruolo, new Date(), dati.costanti) : '' },
+    te: { ...te, notaScadenza: percorso === 'entrare' ? notaScadenza(s.utente.ruolo, new Date(), dati.costanti, s.utente.stato) : '' },
     emissioni: {
       ...em,
       stimaTesto: testoStimaCo2(r.emissioni.principale, em.evitataAltra, dati.costanti),

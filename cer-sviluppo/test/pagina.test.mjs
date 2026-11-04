@@ -219,5 +219,5 @@ test('testi della CO₂: niente «fino a», stima dichiarata, italiani e 20 anni
 test('la nota sulla scadenza sotto «Per te» è generata dal ruolo, e il testo vecchio non c\'è più (esclude la nota di prima, rimasta a mano)', () => {
   assert.match(HTML, /<p class="nota-r" data-solo-percorso="entrare" data-r="te\.notaScadenza"><\/p>/);
   assert.doesNotMatch(HTML, /la tua parte di tariffa potrebbe non esserci/);
-  assert.match(JS, /notaScadenza: percorso === 'entrare' \? notaScadenza\(s\.utente\.ruolo, new Date\(\), dati\.costanti\) : ''/);
+  assert.match(JS, /notaScadenza: percorso === 'entrare' \? notaScadenza\(s\.utente\.ruolo, new Date\(\), dati\.costanti, s\.utente\.stato\) : ''/);
 });

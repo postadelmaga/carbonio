@@ -128,13 +128,16 @@ test('la scadenza in «fondare»: esercizio dopo la costituzione, domanda che co
   assert.ok(!t.includes('va presentata'));
 });
 
-test('la nota sotto «Per te» in «Voglio entrare»: al consumatore solo la parte su chi entra, a prosumer e produttore una nota sola che comincia dall\'impianto (esclude la nota sull\'impianto mostrata al consumatore)', () => {
+test('la nota sotto «Per te» in «Voglio entrare»: al consumatore solo la parte su chi entra, a prosumer e produttore una nota sola che comincia dall\'impianto (esclude la nota sull\'impianto mostrata al consumatore), e con l\'impianto già in esercizio solo la parte su chi entra (esclude la scadenza degli impianti nuovi mostrata a chi ha l\'impianto già in esercizio)', () => {
   const oggi = new Date(2026, 10, 4);
   const chi = 'La scadenza del 31/12/2027 riguarda gli impianti, non chi consuma. Se entri dopo quella data in una comunità i cui impianti hanno già la tariffa, la tua energia condivisa dovrebbe contare ancora, per gli anni che restano dei loro 20: nessuna regola lo esclude, ma nessuna lo scrive, e il GSE non l\'ha chiarito.';
   const impianto = 'Per avere la tariffa premio l\'impianto deve entrare in esercizio dopo la costituzione della CER ed entro il 31/12/2027, e conviene presentare la domanda al GSE entro la stessa data. Se entra in esercizio dopo, con le regole di oggi la tariffa non c\'è: la sua energia conta lo stesso per la comunità, ma riceve solo il contributo ARERA, molto più piccolo. La data può arrivare prima, se in Italia si raggiungono 5 GW di impianti incentivati, e cambierebbe solo con una proroga, che a oggi non c\'è.';
   assert.equal(notaScadenza('consumatore', oggi, costanti), chi);
   assert.equal(notaScadenza('prosumer', oggi, costanti), `${impianto} ${chi}`);
   assert.equal(notaScadenza('produttore', oggi, costanti), `${impianto} ${chi}`);
+  assert.equal(notaScadenza('prosumer', oggi, costanti, 'precedente'), chi);
+  assert.equal(notaScadenza('produttore', oggi, costanti, 'esistente'), chi);
+  assert.equal(notaScadenza('prosumer', oggi, costanti, 'nuovo'), `${impianto} ${chi}`);
   assert.ok(notaScadenza('prosumer', new Date(2028, 1, 1), costanti).startsWith('La finestra della tariffa premio si è chiusa il 31/12/2027, salvo proroghe'));
 });
 

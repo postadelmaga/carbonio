@@ -23,11 +23,12 @@ export function testoScadenza(oggi, costanti) {
 }
 
 // Sotto «Per te» in «Voglio entrare» (revisione §6): al consumatore la parte su chi entra dopo la scadenza, a prosumer e
-// produttore una nota sola che comincia dal loro impianto.
-export function notaScadenza(ruolo, oggi, costanti) {
+// produttore una nota sola che comincia dal loro impianto. Con l'impianto già in esercizio non c'è una tariffa da chiedere
+// entro la data, quindi resta solo la parte su chi entra (decisione dell'utente, 04/11/2026).
+export function notaScadenza(ruolo, oggi, costanti, stato = 'nuovo') {
   const scadenza = voce(costanti, 'scadenza_esercizio'), data = dataIt(scadenza);
   const chi = `La scadenza del ${data} riguarda gli impianti, non chi consuma. Se entri dopo quella data in una comunità i cui impianti hanno già la tariffa, la tua energia condivisa dovrebbe contare ancora, per gli anni che restano dei loro ${voce(costanti, 'durata_tariffa_anni')}: nessuna regola lo esclude, ma nessuna lo scrive, e il GSE non l'ha chiarito.`;
-  if (ruolo !== 'prosumer' && ruolo !== 'produttore') return chi;
+  if ((ruolo !== 'prosumer' && ruolo !== 'produttore') || stato !== 'nuovo') return chi;
   const impianto = chiusa(oggi, scadenza)
     ? `La finestra della tariffa premio si è chiusa il ${data}, salvo proroghe: un impianto nuovo riceve solo il contributo ARERA.`
     : `Per avere la tariffa premio l'impianto deve entrare in esercizio dopo la costituzione della CER ed entro il ${data}, e conviene presentare la domanda al GSE entro la stessa data. Se entra in esercizio dopo, con le regole di oggi la tariffa non c'è: la sua energia conta lo stesso per la comunità, ma riceve solo il contributo ARERA, molto più piccolo. La data può arrivare prima, se in Italia si raggiungono 5 GW di impianti incentivati, e cambierebbe solo con una proroga, che a oggi non c'è.`;
