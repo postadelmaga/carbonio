@@ -25,6 +25,7 @@ test('le ipotesi dicono riparto d\'esempio, scelta prudente, anno meteo e fattor
   }
   assert.ok(t.includes('degrado dei pannelli: 0,5% della produzione l\'anno'), 'frase del degrado');
   assert.ok(!t.includes('il 0,5%'), 'nessun articolo davanti alla percentuale');
+  assert.ok(t.includes('La produzione è calcolata sui kWp dei pannelli, con un inverter della stessa potenza e una connessione che permette di immettere tutto: non contiamo tagli dell\'inverter né limiti di immissione, e il costo della connessione è escluso.'), 'ipotesi sulla potenza dichiarata, senza tagli né limiti di immissione (esclude un\'ipotesi che tace sui limiti dell\'impianto)');
   const riga = t.split('\n').find((l) => l.startsWith('CO₂ evitata:'));
   assert.equal(riga, 'CO₂ evitata: ipotesi che ogni kWh dei pannelli sostituisca un kWh delle centrali fossili italiane, 413,3 g/kWh (metodo ISPRA, media nazionale annua, 2025 preliminare); con la CO₂ media di un kWh consumato sarebbe 199,6. Sui 20 anni il fattore resta quello di oggi: è una proiezione.');
 });

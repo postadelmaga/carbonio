@@ -37,6 +37,9 @@ test('i numeri del testo di «Come calcoliamo» coincidono con costanti.json (es
     'Se i costi superano gli incentivi, il simulatore lo segnala: vanno coperti in altro modo, per esempio con una quota associativa.',
     'Sui 20 anni il fattore delle centrali fossili resta quello di oggi; con la media dei consumi scende come ha fatto in media dal 1990 al 2024.',
     'per chi entra nella comunità dopo quella data la condivisa dovrebbe contare ancora, ma le regole non lo scrivono',
+    'non contiamo tagli dell\'inverter né limiti di immissione',
+    'gli impianti di attività ed enti sono sempre nuovi',
+    'ha la tariffa ma è già pagato, e il simulatore non lo distingue',
   ];
   const mancanti = frasi.filter((f) => !HTML.includes(f));
   assert.deepEqual(mancanti, [], 'frasi da aggiornare in cer/simulatore/metodo/index.html');

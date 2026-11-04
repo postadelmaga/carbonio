@@ -5,6 +5,7 @@ import { formaDomestica, formaAttivita, scala, sposta, produzione, somma } from 
 import { energia } from './energia.js';
 import { economiaAnno, investimento, costoEvitato, voce, giaInEsercizio, STATI } from './economia.js';
 import { emissioni, FATTORI } from './emissioni.js';
+import { numero } from './formato.js';
 
 export const CLASSI = ['0-1,5', '1,5-3', '3-4,5', '4,5-6', 'oltre_6'];
 export const TIPI_SOCIO = ['famiglia', 'attivita', 'ente'];
@@ -197,6 +198,15 @@ export function calcola(ingressi, dati) {
   const kwTot = kw(() => true), kwEs = kw((k) => k.stato === 'esistente');
   if (kwTot > 0 && kwEs / kwTot > voce(c, 'limite_potenza_esistenti')) {
     avvisi.push({ codice: 'esistenti_oltre_soglia', testo: `Gli impianti esistenti, entrati in esercizio fino al 15/12/2021, sono il ${Math.round((100 * kwEs) / kwTot)}% della potenza: le Regole li ammettono fino al ${Math.round(100 * voce(c, 'limite_potenza_esistenti'))}%.` });
+  }
+  // Revisione §10.5: per una famiglia il vincolo è il monofase; il contatore non limita l'immissione.
+  const lim = voce(c, 'limiti_monofase');
+  const diFamiglia = (k) => k.sulPod && gruppi.find((g) => g.id === k.titolare)?.tipo === 'famiglia';
+  const kwpFamiglia = Math.max(0, ...prep.impianti.filter(diFamiglia).map((k) => k.kwp));
+  if (kwpFamiglia > lim.con_sli_kw) {
+    avvisi.push({ codice: 'potenza_trifase', testo: `Oltre ${numero(lim.con_sli_kw, 2)} kW un impianto di famiglia richiede una connessione trifase. Il calcolo non ne tiene conto.` });
+  } else if (kwpFamiglia > lim.monofase_kw) {
+    avvisi.push({ codice: 'potenza_monofase', testo: `Un impianto di famiglia oltre ${numero(lim.monofase_kw)} kW su una connessione monofase richiede il consenso del distributore (fino a ${numero(lim.con_consenso_kw)} kW) o un sistema che limita l'immissione (fino a ${numero(lim.con_sli_kw, 2)} kW). Il calcolo non ne tiene conto.` });
   }
   // Con una quota associativa già impostata l'avviso la conta: manca solo ciò che incentivi e quote insieme non coprono.
   const scoperto = par.quota_associativa > 0 ? ec1.nonCoperti - ec1.cer.quote : ec1.nonCoperti;

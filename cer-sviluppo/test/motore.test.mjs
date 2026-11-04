@@ -312,3 +312,19 @@ test('il costo evitato per kWh del membro è quello della spesa variabile (esclu
   const m = calcola(base(), dati).perTe;
   quasi(m.quotaSpesa, m.cerAggiunge / (m.consumo * m.costoEvitatoKwh), 1e-12);
 });
+
+test('avvisi di potenza solo per gli impianti sul POD di una famiglia: niente a 6 kWp, il monofase oltre 6, il trifase oltre 11,08 (esclude avvisi legati al contatore o agli impianti di attività)', () => {
+  const con = (kwp, titolare = 'io') => {
+    const ing = base();
+    ing.impianti.push({ id: 'tuo', kwp, titolare, sul_pod_del_titolare: true, per_ogni_membro: false, stato: 'nuovo' });
+    return calcola(ing, dati).avvisi.map((a) => a.codice);
+  };
+  assert.ok(!con(6).some((c) => c.startsWith('potenza_')));
+  assert.ok(con(6.5).includes('potenza_monofase') && !con(6.5).includes('potenza_trifase'));
+  assert.ok(con(12).includes('potenza_trifase') && !con(12).includes('potenza_monofase'));
+  const att = base();
+  att.impianti.push({ id: 'att', kwp: 20, titolare: 'attivita', sul_pod_del_titolare: true, per_ogni_membro: true, stato: 'nuovo' });
+  assert.ok(!calcola(att, dati).avvisi.some((a) => a.codice.startsWith('potenza_')));
+  const testo = calcola((() => { const i = base(); i.impianti.push({ id: 'tuo', kwp: 6.5, titolare: 'io', sul_pod_del_titolare: true, per_ogni_membro: false, stato: 'nuovo' }); return i; })(), dati).avvisi.find((a) => a.codice === 'potenza_monofase').testo;
+  assert.equal(testo, 'Un impianto di famiglia oltre 6 kW su una connessione monofase richiede il consenso del distributore (fino a 10 kW) o un sistema che limita l\'immissione (fino a 11,08 kW). Il calcolo non ne tiene conto.');
+});

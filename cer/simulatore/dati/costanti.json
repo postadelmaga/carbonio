@@ -62,11 +62,19 @@
       "note": "Formula applicata alla lettera: punti percentuali oltre la soglia moltiplicati per tutta la tariffa. Il 45% con contributi in conto capitale non serve: il simulatore non li modella."
     },
     "limite_potenza_esistenti": {
-      "descrizione": "Quota massima della potenza della configurazione per gli impianti già esistenti",
+      "descrizione": "Quota massima della potenza della configurazione per gli impianti esistenti, entrati in esercizio fino al 15/12/2021",
       "valore": 0.30, "unita": "frazione",
-      "fonte": "DM MASE 414/2023, art. 3; Regole operative GSE del 16/07/2025",
+      "fonte": "DM MASE 414/2023, art. 3; Regole operative GSE del 16/07/2025, p. 11; TIAD, art. 3.4 lett. f",
       "url": "https://www.gse.it/documenti_site/Documenti%20GSE/Servizi%20per%20te/AUTOCONSUMO/Gruppi%20di%20autoconsumatori%20e%20comunita%20di%20energia%20rinnovabile/Regole%20e%20procedure/Allegato%201%20Regole%20Operative%20CACER.pdf",
-      "consultato": "2026-10-18", "note": "Oltre il limite la pagina avverte."
+      "consultato": "2026-11-04", "note": "Oltre il limite la pagina avverte."
+    },
+    "limiti_monofase": {
+      "descrizione": "Potenza di un impianto su una connessione monofase in bassa tensione: senza consenso, con il consenso del distributore, con un sistema di limitazione dell'immissione",
+      "valore": { "monofase_kw": 6, "con_consenso_kw": 10, "con_sli_kw": 11.08 }, "unita": "kW",
+      "fonte": "Norma CEI 0-21, §8.3 e Allegato L (versione consolidata di lavoro del CEI)",
+      "url": "",
+      "consultato": "2026-11-04",
+      "note": "Letta nella versione consolidata che il CEI pubblica gratuitamente, che non sostituisce la norma. Lo SLI vale dal 01/03/2026 con una potenza in immissione fino a 6 kW."
     },
     "contributo_arera": {
       "descrizione": "Contributo di valorizzazione ARERA per una CER: TRAS_E in bassa tensione sull'energia condivisa",
