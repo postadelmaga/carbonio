@@ -64,7 +64,7 @@ test('ogni data-r della pagina comincia con una chiave di vista, e le chiavi son
 test('un nome rinominato da una parte sola non passa: la prova se ne accorge', () => {
   assert.deepEqual(nomiMancanti(HTML.replaceAll('name="kwp"', 'name="potenza"'), JS), ['kwp']);
   assert.deepEqual(idMancanti(HTML.replaceAll('id="mese"', 'id="mesi"'), JS), ['mese']);
-  assert.ok(rilegatureMancanti(HTML, JS.replace('    te,', '    tuo,')).includes('te.totale'));
+  assert.ok(rilegatureMancanti(HTML, JS.replace('    te,', '    tuo,')).includes('te.cerAggiunge'));
   assert.ok(rilegatureMancanti(HTML, JS.replace('anni: voce(', 'durata: voce(')).includes('cost.anni'));
 });
 test('ogni cursore ha un id uguale al name e una label che lo indica con for', () => {
@@ -130,12 +130,21 @@ test('l\'impianto della CER ha il suo riquadro, che compare solo se la CER ha im
   assert.match(CSS, /body:not\(\[data-impianto-cer\]\) \[data-solo-impianto-cer\]/);
 });
 
-test('«L\'impianto da solo» segue haImpianto, investimento e rientri seguono l\'investimento, «già pagato» segue soloGiaInEsercizio', () => {
-  const riga = (titolo) => HTML.match(new RegExp(`<div([^>]*)><dt>${titolo}</dt>`))?.[1] ?? null;
-  assert.equal(riga('L\'impianto da solo').trim(), 'data-solo-impianto');
-  for (const t of ['Investimento', 'Rientro con la CER', 'Rientro senza CER']) assert.equal(riga(t).trim(), 'data-solo-investimento', t);
-  assert.match(HTML, /<div data-solo-pagato><dt>Investimento<\/dt><dd>già pagato<\/dd><\/div>/);
-  assert.match(HTML, /<p data-solo-investimento>Il tuo impianto: /, 'la CO₂ del tuo impianto c\'è solo con un impianto nuovo: quelli esistenti non evitano CO₂ in più');
+test('«Per te»: il numero grande è ciò che porta la CER, l\'impianto ha le sue righe, rientro e 20 anni con l\'impianto solo per un impianto nuovo (esclude un numero grande che sommi ciò che l\'impianto dà comunque)', () => {
+  assert.match(HTML, /<p class="grande" aria-live="polite"><b data-r="te\.cerAggiunge" data-f="euro"><\/b><small>all'anno dalla CER, il primo anno<\/small><\/p>/);
+  assert.doesNotMatch(HTML, /<dt>La CER aggiunge<\/dt>/);
+  assert.match(HTML, /<dt>In <span data-r="cost\.anni"><\/span> anni, dalla CER<\/dt><dd data-r="te\.cerVentiAnniNetto" data-f="euro"><\/dd>/);
+  assert.match(HTML, /<div data-solo-fondatore><dt>Costituzione, la tua parte, già tolta dai <span data-r="cost\.anni"><\/span> anni<\/dt>/);
+  const da = HTML.indexOf('<div class="impianto-te" data-solo-impianto>');
+  assert.ok(da >= 0, 'manca il gruppo «Il tuo impianto»');
+  const gruppo = HTML.slice(da, HTML.indexOf('</dl>', da));
+  assert.match(gruppo, /<p class="kicker">Il tuo impianto<\/p>/);
+  assert.match(gruppo, /<div><dt>Da solo, all'anno<\/dt><dd data-r="te\.impiantoDaSolo" data-f="euro"><\/dd><\/div>/);
+  const riga = (titolo) => gruppo.match(new RegExp(`<div([^>]*)><dt>${titolo}`))?.[1] ?? null;
+  for (const t of ['Investimento</dt><dd data-r', 'Rientro con la CER', 'Rientro senza CER', 'In <span data-r="cost\\.anni"></span> anni, impianto e CER']) assert.equal(riga(t)?.trim(), 'data-solo-investimento', t);
+  assert.match(gruppo, /<div data-solo-pagato><dt>Investimento<\/dt><dd>già pagato<\/dd><\/div>/);
+  assert.match(HTML, /<p data-solo-investimento>Il tuo impianto: /, 'la CO₂ del tuo impianto c\'è solo con un impianto nuovo');
+  assert.match(HTML, /<div class="barra-riassunto" aria-hidden="true"><b data-r="te\.cerAggiunge" data-f="euro"><\/b> l'anno dalla CER · /);
   assert.match(JS, /if \(te\.haImpianto\) b\.impianto = ''; else delete b\.impianto;/);
   assert.match(JS, /if \(te\.investimento > 0\) b\.investimento = ''; else delete b\.investimento;/);
   assert.match(JS, /if \(te\.soloGiaInEsercizio\) b\.pagato = ''; else delete b\.pagato;/);
@@ -176,7 +185,7 @@ test('i numeri della regione viva si riscrivono solo se il testo cambia, e gli a
   assert.match(corpo, /if \(e\.textContent !== t\) e\.textContent = t;/);
   assert.doesNotMatch(corpo, /e\.textContent = e\.dataset\.f/, 'il ciclo dei data-r non scrive più senza confrontare');
   assert.match(HTML, /<div id="avvisi" class="avvisi" role="status"><\/div>/);
-  assert.match(HTML, /<p class="grande" aria-live="polite"><b data-r="te\.totale"/, 'il totale resta nella regione viva');
+  assert.match(HTML, /<p class="grande" aria-live="polite"><b data-r="te\.cerAggiunge"/, 'il totale resta nella regione viva');
 });
 
 test('gli avvisi si riscrivono solo se cambiano: una regione di stato non ripete lo stesso avviso a ogni movimento di cursore', () => {

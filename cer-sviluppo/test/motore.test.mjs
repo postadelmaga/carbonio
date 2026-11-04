@@ -262,6 +262,15 @@ test('chi non ha impianto non ha né investimento né impianto già pagato', () 
   assert.equal(m.investimento, 0);
 });
 
+test('«Per te»: in 20 anni dalla CER è la somma di ciò che porta la CER meno la quota della costituzione (esclude un conto che sommi ciò che l\'impianto dà comunque)', () => {
+  const ing = conTuo(true);
+  const m = calcola(ing, dati).perTe;
+  quasi(m.cerVentiAnniNetto, m.cerVentiAnni, 1e-9, 'senza costituzione in «entrare»');
+  const fondatore = { ...conTuo(false), fondatore: true, parametri: { fondatori: 4 } };
+  const f = calcola(fondatore, dati).perTe;
+  quasi(f.cerVentiAnniNetto, f.cerVentiAnni - 360 / 4, 1e-9, 'la parte di 360 € fra 4 fondatori');
+});
+
 test('l\'investimento della CER somma solo gli impianti nuovi', () => {
   const ing = base({ impianti: [
     { id: 'vecchio', kwp: 6, titolare: 'cer', sul_pod_del_titolare: false, per_ogni_membro: false, stato: 'precedente' },

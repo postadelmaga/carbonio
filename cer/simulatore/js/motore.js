@@ -153,7 +153,7 @@ export function calcola(ingressi, dati) {
   if (ingressi.io && membri[ingressi.io]) {
     const m = membri[ingressi.io];
     const quota = ingressi.fondatore ? (par.costituzione_eur == null ? null : par.costituzione_eur / par.fondatori) : 0;
-    perTe = { id: ingressi.io, ...m, costituzione: quota, ventiAnni: m.ventiAnni - (quota ?? 0) };
+    perTe = { id: ingressi.io, ...m, costituzione: quota, ventiAnni: m.ventiAnni - (quota ?? 0), cerVentiAnniNetto: m.cerVentiAnni - (quota ?? 0) };
   }
 
   const t1 = en1.totali;

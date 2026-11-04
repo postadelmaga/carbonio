@@ -246,18 +246,23 @@
 
   <section class="ris ris-te">
     <p class="kicker">Per te</p>
-    <p class="grande" aria-live="polite"><b data-r="te.totale" data-f="euro"></b><small>all'anno, il primo anno</small></p>
+    <p class="grande" aria-live="polite"><b data-r="te.cerAggiunge" data-f="euro"></b><small>all'anno dalla CER, il primo anno</small></p>
     <dl class="voci">
-      <div data-solo-impianto><dt>L'impianto da solo</dt><dd data-r="te.impiantoDaSolo" data-f="euro"></dd></div>
-      <div><dt>La CER aggiunge</dt><dd data-r="te.cerAggiunge" data-f="euro"></dd></div>
       <div><dt>Sulla spesa variabile della bolletta</dt><dd data-r="te.quotaSpesa" data-f="perc"></dd></div>
-      <div><dt>In <span data-r="cost.anni"></span> anni</dt><dd data-r="te.ventiAnni" data-f="euro"></dd></div>
-      <div data-solo-investimento><dt>Investimento</dt><dd data-r="te.investimento" data-f="euro"></dd></div>
-      <div data-solo-pagato><dt>Investimento</dt><dd>già pagato</dd></div>
-      <div data-solo-investimento><dt>Rientro con la CER</dt><dd data-r="te.rientroConCer" data-f="anni"></dd></div>
-      <div data-solo-investimento><dt>Rientro senza CER</dt><dd data-r="te.rientroSenzaCer" data-f="anni"></dd></div>
-      <div data-solo-fondatore><dt>Costituzione, la tua parte</dt><dd data-r="te.costituzione" data-f="euro"></dd></div>
+      <div><dt>In <span data-r="cost.anni"></span> anni, dalla CER</dt><dd data-r="te.cerVentiAnniNetto" data-f="euro"></dd></div>
+      <div data-solo-fondatore><dt>Costituzione, la tua parte, già tolta dai <span data-r="cost.anni"></span> anni</dt><dd data-r="te.costituzione" data-f="euro"></dd></div>
     </dl>
+    <div class="impianto-te" data-solo-impianto>
+      <p class="kicker">Il tuo impianto</p>
+      <dl class="voci">
+        <div><dt>Da solo, all'anno</dt><dd data-r="te.impiantoDaSolo" data-f="euro"></dd></div>
+        <div data-solo-investimento><dt>Investimento</dt><dd data-r="te.investimento" data-f="euro"></dd></div>
+        <div data-solo-pagato><dt>Investimento</dt><dd>già pagato</dd></div>
+        <div data-solo-investimento><dt>Rientro con la CER</dt><dd data-r="te.rientroConCer" data-f="anni"></dd></div>
+        <div data-solo-investimento><dt>Rientro senza CER</dt><dd data-r="te.rientroSenzaCer" data-f="anni"></dd></div>
+        <div data-solo-investimento><dt>In <span data-r="cost.anni"></span> anni, impianto e CER</dt><dd data-r="te.ventiAnni" data-f="euro"></dd></div>
+      </dl>
+    </div>
     <p class="nota-r" data-solo-percorso="entrare">Se entri dopo il <span data-r="cost.scadenza"></span> la tua parte di tariffa potrebbe non esserci: le regole non chiariscono se la condivisa di chi entra dopo quella data conti ancora.</p>
   </section>
 
@@ -329,7 +334,7 @@
 </section>
 </main>
 
-<div class="barra-riassunto" aria-hidden="true"><b data-r="te.totale" data-f="euro"></b> l'anno · <b data-r="emissioni.evitata" data-f="t"></b> di CO₂ evitate</div>
+<div class="barra-riassunto" aria-hidden="true"><b data-r="te.cerAggiunge" data-f="euro"></b> l'anno dalla CER · <b data-r="emissioni.evitata" data-f="t"></b> di CO₂ evitate</div>
 
 <footer>
   <div class="wrap">
