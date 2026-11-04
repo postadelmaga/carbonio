@@ -214,13 +214,13 @@ test('impianto di un socio: il fondo è solo la parte della CER, titolareCer e f
 });
 
 // Il ciclo dei 20 anni (spec §6.10), rifatto qui fuori da calcola: anno 1 e anno 20 esatti, gli altri interpolati con peso().
-function sommaVentiAnni(ingressi, id) {
+function sommaVentiAnni(ingressi, id, campi = ['impiantoDaSolo', 'cerAggiunge']) {
   const prep = prepara(ingressi, dati);
   const f1 = flussi(anno(prep, 1).ec.membri[id]), f20 = flussi(anno(prep, (1 - prep.degrado) ** (prep.anni - 1)).ec.membri[id]);
   let somma = 0;
   for (let t = 1; t <= prep.anni; t++) {
     const w = peso(t, prep.degrado, prep.anni);
-    for (const campo of ['impiantoDaSolo', 'cerAggiunge']) somma += f1[campo] + (f20[campo] - f1[campo]) * w;
+    for (const campo of campi) somma += f1[campo] + (f20[campo] - f1[campo]) * w;
   }
   return somma;
 }
@@ -265,6 +265,9 @@ test('chi non ha impianto non ha né investimento né impianto già pagato', () 
 test('«Per te»: in 20 anni dalla CER è la somma di ciò che porta la CER meno la quota della costituzione (esclude un conto che sommi ciò che l\'impianto dà comunque)', () => {
   const ing = conTuo(true);
   const m = calcola(ing, dati).perTe;
+  assert.ok(m.impiantoDaSolo > 0, 'l\'impianto già in esercizio fa risparmiare: senza, il controllo non distingue');
+  quasi(m.cerVentiAnni, sommaVentiAnni(ing, 'io', ['cerAggiunge']), 1e-6, 'cerVentiAnni è solo ciò che porta la CER, senza l\'impianto');
+  assert.ok(m.cerVentiAnni <= sommaVentiAnni(ing, 'io') - 1, 'cerVentiAnni è minore della somma con l\'impianto di almeno 1 €');
   quasi(m.cerVentiAnniNetto, m.cerVentiAnni, 1e-9, 'senza costituzione in «entrare»');
   const fondatore = { ...conTuo(false), fondatore: true, parametri: { fondatori: 4 } };
   const f = calcola(fondatore, dati).perTe;

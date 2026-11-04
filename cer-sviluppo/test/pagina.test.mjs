@@ -185,7 +185,7 @@ test('i numeri della regione viva si riscrivono solo se il testo cambia, e gli a
   assert.match(corpo, /if \(e\.textContent !== t\) e\.textContent = t;/);
   assert.doesNotMatch(corpo, /e\.textContent = e\.dataset\.f/, 'il ciclo dei data-r non scrive più senza confrontare');
   assert.match(HTML, /<div id="avvisi" class="avvisi" role="status"><\/div>/);
-  assert.match(HTML, /<p class="grande" aria-live="polite"><b data-r="te\.cerAggiunge"/, 'il totale resta nella regione viva');
+  assert.match(HTML, /<p class="grande" aria-live="polite"><b data-r="te\.cerAggiunge"/, 'ciò che porta la CER resta nella regione viva');
 });
 
 test('gli avvisi si riscrivono solo se cambiano: una regione di stato non ripete lo stesso avviso a ogni movimento di cursore', () => {
