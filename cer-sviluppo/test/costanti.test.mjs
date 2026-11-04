@@ -42,6 +42,14 @@ test('il corrispettivo del GSE si dichiara IVA esclusa, come lo conta il simulat
   assert.match(v.note, /il simulatore non la aggiunge/);
 });
 
+test('l\'IVA al 10% sull\'impianto di una famiglia cita il DPR 633/1972, come quella dell\'ente (esclude un\'aliquota sostenuta solo da un\'indagine sui prezzi)', () => {
+  const { voci } = leggi('costanti.json');
+  const norma = 'DPR 633/1972, Tabella A, parte III, nn. 127-quinquies, 127-sexies e 127-septies';
+  assert.ok(voci.iva_impianto.fonte.startsWith(norma), voci.iva_impianto.fonte);
+  assert.ok(voci.iva_impianto_ente.fonte.startsWith(norma), voci.iva_impianto_ente.fonte);
+  assert.match(voci.iva_impianto.url, /agenziaentrate\.gov\.it/);
+});
+
 test('archetipi: 24 ore per tipo di giorno e 12 mesi', () => {
   const { archetipi } = leggi('consumi/attivita.json');
   for (const [id, a] of Object.entries(archetipi)) {

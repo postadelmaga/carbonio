@@ -153,8 +153,8 @@
     "iva_impianto": {
       "descrizione": "IVA sull'impianto fotovoltaico di una famiglia",
       "valore": 0.10, "unita": "frazione",
-      "fonte": "IEA PVPS, National Survey Report Italy 2024, tab. 9 (1,53 €/W con l'IVA al 10% sotto 10 kW)",
-      "url": "https://iea-pvps.org/wp-content/uploads/2025/10/NSR-of-PV-Power-Applications-in-Italy-2024.pdf",
+      "fonte": "DPR 633/1972, Tabella A, parte III, nn. 127-quinquies, 127-sexies e 127-septies; Agenzia delle Entrate, Risposta n. 181/2026; IEA PVPS, National Survey Report Italy 2024, tab. 9 (1,53 €/W con l'IVA al 10% sotto 10 kW)",
+      "url": "https://www.agenziaentrate.gov.it/portale/documents/20143/10360383/Risposta+n.+181_2026/34a8157d-69bb-0a63-c35e-cf8aa3d7b4ea",
       "consultato": "2026-11-02", "note": ""
     },
     "iva_impianto_ente": {
