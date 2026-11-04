@@ -16,9 +16,9 @@ test('fattori', () => {
 function caso() {
   const gruppi = [{ id: 'f', tipo: 'famiglia', numero: 2 }, { id: 'a', tipo: 'attivita', numero: 1 }];
   const impianti = [
-    { id: 'vecchio', kwp: 3, titolare: 'a', esistente: true, perOgniMembro: false, sulPod: true, produzione: serie(1, 1, 1, 1) },
-    { id: 'tetti', kwp: 3, titolare: 'f', esistente: false, perOgniMembro: true, sulPod: true, produzione: serie(0, 2, 2, 0) },
-    { id: 'campo', kwp: 20, titolare: 'cer', esistente: false, perOgniMembro: false, sulPod: false, produzione: serie(0, 5, 5, 0) },
+    { id: 'vecchio', kwp: 3, titolare: 'a', stato: 'precedente', perOgniMembro: false, sulPod: true, produzione: serie(1, 1, 1, 1) },
+    { id: 'tetti', kwp: 3, titolare: 'f', perOgniMembro: true, sulPod: true, produzione: serie(0, 2, 2, 0) },
+    { id: 'campo', kwp: 20, titolare: 'cer', perOgniMembro: false, sulPod: false, produzione: serie(0, 5, 5, 0) },
   ];
   const en = energia([{ ...gruppi[0], consumo: serie(1, 1, 1, 1) }, { ...gruppi[1], consumo: serie(3, 3, 3, 3) }], impianti);
   return { en, gruppi, impianti };

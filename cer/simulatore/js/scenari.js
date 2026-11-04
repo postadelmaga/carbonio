@@ -5,7 +5,7 @@ import { voce } from './economia.js';
 
 const famiglia = (id, numero, classe, consumo, spostamento) => ({ id, tipo: 'famiglia', numero, classe_potenza: classe, consumo_kwh_anno: consumo ?? null, spostamento: spostamento ?? 0 });
 const altro = (id, tipo, numero, archetipo, consumo) => ({ id, tipo, numero, archetipo, consumo_kwh_anno: consumo ?? null, spostamento: 0 });
-const impianto = (id, kwp, titolare, sulPod, perOgni, esistente) => ({ id, kwp, titolare, sul_pod_del_titolare: sulPod, per_ogni_membro: perOgni, esistente: !!esistente });
+const impianto = (id, kwp, titolare, sulPod, perOgni, esistente) => ({ id, kwp, titolare, sul_pod_del_titolare: sulPod, per_ogni_membro: perOgni, stato: esistente ? 'precedente' : 'nuovo' });
 
 export function ingressiEntrare(stato, costanti) {
   const u = stato.utente;
@@ -19,12 +19,12 @@ export function ingressiEntrare(stato, costanti) {
   if (cm.enti > 0) soci.push(altro('enti', 'ente', cm.enti, cm.archetipo_ente, cm.consumo_ente));
   const impianti = [];
   const tuo = u.ruolo === 'prosumer' || u.ruolo === 'produttore' ? impianto('tuo', u.kwp, 'io', u.ruolo === 'prosumer', false, u.esistente) : null;
-  if (tuo?.esistente) impianti.push(tuo);
+  if (tuo && tuo.stato !== 'nuovo') impianti.push(tuo);
   if (cm.kwp_comune > 0) {
     soci.push(altro('produttore', 'attivita', 1, 'com_orario_apertura', 0));
     impianti.push(impianto('comune', cm.kwp_comune, 'produttore', false, false, false));
   }
-  if (tuo && !tuo.esistente) impianti.push(tuo);
+  if (tuo && tuo.stato === 'nuovo') impianti.push(tuo);
   return { area: stato.area, soci, impianti, parametri: stato.parametri ?? {}, io: 'io', fondatore: false };
 }
 
@@ -41,7 +41,7 @@ export function ingressiFondare(stato, costanti) {
   if (f.comune.kwp > 0) {
     if (f.comune.titolare === 'produttore') soci.push(altro('produttore', 'attivita', 1, 'com_orario_apertura', 0));
     const k = impianto('comune', f.comune.kwp, f.comune.titolare === 'cer' ? 'cer' : 'produttore', false, false, f.comune.esistente);
-    (k.esistente ? esistenti : nuovi).push(k);
+    (k.stato !== 'nuovo' ? esistenti : nuovi).push(k);
   }
   for (const id of ['attivita', 'enti']) {
     if (f[id].numero > 0 && f[id].kwp > 0) nuovi.push(impianto(id, f[id].kwp, id, true, true, false));

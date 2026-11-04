@@ -171,7 +171,7 @@ function mostra(r, s, percorso, ingressi) {
   // tre attributi distinti: chi ha un impianto, chi lo deve ancora pagare, chi ha solo impianti già in esercizio
   if (te.haImpianto) b.impianto = ''; else delete b.impianto;
   if (te.investimento > 0) b.investimento = ''; else delete b.investimento;
-  if (te.soloEsistenti) b.pagato = ''; else delete b.pagato;
+  if (te.soloGiaInEsercizio) b.pagato = ''; else delete b.pagato;
   if (percorso === 'fondare') b.fondatore = ''; else delete b.fondatore;
   if (com.investimentoCer > 0) b.impiantoCer = ''; else delete b.impiantoCer;
   const vista = {

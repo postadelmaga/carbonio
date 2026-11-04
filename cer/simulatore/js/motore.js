@@ -3,7 +3,7 @@
 import { asseOre } from './calendario.js';
 import { formaDomestica, formaAttivita, scala, sposta, produzione, somma } from './profili.js';
 import { energia } from './energia.js';
-import { economiaAnno, investimento, costoEvitato, voce } from './economia.js';
+import { economiaAnno, investimento, costoEvitato, voce, giaInEsercizio, STATI } from './economia.js';
 import { emissioni } from './emissioni.js';
 
 export const CLASSI = ['0-1,5', '1,5-3', '3-4,5', '4,5-6', 'oltre_6'];
@@ -40,6 +40,8 @@ export function valida(ingressi, c) {
     if (k.titolare === 'cer' && k.sul_pod_del_titolare) err.push(`impianto ${k.id}: un impianto della CER non sta sul POD di un socio`);
     if (k.per_ogni_membro && !k.sul_pod_del_titolare) err.push(`impianto ${k.id}: un impianto per ogni membro sta sul POD di ciascuno`);
     if (t && t.numero > 1 && !k.per_ogni_membro) err.push(`impianto ${k.id}: il titolare è un gruppo, l'impianto va indicato per ogni membro`);
+    if ('esistente' in k) err.push(`impianto ${k.id}: «esistente» non si usa più, lo stato va in «stato»`);
+    if (!STATI.includes(k.stato ?? 'nuovo')) err.push(`impianto ${k.id}: stato «${k.stato}» non previsto`);
   }
   const p = ingressi.parametri ?? {};
   for (const q of ['quota_produttore', 'quota_consumatori']) if (p[q] != null && !fra(p[q], 0, 1)) err.push(`${q} fra 0 e 100%`);
@@ -78,7 +80,7 @@ export function prepara(ingressi, dati) {
   });
   const impianti = ingressi.impianti.map((k) => ({
     id: k.id, kwp: k.kwp, titolare: k.titolare, sulPod: !!k.sul_pod_del_titolare, perOgniMembro: !!k.per_ogni_membro,
-    esistente: !!k.esistente, unitaria: serie.produzioni?.[k.id] ?? produzione(dati.pv, k.kwp),
+    stato: k.stato ?? 'nuovo', unitaria: serie.produzioni?.[k.id] ?? produzione(dati.pv, k.kwp),
   }));
   return { c, par, gruppi, impianti, degrado: voce(c, 'degrado'), anni: voce(c, 'durata_tariffa_anni') };
 }
@@ -126,9 +128,9 @@ export function calcola(ingressi, dati) {
     const delAnno = (t, campo) => f1[campo] + (f20[campo] - f1[campo]) * peso(t, degrado, anni);
     // Un impianto già in esercizio è già pagato: si tolgono dall'investimento, non dai flussi.
     const propri = prep.impianti.filter((k) => k.titolare === g.id);
-    const inv = propri.filter((k) => !k.esistente)
+    const inv = propri.filter((k) => !giaInEsercizio(k))
       .reduce((s, k) => s + investimento(k.kwp, g.tipo, c, par.prezzo_impianto_eur_w), 0);
-    const haImpianto = propri.length > 0, soloEsistenti = haImpianto && propri.every((k) => k.esistente);
+    const haImpianto = propri.length > 0, soloGiaInEsercizio = haImpianto && propri.every(giaInEsercizio);
     let con = 0, senza = 0, cer = 0, rientroCon = null, rientroSenza = null;
     for (let t = 1; t <= anni; t++) {
       const da = delAnno(t, 'impiantoDaSolo'), ag = delAnno(t, 'cerAggiunge');
@@ -142,7 +144,7 @@ export function calcola(ingressi, dati) {
       tipo: g.tipo, numero: g.numero, consumo: e.consumo, autoconsumo: e.autoconsumo, prelievo: e.prelievo, condivisa: e.condivisa,
       voci: ec1.membri[g.id], impiantoDaSolo: f1.impiantoDaSolo, cerAggiunge: f1.cerAggiunge, totale: f1.impiantoDaSolo + f1.cerAggiunge,
       quotaSpesa: spesa > 0 ? f1.cerAggiunge / spesa : null,
-      haImpianto, soloEsistenti, investimento: inv, rientroConCer: rientroCon, rientroSenzaCer: rientroSenza, ventiAnni: con - inv, cerVentiAnni: cer,
+      haImpianto, soloGiaInEsercizio, investimento: inv, rientroConCer: rientroCon, rientroSenzaCer: rientroSenza, ventiAnni: con - inv, cerVentiAnni: cer,
       co2: co2.membri[g.id],
     };
   });
@@ -171,7 +173,7 @@ export function calcola(ingressi, dati) {
     costi: ec1.costi, kappa: ec1.kappa, nonCoperti: ec1.nonCoperti, fondo: ec1.cer.fondo, quote: ec1.cer.quote,
     quotaCer: ec1.cer.quotaCer, titolareCer: ec1.cer.titolare, fondoSociale: ec1.cer.fondoSociale,
     venditaCer: ec1.cer.vendita, manutenzioneCer: ec1.cer.manutenzione,
-    investimentoCer: prep.impianti.filter((k) => k.titolare === 'cer' && !k.esistente).reduce((s, k) => s + investimento(k.kwp, 'cer', c, par.prezzo_impianto_eur_w), 0),
+    investimentoCer: prep.impianti.filter((k) => k.titolare === 'cer' && !giaInEsercizio(k)).reduce((s, k) => s + investimento(k.kwp, 'cer', c, par.prezzo_impianto_eur_w), 0),
     incentivi,
     costituzionePerFondatore: par.costituzione_eur == null ? null : par.costituzione_eur / par.fondatori,
     membriTotali: gruppi.reduce((s, g) => s + g.numero, 0),
@@ -190,9 +192,10 @@ export function calcola(ingressi, dati) {
   if (!prep.impianti.length) avvisi.push({ codice: 'senza_impianti', testo: 'Senza impianti non c\'è energia da condividere.' });
   if (!(t1.prelievo > 0)) avvisi.push({ codice: 'senza_prelievi', testo: 'Senza consumi dalla rete non c\'è energia condivisa.' });
   const kw = (filtro) => prep.impianti.reduce((s, k, j) => s + (filtro(k) ? k.kwp * en1.impianti[j].copie : 0), 0);
-  const kwTot = kw(() => true), kwEs = kw((k) => k.esistente);
+  // Il limite del 30% vale solo per gli impianti «esistenti» delle Regole, entrati in esercizio fino al 15/12/2021.
+  const kwTot = kw(() => true), kwEs = kw((k) => k.stato === 'esistente');
   if (kwTot > 0 && kwEs / kwTot > voce(c, 'limite_potenza_esistenti')) {
-    avvisi.push({ codice: 'esistenti_oltre_soglia', testo: `Gli impianti già in esercizio sono il ${Math.round((100 * kwEs) / kwTot)}% della potenza: le Regole li ammettono fino al ${Math.round(100 * voce(c, 'limite_potenza_esistenti'))}%.` });
+    avvisi.push({ codice: 'esistenti_oltre_soglia', testo: `Gli impianti esistenti, entrati in esercizio fino al 15/12/2021, sono il ${Math.round((100 * kwEs) / kwTot)}% della potenza: le Regole li ammettono fino al ${Math.round(100 * voce(c, 'limite_potenza_esistenti'))}%.` });
   }
   // Con una quota associativa già impostata l'avviso la conta: manca solo ciò che incentivi e quote insieme non coprono.
   const scoperto = par.quota_associativa > 0 ? ec1.nonCoperti - ec1.cer.quote : ec1.nonCoperti;
@@ -212,7 +215,7 @@ export function calcola(ingressi, dati) {
   }
 
   const impianti = imp1.map((k, j) => ({
-    id: k.id, kwp: k.kwp, esistente: k.esistente, copie: en1.impianti[j].copie, produzione: en1.impianti[j].produzione,
+    id: k.id, kwp: k.kwp, stato: k.stato, giaInEsercizio: giaInEsercizio(k), copie: en1.impianti[j].copie, produzione: en1.impianti[j].produzione,
     immessa: en1.impianti[j].immessa, autoconsumo: en1.impianti[j].autoconsumo, condivisa: en1.impianti[j].condivisa,
     incentivato: ec1.voci[j].incentivato, tip: ec1.voci[j].tip, tariffa: ec1.voci[j].tariffa,
   }));

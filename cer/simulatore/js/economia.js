@@ -3,6 +3,12 @@
 // di R-23), riparto per quote, vendita dell'immessa, risparmio dell'autoconsumo e manutenzione.
 export const NON_IMPRESE = new Set(['famiglia', 'ente']);
 
+// Stati di un impianto (revisione §7.1): «nuovo» entra in esercizio dopo la costituzione della CER ed entro la scadenza;
+// «precedente» è entrato in esercizio dopo il 15/12/2021 ma prima della costituzione; «esistente» fino al 15/12/2021,
+// nel senso delle Regole. Gli ultimi due sono già in esercizio: niente tariffa, contributo ARERA sulla loro condivisa.
+export const STATI = ['nuovo', 'precedente', 'esistente'];
+export const giaInEsercizio = (k) => (k.stato ?? 'nuovo') !== 'nuovo';
+
 export function voce(costanti, id) {
   const v = costanti.voci[id];
   if (!v || !('valore' in v)) throw new Error(`costante mancante: ${id}`);
@@ -58,7 +64,7 @@ export function economiaAnno(en, gruppi, impianti, par, c) {
 
   const voci = impianti.map((k, j) => {
     const x = en.impianti[j];
-    const unitaria = k.esistente ? 0 : tip(k.kwp, pz, par.area, c);
+    const unitaria = giaInEsercizio(k) ? 0 : tip(k.kwp, pz, par.area, c);
     const incentivato = unitaria > 0;
     return { id: k.id, incentivato, tip: unitaria, tariffa: (unitaria * x.condivisa) / 1000, condivisa: x.condivisa, immessa: x.immessa, copie: x.copie };
   });

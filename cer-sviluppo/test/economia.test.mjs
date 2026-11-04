@@ -45,7 +45,7 @@ test('corrispettivo GSE, κ, costo evitato, investimento', () => {
 
 function caso(gestione) {
   const gruppi = [{ id: 'f', tipo: 'famiglia', numero: 2 }, { id: 'a', tipo: 'attivita', numero: 1 }];
-  const impianti = [{ id: 'k', kwp: 10, titolare: 'a', esistente: false, perOgniMembro: false }];
+  const impianti = [{ id: 'k', kwp: 10, titolare: 'a', perOgniMembro: false }];
   const en = energia(
     [{ ...gruppi[0], consumo: serie(200, 200, 200, 200) }, { ...gruppi[1], consumo: serie(200, 200, 200, 200) }],
     [{ ...impianti[0], sulPod: false, produzione: serie(100, 100, 100, 100) }],
@@ -80,7 +80,7 @@ test('κ non tocca l\'eccedentaria e i costi non coperti si vedono', () => {
 });
 
 test('il limite di 1 MW della tariffa viene da costanti.json', () => {
-  const impianto = (kwp) => [{ id: 'k', kwp, titolare: 'f', esistente: false, perOgniMembro: false }];
+  const impianto = (kwp) => [{ id: 'k', kwp, titolare: 'f', perOgniMembro: false }];
   // 700 kW: nelle costanti vere ricade nell'ultima fascia (1000); con l'ultima a 500 kW non ne ha nessuna
   const gruppi = [{ id: 'f', tipo: 'famiglia', numero: 1 }];
   const par = { prezzo_zonale: 115.94, area: 'nord', gestione_eur_anno: 0, quota_produttore: 0.4, quota_consumatori: 0.4, quota_associativa: 0, manutenzione: 20, costo_evitato: {} };
@@ -101,7 +101,7 @@ test('il limite di 1 MW della tariffa viene da costanti.json', () => {
 
 // Impianto della CER (spec §6.7): le tre voci che finivano in un solo «fondo» restano separate.
 function casoCer(gruppi, par = {}) {
-  const impianti = [{ id: 'k', kwp: 10, titolare: 'cer', esistente: false, perOgniMembro: false }];
+  const impianti = [{ id: 'k', kwp: 10, titolare: 'cer', perOgniMembro: false }];
   const en = energia(
     gruppi.map((g) => ({ ...g, consumo: serie(200, 200, 200, 200) })),
     [{ ...impianti[0], sulPod: false, produzione: serie(100, 100, 100, 100) }],

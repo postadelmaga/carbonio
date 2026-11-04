@@ -33,8 +33,8 @@ const perChiave = (righe, chiave, valore) => {
   return new Map([...m].map(([k, v]) => [k, Float64Array.from(v)]));
 };
 
-// Dal file del caso la_spezia_riparto @ 10dd415: potenze, anzianità (data di esercizio), esistente prima della CER.
-const IMPIANTI = { FV2: { kwp: 6, esistente: true }, FV3: { kwp: 3, esistente: false }, FV1: { kwp: 20, esistente: false } };
+// Dal file del caso la_spezia_riparto @ 10dd415: potenze, anzianità (data di esercizio), stato. FV2 è entrato in esercizio il 01/03/2023, prima della costituzione: «precedente».
+const IMPIANTI = { FV2: { kwp: 6, stato: 'precedente' }, FV3: { kwp: 3, stato: 'nuovo' }, FV1: { kwp: 20, stato: 'nuovo' } };
 const ORDINE = ['FV2', 'FV3', 'FV1']; // 2023, 15/11/2026, 01/12/2026
 
 const soggetti = csv('soggetti.csv'), impiantiCsv = csv('impianti.csv');
@@ -52,7 +52,7 @@ for (const s of soggetti) {
 const titolare = Object.fromEntries(impiantiCsv.map((r) => [r.plant, r.pod]));
 const ingressi = {
   area: 'nord', soci,
-  impianti: ORDINE.map((id) => ({ id, kwp: IMPIANTI[id].kwp, titolare: titolare[id], sul_pod_del_titolare: false, per_ogni_membro: false, esistente: IMPIANTI[id].esistente })),
+  impianti: ORDINE.map((id) => ({ id, kwp: IMPIANTI[id].kwp, titolare: titolare[id], sul_pod_del_titolare: false, per_ogni_membro: false, stato: IMPIANTI[id].stato })),
   parametri: { prezzo_zonale: 115.9, gestione_eur_anno: 0, quota_associativa: 0, quota_produttore: 0.4, quota_consumatori: 0.4 },
   serie: { consumi: Object.fromEntries(soci.map((s) => [s.id, prelievi.get(s.id)])), produzioni: Object.fromEntries(ORDINE.map((id) => [id, immesse.get(id)])) },
 };

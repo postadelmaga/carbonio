@@ -22,14 +22,14 @@ const base = (sovrascrivi = {}) => ({
     { id: 'attivita', tipo: 'attivita', numero: 2, consumo_kwh_anno: 10000, archetipo: 'com_orario_apertura', spostamento: 0 },
     { id: 'produttore', tipo: 'attivita', numero: 1, consumo_kwh_anno: 0, archetipo: 'com_orario_apertura', spostamento: 0 },
   ],
-  impianti: [{ id: 'comune', kwp: 40, titolare: 'produttore', sul_pod_del_titolare: false, per_ogni_membro: false, esistente: false }],
+  impianti: [{ id: 'comune', kwp: 40, titolare: 'produttore', sul_pod_del_titolare: false, per_ogni_membro: false, stato: 'nuovo' }],
   parametri: {}, io: 'io', fondatore: false, ...sovrascrivi,
 });
 
 test('validazione: errori in italiano, con il campo', () => {
   assert.deepEqual(valida(base(), costanti), []);
   const e = valida(base({
-    impianti: [{ id: 'x', kwp: 2000, titolare: 'nessuno', sul_pod_del_titolare: false, per_ogni_membro: false, esistente: false }],
+    impianti: [{ id: 'x', kwp: 2000, titolare: 'nessuno', sul_pod_del_titolare: false, per_ogni_membro: false, stato: 'nuovo' }],
     parametri: { quota_produttore: 0.7, quota_consumatori: 0.5 },
   }), costanti);
   assert.ok(e.some((m) => /potenza fra 0,5 e 1\.000/.test(m)));
@@ -40,9 +40,9 @@ test('validazione: errori in italiano, con il campo', () => {
   const zero = base();
   zero.soci[1] = { ...zero.soci[1], numero: 0 };
   assert.ok(valida(zero, costanti).some((m) => m.includes('numero dei membri fra 1 e 500')));
-  const senzaPod = base({ impianti: [{ id: 'x', kwp: 4, titolare: 'produttore', sul_pod_del_titolare: false, per_ogni_membro: true, esistente: false }] });
+  const senzaPod = base({ impianti: [{ id: 'x', kwp: 4, titolare: 'produttore', sul_pod_del_titolare: false, per_ogni_membro: true, stato: 'nuovo' }] });
   assert.ok(valida(senzaPod, costanti).some((m) => m.includes('un impianto per ogni membro sta sul POD di ciascuno')));
-  const gruppo = base({ impianti: [{ id: 'x', kwp: 4, titolare: 'famiglie', sul_pod_del_titolare: true, per_ogni_membro: false, esistente: false }] });
+  const gruppo = base({ impianti: [{ id: 'x', kwp: 4, titolare: 'famiglie', sul_pod_del_titolare: true, per_ogni_membro: false, stato: 'nuovo' }] });
   assert.ok(valida(gruppo, costanti).some((m) => m.includes('il titolare è un gruppo, l\'impianto va indicato per ogni membro')));
   const sposta = base();
   sposta.soci[0] = { ...sposta.soci[0], spostamento: 0.5 };
@@ -73,21 +73,52 @@ test('un gruppo di tre famiglie vale tre famiglie singole', () => {
   quasi(r1.perTe.totale, r2.perTe.totale, 1e-9);
 });
 
-test('prosumer con impianto esistente: niente tariffa, e toglie condivisa al comune', () => {
+test('prosumer con impianto già in esercizio: niente tariffa, toglie condivisa al comune, e il 30% vale solo per gli esistenti fino al 15/12/2021 (esclude il limite applicato agli impianti successivi)', () => {
   const nuovo = calcola(base(), dati);
   const conVecchio = base();
-  conVecchio.impianti.unshift({ id: 'tuo', kwp: 6, titolare: 'io', sul_pod_del_titolare: true, per_ogni_membro: false, esistente: true });
+  conVecchio.impianti.unshift({ id: 'tuo', kwp: 6, titolare: 'io', sul_pod_del_titolare: true, per_ogni_membro: false, stato: 'precedente' });
   const r = calcola(conVecchio, dati);
   assert.equal(r.impianti[0].tariffa, 0);
+  assert.equal(r.impianti[0].giaInEsercizio, true);
   assert.ok(r.impianti[1].condivisa <= nuovo.impianti[0].condivisa + 1e-9);
-  assert.ok(!r.avvisi.some((x) => x.codice === 'esistenti_oltre_soglia'), '6 kW su 46 stanno sotto il 30%');
   conVecchio.impianti[0] = { ...conVecchio.impianti[0], kwp: 30 };
-  assert.ok(calcola(conVecchio, dati).avvisi.some((x) => x.codice === 'esistenti_oltre_soglia'), '30 kW su 70 no');
+  assert.ok(!calcola(conVecchio, dati).avvisi.some((x) => x.codice === 'esistenti_oltre_soglia'), '30 kW su 70, ma entrati dopo il 15/12/2021: niente avviso');
+  conVecchio.impianti[0] = { ...conVecchio.impianti[0], stato: 'esistente' };
+  const avviso = calcola(conVecchio, dati).avvisi.find((x) => x.codice === 'esistenti_oltre_soglia');
+  assert.ok(avviso, '30 kW esistenti su 70: avviso');
+  assert.equal(avviso.testo, 'Gli impianti esistenti, entrati in esercizio fino al 15/12/2021, sono il 43% della potenza: le Regole li ammettono fino al 30%.');
+  conVecchio.impianti[0] = { ...conVecchio.impianti[0], kwp: 6 };
+  assert.ok(!calcola(conVecchio, dati).avvisi.some((x) => x.codice === 'esistenti_oltre_soglia'), '6 kW su 46 stanno sotto il 30%');
+});
+
+test('«precedente» ed «esistente» hanno gli stessi conti: lo stato cambia solo l\'avviso del 30% (esclude uno stato che tocchi tariffa, contributo o investimento)', () => {
+  const con = (stato) => {
+    const ing = base();
+    ing.impianti.unshift({ id: 'tuo', kwp: 6, titolare: 'io', sul_pod_del_titolare: true, per_ogni_membro: false, stato });
+    return calcola(ing, dati);
+  };
+  const p = con('precedente'), e = con('esistente');
+  assert.equal(p.impianti[0].tariffa, 0);
+  assert.equal(e.impianti[0].tariffa, 0);
+  quasi(p.comunita.contributo, e.comunita.contributo, 1e-9);
+  quasi(p.comunita.condivisa, e.comunita.condivisa, 1e-9);
+  quasi(p.perTe.totale, e.perTe.totale, 1e-9);
+  assert.equal(p.perTe.investimento, 0);
+  assert.equal(e.perTe.investimento, 0);
+});
+
+test('ingressi con la chiave «esistente» o uno stato sconosciuto: errore di validazione (esclude chiamanti rimasti al booleano)', () => {
+  const vecchio = base({ impianti: [{ id: 'comune', kwp: 40, titolare: 'produttore', sul_pod_del_titolare: false, per_ogni_membro: false, esistente: false }] });
+  assert.ok(valida(vecchio, costanti).some((m) => /«esistente» non si usa più/.test(m)));
+  const ignoto = base({ impianti: [{ id: 'comune', kwp: 40, titolare: 'produttore', sul_pod_del_titolare: false, per_ogni_membro: false, stato: 'vecchio' }] });
+  assert.ok(valida(ignoto, costanti).some((m) => /stato «vecchio» non previsto/.test(m)));
+  const senza = base({ impianti: [{ id: 'comune', kwp: 40, titolare: 'produttore', sul_pod_del_titolare: false, per_ogni_membro: false }] });
+  assert.deepEqual(valida(senza, costanti), [], 'senza stato vale «nuovo»');
 });
 
 test('degrado: anno 20 al 0,995^19 e interpolazione entro lo 0,5% all\'anno 10', () => {
   const ing = base();
-  ing.impianti.push({ id: 'tuo', kwp: 4.5, titolare: 'io', sul_pod_del_titolare: true, per_ogni_membro: false, esistente: false });
+  ing.impianti.push({ id: 'tuo', kwp: 4.5, titolare: 'io', sul_pod_del_titolare: true, per_ogni_membro: false, stato: 'nuovo' });
   const prep = prepara(ing, dati);
   assert.equal(prep.anni, 20);
   const deg = 0.005, d10 = (1 - deg) ** 9, d20 = (1 - deg) ** 19;
@@ -138,7 +169,7 @@ test('serie fotovoltaica: la lunghezza deve essere quella dell\'asse', () => {
 // Impianto comune della CER (spec §6.7): il risultato tiene separate la parte della CER, la quota di titolare e la finalità sociale.
 const conImpiantoCer = (soci) => base({
   soci: soci ?? base().soci.filter((x) => x.id !== 'produttore'),
-  impianti: [{ id: 'comune', kwp: 40, titolare: 'cer', sul_pod_del_titolare: false, per_ogni_membro: false, esistente: false }],
+  impianti: [{ id: 'comune', kwp: 40, titolare: 'cer', sul_pod_del_titolare: false, per_ogni_membro: false, stato: 'nuovo' }],
 });
 
 test('impianto della CER: quotaCer è il 20% della tariffa netta, titolareCer il 40%, e il fondo è la somma delle tre voci', () => {
@@ -195,7 +226,7 @@ function sommaVentiAnni(ingressi, id) {
 }
 const conTuo = (esistente) => {
   const ing = base();
-  ing.impianti.push({ id: 'tuo', kwp: 4.5, titolare: 'io', sul_pod_del_titolare: true, per_ogni_membro: false, esistente });
+  ing.impianti.push({ id: 'tuo', kwp: 4.5, titolare: 'io', sul_pod_del_titolare: true, per_ogni_membro: false, stato: esistente ? 'precedente' : 'nuovo' });
   if (esistente) ing.impianti.reverse(); // gli esistenti sono i più anziani
   return ing;
 };
@@ -207,7 +238,7 @@ test('un impianto già in esercizio è già pagato: investimento 0, nessun rient
   assert.equal(m.rientroConCer, null);
   assert.equal(m.rientroSenzaCer, null);
   assert.equal(m.haImpianto, true);
-  assert.equal(m.soloEsistenti, true);
+  assert.equal(m.soloGiaInEsercizio, true);
   quasi(m.ventiAnni, sommaVentiAnni(ing, 'io'), 1e-6, 'ventiAnni');
   assert.ok(m.impiantoDaSolo > 0, 'l\'impianto già in esercizio fa risparmiare e vende');
 });
@@ -218,7 +249,7 @@ test('un impianto nuovo si paga: investimento, rientro con la CER prima di quell
   assert.ok(m.investimento > 0);
   quasi(m.investimento, 6880.5, 1e-6, '4,5 kWp di una famiglia, IVA compresa');
   assert.equal(m.haImpianto, true);
-  assert.equal(m.soloEsistenti, false);
+  assert.equal(m.soloGiaInEsercizio, false);
   assert.ok(m.rientroConCer != null && m.rientroSenzaCer != null, 'in 20 anni rientra');
   assert.ok(m.rientroConCer <= m.rientroSenzaCer, `${m.rientroConCer} anni con la CER, ${m.rientroSenzaCer} senza`);
   quasi(m.ventiAnni, sommaVentiAnni(ing, 'io') - m.investimento, 1e-6, 'ventiAnni');
@@ -227,14 +258,14 @@ test('un impianto nuovo si paga: investimento, rientro con la CER prima di quell
 test('chi non ha impianto non ha né investimento né impianto già pagato', () => {
   const m = calcola(base(), dati).perTe;
   assert.equal(m.haImpianto, false);
-  assert.equal(m.soloEsistenti, false);
+  assert.equal(m.soloGiaInEsercizio, false);
   assert.equal(m.investimento, 0);
 });
 
 test('l\'investimento della CER somma solo gli impianti nuovi', () => {
   const ing = base({ impianti: [
-    { id: 'vecchio', kwp: 6, titolare: 'cer', sul_pod_del_titolare: false, per_ogni_membro: false, esistente: true },
-    { id: 'comune', kwp: 40, titolare: 'cer', sul_pod_del_titolare: false, per_ogni_membro: false, esistente: false },
+    { id: 'vecchio', kwp: 6, titolare: 'cer', sul_pod_del_titolare: false, per_ogni_membro: false, stato: 'precedente' },
+    { id: 'comune', kwp: 40, titolare: 'cer', sul_pod_del_titolare: false, per_ogni_membro: false, stato: 'nuovo' },
   ] });
   ing.soci = ing.soci.filter((x) => x.id !== 'produttore');
   quasi(calcola(ing, dati).comunita.investimentoCer, 51200, 1e-6, 'solo i 40 kWp nuovi, 1,28 €/W');

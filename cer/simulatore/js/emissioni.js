@@ -1,7 +1,7 @@
 // CO₂ evitata dagli impianti nuovi, impronta dei prelievi e copertura dei consumi (spec §6.12). La CO₂ evitata si
 // attribuisce solo al titolare di un impianto nuovo: la condivisa di un consumatore è energia di quello stesso
 // impianto, e contarla due volte farebbe superare al totale dei soci quello reale.
-import { voce } from './economia.js';
+import { voce, giaInEsercizio } from './economia.js';
 
 export const tonnellateCo2 = (kwh, gPerKwh) => (kwh * gPerKwh) / 1e6;
 
@@ -20,7 +20,7 @@ export function emissioni(en, gruppi, impianti, c, principale = 'media') {
   let nuovi = 0, esistenti = 0;
   impianti.forEach((k, j) => {
     const prod = en.impianti[j].produzione;
-    if (k.esistente) { esistenti += prod; return; }
+    if (giaInEsercizio(k)) { esistenti += prod; return; }
     nuovi += prod;
     if (k.titolare === 'cer') return;
     const m = membri[k.titolare], perMembro = prod / en.impianti[j].copie;
