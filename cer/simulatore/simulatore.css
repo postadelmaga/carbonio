@@ -123,3 +123,11 @@ table.tabella{width:100%;border-collapse:collapse;font-size:.86rem;margin-top:8p
 .info:focus-visible{outline:2px solid var(--ocean);outline-offset:2px}
 .info[aria-expanded="true"]{background:var(--ink);color:var(--ground)}
 .info-testo{position:absolute;z-index:6;left:0;top:calc(100% + 6px);width:min(22rem,calc(100vw - 32px));padding:10px 12px;border-radius:12px;background:var(--surface);border:1px solid var(--rule);box-shadow:var(--shadow);color:var(--ink);font:400 .88rem/1.45 'Source Serif 4',serif;text-align:left;white-space:normal}
+/* Il ponte sopra il riquadro copre i 6 px di vuoto fra l'icona e il testo (più il bordo): il mouse può passare dall'una all'altro senza che si chiuda. */
+.info-testo::before{content:'';position:absolute;left:0;right:0;top:-7px;height:7px}
+/* L'etichetta e la sua icona su una riga: l'icona resta fuori dalla label, accanto a lei. */
+.con-info{display:flex;align-items:flex-start;gap:4px}
+.con-info>label{flex:1 1 auto;min-width:0;margin:0}
+.con-info:has(>.campo){margin-top:12px}
+.scelte-in-linea .con-info{align-items:center;margin:4px 0}
+.scelte-in-linea .con-info>label{flex:0 1 auto}

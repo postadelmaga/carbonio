@@ -222,13 +222,21 @@ test('la nota sulla scadenza sotto «Per te» è generata dal ruolo, e il testo 
   assert.match(JS, /notaScadenza: percorso === 'entrare' \? notaScadenza\(s\.utente\.ruolo, new Date\(\), dati\.costanti, s\.utente\.stato\) : ''/);
 });
 
-test('ogni icona «i» è un pulsante con aria-expanded, aria-controls verso un testo nascosto della pagina e aria-label, fuori dalle label (esclude testi raggiungibili solo con il mouse e pulsanti dentro una label)', () => {
+test('ogni icona «i» è un pulsante con aria-expanded, aria-controls verso un testo nascosto della pagina e aria-label, fuori dalle label (esclude testi raggiungibili solo con il mouse, pulsanti dentro una label e icone staccate dall\'etichetta)', () => {
   const pulsanti = [...HTML.matchAll(/<button type="button" class="info" aria-expanded="false" aria-controls="([^"]+)" aria-label="Spiegazione: [^"]+">i<\/button>/g)].map((m) => m[1]);
   assert.ok(pulsanti.length >= 5, `icone trovate: ${pulsanti.length}`);
   assert.equal((HTML.match(/class="info"/g) ?? []).length, pulsanti.length, 'ogni icona ha tutti gli attributi');
   for (const id of pulsanti) assert.match(HTML, new RegExp(`<span class="info-testo" id="${id}" hidden>`), id);
   for (const l of HTML.matchAll(/<label[^>]*>([\s\S]*?)<\/label>/g)) assert.ok(!l[1].includes('class="info"'), 'un\'icona dentro una label');
   for (const id of ['info-spesa', 'info-fossili', 'info-media', 'info-fondatori', 'info-esercizio']) assert.ok(pulsanti.includes(id), id);
+  // l'icona sta nello stesso contenitore della sua label, subito dopo (non dentro: un pulsante in una label non è ammesso)
+  for (const [id, segno] of [['info-fossili', 'value="fossili"'], ['info-media', 'value="media"'], ['info-fondatori', 'name="f-fondatori"']]) {
+    const m = HTML.match(new RegExp(`<div class="con-info">\\s*(<label[^>]*>(?:(?!</label>)[\\s\\S])*</label>)\\s*<span class="info-gruppo"><button type="button" class="info" aria-expanded="false" aria-controls="${id}"`));
+    assert.ok(m, `${id}: l'icona non sta accanto alla sua label in un <div class="con-info">`);
+    assert.ok(m[1].includes(segno), `${id}: la label accanto all'icona non è la sua (${segno})`);
+  }
+  assert.match(CSS, /\.con-info\{display:flex;/);
+  assert.match(CSS, /\.info-testo::before\{content:'';position:absolute;left:0;right:0;top:-7px;height:7px\}/, 'manca il ponte fra l\'icona e il riquadro');
   assert.match(JS, /import \{ attivaInfo \} from '\.\/info\.js';/);
   assert.match(JS, /attivaInfo\(document\)/);
   assert.match(HTML, /Il contatore non limita i pannelli: serve a stimare i consumi\./);

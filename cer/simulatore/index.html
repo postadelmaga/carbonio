@@ -208,8 +208,10 @@
         <option value="produttore">il socio produttore</option>
       </select>
     </label>
-    <label class="campo"><span data-r="com.fondatoriTesto"></span> <input name="f-fondatori" type="number" min="1" max="500" step="1"></label>
-    <span class="info-gruppo"><button type="button" class="info" aria-expanded="false" aria-controls="info-fondatori" aria-label="Spiegazione: fondatori">i</button><span class="info-testo" id="info-fondatori" hidden>Per fondare la CER si registrano l'atto costitutivo e lo statuto: imposta di registro e bollo, <span data-r="com.costituzione" data-f="euroOppure"></span>. Il simulatore li divide in parti uguali fra i fondatori e toglie la tua parte dal conto dei 20 anni della CER.</span></span>
+    <div class="con-info">
+      <label class="campo"><span data-r="com.fondatoriTesto"></span> <input name="f-fondatori" type="number" min="1" max="500" step="1"></label>
+      <span class="info-gruppo"><button type="button" class="info" aria-expanded="false" aria-controls="info-fondatori" aria-label="Spiegazione: fondatori">i</button><span class="info-testo" id="info-fondatori" hidden>Per fondare la CER si registrano l'atto costitutivo e lo statuto: imposta di registro e bollo, <span data-r="com.costituzione" data-f="euroOppure"></span>. Il simulatore li divide in parti uguali fra i fondatori e toglie la tua parte dal conto dei 20 anni della CER.</span></span>
+    </div>
     <label class="campo" for="f-abitudini">Consumi delle famiglie spostati nelle ore di sole <output name="f-abitudini-valore"></output>
       <input id="f-abitudini" name="f-abitudini" type="range" min="0" max="0.3" step="0.01" value="0"></label>
     <p class="scadenza" id="scadenza"></p>
@@ -236,10 +238,14 @@
     </div>
     <fieldset class="scelte-in-linea">
       <legend>Fattore di emissione per la CO₂ evitata</legend>
-      <label><input type="radio" name="p-fattore" value="fossili" checked> Metodo ISPRA: centrali fossili, <span data-r="cost.fattoreFossili" data-f="g"></span> g/kWh</label>
-      <span class="info-gruppo"><button type="button" class="info" aria-expanded="false" aria-controls="info-fossili" aria-label="Spiegazione: metodo ISPRA">i</button><span class="info-testo" id="info-fossili" hidden>È il metodo con cui ISPRA calcola le emissioni evitate dalle rinnovabili: ogni kWh dei pannelli sostituisce un kWh prodotto dalle centrali fossili italiane (media del 2025, dato preliminare).</span></span>
-      <label><input type="radio" name="p-fattore" value="media"> Media dei consumi, <span data-r="cost.fattore" data-f="g"></span> g/kWh</label>
-      <span class="info-gruppo"><button type="button" class="info" aria-expanded="false" aria-controls="info-media" aria-label="Spiegazione: media dei consumi">i</button><span class="info-testo" id="info-media" hidden>È la CO₂ media di un kWh consumato in Italia, importazioni comprese. ISPRA la usa per un kWh non consumato: applicata ai pannelli dà una stima circa dimezzata.</span></span>
+      <div class="con-info">
+        <label><input type="radio" name="p-fattore" value="fossili" checked> Metodo ISPRA: centrali fossili, <span data-r="cost.fattoreFossili" data-f="g"></span> g/kWh</label>
+        <span class="info-gruppo"><button type="button" class="info" aria-expanded="false" aria-controls="info-fossili" aria-label="Spiegazione: metodo ISPRA">i</button><span class="info-testo" id="info-fossili" hidden>È il metodo con cui ISPRA calcola le emissioni evitate dalle rinnovabili: ogni kWh dei pannelli sostituisce un kWh prodotto dalle centrali fossili italiane (media del 2025, dato preliminare).</span></span>
+      </div>
+      <div class="con-info">
+        <label><input type="radio" name="p-fattore" value="media"> Media dei consumi, <span data-r="cost.fattore" data-f="g"></span> g/kWh</label>
+        <span class="info-gruppo"><button type="button" class="info" aria-expanded="false" aria-controls="info-media" aria-label="Spiegazione: media dei consumi">i</button><span class="info-testo" id="info-media" hidden>È la CO₂ media di un kWh consumato in Italia, importazioni comprese. ISPRA la usa per un kWh non consumato: applicata ai pannelli dà una stima circa dimezzata.</span></span>
+      </div>
     </fieldset>
     <button type="button" class="btn" id="ripristina">Torna ai valori predefiniti</button>
   </details>
