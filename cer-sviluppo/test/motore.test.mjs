@@ -307,3 +307,8 @@ test('costi non coperti: senza quota associativa invita a metterla, con una quot
   // se le quote bastano, l'avviso sparisce
   assert.ok(!costi({ quota_associativa: 100000 }).avvisi.some((x) => x.codice === 'costi_non_coperti'));
 });
+
+test('il costo evitato per kWh del membro è quello della spesa variabile (esclude un\'icona con un valore diverso da quello del calcolo)', () => {
+  const m = calcola(base(), dati).perTe;
+  quasi(m.quotaSpesa, m.cerAggiunge / (m.consumo * m.costoEvitatoKwh), 1e-12);
+});

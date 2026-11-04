@@ -116,3 +116,10 @@ table.tabella{width:100%;border-collapse:collapse;font-size:.86rem;margin-top:8p
 #fonti{overflow-x:auto}
 @media (max-width:560px){ .metodo{padding:28px 16px 48px} }
 .metodo .tabella th{text-align:left}
+
+/* Icone «i» (revisione §8): il testo è un riquadro sopra la pagina, spostato da info.js per restare nella finestra. */
+.info-gruppo{position:relative;display:inline-block;vertical-align:middle}
+.info{display:inline-grid;place-items:center;width:20px;height:20px;margin-left:6px;padding:0;border:1px solid var(--rule);border-radius:50%;background:var(--surface);color:var(--ink-2);font:italic 700 .78rem/1 'Source Serif 4',serif;cursor:pointer}
+.info:focus-visible{outline:2px solid var(--ocean);outline-offset:2px}
+.info[aria-expanded="true"]{background:var(--ink);color:var(--ground)}
+.info-testo{position:absolute;z-index:6;left:0;top:calc(100% + 6px);width:min(22rem,calc(100vw - 32px));padding:10px 12px;border-radius:12px;background:var(--surface);border:1px solid var(--rule);box-shadow:var(--shadow);color:var(--ink);font:400 .88rem/1.45 'Source Serif 4',serif;text-align:left;white-space:normal}

@@ -80,6 +80,9 @@ export function testoGiaInEsercizio(stato) {
   return stato === 'esistente' ? `${base} Un impianto entrato in esercizio fino al 15/12/2021 è un impianto «esistente»: la comunità può averne al massimo il 30% della potenza.` : base;
 }
 
+// L'etichetta del campo dei fondatori (revisione §8.2): l'importo che dividono, se c'è.
+export const testoFondatori = (costituzione) => (costituzione == null ? 'Fondatori, che dividono la costituzione' : `Fondatori, che dividono i ${euro(costituzione)} della costituzione`);
+
 export function ipotesi(r, loc, pvInfo, costanti) {
   const p = r.parametri, em = r.emissioni;
   const anni = voce(costanti, 'durata_tariffa_anni');

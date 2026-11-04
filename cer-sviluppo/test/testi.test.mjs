@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { mesiAllaScadenza, testoScadenza, notaScadenza, ipotesi, testoEccedentaria, testoItaliani, testoStimaCo2, testoVentiAnniCo2, testoGiaInEsercizio } from '../../cer/simulatore/js/testi.js';
+import { mesiAllaScadenza, testoScadenza, notaScadenza, ipotesi, testoEccedentaria, testoItaliani, testoStimaCo2, testoVentiAnniCo2, testoGiaInEsercizio, testoFondatori } from '../../cer/simulatore/js/testi.js';
 
 const costanti = JSON.parse(readFileSync(new URL('../../cer/simulatore/dati/costanti.json', import.meta.url), 'utf8'));
 
@@ -155,4 +155,9 @@ test('le ipotesi seguono gli impianti: la riga dei nuovi solo con impianti nuovi
   assert.ok(!t2.includes(nuovi) && t2.includes(gia));
   const t3 = ipotesi({ ...base, impianti: [{ incentivato: false, tip: 0, giaInEsercizio: true }, { incentivato: true, tip: 130, giaInEsercizio: false }] }, loc, pv, costanti);
   assert.ok(t3.includes(nuovi) && t3.includes(gia));
+});
+
+test('l\'etichetta dei fondatori dice l\'importo che dividono, o solo «la costituzione» se manca (esclude un campo che divide una cifra invisibile)', () => {
+  assert.equal(testoFondatori(360), 'Fondatori, che dividono i 360 € della costituzione');
+  assert.equal(testoFondatori(null), 'Fondatori, che dividono la costituzione');
 });

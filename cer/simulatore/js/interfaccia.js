@@ -7,14 +7,15 @@ import { voce } from './economia.js';
 import { consumoMedioClasse } from './profili.js';
 import { numero, euro, kwh, perc, tonnellate, anni, circa } from './formato.js';
 import { giornata, anno, incentivi, vociIncentivi, scenaComunita, tabella, MESI } from './grafici.js';
-import { ipotesi, testoScadenza, notaScadenza, testoEccedentaria, testoItaliani, testoStimaCo2, testoVentiAnniCo2, testoGiaInEsercizio } from './testi.js';
+import { ipotesi, testoScadenza, notaScadenza, testoEccedentaria, testoItaliani, testoStimaCo2, testoVentiAnniCo2, testoGiaInEsercizio, testoFondatori } from './testi.js';
+import { attivaInfo } from './info.js';
 
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => [...document.querySelectorAll(s)];
 const form = $('#moduli');
 const campo = (nome) => form.elements[nome];
 const scelto = (nome) => document.querySelector(`input[name="${nome}"]:checked`)?.value;
-const FORMATI = { euro: (v) => euro(v), perc: (v) => perc(v), t: tonnellate, circa, kwh, anni: (v) => anni(v, voce(dati.costanti, 'durata_tariffa_anni')), int: (v) => numero(v), g: (v) => numero(v, Number.isInteger(v) ? 0 : 1) };
+const FORMATI = { euro: (v) => euro(v), eur3: (v) => euro(v, 3), euroOppure: (v) => (v == null ? 'da verificare' : euro(v)), perc: (v) => perc(v), t: tonnellate, circa, kwh, anni: (v) => anni(v, voce(dati.costanti, 'durata_tariffa_anni')), int: (v) => numero(v), g: (v) => numero(v, Number.isInteger(v) ? 0 : 1) };
 const NOMI = { famiglie: 'Famiglia', pannelli: 'Famiglia con pannelli', pannelli_esistenti: 'Famiglia con pannelli già in esercizio', attivita: 'Attività', enti: 'Ente o associazione', produttore: 'Socio produttore' };
 const validi = {};
 let elenco = [], loc = null, dati = null, ultimo = null, scena = null, richiestaLocalita = 0, avvisiMostrati = null;
@@ -188,7 +189,7 @@ function mostra(r, s, percorso, ingressi) {
       ventiAnniTesto: testoVentiAnniCo2(r.emissioni.principale, em.ventiAnni, dati.costanti),
       giaInEsercizioTesto: em.giaInEsercizio > 0 ? `Gli impianti già in esercizio evitano, con la stessa ipotesi, altre ${circa(em.giaInEsercizio)} l'anno: non le attribuiamo alla CER.` : '',
     },
-    com: { ...com, incentivi: com.tariffa + com.contributo, frazioneCer: 1 - p.quota_produttore - p.quota_consumatori, eccedentariaTesto: testoEccedentaria(com) },
+    com: { ...com, incentivi: com.tariffa + com.contributo, frazioneCer: 1 - p.quota_produttore - p.quota_consumatori, eccedentariaTesto: testoEccedentaria(com), costituzione: p.costituzione_eur, fondatoriTesto: testoFondatori(p.costituzione_eur) },
     cost: {
       g1990: voce(dati.costanti, 'fattore_co2_1990')['1990'],
       g2024: voce(dati.costanti, 'fattore_co2_1990')['2024'],
@@ -324,6 +325,8 @@ async function avvia() {
   for (const r of $$('input[name="modo"]')) r.addEventListener('change', aggiorna);
   $('#mese').addEventListener('change', disegnaGrafici);
   osservaLarghezze();
+  $('#info-esercizio').textContent = testoGiaInEsercizio('esistente');
+  attivaInfo(document);
   $('#ripristina').addEventListener('click', () => {
     if (!dati) return;
     form.reset();

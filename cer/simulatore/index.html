@@ -99,6 +99,7 @@
         <option value="1,5-3">non so</option>
       </select>
     </label>
+    <p class="aiuto" data-solo-tipo="famiglia">Il contatore non limita i pannelli: serve a stimare i consumi.</p>
     <label class="campo" data-solo-tipo="altri">Che attività
       <select name="archetipo">
         <option value="com_orario_apertura">Negozio o ufficio con orario di apertura</option>
@@ -192,6 +193,7 @@
         <label data-solo-modo="esperto">in esercizio <select name="f-comune-stato"><option value="nuovo" selected>nuovo</option><option value="precedente">già, dopo il 15/12/2021</option><option value="esistente">già, fino al 15/12/2021</option></select></label>
       </div>
     </div>
+    <p class="aiuto" data-solo-modo="esperto">Impianti già in esercizio: che cosa cambia <span class="info-gruppo"><button type="button" class="info" aria-expanded="false" aria-controls="info-esercizio" aria-label="Spiegazione: impianti già in esercizio">i</button><span class="info-testo" id="info-esercizio" hidden></span></span></p>
   </fieldset>
 
   <fieldset class="passo" data-solo-percorso="fondare">
@@ -206,7 +208,8 @@
         <option value="produttore">il socio produttore</option>
       </select>
     </label>
-    <label class="campo">Fondatori, che si dividono la costituzione <input name="f-fondatori" type="number" min="1" max="500" step="1"></label>
+    <label class="campo"><span data-r="com.fondatoriTesto"></span> <input name="f-fondatori" type="number" min="1" max="500" step="1"></label>
+    <span class="info-gruppo"><button type="button" class="info" aria-expanded="false" aria-controls="info-fondatori" aria-label="Spiegazione: fondatori">i</button><span class="info-testo" id="info-fondatori" hidden>Per fondare la CER si registrano l'atto costitutivo e lo statuto: imposta di registro e bollo, <span data-r="com.costituzione" data-f="euroOppure"></span>. Il simulatore li divide in parti uguali fra i fondatori e toglie la tua parte dal conto dei 20 anni della CER.</span></span>
     <label class="campo" for="f-abitudini">Consumi delle famiglie spostati nelle ore di sole <output name="f-abitudini-valore"></output>
       <input id="f-abitudini" name="f-abitudini" type="range" min="0" max="0.3" step="0.01" value="0"></label>
     <p class="scadenza" id="scadenza"></p>
@@ -234,7 +237,9 @@
     <fieldset class="scelte-in-linea">
       <legend>Fattore di emissione per la CO₂ evitata</legend>
       <label><input type="radio" name="p-fattore" value="fossili" checked> Metodo ISPRA: centrali fossili, <span data-r="cost.fattoreFossili" data-f="g"></span> g/kWh</label>
+      <span class="info-gruppo"><button type="button" class="info" aria-expanded="false" aria-controls="info-fossili" aria-label="Spiegazione: metodo ISPRA">i</button><span class="info-testo" id="info-fossili" hidden>È il metodo con cui ISPRA calcola le emissioni evitate dalle rinnovabili: ogni kWh dei pannelli sostituisce un kWh prodotto dalle centrali fossili italiane (media del 2025, dato preliminare).</span></span>
       <label><input type="radio" name="p-fattore" value="media"> Media dei consumi, <span data-r="cost.fattore" data-f="g"></span> g/kWh</label>
+      <span class="info-gruppo"><button type="button" class="info" aria-expanded="false" aria-controls="info-media" aria-label="Spiegazione: media dei consumi">i</button><span class="info-testo" id="info-media" hidden>È la CO₂ media di un kWh consumato in Italia, importazioni comprese. ISPRA la usa per un kWh non consumato: applicata ai pannelli dà una stima circa dimezzata.</span></span>
     </fieldset>
     <button type="button" class="btn" id="ripristina">Torna ai valori predefiniti</button>
   </details>
@@ -248,7 +253,7 @@
     <p class="kicker">Per te</p>
     <p class="grande" aria-live="polite"><b data-r="te.cerAggiunge" data-f="euro"></b><small>all'anno dalla CER, il primo anno</small></p>
     <dl class="voci">
-      <div><dt>Sulla spesa variabile della bolletta</dt><dd data-r="te.quotaSpesa" data-f="perc"></dd></div>
+      <div><dt>Sulla spesa variabile della bolletta <span class="info-gruppo"><button type="button" class="info" aria-expanded="false" aria-controls="info-spesa" aria-label="Spiegazione: spesa variabile della bolletta">i</button><span class="info-testo" id="info-spesa" hidden>La spesa variabile è la parte della bolletta che cresce con i kWh: l'energia, con le perdite di rete, la parte della rete e degli oneri che si paga a kWh, le accise e, per famiglie ed enti, l'IVA. Restano fuori la quota fissa, la quota per la potenza del contatore e il canone. Qui un kWh vale <span data-r="te.costoEvitatoKwh" data-f="eur3"></span>; la percentuale è ciò che ti porta la CER diviso la spesa variabile di un anno, <span data-r="te.consumo" data-f="kwh"></span>.</span></span></dt><dd data-r="te.quotaSpesa" data-f="perc"></dd></div>
       <div><dt>In <span data-r="cost.anni"></span> anni, dalla CER</dt><dd data-r="te.cerVentiAnniNetto" data-f="euro"></dd></div>
       <div data-solo-fondatore><dt>Costituzione, la tua parte, già tolta dai <span data-r="cost.anni"></span> anni</dt><dd data-r="te.costituzione" data-f="euro"></dd></div>
     </dl>

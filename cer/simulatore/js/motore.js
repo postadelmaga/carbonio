@@ -139,11 +139,12 @@ export function calcola(ingressi, dati) {
       if (inv > 0 && rientroSenza == null && senza >= inv) rientroSenza = t;
     }
     const e = en1.gruppi[gi];
-    const spesa = e.consumo * costoEvitato(g.tipo, par.prezzo_zonale, c, par.costo_evitato);
+    const ce = costoEvitato(g.tipo, par.prezzo_zonale, c, par.costo_evitato);
+    const spesa = e.consumo * ce;
     membri[g.id] = {
       tipo: g.tipo, numero: g.numero, consumo: e.consumo, autoconsumo: e.autoconsumo, prelievo: e.prelievo, condivisa: e.condivisa,
       voci: ec1.membri[g.id], impiantoDaSolo: f1.impiantoDaSolo, cerAggiunge: f1.cerAggiunge, totale: f1.impiantoDaSolo + f1.cerAggiunge,
-      quotaSpesa: spesa > 0 ? f1.cerAggiunge / spesa : null,
+      quotaSpesa: spesa > 0 ? f1.cerAggiunge / spesa : null, costoEvitatoKwh: ce,
       haImpianto, soloGiaInEsercizio, investimento: inv, rientroConCer: rientroCon, rientroSenzaCer: rientroSenza, ventiAnni: con - inv, cerVentiAnni: cer,
       co2: co2.membri[g.id],
     };
