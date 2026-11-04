@@ -35,12 +35,16 @@ export function notaScadenza(ruolo, oggi, costanti, stato = 'nuovo') {
   return `${impianto} ${chi}`;
 }
 
-// La quota eccedentaria della tariffa (statuto, art. 12): ai consumatori che non sono imprese, o a finalità sociali se non ce
-// ne sono. Vuota quando non c'è eccedentaria. `com` è `comunita` del risultato del calcolo.
+// La quota eccedentaria della tariffa. Il DM 414/2023 (art. 3 c. 2 lett. g) e lo statuto (art. 12) la destinano «ai soli
+// consumatori diversi dalle imprese e/o» a finalità sociali; la scelta di darla tutta ai primi, e alle finalità sociali solo
+// se non ce ne sono, è del simulatore, e la frase lo dice. Vuota quando non c'è eccedentaria. `com` è `comunita` del
+// risultato del calcolo.
 export function testoEccedentaria(com) {
   if (!(com.quotaEccedentaria > 0)) return '';
-  const base = `La quota eccedentaria della tariffa, ${euro(com.eccedentaria)} l'anno, va ai consumatori che non sono imprese (statuto, art. 12).`;
-  return com.fondoSociale > 0 ? `${base} Senza consumatori che non siano imprese, va a finalità sociali: ${euro(com.fondoSociale)} l'anno.` : base;
+  const importo = `La quota eccedentaria della tariffa, ${euro(com.eccedentaria)} l'anno,`;
+  return com.fondoSociale > 0
+    ? `${importo} va a finalità sociali. Lo statuto (art. 12) la destina ai consumatori che non sono imprese o a finalità sociali: qui non ci sono consumatori che non siano imprese.`
+    : `${importo} va ai consumatori che non sono imprese. Lo statuto (art. 12) la destina a loro o a finalità sociali: qui va tutta a loro.`;
 }
 
 // La CO₂ evitata in italiani, con il pro capite (revisione §9.4). Senza CO₂ evitata la frase non c'è; arrotondato a 0 è

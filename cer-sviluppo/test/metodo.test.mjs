@@ -89,3 +89,9 @@ test('il menu di «Come calcoliamo» è quello del simulatore, senza «Come funz
   assert.match(HTML, /<nav aria-label="Sezioni">\s*<a href="\/cer\/">La comunità<\/a>\s*<a href="\/cer\/#progetti">Progetti<\/a>\s*<a href="\/cer\/simulatore\/">Simulatore<\/a>\s*<a href="\/cer\/statuto\/">Statuto<\/a>\s*<\/nav>/);
   assert.ok(!/[Ee]spert/.test(HTML), 'nella pagina c\'è ancora «esperto»');
 });
+
+test('«Come calcoliamo» dice che decreto e statuto destinano l\'eccedentaria ai consumatori non imprese o a finalità sociali, e che il rapporto conta la condivisa dei soli impianti incentivati (esclude la scelta del simulatore presentata come la regola)', () => {
+  assert.ok(HTML.includes('la parte in più della tariffa va, per il decreto e per lo statuto, ai soli consumatori che non sono imprese o a finalità sociali: qui va ai consumatori che non sono imprese; se non ce ne sono, va a finalità sociali'), 'frase della destinazione');
+  assert.ok(HTML.includes('Quando l\'energia condivisa attribuita agli impianti incentivati supera il 55% di quella che immettono'), 'rapporto della soglia');
+  assert.ok(!HTML.includes('la parte in più della tariffa va solo ai consumatori che non sono imprese'), 'la scelta del simulatore detta come regola');
+});

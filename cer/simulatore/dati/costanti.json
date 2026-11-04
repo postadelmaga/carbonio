@@ -54,7 +54,7 @@
       "note": "O prima, se si raggiunge il contingente di 5 GW, lontano secondo i dati pubblicati. Nessuna proroga al 04/11/2026."
     },
     "soglia_eccedentaria": {
-      "descrizione": "Soglia oltre la quale la tariffa va solo ai consumatori non imprese o a fini sociali (rapporto fra condivisa e immessa degli impianti incentivati)",
+      "descrizione": "Soglia oltre la quale una parte della tariffa, la quota eccedentaria, va solo ai consumatori non imprese o a fini sociali (rapporto fra condivisa e immessa degli impianti incentivati)",
       "valore": 0.55, "unita": "frazione",
       "fonte": "DM MASE 414/2023, art. 3 c. 2 lett. g) e Allegato 1 §4; Regole operative GSE del 16/07/2025, §2.2.2.1.3",
       "url": "https://www.gse.it/documenti_site/Documenti%20GSE/Servizi%20per%20te/AUTOCONSUMO/Gruppi%20di%20autoconsumatori%20e%20comunita%20di%20energia%20rinnovabile/Regole%20e%20procedure/Allegato%201%20Regole%20Operative%20CACER.pdf",
