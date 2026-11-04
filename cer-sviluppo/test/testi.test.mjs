@@ -76,6 +76,21 @@ test('le ipotesi dicono che il 20% resta alla CER, non che va a un fondo sociale
   assert.ok(riga.includes('40% della tariffa al titolare dell\'impianto, 40% ai consumatori'), riga);
 });
 
+test('con quote del riparto cambiate in avanzato la riga non le chiama «l\'esempio di CERS Eliodora» (esclude un riparto 60/30/10 attribuito a un regolamento che dice 40/40/20)', () => {
+  const r = (qp, qc) => ({
+    parametri: { prezzo_zonale: 115.94, quota_produttore: qp, quota_consumatori: qc, gestione_eur_anno: 500, costo_evitato: {} },
+    impianti: [{ incentivato: true, tip: 130 }],
+    emissioni: { fattore: 413.3, fattoreAltro: 199.6, principale: 'fossili' },
+  });
+  const loc = { nome: 'La Spezia', sigla: 'SP', regione: 'Liguria' };
+  const riga = (qp, qc) => ipotesi(r(qp, qc), loc, { inclinazione: 33, anno_meteo: 2023, valori: [1000, 2000] }, costanti).find((l) => l.startsWith('Riparto:'));
+  const cambiata = riga(0.6, 0.3);
+  assert.ok(cambiata.startsWith('Riparto: 60% della tariffa al titolare dell\'impianto, 30% ai consumatori'), cambiata);
+  assert.ok(!cambiata.includes('È l\'esempio di CERS Eliodora'), cambiata);
+  assert.ok(cambiata.includes('Sono le quote scelte in modalità avanzata: l\'esempio predefinito, quello di CERS Eliodora, è 40%, 40% e 20%; il regolamento della nostra CER non è ancora scritto.'), cambiata);
+  assert.ok(riga(0.4, 0.4).endsWith('È l\'esempio di CERS Eliodora, non il regolamento della nostra CER, che non è ancora scritto.'), 'con le quote predefinite resta l\'esempio');
+});
+
 test('la frase sull\'eccedentaria compare solo se c\'è, e dice dove va', () => {
   assert.equal(testoEccedentaria({ quotaEccedentaria: 0, eccedentaria: 0, fondoSociale: 0 }), '');
   assert.equal(

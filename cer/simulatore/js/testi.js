@@ -94,13 +94,19 @@ export function ipotesi(r, loc, pvInfo, costanti) {
   const tipFv = r.impianti.find((k) => k.incentivato)?.tip;
   const ce = (tipo) => numero(costoEvitato(tipo, p.prezzo_zonale, costanti, p.costo_evitato ?? {}), 3);
   const media = em.principale === 'media';
+  // Le quote dell'esempio sono quelle del regolamento di CERS Eliodora (art. 3): con quote cambiate in avanzato non lo sono più.
+  const q = voce(costanti, 'quote_riparto');
+  const esempio = Math.abs(p.quota_produttore - q.produttore) < 1e-9 && Math.abs(p.quota_consumatori - q.consumatori) < 1e-9;
+  const fonteRiparto = esempio
+    ? 'È l\'esempio di CERS Eliodora, non il regolamento della nostra CER, che non è ancora scritto.'
+    : `Sono le quote scelte in modalità avanzata: l'esempio predefinito, quello di CERS Eliodora, è ${perc(q.produttore)}, ${perc(q.consumatori)} e ${perc(1 - q.produttore - q.consumatori)}; il regolamento della nostra CER non è ancora scritto.`;
   return [
     `Località: ${loc.nome} (${loc.sigla}). Produzione PVGIS dell'anno meteorologico ${pvInfo.anno_meteo}, pannelli rivolti a sud con l'inclinazione ottimale di ${numero(pvInfo.inclinazione)}°: ${numero(resa)} kWh per kWp l'anno. Un altro anno sposta la produzione di qualche punto percentuale.`,
     'La produzione è calcolata sui kWp dei pannelli, con un inverter della stessa potenza e una connessione che permette di immettere tutto: non contiamo tagli dell\'inverter né limiti di immissione, e il costo della connessione è escluso.',
     `Consumi delle famiglie: forme medie ARERA 2025 dei residenti in ${loc.regione}; una famiglia vera è più irregolare. Attività ed enti: profili illustrativi, non misurati.`,
     `Prezzo dell'energia: ${numero(p.prezzo_zonale, 2)} €/MWh, uguale tutto l'anno${tipFv != null ? `; tariffa premio ${numero(tipFv)} €/MWh` : ''}.`,
     `Costo evitato in bolletta per ogni kWh autoconsumato: ${ce('famiglia')} €/kWh per le famiglie, ${ce('attivita')} per le attività, ${ce('ente')} per gli enti.`,
-    `Riparto: ${perc(p.quota_produttore)} della tariffa al titolare dell'impianto, ${perc(p.quota_consumatori)} ai consumatori secondo quanto consumano nelle ore di produzione, ${perc(1 - p.quota_produttore - p.quota_consumatori)} alla CER; il contributo ARERA ai consumatori. È l'esempio di CERS Eliodora, non il regolamento della nostra CER, che non è ancora scritto.`,
+    `Riparto: ${perc(p.quota_produttore)} della tariffa al titolare dell'impianto, ${perc(p.quota_consumatori)} ai consumatori secondo quanto consumano nelle ore di produzione, ${perc(1 - p.quota_produttore - p.quota_consumatori)} alla CER; il contributo ARERA ai consumatori. ${fonteRiparto}`,
     `Costi della CER: ${euro(p.gestione_eur_anno)} l'anno di gestione più i corrispettivi del GSE, tolti dagli incentivi prima del riparto. La quota eccedentaria resta intera ai consumatori che non sono imprese: è la lettura prudente, perché le regole non dicono se possa coprire i costi.`,
     ...(r.impianti.some((k) => !k.giaInEsercizio) ? [`Gli impianti nuovi entrano in esercizio dopo la costituzione della CER ed entro il ${dataIt(voce(costanti, 'scadenza_esercizio'))}.`] : []),
     ...(r.impianti.some((k) => k.giaInEsercizio) ? ['Gli impianti già in esercizio sono entrati in esercizio prima della costituzione della CER: niente tariffa premio, solo il contributo ARERA sulla loro condivisa.'] : []),
