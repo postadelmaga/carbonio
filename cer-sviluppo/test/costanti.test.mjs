@@ -34,6 +34,14 @@ test('il limite del 30% sugli impianti esistenti cita la norma che lo pone, il D
   assert.match(v.url, /normattiva\.it.*decreto\.legislativo:2021-11-08;199~art31/);
 });
 
+test('il corrispettivo del GSE si dichiara IVA esclusa, come lo conta il simulatore (esclude una nota che tace l\'IVA che il DM 106/2024 aggiunge in fattura)', () => {
+  const v = leggi('costanti.json').voci.corrispettivo_gse;
+  assert.match(v.fonte, /Allegato 2 lett\. a\)/);
+  assert.match(v.note, /IVA esclusa/);
+  assert.match(v.note, /«maggiorati dell'aliquota IVA»/);
+  assert.match(v.note, /il simulatore non la aggiunge/);
+});
+
 test('archetipi: 24 ore per tipo di giorno e 12 mesi', () => {
   const { archetipi } = leggi('consumi/attivita.json');
   for (const [id, a] of Object.entries(archetipi)) {

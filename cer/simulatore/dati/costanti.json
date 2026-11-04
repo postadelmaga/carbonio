@@ -175,10 +175,10 @@
     "corrispettivo_gse": {
       "descrizione": "Corrispettivo annuo al GSE per impianto",
       "valore": { "esente_fino_kw": 3, "fisso": 15, "oltre_kw": 20, "per_kw": 1 }, "unita": "€ l'anno",
-      "fonte": "DM MASE 15 marzo 2024, n. 106, Allegato 1 lett. a)",
+      "fonte": "DM MASE 15 marzo 2024, n. 106, Allegato 1 lett. a) e Allegato 2 lett. a)",
       "url": "https://www.mase.gov.it/portale/documents/d/guest/m_amte-mase-registro-ufficiale-e-0050960-18-03-2024-pdf",
-      "consultato": "2026-10-18",
-      "note": "Nulla fino a 3 kW; 15 € oltre, più 1 €/kW oltre i primi 20 kW. La verifica preliminare da 100 € è facoltativa e non si conta."
+      "consultato": "2026-11-04",
+      "note": "Nulla fino a 3 kW; 15 € oltre, più 1 €/kW oltre i primi 20 kW, IVA esclusa: il GSE li fattura «maggiorati dell'aliquota IVA» e il simulatore non la aggiunge. La verifica preliminare da 100 € è facoltativa e non si conta."
     },
     "gestione": {
       "descrizione": "Costi annui di gestione della CER, tolti prima del riparto",
