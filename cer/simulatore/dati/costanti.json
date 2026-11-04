@@ -64,8 +64,8 @@
     "limite_potenza_esistenti": {
       "descrizione": "Quota massima della potenza della configurazione per gli impianti esistenti, entrati in esercizio fino al 15/12/2021",
       "valore": 0.30, "unita": "frazione",
-      "fonte": "DM MASE 414/2023, art. 3; Regole operative GSE del 16/07/2025, p. 11; TIAD, art. 3.4 lett. f",
-      "url": "https://www.gse.it/documenti_site/Documenti%20GSE/Servizi%20per%20te/AUTOCONSUMO/Gruppi%20di%20autoconsumatori%20e%20comunita%20di%20energia%20rinnovabile/Regole%20e%20procedure/Allegato%201%20Regole%20Operative%20CACER.pdf",
+      "fonte": "D.Lgs. 199/2021, art. 31 c. 2 lett. d) (richiamato dal DM MASE 414/2023, art. 3 c. 2 lett. b); TIAD, art. 3.4 lett. f; Regole operative GSE del 16/07/2025, p. 11",
+      "url": "https://www.normattiva.it/uri-res/N2Ls?urn:nir:stato:decreto.legislativo:2021-11-08;199~art31",
       "consultato": "2026-11-04", "note": "Oltre il limite la pagina avverte."
     },
     "limiti_monofase": {

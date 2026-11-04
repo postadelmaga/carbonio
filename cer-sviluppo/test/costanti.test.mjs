@@ -26,6 +26,14 @@ test('valori controllati sulla spec', () => {
   assert.equal(voci.comunita_tipo.valore.classe, '1,5-3');
 });
 
+test('il limite del 30% sugli impianti esistenti cita la norma che lo pone, il D.Lgs. 199/2021, art. 31 (esclude il rimando al DM 414, art. 3, che quel limite non lo contiene)', () => {
+  const v = leggi('costanti.json').voci.limite_potenza_esistenti;
+  assert.match(v.fonte, /^D\.Lgs\. 199\/2021, art\. 31 c\. 2 lett\. d\)/);
+  assert.doesNotMatch(v.fonte, /^DM MASE 414\/2023, art\. 3;/);
+  assert.match(v.fonte, /TIAD, art\. 3\.4 lett\. f/);
+  assert.match(v.url, /normattiva\.it.*decreto\.legislativo:2021-11-08;199~art31/);
+});
+
 test('archetipi: 24 ore per tipo di giorno e 12 mesi', () => {
   const { archetipi } = leggi('consumi/attivita.json');
   for (const [id, a] of Object.entries(archetipi)) {
