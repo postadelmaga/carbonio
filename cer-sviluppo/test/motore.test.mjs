@@ -48,6 +48,14 @@ test('validazione: errori in italiano, con il campo', () => {
   sposta.soci[0] = { ...sposta.soci[0], spostamento: 0.5 };
   assert.ok(valida(sposta, costanti).some((m) => m.includes('spostamento fra 0 e 30%')));
   assert.ok(valida(base({ parametri: { fattore_principale: 'alto' } }), costanti).some((m) => m.includes('fattore principale «alto»')));
+  assert.ok(valida(base({ parametri: { fattore_principale: 'termoelettrico' } }), costanti).some((m) => /non previsto/.test(m)));
+});
+
+test('il calcolo parte dal metodo ISPRA delle centrali fossili e, se richiesto, usa la media dei consumi (esclude un predefinito rimasto alla media)', () => {
+  const f = calcola(base(), dati), m = calcola(base({ parametri: { fattore_principale: 'media' } }), dati);
+  assert.deepEqual([f.parametri.fattore_principale, f.emissioni.principale, f.emissioni.fattore, f.emissioni.fattoreAltro], ['fossili', 'fossili', 413.3, 199.6]);
+  assert.deepEqual([m.emissioni.principale, m.emissioni.fattore, m.emissioni.fattoreAltro], ['media', 199.6, 413.3]);
+  quasi(f.emissioni.comunita.evitata / m.emissioni.comunita.evitata, 413.3 / 199.6, 1e-9, 'stessa produzione, fattori diversi');
 });
 
 test('tutto torna: incentivi distribuiti = tariffa + contributo', () => {

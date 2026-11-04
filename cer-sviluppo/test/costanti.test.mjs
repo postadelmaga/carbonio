@@ -19,7 +19,8 @@ test('valori controllati sulla spec', () => {
   assert.equal(voci.prezzo_zonale.valore, 115.94);
   assert.equal(voci.contributo_arera.valore, 11.9);
   assert.equal(voci.fattore_co2.valore, 199.6);
-  assert.equal(voci.fattore_co2_alto.valore, 366.5);
+  assert.equal(voci.fattore_co2_fossili.valore, 413.3);
+  assert.ok(!('fattore_co2_alto' in voci), 'il termoelettrico con bioenergie non si usa più');
   assert.equal(voci.soglia_eccedentaria.valore, 0.55);
   assert.deepEqual(voci.quote_riparto.valore, { produttore: 0.4, consumatori: 0.4 });
   assert.equal(voci.comunita_tipo.valore.classe, '1,5-3');

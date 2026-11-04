@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { numero, euro, kwh, perc, tonnellate, anni, slug } from '../../cer/simulatore/js/formato.js';
+import { numero, euro, kwh, perc, tonnellate, circa, anni, slug } from '../../cer/simulatore/js/formato.js';
 
 test('numeri in italiano', () => {
   assert.equal(numero(12345678), '12.345.678');
@@ -21,6 +21,19 @@ test('tonnellate e anni', () => {
   assert.equal(anni(null, 25), 'non rientra in 25 anni');
   assert.equal(anni(1), '1 anno');
   assert.equal(anni(7), '7 anni');
+});
+
+test('circa: due cifre significative, chilogrammi sotto la tonnellata (esclude numeri più precisi dei fattori)', () => {
+  assert.equal(circa(22.78), 'circa 23 t');
+  assert.equal(circa(1.2377), 'circa 1,2 t');
+  assert.equal(circa(0.296), 'circa 300 kg');
+  assert.equal(circa(161.8), 'circa 160 t');
+  assert.equal(circa(434.6), 'circa 430 t');
+  assert.equal(circa(9.96), 'circa 10 t');
+  assert.equal(circa(0.9996), 'circa 1,0 t');
+  assert.equal(circa(12345), 'circa 12.000 t');
+  assert.equal(circa(0), '0 kg');
+  assert.equal(circa(NaN), '—');
 });
 
 test('nomi di file delle regioni', () => {

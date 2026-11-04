@@ -41,7 +41,7 @@
 <main class="wrap metodo">
   <p class="kicker">Simulatore · metodo</p>
   <h1>Come calcoliamo</h1>
-  <p class="lead">Il simulatore fa una stima indicativa: non è un'offerta né un preventivo. Qui ci sono i passi del calcolo, la fonte di ogni valore, le ipotesi e i limiti. Il codice è aperto, nel repository del sito.</p>
+  <p class="lead">Il simulatore fa una stima indicativa: non è un'offerta né un preventivo. Per ogni numero indichiamo la fonte o diciamo che è un'ipotesi nostra. Qui ci sono i passi del calcolo, le fonti e le ipotesi dichiarate, i limiti. Il codice è aperto, nel repository del sito.</p>
 
   <h2>I passi</h2>
   <ol>
@@ -56,7 +56,7 @@
     <li><b>Il riparto.</b> Il regolamento della nostra CER non c'è ancora: usiamo come esempio quello di un'altra comunità della Spezia, CERS Eliodora. Il 40% della tariffa va al titolare dell'impianto, il 40% ai consumatori secondo quanto consumano nelle ore di produzione, il 20% resta alla CER, che ne decide l'uso. Il contributo ARERA va ai consumatori.</li>
     <li><b>Fuori dalla CER.</b> L'energia immessa si vende al prezzo dell'energia; quella autoconsumata fa risparmiare in bolletta, e la stimiamo con l'ipotesi più bassa: energia, rete, oneri, accisa e IVA dove si paga, senza il margine del venditore.</li>
     <li><b>Venti anni.</b> Prezzi costanti, nessuna inflazione; i pannelli perdono lo 0,5% di produzione l'anno. Calcoliamo esattamente il primo e il ventesimo anno e interpoliamo gli altri.</li>
-    <li><b>La CO₂.</b> La CO₂ la evitano gli impianti nuovi: la loro produzione per il fattore medio dei consumi elettrici italiani di ISPRA, e «fino a» con quello della produzione termoelettrica, che è ciò che un kWh solare toglie oggi soprattutto. La condivisa di un consumatore è energia di quegli stessi impianti: per non contarla due volte la chiamiamo «copertura», non CO₂ evitata. Sui 20 anni si usa sempre il fattore medio, che cala come ha fatto in media dal 1990 al 2024.</li>
+    <li><b>La CO₂.</b> La CO₂ la evitano gli impianti nuovi. La stimiamo con il metodo con cui ISPRA calcola le emissioni evitate dalle rinnovabili: ogni kWh dei pannelli sostituisce un kWh prodotto dalle centrali fossili italiane. In modalità avanzata si può usare invece la CO₂ media di un kWh consumato in Italia, che dà una stima circa dimezzata. Quale centrale si ferma ora per ora nessuna fonte ufficiale lo pubblica: è un'ipotesi. La condivisa di un consumatore è energia di quegli stessi impianti: per non contarla due volte la chiamiamo «copertura», non CO₂ evitata. L'impronta dei prelievi usa la CO₂ media di un kWh consumato. Sui 20 anni il fattore delle centrali fossili resta quello di oggi; con la media dei consumi scende come ha fatto in media dal 1990 al 2024.</li>
   </ol>
 
   <h2>Due scelte prudenti</h2>

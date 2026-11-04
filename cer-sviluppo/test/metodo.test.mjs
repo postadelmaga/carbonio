@@ -35,7 +35,7 @@ test('i numeri del testo di «Come calcoliamo» coincidono con costanti.json (es
     `non oltre ${fasce.at(-1).fino_kw / 1000} MW di potenza, fino a ${durata} anni`,
     'se non ce ne sono, va a finalità sociali',
     'Se i costi superano gli incentivi, il simulatore lo segnala: vanno coperti in altro modo, per esempio con una quota associativa.',
-    'Sui 20 anni si usa sempre il fattore medio, che cala come ha fatto in media dal 1990 al 2024.',
+    'Sui 20 anni il fattore delle centrali fossili resta quello di oggi; con la media dei consumi scende come ha fatto in media dal 1990 al 2024.',
   ];
   const mancanti = frasi.filter((f) => !HTML.includes(f));
   assert.deepEqual(mancanti, [], 'frasi da aggiornare in cer/simulatore/metodo/index.html');
@@ -51,8 +51,9 @@ test('i numeri del testo di «Come calcoliamo» coincidono con costanti.json (es
   assert.ok(HTML.includes('il ventesimo anno'), 'nella pagina manca «il ventesimo anno»');
 });
 
-test('la pagina dice che i 20 anni usano sempre il fattore medio e come si leggono le fonti (esclude una pagina che dice il contrario del calcolo)', () => {
-  assert.ok(HTML.includes('si usa sempre il fattore medio'), 'nella pagina manca «si usa sempre il fattore medio»');
+test('la pagina dice che sui 20 anni il fattore delle centrali fossili resta quello di oggi e come si leggono le fonti (esclude una pagina che dice il contrario del calcolo)', () => {
+  assert.ok(HTML.includes('resta quello di oggi'), 'nella pagina manca «resta quello di oggi»');
+  assert.ok(!HTML.includes('che è ciò che un kWh solare toglie oggi soprattutto'), 'frase senza fonte ufficiale');
   assert.ok(HTML.includes("unita === 'data'"), 'lo script non scrive le date in GG/MM/AAAA');
   assert.ok(HTML.includes("join(', ')"), 'le liste della tabella non si uniscono con «, »');
   assert.ok(HTML.includes('console.error(e)'), 'il ramo di errore non registra l\'errore');

@@ -4,10 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Simulatore · Comunità Energetica Rinnovabile</title>
-<meta name="description" content="Che cosa porta una comunità energetica a chi ci entra e a chi la fonda: euro, energia condivisa e CO₂ evitata. Stima indicativa, con la fonte di ogni numero.">
+<meta name="description" content="Che cosa porta una comunità energetica a chi ci entra e a chi la fonda: euro, energia condivisa e CO₂ evitata. Stima indicativa. Per ogni numero indichiamo la fonte o diciamo che è un'ipotesi nostra.">
 <link rel="canonical" href="https://co2-info.duckdns.org/cer/simulatore/">
 <meta property="og:title" content="Simulatore della Comunità Energetica Rinnovabile">
-<meta property="og:description" content="Per te, per la comunità, per il clima: una stima indicativa, con le fonti.">
+<meta property="og:description" content="Per te, per la comunità, per il clima. Stima indicativa: per ogni numero indichiamo la fonte o diciamo che è un'ipotesi nostra.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://co2-info.duckdns.org/cer/simulatore/">
 <meta property="og:image" content="https://co2-info.duckdns.org/cer/img/social.png">
@@ -136,7 +136,7 @@
     <label class="campo" for="abitudini-cursore" data-solo-modo="esperto">Consumi spostati nelle ore di sole <output name="abitudini-valore"></output>
       <input id="abitudini-cursore" name="abitudini-cursore" type="range" min="0" max="0.3" step="0.01" value="0">
     </label>
-    <p class="aiuto">Lavatrice, lavastoviglie, scaldabagno, ricarica dell'auto: usarli quando c'è il sole fa crescere la condivisa, e gli incentivi restano nella comunità. In questo calcolo la CO₂ non cambia: usiamo un fattore medio annuo, e per misurare l'effetto ora per ora servirebbero dati orari delle emissioni che ISPRA non pubblica.</p>
+    <p class="aiuto">Lavatrice, lavastoviglie, scaldabagno, ricarica dell'auto: usarli quando c'è il sole fa crescere la condivisa, e gli incentivi restano nella comunità. La CO₂ evitata dai pannelli non cambia: dipende da quanta energia producono, non da quando la consumi. Se hai pannelli sul tetto, la tua impronta scende perché prelevi meno dalla rete, ma quel kWh l'avresti immesso per gli altri: con un fattore annuo, come in questo calcolo, non è CO₂ in meno per il sistema. Ora per ora probabilmente lo è, perché nelle ore di sole la rete emette meno, ma non lo stimiamo: ISPRA pubblica solo fattori annui, e i dati orari di Terna ed ENTSO-E dicono quanto produce ogni fonte, non quale centrale si ferma.</p>
   </fieldset>
 
   <fieldset class="passo" data-solo-percorso="entrare">
@@ -232,9 +232,9 @@
       <label class="campo">Costo evitato, enti, €/kWh <input name="p-ce-ente" type="number" min="0" max="2" step="0.001"></label>
     </div>
     <fieldset class="scelte-in-linea">
-      <legend>CO₂ del numero principale</legend>
-      <label><input type="radio" name="p-fattore" value="media" checked> media dei consumi (<span data-r="cost.fattore" data-f="g"></span> g/kWh)</label>
-      <label><input type="radio" name="p-fattore" value="termoelettrico"> termoelettrico (<span data-r="cost.fattoreAlto" data-f="g"></span> g/kWh)</label>
+      <legend>Fattore di emissione per la CO₂ evitata</legend>
+      <label><input type="radio" name="p-fattore" value="fossili" checked> Metodo ISPRA: centrali fossili, <span data-r="cost.fattoreFossili" data-f="g"></span> g/kWh</label>
+      <label><input type="radio" name="p-fattore" value="media"> Media dei consumi, <span data-r="cost.fattore" data-f="g"></span> g/kWh</label>
     </fieldset>
     <button type="button" class="btn" id="ripristina">Torna ai valori predefiniti</button>
   </details>
@@ -268,14 +268,15 @@
 
   <section class="ris ris-emissioni">
     <p class="kicker">Per il clima</p>
-    <p class="grande"><b data-r="emissioni.evitata" data-f="t"></b><small>di CO₂ evitate in un anno dagli impianti nuovi della comunità<span data-r="emissioni.finoA"></span></small></p>
-    <p><span data-r="emissioni.italianiTesto"></span> In <span data-r="cost.anni"></span> anni: <b data-r="emissioni.ventiAnni" data-f="t"></b>.</p>
-    <p data-solo-investimento>Il tuo impianto: <b data-r="te.co2.evitata" data-f="t"></b> l'anno.</p>
-    <p>I tuoi prelievi dalla rete pesano <b data-r="te.co2.impronta" data-f="t"></b> di CO₂ l'anno; il <b data-r="te.co2.copertura" data-f="perc"></b> dei tuoi consumi è coperto, nella stessa ora, da energia rinnovabile della comunità o del tuo tetto.</p>
-    <p class="testo-emissioni">La CO₂ la evitano i pannelli. La comunità serve a farli nascere: senza chi consuma nelle stesse ore non c'è energia condivisa, e senza condivisa non c'è l'incentivo che li ripaga.</p>
-    <p class="testo-emissioni">Un kWh preso dalla rete nel 1990 emetteva <span data-r="cost.g1990" data-f="g"></span> g di CO₂, nel 2024 <span data-r="cost.g2024" data-f="g"></span> (ISPRA). Ogni impianto nuovo spinge in quella direzione, ed è anche per questo che il conto sui <span data-r="cost.anni"></span> anni scende.</p>
-    <p class="testo-emissioni" data-r="emissioni.esistentiTesto"></p>
-    <p class="testo-emissioni">Per restare sotto 1,5 °C il mondo può emettere ancora circa <span data-r="cost.budget" data-f="int"></span> miliardi di tonnellate di CO₂ dall'inizio del 2026: <a href="/it/">Il carbonio che resta</a>. Perché l'energia pesa su tutti i prezzi: <a href="/cer/#perche">la nostra pagina</a>.</p>
+    <p class="grande"><b data-r="emissioni.evitata" data-f="circa"></b><small>di CO₂ in meno ogni anno, una stima, dagli impianti nuovi della comunità</small></p>
+    <p class="testo-emissioni" data-r="emissioni.stimaTesto"></p>
+    <p><span data-r="emissioni.italianiTesto"></span> <span data-r="emissioni.ventiAnniTesto"></span></p>
+    <p data-solo-investimento>Il tuo impianto: <b data-r="te.co2.evitata" data-f="circa"></b> di CO₂ in meno l'anno (stima).</p>
+    <p>I tuoi prelievi dalla rete pesano <b data-r="te.co2.impronta" data-f="circa"></b> di CO₂ l'anno (CO₂ media di un kWh consumato). Nel <b data-r="te.co2.copertura" data-f="perc"></b> dei tuoi consumi, ora per ora, la produzione rinnovabile della comunità o del tuo tetto basta a coprirli: è un conteggio, la corrente resta quella della rete.</p>
+    <p class="testo-emissioni">La CO₂ la evitano i pannelli. La comunità può aiutare a realizzarli, perché l'energia condivisa porta un incentivo; ma non sappiamo quanti impianti nascerebbero comunque senza di essa, e la nostra stima conta tutta la produzione degli impianti nuovi.</p>
+    <p class="testo-emissioni">Un kWh preso dalla rete nel 1990 emetteva <span data-r="cost.g1990" data-f="g"></span> g di CO₂, nel 2024 <span data-r="cost.g2024" data-f="g"></span> e nel 2025, dato preliminare, <span data-r="cost.fattore" data-f="g"></span>: più rinnovabili e meno carbone e olio, ma conta anche il meteo (ISPRA).</p>
+    <p class="testo-emissioni" data-r="emissioni.giaInEsercizioTesto"></p>
+    <p class="testo-emissioni">Per avere il 50% di probabilità di restare sotto 1,5 °C restano circa <span data-r="cost.budget" data-f="int"></span> miliardi di tonnellate di CO₂ dall'inizio del 2026, circa quattro anni alle emissioni attuali (Global Carbon Budget 2025): <a href="/it/">Il carbonio che resta</a>. Perché l'energia pesa su tutti i prezzi: <a href="/cer/#perche">la nostra pagina</a>.</p>
   </section>
 
   <section class="ris ris-comunita">
@@ -334,7 +335,7 @@
 </section>
 </main>
 
-<div class="barra-riassunto" aria-hidden="true"><b data-r="te.cerAggiunge" data-f="euro"></b> l'anno dalla CER · <b data-r="emissioni.evitata" data-f="t"></b> di CO₂ evitate</div>
+<div class="barra-riassunto" aria-hidden="true"><b data-r="te.cerAggiunge" data-f="euro"></b> l'anno dalla CER · <b data-r="emissioni.evitata" data-f="circa"></b> di CO₂ in meno (stima)</div>
 
 <footer>
   <div class="wrap">

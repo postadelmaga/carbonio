@@ -5,16 +5,16 @@ import { calcola, valida, asse } from './motore.js';
 import { ingressiEntrare, ingressiFondare, sceltaIo } from './scenari.js';
 import { voce } from './economia.js';
 import { consumoMedioClasse } from './profili.js';
-import { numero, euro, kwh, perc, tonnellate, anni } from './formato.js';
+import { numero, euro, kwh, perc, tonnellate, anni, circa } from './formato.js';
 import { giornata, anno, incentivi, vociIncentivi, scenaComunita, tabella, MESI } from './grafici.js';
-import { ipotesi, testoScadenza, testoEccedentaria, testoFinoA, testoItaliani, testoGiaInEsercizio } from './testi.js';
+import { ipotesi, testoScadenza, testoEccedentaria, testoItaliani, testoStimaCo2, testoVentiAnniCo2, testoGiaInEsercizio } from './testi.js';
 
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => [...document.querySelectorAll(s)];
 const form = $('#moduli');
 const campo = (nome) => form.elements[nome];
 const scelto = (nome) => document.querySelector(`input[name="${nome}"]:checked`)?.value;
-const FORMATI = { euro: (v) => euro(v), perc: (v) => perc(v), t: tonnellate, kwh, anni: (v) => anni(v, voce(dati.costanti, 'durata_tariffa_anni')), int: (v) => numero(v), g: (v) => numero(v, Number.isInteger(v) ? 0 : 1) };
+const FORMATI = { euro: (v) => euro(v), perc: (v) => perc(v), t: tonnellate, circa, kwh, anni: (v) => anni(v, voce(dati.costanti, 'durata_tariffa_anni')), int: (v) => numero(v), g: (v) => numero(v, Number.isInteger(v) ? 0 : 1) };
 const NOMI = { famiglie: 'Famiglia', pannelli: 'Famiglia con pannelli', pannelli_esistenti: 'Famiglia con pannelli già in esercizio', attivita: 'Attività', enti: 'Ente o associazione', produttore: 'Socio produttore' };
 const validi = {};
 let elenco = [], loc = null, dati = null, ultimo = null, scena = null, richiestaLocalita = 0, avvisiMostrati = null;
@@ -181,14 +181,20 @@ function mostra(r, s, percorso, ingressi) {
   if (com.investimentoCer > 0) b.impiantoCer = ''; else delete b.impiantoCer;
   const vista = {
     te,
-    emissioni: { ...em, finoA: testoFinoA(r.emissioni.principale, em.evitata, em.evitataAlta), italianiTesto: testoItaliani(em.italiani, voce(dati.costanti, 'co2_pro_capite')), esistentiTesto: em.esistenti > 0 ? `Gli impianti già in esercizio evitano altre ${tonnellate(em.esistenti)} l'anno, già contate prima della CER.` : '' },
+    emissioni: {
+      ...em,
+      stimaTesto: testoStimaCo2(r.emissioni.principale, em.evitataAltra, dati.costanti),
+      italianiTesto: testoItaliani(em.italiani, voce(dati.costanti, 'co2_pro_capite')),
+      ventiAnniTesto: testoVentiAnniCo2(r.emissioni.principale, em.ventiAnni, dati.costanti),
+      giaInEsercizioTesto: em.giaInEsercizio > 0 ? `Gli impianti già in esercizio evitano, con la stessa ipotesi, altre ${circa(em.giaInEsercizio)} l'anno: non le attribuiamo alla CER.` : '',
+    },
     com: { ...com, incentivi: com.tariffa + com.contributo, frazioneCer: 1 - p.quota_produttore - p.quota_consumatori, eccedentariaTesto: testoEccedentaria(com) },
     cost: {
       g1990: voce(dati.costanti, 'fattore_co2_1990')['1990'],
       g2024: voce(dati.costanti, 'fattore_co2_1990')['2024'],
       anni: voce(dati.costanti, 'durata_tariffa_anni'),
       fattore: voce(dati.costanti, 'fattore_co2'),
-      fattoreAlto: voce(dati.costanti, 'fattore_co2_alto'),
+      fattoreFossili: voce(dati.costanti, 'fattore_co2_fossili'),
       scadenza: voce(dati.costanti, 'scadenza_esercizio').split('-').reverse().join('/'),
       budget: voce(dati.costanti, 'budget_1_5'),
     },

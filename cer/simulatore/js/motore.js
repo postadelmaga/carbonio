@@ -4,7 +4,7 @@ import { asseOre } from './calendario.js';
 import { formaDomestica, formaAttivita, scala, sposta, produzione, somma } from './profili.js';
 import { energia } from './energia.js';
 import { economiaAnno, investimento, costoEvitato, voce, giaInEsercizio, STATI } from './economia.js';
-import { emissioni } from './emissioni.js';
+import { emissioni, FATTORI } from './emissioni.js';
 
 export const CLASSI = ['0-1,5', '1,5-3', '3-4,5', '4,5-6', 'oltre_6'];
 export const TIPI_SOCIO = ['famiglia', 'attivita', 'ente'];
@@ -48,7 +48,7 @@ export function valida(ingressi, c) {
   if ((p.quota_produttore ?? quote.produttore) + (p.quota_consumatori ?? quote.consumatori) > 1 + 1e-9) err.push('quota del produttore più quota dei consumatori oltre il 100%');
   if (p.prezzo_zonale != null && !fra(p.prezzo_zonale, 0, 1000)) err.push('prezzo zonale fra 0 e 1.000 €/MWh');
   if (p.fondatori != null && !(Number.isInteger(p.fondatori) && p.fondatori >= 1)) err.push('i fondatori sono almeno 1');
-  if (p.fattore_principale != null && !['media', 'termoelettrico'].includes(p.fattore_principale)) err.push(`fattore principale «${p.fattore_principale}» non previsto`);
+  if (p.fattore_principale != null && !FATTORI.includes(p.fattore_principale)) err.push(`fattore principale «${p.fattore_principale}» non previsto`);
   return err;
 }
 
@@ -58,7 +58,7 @@ function parametri(ingressi, c) {
   return {
     prezzo_zonale: voce(c, 'prezzo_zonale'), gestione_eur_anno: voce(c, 'gestione'), costituzione_eur: voce(c, 'costituzione'),
     quota_associativa: voce(c, 'quota_associativa'), quota_produttore: q.produttore, quota_consumatori: q.consumatori,
-    fattore_principale: 'media', fondatori: voce(c, 'predefiniti').fondatori, manutenzione: voce(c, 'manutenzione'),
+    fattore_principale: 'fossili', fondatori: voce(c, 'predefiniti').fondatori, manutenzione: voce(c, 'manutenzione'),
     prezzo_impianto_eur_w: null, costo_evitato: {},
     ...scelti, area: ingressi.area,
   };
@@ -221,7 +221,7 @@ export function calcola(ingressi, dati) {
   }));
   return {
     avvisi, parametri: par, comunita, membri, perTe, impianti,
-    emissioni: { fattore: co2.fattore, fattoreAlto: co2.fattoreAlto, principale: co2.principale, comunita: co2.comunita },
+    emissioni: { fattore: co2.fattore, fattoreAltro: co2.fattoreAltro, principale: co2.principale, comunita: co2.comunita },
     grafici,
   };
 }

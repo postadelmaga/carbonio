@@ -194,11 +194,22 @@ test('gli avvisi si riscrivono solo se cambiano: una regione di stato non ripete
   assert.match(corpo, /if \(chiave === avvisiMostrati\) return;/);
 });
 
-test('testi che il visitatore vede sbagliati: «fino a» solo con la media, italiani, abitudini solo per le famiglie, «Io sono» senza gruppi assenti', () => {
-  assert.match(HTML, /della comunità<span data-r="emissioni\.finoA"><\/span><\/small>/);
-  assert.match(HTML, /<p><span data-r="emissioni\.italianiTesto"><\/span> In <span data-r="cost\.anni"><\/span> anni: /);
-  assert.match(JS, /finoA: testoFinoA\(r\.emissioni\.principale, em\.evitata, em\.evitataAlta\)/);
+test('testi della CO₂: niente «fino a», stima dichiarata, italiani e 20 anni generati, abitudini corrette, «Io sono» senza gruppi assenti', () => {
+  assert.doesNotMatch(HTML, /finoA|fino a \d/);
+  assert.match(HTML, /<p class="grande"><b data-r="emissioni\.evitata" data-f="circa"><\/b><small>di CO₂ in meno ogni anno, una stima, dagli impianti nuovi della comunità<\/small><\/p>/);
+  assert.match(HTML, /<p class="testo-emissioni" data-r="emissioni\.stimaTesto"><\/p>/);
+  assert.match(HTML, /<p><span data-r="emissioni\.italianiTesto"><\/span> <span data-r="emissioni\.ventiAnniTesto"><\/span><\/p>/);
+  assert.match(JS, /stimaTesto: testoStimaCo2\(r\.emissioni\.principale, em\.evitataAltra, dati\.costanti\)/);
   assert.match(JS, /italianiTesto: testoItaliani\(em\.italiani, voce\(dati\.costanti, 'co2_pro_capite'\)\)/);
+  assert.match(HTML, /La comunità può aiutare a realizzarli, perché l'energia condivisa porta un incentivo; ma non sappiamo quanti impianti nascerebbero comunque senza di essa/);
+  assert.doesNotMatch(HTML, /La comunità serve a farli nascere/);
+  assert.match(HTML, /con un fattore annuo, come in questo calcolo, non è CO₂ in meno per il sistema/);
+  assert.doesNotMatch(HTML, /In questo calcolo la CO₂ non cambia/);
+  assert.match(HTML, /La CO₂ evitata dai pannelli non cambia: dipende da quanta energia producono, non da quando la consumi\./);
+  assert.match(HTML, /Per avere il 50% di probabilità di restare sotto 1,5 °C restano circa <span data-r="cost\.budget" data-f="int"><\/span> miliardi di tonnellate di CO₂ dall'inizio del 2026, circa quattro anni alle emissioni attuali \(Global Carbon Budget 2025\)/);
+  assert.match(HTML, /<legend>Fattore di emissione per la CO₂ evitata<\/legend>/);
+  assert.match(HTML, /<input type="radio" name="p-fattore" value="fossili" checked>/);
+  assert.match(HTML, /· <b data-r="emissioni\.evitata" data-f="circa"><\/b> di CO₂ in meno \(stima\)<\/div>/);
   assert.match(HTML, /<fieldset class="passo" data-solo-percorso="entrare" data-solo-tipo="famiglia">\s*<legend><span class="n">6<\/span>Le tue abitudini<\/legend>/);
   assert.match(JS, /sceltaIo\(ingressi, \[\.\.\.selezione\.options\]\.map\(\(o\) => o\.value\)\)/);
   assert.match(JS, /o\.disabled = disabilitati\.includes\(o\.value\)/);
