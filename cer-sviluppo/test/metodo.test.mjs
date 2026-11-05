@@ -115,3 +115,13 @@ test('«Che cosa resta fuori» dice che le imprese socie devono essere PMI e che
 test('«Che cosa resta fuori» elenca i costi dell\'impianto che non si contano: inverter, assicurazione, manutenzione straordinaria, corrispettivo del ritiro dedicato (esclude una spesa dell\'impianto taciuta)', () => {
   assert.ok(fuori().includes('<li>Costi dell\'impianto che non contiamo: la sostituzione dell\'inverter, l\'assicurazione, la manutenzione straordinaria e il corrispettivo del ritiro dedicato.</li>'));
 });
+
+test('«Come calcoliamo» dichiara tre scelte prudenti, fra cui il corrispettivo del GSE contato per ogni impianto anche senza tariffa (esclude una scelta del calcolo taciuta e il titolo che ne conta due)', () => {
+  assert.ok(!HTML.includes('Due scelte prudenti') && !HTML.includes('Su due punti'), 'il titolo e la frase contano ancora due scelte');
+  const da = HTML.indexOf('<h2>Tre scelte prudenti</h2>');
+  assert.ok(da >= 0, 'manca il titolo «Tre scelte prudenti»');
+  const sezione = HTML.slice(da, HTML.indexOf('<h2>', da + 1));
+  assert.ok(sezione.includes('<p>Su tre punti le regole non sono chiare, e scegliamo la lettura prudente:</p>'));
+  assert.equal((sezione.match(/<li>/g) ?? []).length, 3, 'le scelte elencate sono tre');
+  assert.ok(sezione.includes('<li>il corrispettivo del GSE si conta per ogni impianto della comunità, anche per quelli senza tariffa: il DM 106/2024 lo chiede a chi è ammesso alle tariffe incentivanti, ma non dice se valga anche per gli altri.</li>'));
+});
