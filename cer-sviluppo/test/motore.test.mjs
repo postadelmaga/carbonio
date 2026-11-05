@@ -292,6 +292,19 @@ test('l\'investimento della CER somma solo gli impianti nuovi', () => {
   quasi(calcola(ing, dati).comunita.investimentoCer, 51200, 1e-6, 'solo i 40 kWp nuovi, 1,28 €/W');
 });
 
+test('haImpiantoCer è vero con un impianto della CER nuovo o già in esercizio, falso con l\'impianto di un socio (esclude un riquadro dell\'impianto della CER che sparisce quando l\'impianto è già pagato)', () => {
+  const senzaProduttore = (ing) => { ing.soci = ing.soci.filter((x) => x.id !== 'produttore'); return ing; };
+  const nuovo = calcola(conImpiantoCer(), dati).comunita;
+  assert.equal(nuovo.haImpiantoCer, true);
+  assert.ok(nuovo.investimentoCer > 0);
+  const gia = calcola(senzaProduttore(base({ impianti: [{ id: 'vecchio', kwp: 6, titolare: 'cer', sul_pod_del_titolare: false, per_ogni_membro: false, stato: 'precedente' }] })), dati).comunita;
+  assert.equal(gia.haImpiantoCer, true, 'l\'impianto della CER già in esercizio è un impianto della CER');
+  assert.equal(gia.investimentoCer, 0, 'e non c\'è nulla da finanziare');
+  assert.equal(calcola(base(), dati).comunita.haImpiantoCer, false, 'l\'impianto di un socio produttore non è della CER');
+  const delSocio = calcola(base({ impianti: [{ id: 'comune', kwp: 40, titolare: 'produttore', sul_pod_del_titolare: false, per_ogni_membro: false, stato: 'esistente' }] }), dati).comunita;
+  assert.equal(delSocio.haImpiantoCer, false, 'nemmeno quando il suo impianto è già in esercizio');
+});
+
 test('costi non coperti: senza quota associativa invita a metterla, con una quota la conta e dice quanto manca ancora', () => {
   const costi = (parametri) => calcola(base({ parametri: { gestione_eur_anno: 100000, ...parametri } }), dati);
   const senza = costi({});

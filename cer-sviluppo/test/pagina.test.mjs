@@ -117,7 +117,7 @@ test('«Per la comunità» dice che il 20% resta alla CER, senza il fondo contro
   assert.match(HTML, /Alla CER: <output name="p-fondo-valore">/);
 });
 
-test('l\'impianto della CER ha il suo riquadro, che compare solo se la CER ha impianti nuovi da finanziare', () => {
+test('l\'impianto della CER ha il suo riquadro, che compare con ogni impianto della CER, nuovo o già in esercizio, e dice «già pagato» al posto dell\'investimento da finanziare quando non c\'è (esclude un riquadro che sparisce con l\'impianto già in esercizio e una richiesta di finanziamento per un impianto già pagato)', () => {
   const da = HTML.indexOf('data-solo-impianto-cer');
   assert.ok(da >= 0, 'manca il riquadro con data-solo-impianto-cer');
   const riquadro = HTML.slice(HTML.lastIndexOf('<section', da), HTML.indexOf('</section>', da));
@@ -125,9 +125,19 @@ test('l\'impianto della CER ha il suo riquadro, che compare solo se la CER ha im
   for (const r of ['com.titolareCer', 'com.venditaCer', 'com.manutenzioneCer', 'com.investimentoCer']) {
     assert.ok(riquadro.includes(`data-r="${r}"`), `il riquadro non mostra ${r}`);
   }
-  assert.ok(riquadro.includes('L\'impianto va pagato dalla CER: con contributi, quote dei soci o un prestito.'));
-  assert.match(JS, /com\.investimentoCer > 0/);
+  assert.match(riquadro, /<div data-solo-investimento-cer><dt>Investimento da finanziare<\/dt><dd data-r="com\.investimentoCer" data-f="euro"><\/dd><\/div>/);
+  assert.match(riquadro, /<div data-solo-pagato-cer><dt>Investimento<\/dt><dd>già pagato<\/dd><\/div>/);
+  assert.match(riquadro, /<p class="testo-emissioni" data-solo-investimento-cer>L'impianto va pagato dalla CER: con contributi, quote dei soci o un prestito\.<\/p>/);
+  assert.match(JS, /if \(com\.haImpiantoCer\) b\.impiantoCer = ''; else delete b\.impiantoCer;/);
+  assert.match(JS, /if \(com\.investimentoCer > 0\) b\.investimentoCer = ''; else delete b\.investimentoCer;/);
+  const impiantoCer = attributoDelCorpo('impiantoCer'), investimentoCer = attributoDelCorpo('investimentoCer');
+  assert.equal(impiantoCer({ com: { haImpiantoCer: true, investimentoCer: 0 } }), true, 'impianto della CER già in esercizio: il riquadro c\'è');
+  assert.equal(impiantoCer({ com: { haImpiantoCer: false, investimentoCer: 0 } }), false);
+  assert.equal(investimentoCer({ com: { haImpiantoCer: true, investimentoCer: 51200 } }), true);
+  assert.equal(investimentoCer({ com: { haImpiantoCer: true, investimentoCer: 0 } }), false, 'già in esercizio: niente investimento da finanziare');
   assert.match(CSS, /body:not\(\[data-impianto-cer\]\) \[data-solo-impianto-cer\]/);
+  assert.ok(CSS.includes('body:not([data-investimento-cer]) [data-solo-investimento-cer]{display:none}'));
+  assert.ok(CSS.includes('body[data-investimento-cer] [data-solo-pagato-cer], body:not([data-impianto-cer]) [data-solo-pagato-cer]{display:none}'));
 });
 
 test('«Per te»: il numero grande è ciò che porta la CER, l\'impianto ha le sue righe, rientro e 20 anni con l\'impianto solo per un impianto nuovo (esclude un numero grande che sommi ciò che l\'impianto dà comunque)', () => {

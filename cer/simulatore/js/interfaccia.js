@@ -183,7 +183,9 @@ function mostra(r, s, percorso, ingressi) {
   // sulla spesa mescolerebbe la sua quota di produttore con la bolletta di casa
   if (te.consumo > 0) b.consumo = ''; else delete b.consumo;
   if (te.consumo > 0 && !(percorso === 'entrare' && s.utente.ruolo === 'produttore') && te.id !== 'produttore') b.spesa = ''; else delete b.spesa;
-  if (com.investimentoCer > 0) b.impiantoCer = ''; else delete b.impiantoCer;
+  // il riquadro dell'impianto della CER c'è con ogni impianto della CER; l'investimento da finanziare solo se uno è nuovo
+  if (com.haImpiantoCer) b.impiantoCer = ''; else delete b.impiantoCer;
+  if (com.investimentoCer > 0) b.investimentoCer = ''; else delete b.investimentoCer;
   const vista = {
     te: { ...te, notaScadenza: percorso === 'entrare' ? notaScadenza(s.utente.ruolo, new Date(), dati.costanti, s.utente.stato) : '' },
     emissioni: {

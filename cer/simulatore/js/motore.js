@@ -175,6 +175,7 @@ export function calcola(ingressi, dati) {
     costi: ec1.costi, kappa: ec1.kappa, nonCoperti: ec1.nonCoperti, fondo: ec1.cer.fondo, quote: ec1.cer.quote,
     quotaCer: ec1.cer.quotaCer, titolareCer: ec1.cer.titolare, fondoSociale: ec1.cer.fondoSociale,
     venditaCer: ec1.cer.vendita, manutenzioneCer: ec1.cer.manutenzione,
+    haImpiantoCer: prep.impianti.some((k) => k.titolare === 'cer'),
     investimentoCer: prep.impianti.filter((k) => k.titolare === 'cer' && !giaInEsercizio(k)).reduce((s, k) => s + investimento(k.kwp, 'cer', c, par.prezzo_impianto_eur_w), 0),
     incentivi,
     costituzionePerFondatore: par.costituzione_eur == null ? null : par.costituzione_eur / par.fondatori,
