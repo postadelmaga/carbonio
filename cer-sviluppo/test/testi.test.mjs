@@ -95,19 +95,20 @@ test('la frase sull\'eccedentaria compare solo se c\'è, e dice dove va', () => 
   assert.equal(testoEccedentaria({ quotaEccedentaria: 0, eccedentaria: 0, fondoSociale: 0 }), '');
   assert.equal(
     testoEccedentaria({ quotaEccedentaria: 0.1, eccedentaria: 300, fondoSociale: 0 }),
-    'La quota eccedentaria della tariffa, 300 € l\'anno, va ai consumatori che non sono imprese. Lo statuto (art. 12) la destina a loro o a finalità sociali: qui va tutta a loro.',
+    'La quota eccedentaria della tariffa, 300 € l\'anno, va ai consumatori che non sono imprese. Lo statuto (art. 12) la destina a loro, a finalità sociali o a entrambe: qui va tutta a loro.',
   );
   assert.equal(
     testoEccedentaria({ quotaEccedentaria: 0.1, eccedentaria: 300, fondoSociale: 300 }),
-    'La quota eccedentaria della tariffa, 300 € l\'anno, va a finalità sociali. Lo statuto (art. 12) la destina ai consumatori che non sono imprese o a finalità sociali: qui non ci sono consumatori che non siano imprese.',
+    'La quota eccedentaria della tariffa, 300 € l\'anno, va a finalità sociali. Lo statuto (art. 12) la destina ai consumatori che non sono imprese, a finalità sociali o a entrambe: qui non ci sono consumatori che non siano imprese.',
   );
 });
 
-test('la frase sull\'eccedentaria dice che lo statuto ammette i consumatori non imprese o le finalità sociali, e che la scelta di darla ai primi è del simulatore (esclude la scelta presentata come regola dello statuto)', () => {
+test('la frase sull\'eccedentaria dice che lo statuto ammette i consumatori non imprese, le finalità sociali o entrambe come l\'«e/o» del decreto, e che la scelta di darla ai primi è del simulatore (esclude la scelta presentata come regola dello statuto e un «o» che escluderebbe l\'una o l\'altra)', () => {
   for (const fondoSociale of [0, 300]) {
     const t = testoEccedentaria({ quotaEccedentaria: 0.1, eccedentaria: 300, fondoSociale });
     assert.doesNotMatch(t, /\(statuto, art\. 12\)\./, t);
-    assert.match(t, /Lo statuto \(art\. 12\) la destina (a loro|ai consumatori che non sono imprese) o a finalità sociali/, t);
+    assert.match(t, /Lo statuto \(art\. 12\) la destina (a loro|ai consumatori che non sono imprese), a finalità sociali o a entrambe/, t);
+    assert.doesNotMatch(t, /(a loro|imprese) o a finalità sociali/, t);
   }
   // con consumatori non imprese e senza: le due frasi non si contraddicono
   assert.doesNotMatch(testoEccedentaria({ quotaEccedentaria: 0.1, eccedentaria: 300, fondoSociale: 300 }), /va ai consumatori/);

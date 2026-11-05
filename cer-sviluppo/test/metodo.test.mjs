@@ -90,10 +90,11 @@ test('il menu di «Come calcoliamo» è quello del simulatore, senza «Come funz
   assert.ok(!/[Ee]spert/.test(HTML), 'nella pagina c\'è ancora «esperto»');
 });
 
-test('«Come calcoliamo» dice che decreto e statuto destinano l\'eccedentaria ai consumatori non imprese o a finalità sociali, e che il rapporto conta la condivisa dei soli impianti incentivati (esclude la scelta del simulatore presentata come la regola)', () => {
-  assert.ok(HTML.includes('la parte in più della tariffa va, per il decreto e per lo statuto, ai soli consumatori che non sono imprese o a finalità sociali: qui va ai consumatori che non sono imprese; se non ce ne sono, va a finalità sociali'), 'frase della destinazione');
+test('«Come calcoliamo» dice che il DM 414/2023 e lo statuto destinano l\'eccedentaria ai consumatori non imprese, a finalità sociali o a entrambe, e che il rapporto conta la condivisa dei soli impianti incentivati (esclude la scelta del simulatore presentata come la regola, un «decreto» senza numero e un «o» che escluderebbe l\'una o l\'altra)', () => {
+  assert.ok(HTML.includes('la parte in più della tariffa va, per il DM 414/2023 e per lo statuto, ai soli consumatori che non sono imprese, a finalità sociali o a entrambe: qui va ai consumatori che non sono imprese; se non ce ne sono, va a finalità sociali'), 'frase della destinazione');
   assert.ok(HTML.includes('Quando l\'energia condivisa attribuita agli impianti incentivati supera il 55% di quella che immettono'), 'rapporto della soglia');
   assert.ok(!HTML.includes('la parte in più della tariffa va solo ai consumatori che non sono imprese'), 'la scelta del simulatore detta come regola');
+  assert.ok(!HTML.includes('per il decreto'), 'un decreto senza numero');
 });
 
 test('«Come calcoliamo» dichiara che soci e impianti stanno sotto la stessa cabina primaria (esclude un perimetro della condivisa taciuto, che decide se tariffa e contributo spettano)', () => {

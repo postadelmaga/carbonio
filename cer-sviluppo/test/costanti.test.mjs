@@ -52,7 +52,7 @@ test('l\'IVA al 10% sull\'impianto di una famiglia cita il DPR 633/1972, come qu
 
 test('la soglia dell\'eccedentaria dice che oltre il 55% è vincolata una parte della tariffa, non tutta (esclude la descrizione per cui oltre la soglia l\'intera tariffa va ai non imprese)', () => {
   const v = leggi('costanti.json').voci.soglia_eccedentaria;
-  assert.match(v.descrizione, /^Soglia oltre la quale una parte della tariffa, la quota eccedentaria, va solo ai consumatori non imprese o a fini sociali/);
+  assert.match(v.descrizione, /^Soglia oltre la quale una parte della tariffa, la quota eccedentaria, va solo ai consumatori non imprese, a finalità sociali o a entrambe/);
   assert.doesNotMatch(v.descrizione, /oltre la quale la tariffa va/);
 });
 

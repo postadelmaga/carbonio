@@ -43,8 +43,8 @@ export function testoEccedentaria(com) {
   if (!(com.quotaEccedentaria > 0)) return '';
   const importo = `La quota eccedentaria della tariffa, ${euro(com.eccedentaria)} l'anno,`;
   return com.fondoSociale > 0
-    ? `${importo} va a finalità sociali. Lo statuto (art. 12) la destina ai consumatori che non sono imprese o a finalità sociali: qui non ci sono consumatori che non siano imprese.`
-    : `${importo} va ai consumatori che non sono imprese. Lo statuto (art. 12) la destina a loro o a finalità sociali: qui va tutta a loro.`;
+    ? `${importo} va a finalità sociali. Lo statuto (art. 12) la destina ai consumatori che non sono imprese, a finalità sociali o a entrambe: qui non ci sono consumatori che non siano imprese.`
+    : `${importo} va ai consumatori che non sono imprese. Lo statuto (art. 12) la destina a loro, a finalità sociali o a entrambe: qui va tutta a loro.`;
 }
 
 // La CO₂ evitata in italiani, con il pro capite (revisione §9.4). Senza CO₂ evitata la frase non c'è; arrotondato a 0 è
