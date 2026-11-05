@@ -304,3 +304,8 @@ test('«Chi sei» dice che l\'attività è una piccola o media impresa (PMI), no
   assert.match(HTML, /<input type="radio" name="tipo" value="attivita"><b>Attività<\/b><span>È una piccola o media impresa \(PMI\)\.<\/span>/);
   assert.doesNotMatch(HTML, /È un'impresa\./);
 });
+
+test('il passo «Dove» dice che soci e impianti devono stare sotto la stessa cabina primaria e dove si trova la propria, subito dopo la riga della località (esclude un perimetro della CER taciuto nella pagina del simulatore)', () => {
+  const dove = HTML.slice(HTML.indexOf('<legend><span class="n">1</span>Dove</legend>'), HTML.indexOf('</fieldset>'));
+  assert.match(dove, /<p class="aiuto" id="info-localita"><\/p>\s*<p class="aiuto">I soci e gli impianti di una CER devono stare sotto la stessa cabina primaria: il GSE la indica sulla sua mappa delle comunità energetiche, per indirizzo o POD\.<\/p>/);
+});
