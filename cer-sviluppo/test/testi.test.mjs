@@ -195,3 +195,23 @@ test('l\'etichetta dei fondatori dice l\'importo che dividono, o solo «la costi
   assert.equal(testoFondatori(360), 'Fondatori, che dividono i 360 € della costituzione');
   assert.equal(testoFondatori(null), 'Fondatori, che dividono la costituzione');
 });
+
+// Una simulazione minima per leggere le righe delle ipotesi: `prezzo` è il prezzo dell'energia, `tip` la tariffa premio (assente senza impianti incentivati).
+const ipotesiCon = (prezzo, tip = 130) => ipotesi({
+  parametri: { prezzo_zonale: prezzo, quota_produttore: 0.4, quota_consumatori: 0.4, gestione_eur_anno: 500, costo_evitato: {} },
+  impianti: [tip == null ? { incentivato: false, tip: 0, giaInEsercizio: true } : { incentivato: true, tip, giaInEsercizio: false }],
+  emissioni: { fattore: 413.3, fattoreAltro: 199.6, principale: 'fossili' },
+}, { nome: 'La Spezia', sigla: 'SP', regione: 'Liguria' }, { inclinazione: 33, anno_meteo: 2023, valori: [1000, 2000] }, costanti);
+
+test('la riga del prezzo dice che è la media nazionale del 2025 e che nella zona di mercato può essere diverso, e con un prezzo scelto in avanzato dice che è scelto (esclude un prezzo scelto presentato come la media nazionale e un prezzo nazionale presentato come quello della zona)', () => {
+  const riga = (t) => t.find((l) => l.startsWith('Prezzo dell\'energia:'));
+  assert.equal(riga(ipotesiCon(115.94)), 'Prezzo dell\'energia: 115,94 €/MWh, la media nazionale del 2025 (PUN Index), uguale tutto l\'anno: nella tua zona di mercato il prezzo può essere diverso; tariffa premio 130 €/MWh.');
+  assert.equal(riga(ipotesiCon(90)), 'Prezzo dell\'energia: 90,00 €/MWh, scelto in modalità avanzata, uguale tutto l\'anno; tariffa premio 130 €/MWh.');
+  assert.equal(riga(ipotesiCon(115.94, null)), 'Prezzo dell\'energia: 115,94 €/MWh, la media nazionale del 2025 (PUN Index), uguale tutto l\'anno: nella tua zona di mercato il prezzo può essere diverso.');
+  assert.equal(riga(ipotesiCon(90, null)), 'Prezzo dell\'energia: 90,00 €/MWh, scelto in modalità avanzata, uguale tutto l\'anno.');
+});
+
+test('«Fuori dal calcolo» elenca anche la sostituzione dell\'inverter e l\'assicurazione (esclude costi dell\'impianto taciuti)', () => {
+  const riga = ipotesiCon(115.94).find((l) => l.startsWith('Fuori dal calcolo:'));
+  assert.equal(riga, 'Fuori dal calcolo: imposte, agevolazioni (PNRR, detrazioni), accumuli, prezzo ora per ora, quarto d\'ora, sostituzione dell\'inverter, assicurazione.');
+});

@@ -111,3 +111,7 @@ test('«Che cosa resta fuori» dice che il socio produttore è un\'impresa che n
 test('«Che cosa resta fuori» dice che le imprese socie devono essere PMI e che il simulatore non lo verifica (esclude una grande impresa che vede benefici che non può avere)', () => {
   assert.ok(fuori().includes('<li>Le imprese possono essere socie di una CER solo se sono piccole o medie imprese (PMI; DM 414/2023, art. 3 c. 2 lett. c): il simulatore non lo verifica.</li>'));
 });
+
+test('«Che cosa resta fuori» elenca i costi dell\'impianto che non si contano: inverter, assicurazione, manutenzione straordinaria, corrispettivo del ritiro dedicato (esclude una spesa dell\'impianto taciuta)', () => {
+  assert.ok(fuori().includes('<li>Costi dell\'impianto che non contiamo: la sostituzione dell\'inverter, l\'assicurazione, la manutenzione straordinaria e il corrispettivo del ritiro dedicato.</li>'));
+});
