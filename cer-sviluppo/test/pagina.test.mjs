@@ -309,3 +309,18 @@ test('il passo «Dove» dice che soci e impianti devono stare sotto la stessa ca
   const dove = HTML.slice(HTML.indexOf('<legend><span class="n">1</span>Dove</legend>'), HTML.indexOf('</fieldset>'));
   assert.match(dove, /<p class="aiuto" id="info-localita"><\/p>\s*<p class="aiuto">I soci e gli impianti di una CER devono stare sotto la stessa cabina primaria: il GSE la indica sulla sua mappa delle comunità energetiche, per indirizzo o POD\.<\/p>/);
 });
+
+test('la descrizione della comunità dice «ente» al singolare con un ente, anche senza impianto comune (esclude «1 enti»)', () => {
+  const corpo = JS.slice(JS.indexOf('function disegnaScena('), JS.indexOf('function tabellaRuoli('));
+  assert.doesNotMatch(corpo, /\$\{n\('enti'\)\} enti/, 'un plurale fisso dopo il numero degli enti');
+  assert.equal((corpo.match(/\$\{n\('enti'\)\} \$\{n\('enti'\) === 1 \? 'ente' : 'enti'\}/g) ?? []).length, 2, 'i due rami della descrizione scelgono singolare o plurale');
+});
+
+test('le etichette del costo evitato dicono se l\'IVA è compresa (famiglie ed enti) o esclusa (attività), e il contatore non dice «il più comune» senza una fonte (esclude un costo evitato di cui non si sa se è tassato e un «più comune» senza fonte)', () => {
+  assert.match(HTML, /<label class="campo">Costo evitato, famiglie, €\/kWh, IVA compresa <input name="p-ce-famiglia"/);
+  assert.match(HTML, /<label class="campo">Costo evitato, attività, €\/kWh, IVA esclusa <input name="p-ce-attivita"/);
+  assert.match(HTML, /<label class="campo">Costo evitato, enti, €\/kWh, IVA compresa <input name="p-ce-ente"/);
+  assert.match(HTML, /<select name="classe">\s*<option value="1,5-3" selected>3 kW<\/option>/);
+  assert.match(HTML, /<option value="1,5-3">non so \(usiamo 3 kW\)<\/option>/);
+  assert.doesNotMatch(HTML, /il più comune/);
+});

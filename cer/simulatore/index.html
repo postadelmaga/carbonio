@@ -94,11 +94,11 @@
     </div>
     <label class="campo" data-solo-tipo="famiglia">Potenza del contatore
       <select name="classe">
-        <option value="1,5-3" selected>3 kW, il più comune</option>
+        <option value="1,5-3" selected>3 kW</option>
         <option value="3-4,5">4,5 kW</option>
         <option value="4,5-6">6 kW</option>
         <option value="oltre_6">oltre 6 kW</option>
-        <option value="1,5-3">non so</option>
+        <option value="1,5-3">non so (usiamo 3 kW)</option>
       </select>
     </label>
     <p class="aiuto" data-solo-tipo="famiglia">Il contatore non limita i pannelli: serve a stimare i consumi.</p>
@@ -234,9 +234,9 @@
       <p class="aiuto">Alla CER: <output name="p-fondo-valore"></output>.</p>
       <label class="campo">Manutenzione, € per kW l'anno <input name="p-om" type="number" min="0" max="200" step="1"></label>
       <label class="campo">Prezzo dell'impianto, €/W, IVA esclusa <input name="p-eurw" type="number" min="0.3" max="5" step="0.01" placeholder="per taglia"></label>
-      <label class="campo">Costo evitato, famiglie, €/kWh <input name="p-ce-famiglia" type="number" min="0" max="2" step="0.001"></label>
-      <label class="campo">Costo evitato, attività, €/kWh <input name="p-ce-attivita" type="number" min="0" max="2" step="0.001"></label>
-      <label class="campo">Costo evitato, enti, €/kWh <input name="p-ce-ente" type="number" min="0" max="2" step="0.001"></label>
+      <label class="campo">Costo evitato, famiglie, €/kWh, IVA compresa <input name="p-ce-famiglia" type="number" min="0" max="2" step="0.001"></label>
+      <label class="campo">Costo evitato, attività, €/kWh, IVA esclusa <input name="p-ce-attivita" type="number" min="0" max="2" step="0.001"></label>
+      <label class="campo">Costo evitato, enti, €/kWh, IVA compresa <input name="p-ce-ente" type="number" min="0" max="2" step="0.001"></label>
     </div>
     <fieldset class="scelte-in-linea">
       <legend>Fattore di emissione per la CO₂ evitata</legend>

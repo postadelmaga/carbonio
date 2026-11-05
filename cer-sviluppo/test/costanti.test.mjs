@@ -63,3 +63,13 @@ test('archetipi: 24 ore per tipo di giorno e 12 mesi', () => {
     assert.equal(a.stagionalita.length, 12, id);
   }
 });
+
+test('la tabella pubblica delle fonti non cita la spec né i compiti del piano, e la comunità tipo dice di chi è l\'ipotesi (esclude gergo interno di un repo che il lettore non vede)', () => {
+  const { voci } = leggi('costanti.json');
+  for (const [id, v] of Object.entries(voci)) {
+    for (const campo of ['descrizione', 'fonte', 'note']) assert.doesNotMatch(v[campo] ?? '', /\bspec\b|\bTask\b/i, `${id}.${campo}: gergo interno`);
+  }
+  assert.equal(voci.comunita_tipo.fonte, 'Ipotesi del simulatore; consumi delle famiglie dalle medie ARERA della regione');
+  assert.equal(voci.comunita_tipo.note, 'I consumi di attività ed ente sono illustrativi. Il numero di famiglie è tarato sulla Spezia.');
+  assert.equal(voci.predefiniti.fonte, 'Ipotesi del simulatore');
+});

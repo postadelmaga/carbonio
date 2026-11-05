@@ -273,14 +273,14 @@
       "descrizione": "La comunità tipo intorno a chi entra",
       "valore": { "famiglie": 30, "classe": "1,5-3", "abitudini_altri": 0, "attivita": 2, "archetipo_attivita": "com_orario_apertura", "consumo_attivita": 10000, "enti": 1, "archetipo_ente": "com_orario_apertura", "consumo_ente": 5000, "kwp_comune": 40 },
       "unita": "—",
-      "fonte": "Ipotesi del simulatore (spec §7.1); consumi delle famiglie dalle medie ARERA della regione",
+      "fonte": "Ipotesi del simulatore; consumi delle famiglie dalle medie ARERA della regione",
       "url": "", "consultato": "2026-11-02",
-      "note": "I consumi di attività ed ente sono illustrativi. Taratura sulla Spezia nel Task 11."
+      "note": "I consumi di attività ed ente sono illustrativi. Il numero di famiglie è tarato sulla Spezia."
     },
     "predefiniti": {
       "descrizione": "Valori proposti dai moduli",
       "valore": { "kwp_prosumer": 4.5, "kwp_produttore": 20, "fondatori": 3 },
-      "unita": "—", "fonte": "Ipotesi del simulatore (spec §7)", "url": "", "consultato": "2026-11-02", "note": ""
+      "unita": "—", "fonte": "Ipotesi del simulatore", "url": "", "consultato": "2026-11-02", "note": ""
     }
   }
 }

@@ -21,7 +21,7 @@ test('i numeri del testo di «Come calcoliamo» coincidono con costanti.json (es
 
   const frasi = [
     `Il ${perc(v('spostamento_massimo'))} massimo`,
-    `fino a ${durata} anni`,
+    `per ${durata} anni`,
     `supera il ${perc(v('soglia_eccedentaria'))}`,
     `Il ${perc(riparto.produttore)} della tariffa va al titolare`,
     `il ${perc(riparto.consumatori)} ai consumatori`,
@@ -32,7 +32,7 @@ test('i numeri del testo di «Come calcoliamo» coincidono con costanti.json (es
     `supera i ${numero(sogliaPrezzo)} €/MWh`,
     `l'anno meteorologico ${PV.anno_meteo}`,
     `perdite del ${PV.parametri.loss}%`,
-    `non oltre ${fasce.at(-1).fino_kw / 1000} MW di potenza, fino a ${durata} anni`,
+    `non oltre ${fasce.at(-1).fino_kw / 1000} MW di potenza, per ${durata} anni`,
     'se non ce ne sono, va a finalità sociali',
     'Se i costi superano gli incentivi, il simulatore lo segnala: vanno coperti in altro modo, per esempio con una quota associativa.',
     'Sui 20 anni il fattore delle centrali fossili resta quello di oggi; con la media dei consumi scende come ha fatto in media dal 1990 al 2024.',
@@ -124,4 +124,9 @@ test('«Come calcoliamo» dichiara tre scelte prudenti, fra cui il corrispettivo
   assert.ok(sezione.includes('<p>Su tre punti le regole non sono chiare, e scegliamo la lettura prudente:</p>'));
   assert.equal((sezione.match(/<li>/g) ?? []).length, 3, 'le scelte elencate sono tre');
   assert.ok(sezione.includes('<li>il corrispettivo del GSE si conta per ogni impianto della comunità, anche per quelli senza tariffa: il DM 106/2024 lo chiede a chi è ammesso alle tariffe incentivanti, ma non dice se valga anche per gli altri.</li>'));
+});
+
+test('«Come calcoliamo» dice che la tariffa spetta «per 20 anni», come il DM 414 («pari a 20 anni»), e non «fino a 20 anni» (esclude una durata presentata come un massimo)', () => {
+  assert.ok(HTML.includes('non oltre 1 MW di potenza, per 20 anni, e la calcoliamo'));
+  assert.ok(!HTML.includes('fino a 20 anni'), 'nella pagina c\'è ancora «fino a 20 anni»');
 });

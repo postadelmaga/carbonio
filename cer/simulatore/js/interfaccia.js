@@ -144,7 +144,7 @@ function disegnaScena(ingressi) {
   tracciaScena();
   $('#descrizione-comunita').textContent = comune > 0
     ? `Intorno a te: ${n('famiglie')} famiglie, ${n('attivita')} attività, ${n('enti')} ${n('enti') === 1 ? 'ente' : 'enti'} e un impianto da ${numero(comune, 1)} kWp di un socio produttore. I consumi di attività ed enti sono illustrativi.`
-    : `Intorno a te: ${n('famiglie')} famiglie, ${n('attivita')} attività, ${n('enti')} enti, nessun impianto comune.`;
+    : `Intorno a te: ${n('famiglie')} famiglie, ${n('attivita')} attività, ${n('enti')} ${n('enti') === 1 ? 'ente' : 'enti'}, nessun impianto comune.`;
 }
 
 function tabellaRuoli(r) {
