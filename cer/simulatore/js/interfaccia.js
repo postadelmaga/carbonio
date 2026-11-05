@@ -179,6 +179,10 @@ function mostra(r, s, percorso, ingressi) {
   if (te.investimento > 0) b.investimento = ''; else delete b.investimento;
   if (te.soloGiaInEsercizio) b.pagato = ''; else delete b.pagato;
   if (percorso === 'fondare') b.fondatore = ''; else delete b.fondatore;
+  // senza consumi (il socio produttore) le righe dei prelievi e della spesa non hanno senso; al produttore che entra la percentuale
+  // sulla spesa mescolerebbe la sua quota di produttore con la bolletta di casa
+  if (te.consumo > 0) b.consumo = ''; else delete b.consumo;
+  if (te.consumo > 0 && !(percorso === 'entrare' && s.utente.ruolo === 'produttore') && te.id !== 'produttore') b.spesa = ''; else delete b.spesa;
   if (com.investimentoCer > 0) b.impiantoCer = ''; else delete b.impiantoCer;
   const vista = {
     te: { ...te, notaScadenza: percorso === 'entrare' ? notaScadenza(s.utente.ruolo, new Date(), dati.costanti, s.utente.stato) : '' },

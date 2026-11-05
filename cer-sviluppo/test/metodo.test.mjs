@@ -100,3 +100,10 @@ test('«Come calcoliamo» dichiara che soci e impianti stanno sotto la stessa ca
   const fuori = HTML.slice(HTML.indexOf('<h2>Che cosa resta fuori</h2>'), HTML.indexOf('<h2>Le fonti di ogni valore</h2>'));
   assert.ok(fuori.includes('<li>La cabina primaria: il calcolo assume che soci e impianti siano tutti sotto la stessa, come chiedono le regole per la tariffa premio e per il contributo ARERA. Una CER con soci sotto più cabine forma una configurazione per ciascuna, e la condivisa si conta dentro ognuna.</li>'), 'manca la voce della cabina primaria');
 });
+
+// La sezione «Che cosa resta fuori», come testo: le voci aggiunte dopo il controllo generale si cercano qui.
+const fuori = () => HTML.slice(HTML.indexOf('<h2>Che cosa resta fuori</h2>'), HTML.indexOf('<h2>Le fonti di ogni valore</h2>'));
+
+test('«Che cosa resta fuori» dice che il socio produttore è un\'impresa che non consuma sul posto e detrae l\'IVA, quindi il suo impianto si conta senza IVA (esclude un investimento senza IVA che la pagina non spiega)', () => {
+  assert.ok(fuori().includes('<li>Il socio produttore della comunità tipo e di «Voglio fondarne una» è un\'impresa che non consuma sul posto e detrae l\'IVA: il suo impianto si conta senza IVA.</li>'));
+});

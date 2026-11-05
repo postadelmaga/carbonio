@@ -256,3 +256,36 @@ test('menu del simulatore come quello dello statuto, «Avanzato», cursore delle
 test('il campo del prezzo dell\'impianto dice che è IVA esclusa, come lo usa il calcolo, che aggiunge l\'IVA per famiglie ed enti (esclude un prezzo con l\'IVA inserito e poi tassato due volte)', () => {
   assert.match(HTML, /<label class="campo">Prezzo dell'impianto, €\/W, IVA esclusa <input name="p-eurw"/);
 });
+
+// Un'istruzione di `mostra` che imposta o toglie un attributo del body, eseguita su uno stato finto (interfaccia.js tocca il DOM
+// al caricamento e non si importa): la condizione è quella scritta nello script, non una copia.
+function attributoDelCorpo(attributo) {
+  const riga = JS.match(new RegExp(`^\\s*(if \\(.*\\) b\\.${attributo} = ''; else delete b\\.${attributo};)\\s*$`, 'm'))?.[1];
+  assert.ok(riga, `in mostra manca l'istruzione che imposta b.${attributo}`);
+  const esegui = new Function('te', 's', 'percorso', 'com', 'b', riga);
+  return ({ te = {}, s = { utente: { ruolo: 'consumatore' } }, percorso = 'entrare', com = {} }) => {
+    const b = {};
+    esegui(te, s, percorso, com, b);
+    return attributo in b;
+  };
+}
+
+test('spesa variabile e prelievi si nascondono senza consumi, e la percentuale anche al produttore che entra (esclude un «—» o uno «0 kWh» in pagina e una percentuale che mescola la quota di produttore con la bolletta di casa)', () => {
+  const consumo = attributoDelCorpo('consumo'), spesa = attributoDelCorpo('spesa');
+  const ruolo = (r) => ({ utente: { ruolo: r } });
+  assert.equal(consumo({ te: { consumo: 3000 } }), true);
+  assert.equal(consumo({ te: { consumo: 0 } }), false, 'il socio produttore non consuma sul posto: niente riga dei prelievi');
+  assert.equal(consumo({ te: {} }), false, 'senza un «io» nel risultato non c\'è nulla da mostrare');
+  assert.equal(spesa({ te: { id: 'io', consumo: 3000 }, s: ruolo('consumatore') }), true);
+  assert.equal(spesa({ te: { id: 'io', consumo: 3000 }, s: ruolo('prosumer') }), true);
+  assert.equal(spesa({ te: { id: 'io', consumo: 3000 }, s: ruolo('produttore') }), false, 'il produttore che entra: la percentuale mescolerebbe la sua quota di produttore con la bolletta di casa');
+  assert.equal(spesa({ te: { id: 'io', consumo: 0 }, s: ruolo('consumatore') }), false);
+  // in «fondare» il ruolo del modulo «Il tuo ruolo» è nascosto ma il suo pulsante resta scelto: non conta
+  assert.equal(spesa({ te: { id: 'famiglie', consumo: 3000 }, s: ruolo('produttore'), percorso: 'fondare' }), true, 'un ruolo rimasto scelto in «entrare» non nasconde la riga a chi fonda');
+  assert.equal(spesa({ te: { id: 'produttore', consumo: 0 }, s: ruolo('consumatore'), percorso: 'fondare' }), false, 'il socio produttore che fonda non consuma');
+  assert.equal(spesa({ te: { id: 'produttore', consumo: 5 }, s: ruolo('consumatore'), percorso: 'fondare' }), false, '«Io sono» il socio produttore');
+  assert.match(CSS, /body:not\(\[data-spesa\]\) \[data-solo-spesa\], body:not\(\[data-consumo\]\) \[data-solo-consumo\]\{display:none\}/);
+  assert.match(HTML, /<div data-solo-spesa><dt>Sulla spesa variabile della bolletta /);
+  assert.match(HTML, /<p data-solo-consumo>I tuoi prelievi dalla rete pesano /);
+  assert.ok(HTML.includes('<span data-r="te.consumo" data-f="kwh"></span>. La stima della spesa non conta il margine del venditore né il dispacciamento, che non sono pubblicati: la spesa vera è più alta e la percentuale più bassa.</span></span></dt>'), 'l\'icona della spesa dice che la spesa vera è più alta e la percentuale più bassa');
+});
