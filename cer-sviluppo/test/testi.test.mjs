@@ -148,16 +148,24 @@ test('il testo sugli impianti già in esercizio: vuoto per un impianto nuovo, la
   assert.ok(e.endsWith('Un impianto entrato in esercizio fino al 15/12/2021 è un impianto «esistente»: la comunità può averne al massimo il 30% della potenza.'));
 });
 
+test('il testo sugli impianti già in esercizio dice che il contributo ARERA lo riceve la comunità e che nel riparto d\'esempio va ai consumatori (esclude un contributo attribuito all\'impianto o al suo titolare)', () => {
+  for (const stato of ['precedente', 'esistente']) {
+    const t = testoGiaInEsercizio(stato);
+    assert.ok(t.includes('Resta nella comunità: la sua energia conta per la condivisa, e su di essa la comunità riceve il contributo ARERA, che nel riparto d\'esempio va ai consumatori; l\'energia che immette resta del titolare, che la vende con il ritiro dedicato del GSE o a un venditore.'), t);
+    assert.ok(!t.includes('e riceve il contributo ARERA'), 'l\'impianto non riceve il contributo ARERA: lo riceve la comunità');
+  }
+});
+
 test('la scadenza in «fondare»: esercizio dopo la costituzione, domanda che conviene presentare entro la data, solo contributo ARERA dopo (esclude «va presentata», che nessuna fonte scrive)', () => {
   const t = testoScadenza(new Date(2026, 10, 2), costanti);
-  assert.equal(t, 'Per avere la tariffa premio gli impianti devono entrare in esercizio dopo la costituzione della CER ed entro il 31/12/2027: mancano 13 mesi. Conviene presentare la domanda al GSE entro la stessa data. Dopo, con le regole di oggi, un impianto riceve solo il contributo ARERA, molto più piccolo. La data cambierebbe solo con una proroga, che a oggi non c\'è.');
+  assert.equal(t, 'Per avere la tariffa premio gli impianti devono entrare in esercizio dopo la costituzione della CER ed entro il 31/12/2027: mancano 13 mesi. Conviene presentare la domanda al GSE entro la stessa data. Dopo, con le regole di oggi, su un impianto nuovo la comunità riceve solo il contributo ARERA, molto più piccolo. La data cambierebbe solo con una proroga, che a oggi non c\'è.');
   assert.ok(!t.includes('va presentata'));
 });
 
 test('la nota sotto «Per te» in «Voglio entrare»: al consumatore solo la parte su chi entra, a prosumer e produttore una nota sola che comincia dall\'impianto (esclude la nota sull\'impianto mostrata al consumatore), e con l\'impianto già in esercizio solo la parte su chi entra (esclude la scadenza degli impianti nuovi mostrata a chi ha l\'impianto già in esercizio)', () => {
   const oggi = new Date(2026, 10, 4);
   const chi = 'La scadenza del 31/12/2027 riguarda gli impianti, non chi consuma. Se entri dopo quella data in una comunità i cui impianti hanno già la tariffa, la tua energia condivisa dovrebbe contare ancora, per gli anni che restano dei loro 20: nessuna regola lo esclude, ma nessuna lo scrive, e il GSE non l\'ha chiarito.';
-  const impianto = 'Per avere la tariffa premio l\'impianto deve entrare in esercizio dopo la costituzione della CER ed entro il 31/12/2027, e conviene presentare la domanda al GSE entro la stessa data. Se entra in esercizio dopo, con le regole di oggi la tariffa non c\'è: la sua energia conta lo stesso per la comunità, ma riceve solo il contributo ARERA, molto più piccolo. La data può arrivare prima, se in Italia si raggiungono 5 GW di impianti incentivati, e cambierebbe solo con una proroga, che a oggi non c\'è.';
+  const impianto = 'Per avere la tariffa premio l\'impianto deve entrare in esercizio dopo la costituzione della CER ed entro il 31/12/2027, e conviene presentare la domanda al GSE entro la stessa data. Se entra in esercizio dopo, con le regole di oggi la tariffa non c\'è: la sua energia conta lo stesso per la comunità, ma su di essa la comunità riceve solo il contributo ARERA, molto più piccolo. La data può arrivare prima, se in Italia si raggiungono 5 GW di impianti incentivati, e cambierebbe solo con una proroga, che a oggi non c\'è.';
   assert.equal(notaScadenza('consumatore', oggi, costanti), chi);
   assert.equal(notaScadenza('prosumer', oggi, costanti), `${impianto} ${chi}`);
   assert.equal(notaScadenza('produttore', oggi, costanti), `${impianto} ${chi}`);

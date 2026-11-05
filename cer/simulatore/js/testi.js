@@ -19,7 +19,7 @@ export function testoScadenza(oggi, costanti) {
   if (chiusa(oggi, scadenza)) return `La finestra della tariffa premio si è chiusa il ${data}, salvo proroghe.`;
   const mesi = mesiAllaScadenza(oggi, scadenza);
   const quando = mesi > 1 ? `mancano ${mesi} mesi` : mesi === 1 ? 'manca un mese' : 'manca meno di un mese';
-  return `Per avere la tariffa premio gli impianti devono entrare in esercizio dopo la costituzione della CER ed entro il ${data}: ${quando}. Conviene presentare la domanda al GSE entro la stessa data. Dopo, con le regole di oggi, un impianto riceve solo il contributo ARERA, molto più piccolo. La data cambierebbe solo con una proroga, che a oggi non c'è.`;
+  return `Per avere la tariffa premio gli impianti devono entrare in esercizio dopo la costituzione della CER ed entro il ${data}: ${quando}. Conviene presentare la domanda al GSE entro la stessa data. Dopo, con le regole di oggi, su un impianto nuovo la comunità riceve solo il contributo ARERA, molto più piccolo. La data cambierebbe solo con una proroga, che a oggi non c'è.`;
 }
 
 // Sotto «Per te» in «Voglio entrare» (revisione §6): al consumatore la parte su chi entra dopo la scadenza, a prosumer e
@@ -31,7 +31,7 @@ export function notaScadenza(ruolo, oggi, costanti, stato = 'nuovo') {
   if ((ruolo !== 'prosumer' && ruolo !== 'produttore') || stato !== 'nuovo') return chi;
   const impianto = chiusa(oggi, scadenza)
     ? `La finestra della tariffa premio si è chiusa il ${data}, salvo proroghe: un impianto nuovo riceve solo il contributo ARERA.`
-    : `Per avere la tariffa premio l'impianto deve entrare in esercizio dopo la costituzione della CER ed entro il ${data}, e conviene presentare la domanda al GSE entro la stessa data. Se entra in esercizio dopo, con le regole di oggi la tariffa non c'è: la sua energia conta lo stesso per la comunità, ma riceve solo il contributo ARERA, molto più piccolo. La data può arrivare prima, se in Italia si raggiungono 5 GW di impianti incentivati, e cambierebbe solo con una proroga, che a oggi non c'è.`;
+    : `Per avere la tariffa premio l'impianto deve entrare in esercizio dopo la costituzione della CER ed entro il ${data}, e conviene presentare la domanda al GSE entro la stessa data. Se entra in esercizio dopo, con le regole di oggi la tariffa non c'è: la sua energia conta lo stesso per la comunità, ma su di essa la comunità riceve solo il contributo ARERA, molto più piccolo. La data può arrivare prima, se in Italia si raggiungono 5 GW di impianti incentivati, e cambierebbe solo con una proroga, che a oggi non c'è.`;
   return `${impianto} ${chi}`;
 }
 
@@ -80,7 +80,7 @@ export function testoVentiAnniCo2(principale, ventiAnni, costanti) {
 // esistenti fino al 15/12/2021, gli unici a cui le Regole applicano il limite.
 export function testoGiaInEsercizio(stato) {
   if (stato !== 'precedente' && stato !== 'esistente') return '';
-  const base = 'Un impianto entrato in esercizio prima della costituzione della CER, con le regole di oggi, non riceve la tariffa premio: le eccezioni per gli impianti entrati in esercizio fra il 2021 e il 2024 avevano scadenze già passate. Resta nella comunità: la sua energia conta per la condivisa e riceve il contributo ARERA, e l\'energia che immette resta del titolare, che la vende con il ritiro dedicato del GSE o a un venditore. Il GSE attribuisce la condivisa prima agli impianti più vecchi: nelle ore in cui l\'energia immessa supera i consumi della comunità, un impianto già in esercizio riduce i kWh incentivati di quelli nuovi, e con loro la tariffa che arriva alla comunità. Se hai lo scambio sul posto, per entrare va chiuso.';
+  const base = 'Un impianto entrato in esercizio prima della costituzione della CER, con le regole di oggi, non riceve la tariffa premio: le eccezioni per gli impianti entrati in esercizio fra il 2021 e il 2024 avevano scadenze già passate. Resta nella comunità: la sua energia conta per la condivisa, e su di essa la comunità riceve il contributo ARERA, che nel riparto d\'esempio va ai consumatori; l\'energia che immette resta del titolare, che la vende con il ritiro dedicato del GSE o a un venditore. Il GSE attribuisce la condivisa prima agli impianti più vecchi: nelle ore in cui l\'energia immessa supera i consumi della comunità, un impianto già in esercizio riduce i kWh incentivati di quelli nuovi, e con loro la tariffa che arriva alla comunità. Se hai lo scambio sul posto, per entrare va chiuso.';
   return stato === 'esistente' ? `${base} Un impianto entrato in esercizio fino al 15/12/2021 è un impianto «esistente»: la comunità può averne al massimo il 30% della potenza.` : base;
 }
 
