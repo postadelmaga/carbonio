@@ -289,3 +289,8 @@ test('spesa variabile e prelievi si nascondono senza consumi, e la percentuale a
   assert.match(HTML, /<p data-solo-consumo>I tuoi prelievi dalla rete pesano /);
   assert.ok(HTML.includes('<span data-r="te.consumo" data-f="kwh"></span>. La stima della spesa non conta il margine del venditore né il dispacciamento, che non sono pubblicati: la spesa vera è più alta e la percentuale più bassa.</span></span></dt>'), 'l\'icona della spesa dice che la spesa vera è più alta e la percentuale più bassa');
 });
+
+test('«Chi sei» dice che l\'attività è una piccola o media impresa (PMI), non «un\'impresa» qualunque (esclude una grande impresa che si crede socia)', () => {
+  assert.match(HTML, /<input type="radio" name="tipo" value="attivita"><b>Attività<\/b><span>È una piccola o media impresa \(PMI\)\.<\/span>/);
+  assert.doesNotMatch(HTML, /È un'impresa\./);
+});

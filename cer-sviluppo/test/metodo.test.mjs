@@ -107,3 +107,7 @@ const fuori = () => HTML.slice(HTML.indexOf('<h2>Che cosa resta fuori</h2>'), HT
 test('«Che cosa resta fuori» dice che il socio produttore è un\'impresa che non consuma sul posto e detrae l\'IVA, quindi il suo impianto si conta senza IVA (esclude un investimento senza IVA che la pagina non spiega)', () => {
   assert.ok(fuori().includes('<li>Il socio produttore della comunità tipo e di «Voglio fondarne una» è un\'impresa che non consuma sul posto e detrae l\'IVA: il suo impianto si conta senza IVA.</li>'));
 });
+
+test('«Che cosa resta fuori» dice che le imprese socie devono essere PMI e che il simulatore non lo verifica (esclude una grande impresa che vede benefici che non può avere)', () => {
+  assert.ok(fuori().includes('<li>Le imprese possono essere socie di una CER solo se sono piccole o medie imprese (PMI; DM 414/2023, art. 3 c. 2 lett. c): il simulatore non lo verifica.</li>'));
+});
