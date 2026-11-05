@@ -114,12 +114,14 @@ test('la frase sull\'eccedentaria dice che lo statuto ammette i consumatori non 
   assert.doesNotMatch(testoEccedentaria({ quotaEccedentaria: 0.1, eccedentaria: 300, fondoSociale: 300 }), /va ai consumatori/);
 });
 
-test('le emissioni in italiani: «circa come», mai «0 italiani», e senza CO₂ evitata la frase non c\'è', () => {
+test('le emissioni in italiani: «circa come», mai «0 italiani» né «1 italiani» ai due lati dell\'arrotondamento (0,49 e 1,4), e senza CO₂ evitata la frase non c\'è', () => {
   const coda = 'in un anno (5,1 t a persona nel 2024, contando solo ciò che si emette sul territorio).';
   assert.equal(testoItaliani(12.4, 5.1), `Circa come le emissioni di 12 italiani ${coda}`);
   assert.equal(testoItaliani(12345.4, 5.1), `Circa come le emissioni di 12.345 italiani ${coda}`);
   assert.equal(testoItaliani(0.3, 5.1), `Meno delle emissioni di un italiano ${coda}`);
+  assert.equal(testoItaliani(0.49, 5.1), `Meno delle emissioni di un italiano ${coda}`, 'arrotondato fa 0: non «0 italiani»');
   assert.equal(testoItaliani(0.5, 5.1), `Circa come le emissioni di un italiano ${coda}`, 'arrotondato fa 1: non «1 italiani»');
+  assert.equal(testoItaliani(1.4, 5.1), `Circa come le emissioni di un italiano ${coda}`, 'arrotondato fa 1: non «1 italiani»');
   assert.equal(testoItaliani(1.5, 5.1), `Circa come le emissioni di 2 italiani ${coda}`);
   assert.equal(testoItaliani(0, 5.1), '');
 });
@@ -133,7 +135,7 @@ test('la riga sotto la CO₂ evitata dice l\'ipotesi e quanto darebbe l\'altra, 
   assert.ok(!f.includes('fino a') && !m.includes('fino a'));
 });
 
-test('i 20 anni della CO₂: «se il fattore restasse quello di oggi» con il metodo ISPRA, il calo del 2,9% solo con la media', () => {
+test('i 20 anni della CO₂: «se il fattore restasse quello di oggi» con il metodo ISPRA, il calo del 2,9% solo con la media (esclude il calo dei consumi applicato al metodo ISPRA)', () => {
   assert.equal(testoVentiAnniCo2('fossili', 434.6, costanti), 'In 20 anni, se il fattore restasse quello di oggi: circa 430 t.');
   assert.equal(testoVentiAnniCo2('media', 161.8, costanti), 'In 20 anni, se il fattore medio continuasse a scendere del 2,9% l\'anno come in media dal 1990: circa 160 t.');
   assert.equal(testoVentiAnniCo2('fossili', 0, costanti), '');
@@ -173,7 +175,10 @@ test('la nota sotto «Per te» in «Voglio entrare»: al consumatore solo la par
   assert.equal(notaScadenza('prosumer', oggi, costanti, 'precedente'), chi);
   assert.equal(notaScadenza('produttore', oggi, costanti, 'esistente'), chi);
   assert.equal(notaScadenza('prosumer', oggi, costanti, 'nuovo'), `${impianto} ${chi}`);
-  assert.ok(notaScadenza('prosumer', new Date(2028, 1, 1), costanti).startsWith('La finestra della tariffa premio si è chiusa il 31/12/2027, salvo proroghe'));
+  const chiusa = 'La finestra della tariffa premio si è chiusa il 31/12/2027, salvo proroghe: su un impianto nuovo la comunità riceve solo il contributo ARERA.';
+  assert.equal(notaScadenza('prosumer', new Date(2028, 1, 1), costanti), `${chiusa} ${chi}`);
+  assert.equal(notaScadenza('consumatore', new Date(2028, 1, 1), costanti), chi);
+  assert.ok(!notaScadenza('produttore', new Date(2028, 1, 1), costanti).includes('un impianto nuovo riceve solo il contributo ARERA'), 'a finestra chiusa il contributo ARERA lo riceve la comunità, non l\'impianto');
 });
 
 test('le ipotesi seguono gli impianti: la riga dei nuovi solo con impianti nuovi, quella dei già in esercizio solo con loro (esclude un\'ipotesi in conflitto con il modulo)', () => {
@@ -212,7 +217,13 @@ test('la riga del prezzo dice che è la media nazionale del 2025 e che nella zon
   assert.equal(riga(ipotesiCon(90, null)), 'Prezzo dell\'energia: 90,00 €/MWh, scelto in modalità avanzata, uguale tutto l\'anno.');
 });
 
-test('«Fuori dal calcolo» elenca anche la sostituzione dell\'inverter e l\'assicurazione (esclude costi dell\'impianto taciuti)', () => {
+test('«Fuori dal calcolo» elenca le imposte sui redditi, non «imposte» in generale, e anche la sostituzione dell\'inverter e l\'assicurazione (esclude un «imposte» che contraddice IVA e accise contate e costi dell\'impianto taciuti)', () => {
   const riga = ipotesiCon(115.94).find((l) => l.startsWith('Fuori dal calcolo:'));
-  assert.equal(riga, 'Fuori dal calcolo: imposte, agevolazioni (PNRR, detrazioni), accumuli, prezzo ora per ora, quarto d\'ora, sostituzione dell\'inverter, assicurazione.');
+  assert.equal(riga, 'Fuori dal calcolo: imposte sui redditi, agevolazioni (PNRR, detrazioni), accumuli, prezzo ora per ora, quarto d\'ora, sostituzione dell\'inverter, assicurazione.');
+});
+
+test('la riga dei costi della CER dice che l\'eccedentaria non li copre e resta a chi la riceve, consumatori non imprese o, senza di loro, finalità sociali (esclude «resta intera ai consumatori che non sono imprese», che contraddice l\'eccedentaria alle finalità sociali)', () => {
+  const riga = ipotesiCon(115.94).find((l) => l.startsWith('Costi della CER:'));
+  assert.equal(riga, 'Costi della CER: 500 € l\'anno di gestione più i corrispettivi del GSE, tolti dagli incentivi prima del riparto. La quota eccedentaria non copre i costi della CER: resta intera a chi la riceve (i consumatori che non sono imprese o, senza di loro, le finalità sociali). È la lettura prudente, perché le regole non dicono se possa coprirli.');
+  assert.ok(!riga.includes('resta intera ai consumatori che non sono imprese'), riga);
 });

@@ -143,8 +143,8 @@ function disegnaScena(ingressi) {
   scena = { tu: true, famiglie: n('famiglie'), attivita: n('attivita'), enti: n('enti'), kwp: comune };
   tracciaScena();
   $('#descrizione-comunita').textContent = comune > 0
-    ? `Intorno a te: ${n('famiglie')} famiglie, ${n('attivita')} attività, ${n('enti')} ${n('enti') === 1 ? 'ente' : 'enti'} e un impianto da ${numero(comune, 1)} kWp di un socio produttore. I consumi di attività ed enti sono illustrativi.`
-    : `Intorno a te: ${n('famiglie')} famiglie, ${n('attivita')} attività, ${n('enti')} ${n('enti') === 1 ? 'ente' : 'enti'}, nessun impianto comune.`;
+    ? `Intorno a te: ${n('famiglie')} ${n('famiglie') === 1 ? 'famiglia' : 'famiglie'}, ${n('attivita')} attività, ${n('enti')} ${n('enti') === 1 ? 'ente' : 'enti'} e un impianto da ${numero(comune, 1)} kWp di un socio produttore. I consumi di attività ed enti sono illustrativi.`
+    : `Intorno a te: ${n('famiglie')} ${n('famiglie') === 1 ? 'famiglia' : 'famiglie'}, ${n('attivita')} attività, ${n('enti')} ${n('enti') === 1 ? 'ente' : 'enti'}, nessun impianto comune.`;
 }
 
 function tabellaRuoli(r) {
@@ -191,8 +191,7 @@ function mostra(r, s, percorso, ingressi) {
     emissioni: {
       ...em,
       stimaTesto: testoStimaCo2(r.emissioni.principale, em.evitataAltra, dati.costanti),
-      italianiTesto: testoItaliani(em.italiani, voce(dati.costanti, 'co2_pro_capite')),
-      ventiAnniTesto: testoVentiAnniCo2(r.emissioni.principale, em.ventiAnni, dati.costanti),
+      paragrafoCo2: [testoItaliani(em.italiani, voce(dati.costanti, 'co2_pro_capite')), testoVentiAnniCo2(r.emissioni.principale, em.ventiAnni, dati.costanti)].filter(Boolean).join(' '),
       giaInEsercizioTesto: em.giaInEsercizio > 0 ? `Gli impianti già in esercizio evitano, con la stessa ipotesi, altre ${circa(em.giaInEsercizio)} l'anno: non le attribuiamo alla CER.` : '',
     },
     com: { ...com, incentivi: com.tariffa + com.contributo, frazioneCer: 1 - p.quota_produttore - p.quota_consumatori, eccedentariaTesto: testoEccedentaria(com), costituzione: p.costituzione_eur, fondatoriTesto: testoFondatori(p.costituzione_eur) },

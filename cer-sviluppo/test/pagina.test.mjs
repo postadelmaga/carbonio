@@ -209,9 +209,9 @@ test('testi della CO₂: niente «fino a», stima dichiarata, italiani e 20 anni
   assert.doesNotMatch(HTML, /finoA|fino a \d/);
   assert.match(HTML, /<p class="grande"><b data-r="emissioni\.evitata" data-f="circa"><\/b><small>di CO₂ in meno ogni anno, una stima, dagli impianti nuovi della comunità<\/small><\/p>/);
   assert.match(HTML, /<p class="testo-emissioni" data-r="emissioni\.stimaTesto"><\/p>/);
-  assert.match(HTML, /<p><span data-r="emissioni\.italianiTesto"><\/span> <span data-r="emissioni\.ventiAnniTesto"><\/span><\/p>/);
+  assert.match(HTML, /<p class="testo-emissioni" data-r="emissioni\.paragrafoCo2"><\/p>/);
   assert.match(JS, /stimaTesto: testoStimaCo2\(r\.emissioni\.principale, em\.evitataAltra, dati\.costanti\)/);
-  assert.match(JS, /italianiTesto: testoItaliani\(em\.italiani, voce\(dati\.costanti, 'co2_pro_capite'\)\)/);
+  assert.match(JS, /paragrafoCo2: \[testoItaliani\(em\.italiani, voce\(dati\.costanti, 'co2_pro_capite'\)\), testoVentiAnniCo2\(r\.emissioni\.principale, em\.ventiAnni, dati\.costanti\)\]\.filter\(Boolean\)\.join\(' '\)/);
   assert.match(HTML, /La comunità può aiutare a realizzarli, perché l'energia condivisa porta un incentivo; ma non sappiamo quanti impianti nascerebbero comunque senza di essa/);
   assert.doesNotMatch(HTML, /La comunità serve a farli nascere/);
   assert.match(HTML, /con un fattore annuo, come in questo calcolo, non è CO₂ in meno per il sistema/);
@@ -301,7 +301,24 @@ test('spesa variabile e prelievi si nascondono senza consumi, e la percentuale a
   assert.match(CSS, /body:not\(\[data-spesa\]\) \[data-solo-spesa\], body:not\(\[data-consumo\]\) \[data-solo-consumo\]\{display:none\}/);
   assert.match(HTML, /<div data-solo-spesa><dt>Sulla spesa variabile della bolletta /);
   assert.match(HTML, /<p data-solo-consumo>I tuoi prelievi dalla rete pesano /);
-  assert.ok(HTML.includes('<span data-r="te.consumo" data-f="kwh"></span>. La stima della spesa non conta il margine del venditore né il dispacciamento, che non sono pubblicati: la spesa vera è più alta e la percentuale più bassa.</span></span></dt>'), 'l\'icona della spesa dice che la spesa vera è più alta e la percentuale più bassa');
+});
+
+test('il paragrafo della CO₂ in italiani e sui 20 anni è uno solo e sparisce se è vuoto (esclude una riga vuota nel riquadro «Per il clima» quando non ci sono impianti nuovi)', () => {
+  assert.doesNotMatch(HTML, /emissioni\.italianiTesto|emissioni\.ventiAnniTesto/, 'la pagina lega ancora i due testi in due span');
+  assert.doesNotMatch(JS, /\bitalianiTesto\b|\bventiAnniTesto\b/, 'lo script genera ancora i due testi separati');
+  assert.equal((HTML.match(/data-r="emissioni\.paragrafoCo2"/g) ?? []).length, 1);
+  assert.match(HTML, /<p class="testo-emissioni" data-r="emissioni\.paragrafoCo2"><\/p>/, 'il paragrafo non è vuoto nella sorgente o non ha la classe che lo nasconde da vuoto');
+  assert.match(CSS, /\.testo-emissioni:empty\{display:none\}/, 'un paragrafo vuoto resterebbe una riga bianca');
+});
+
+test('l\'icona della spesa variabile dice che il margine del venditore non è pubblicato e che il dispacciamento lo è, ma il venditore lo ribalta secondo il contratto (esclude il dispacciamento detto «non pubblicato»)', () => {
+  assert.ok(HTML.includes('<span data-r="te.consumo" data-f="kwh"></span>. La stima della spesa non conta il margine del venditore, che non è pubblicato, né il dispacciamento, che il venditore ribalta secondo il contratto: la spesa vera è più alta e la percentuale più bassa.</span></span></dt>'), 'l\'icona della spesa non dice come stanno margine e dispacciamento, e che la spesa vera è più alta e la percentuale più bassa');
+  assert.ok(!HTML.includes('né il dispacciamento, che non sono pubblicati'), 'il dispacciamento è pubblicato');
+});
+
+test('l\'og:description del simulatore ha il punto dopo «Stima indicativa», come la spec §9.4 (esclude i due punti che legavano la frase sulle fonti)', () => {
+  const og = HTML.match(/<meta property="og:description" content="([^"]+)">/)?.[1];
+  assert.equal(og, 'Per te, per la comunità, per il clima. Stima indicativa. Per ogni numero indichiamo la fonte o diciamo che è un\'ipotesi nostra.');
 });
 
 test('«Chi sei» dice che l\'attività è una piccola o media impresa (PMI), non «un\'impresa» qualunque (esclude una grande impresa che si crede socia)', () => {
@@ -309,15 +326,19 @@ test('«Chi sei» dice che l\'attività è una piccola o media impresa (PMI), no
   assert.doesNotMatch(HTML, /È un'impresa\./);
 });
 
-test('il passo «Dove» dice che soci e impianti devono stare sotto la stessa cabina primaria e dove si trova la propria, subito dopo la riga della località (esclude un perimetro della CER taciuto nella pagina del simulatore)', () => {
+test('il passo «Dove» dice che per gli incentivi soci e impianti stanno sotto la stessa cabina primaria, che una CER con più cabine forma una configurazione per ciascuna e che la mappa del GSE indica l\'area, subito dopo la riga della località (esclude un vincolo attribuito alla CER invece che alla configurazione e una mappa presentata come quella delle cabine)', () => {
   const dove = HTML.slice(HTML.indexOf('<legend><span class="n">1</span>Dove</legend>'), HTML.indexOf('</fieldset>'));
-  assert.match(dove, /<p class="aiuto" id="info-localita"><\/p>\s*<p class="aiuto">I soci e gli impianti di una CER devono stare sotto la stessa cabina primaria: il GSE la indica sulla sua mappa delle comunità energetiche, per indirizzo o POD\.<\/p>/);
+  assert.match(dove, /<p class="aiuto" id="info-localita"><\/p>\s*<p class="aiuto">Per gli incentivi soci e impianti devono stare sotto la stessa cabina primaria: una CER che ne copre più d'una forma una configurazione per ciascuna\. La mappa delle comunità energetiche del GSE indica l'area di ogni indirizzo o POD\.<\/p>/);
+  assert.doesNotMatch(HTML, /di una CER devono stare sotto la stessa cabina primaria/, 'il vincolo è attribuito alla CER');
+  assert.doesNotMatch(HTML, /il GSE la indica sulla sua mappa/, 'la mappa del GSE indicherebbe la cabina, mentre mostra l\'area convenzionale');
 });
 
-test('la descrizione della comunità dice «ente» al singolare con un ente, anche senza impianto comune (esclude «1 enti»)', () => {
+test('la descrizione della comunità dice «famiglia» e «ente» al singolare con una famiglia o un ente, anche senza impianto comune (esclude «1 famiglie» e «1 enti»)', () => {
   const corpo = JS.slice(JS.indexOf('function disegnaScena('), JS.indexOf('function tabellaRuoli('));
   assert.doesNotMatch(corpo, /\$\{n\('enti'\)\} enti/, 'un plurale fisso dopo il numero degli enti');
+  assert.doesNotMatch(corpo, /\$\{n\('famiglie'\)\} famiglie/, 'un plurale fisso dopo il numero delle famiglie');
   assert.equal((corpo.match(/\$\{n\('enti'\)\} \$\{n\('enti'\) === 1 \? 'ente' : 'enti'\}/g) ?? []).length, 2, 'i due rami della descrizione scelgono singolare o plurale');
+  assert.equal((corpo.match(/\$\{n\('famiglie'\)\} \$\{n\('famiglie'\) === 1 \? 'famiglia' : 'famiglie'\}/g) ?? []).length, 2, 'i due rami della descrizione scelgono singolare o plurale per le famiglie');
 });
 
 test('le etichette del costo evitato dicono se l\'IVA è compresa (famiglie ed enti) o esclusa (attività), e il contatore non dice «il più comune» senza una fonte (esclude un costo evitato di cui non si sa se è tassato e un «più comune» senza fonte)', () => {

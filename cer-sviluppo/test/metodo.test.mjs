@@ -36,7 +36,7 @@ test('i numeri del testo di «Come calcoliamo» coincidono con costanti.json (es
     'se non ce ne sono, va a finalità sociali',
     'Se i costi superano gli incentivi, il simulatore lo segnala: vanno coperti in altro modo, per esempio con una quota associativa.',
     'Sui 20 anni il fattore delle centrali fossili resta quello di oggi; con la media dei consumi scende come ha fatto in media dal 1990 al 2024.',
-    'per chi entra nella comunità dopo quella data la condivisa dovrebbe contare ancora, ma le regole non lo scrivono',
+    `la simulazione assume che gli impianti nuovi entrino in esercizio dopo la costituzione ed entro il ${scadenza}, con la domanda al GSE entro la stessa data, e che tu entri prima di quella data; per chi entra dopo la condivisa dovrebbe contare ancora, ma le regole non lo scrivono`,
     'non contiamo tagli dell\'inverter né limiti di immissione',
     'gli impianti di attività ed enti sono sempre nuovi',
     'ha la tariffa ma è già pagato, e il simulatore non lo distingue',
@@ -125,6 +125,17 @@ test('«Come calcoliamo» dichiara tre scelte prudenti, fra cui il corrispettivo
   assert.ok(sezione.includes('<p>Su tre punti le regole non sono chiare, e scegliamo la lettura prudente:</p>'));
   assert.equal((sezione.match(/<li>/g) ?? []).length, 3, 'le scelte elencate sono tre');
   assert.ok(sezione.includes('<li>il corrispettivo del GSE si conta per ogni impianto della comunità, anche per quelli senza tariffa: il DM 106/2024 lo chiede a chi è ammesso alle tariffe incentivanti, ma non dice se valga anche per gli altri.</li>'));
+});
+
+test('le prime due scelte prudenti dicono l\'ipotesi della simulazione: l\'eccedentaria resta a chi la riceve, consumatori non imprese o finalità sociali, e gli impianti nuovi entrano entro la data con il socio che entra prima (esclude «resta intera ai consumatori» e una scelta che descrive solo chi entra dopo)', () => {
+  const scadenza = v('scadenza_esercizio').split('-').reverse().join('/');
+  const da = HTML.indexOf('<h2>Tre scelte prudenti</h2>');
+  assert.ok(da >= 0, 'manca il titolo «Tre scelte prudenti»');
+  const sezione = HTML.slice(da, HTML.indexOf('<h2>', da + 1));
+  assert.ok(sezione.includes('<li>la quota eccedentaria della tariffa non copre i costi della CER: resta intera a chi la riceve, i consumatori che non sono imprese o, senza di loro, le finalità sociali;</li>'), 'prima scelta');
+  assert.ok(!sezione.includes('resta intera ai consumatori che non sono imprese'), 'l\'eccedentaria detta sempre ai consumatori, contro «se non ce ne sono, va a finalità sociali»');
+  assert.ok(sezione.includes(`<li>la simulazione assume che gli impianti nuovi entrino in esercizio dopo la costituzione ed entro il ${scadenza}, con la domanda al GSE entro la stessa data, e che tu entri prima di quella data; per chi entra dopo la condivisa dovrebbe contare ancora, ma le regole non lo scrivono;</li>`), 'seconda scelta');
+  assert.ok(!sezione.includes('per chi entra nella comunità dopo quella data'), 'la scelta descrive solo chi entra dopo, non l\'ipotesi della simulazione');
 });
 
 test('«Come calcoliamo» dice che la tariffa spetta «per 20 anni», come il DM 414 («pari a 20 anni»), e non «fino a 20 anni» (esclude una durata presentata come un massimo)', () => {

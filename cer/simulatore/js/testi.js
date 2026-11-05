@@ -30,7 +30,7 @@ export function notaScadenza(ruolo, oggi, costanti, stato = 'nuovo') {
   const chi = `La scadenza del ${data} riguarda gli impianti, non chi consuma. Se entri dopo quella data in una comunità i cui impianti hanno già la tariffa, la tua energia condivisa dovrebbe contare ancora, per gli anni che restano dei loro ${voce(costanti, 'durata_tariffa_anni')}: nessuna regola lo esclude, ma nessuna lo scrive, e il GSE non l'ha chiarito.`;
   if ((ruolo !== 'prosumer' && ruolo !== 'produttore') || stato !== 'nuovo') return chi;
   const impianto = chiusa(oggi, scadenza)
-    ? `La finestra della tariffa premio si è chiusa il ${data}, salvo proroghe: un impianto nuovo riceve solo il contributo ARERA.`
+    ? `La finestra della tariffa premio si è chiusa il ${data}, salvo proroghe: su un impianto nuovo la comunità riceve solo il contributo ARERA.`
     : `Per avere la tariffa premio l'impianto deve entrare in esercizio dopo la costituzione della CER ed entro il ${data}, e conviene presentare la domanda al GSE entro la stessa data. Se entra in esercizio dopo, con le regole di oggi la tariffa non c'è: la sua energia conta lo stesso per la comunità, ma su di essa la comunità riceve solo il contributo ARERA, molto più piccolo. La data può arrivare prima, se in Italia si raggiungono 5 GW di impianti incentivati, e cambierebbe solo con una proroga, che a oggi non c'è.`;
   return `${impianto} ${chi}`;
 }
@@ -112,13 +112,13 @@ export function ipotesi(r, loc, pvInfo, costanti) {
     `${prezzo}${tipFv != null ? `; tariffa premio ${numero(tipFv)} €/MWh` : ''}.`,
     `Costo evitato in bolletta per ogni kWh autoconsumato: ${ce('famiglia')} €/kWh per le famiglie, ${ce('attivita')} per le attività, ${ce('ente')} per gli enti.`,
     `Riparto: ${perc(p.quota_produttore)} della tariffa al titolare dell'impianto, ${perc(p.quota_consumatori)} ai consumatori secondo quanto consumano nelle ore di produzione, ${perc(1 - p.quota_produttore - p.quota_consumatori)} alla CER; il contributo ARERA ai consumatori. ${fonteRiparto}`,
-    `Costi della CER: ${euro(p.gestione_eur_anno)} l'anno di gestione più i corrispettivi del GSE, tolti dagli incentivi prima del riparto. La quota eccedentaria resta intera ai consumatori che non sono imprese: è la lettura prudente, perché le regole non dicono se possa coprire i costi.`,
+    `Costi della CER: ${euro(p.gestione_eur_anno)} l'anno di gestione più i corrispettivi del GSE, tolti dagli incentivi prima del riparto. La quota eccedentaria non copre i costi della CER: resta intera a chi la riceve (i consumatori che non sono imprese o, senza di loro, le finalità sociali). È la lettura prudente, perché le regole non dicono se possa coprirli.`,
     ...(r.impianti.some((k) => !k.giaInEsercizio) ? [`Gli impianti nuovi entrano in esercizio dopo la costituzione della CER ed entro il ${dataIt(voce(costanti, 'scadenza_esercizio'))}.`] : []),
     ...(r.impianti.some((k) => k.giaInEsercizio) ? ['Gli impianti già in esercizio sono entrati in esercizio prima della costituzione della CER: niente tariffa premio, solo il contributo ARERA sulla loro condivisa.'] : []),
     `${anni} anni a prezzi costanti, senza inflazione né attualizzazione; degrado dei pannelli: ${perc(voce(costanti, 'degrado'), 1)} della produzione l'anno.`,
     media
       ? `CO₂ evitata: ipotesi che ogni kWh dei pannelli valga la CO₂ media di un kWh consumato in Italia, ${numero(voce(costanti, 'fattore_co2'), 1)} g/kWh (media nazionale annua, ISPRA, 2025 preliminare); con il metodo ISPRA delle emissioni evitate sarebbe ${numero(voce(costanti, 'fattore_co2_fossili'), 1)}. Sui ${anni} anni il fattore scende del ${perc(voce(costanti, 'calo_fattore_co2'), 1)} l'anno, come in media dal 1990: è una proiezione.`
       : `CO₂ evitata: ipotesi che ogni kWh dei pannelli sostituisca un kWh delle centrali fossili italiane, ${numero(voce(costanti, 'fattore_co2_fossili'), 1)} g/kWh (metodo ISPRA, media nazionale annua, 2025 preliminare); con la CO₂ media di un kWh consumato sarebbe ${numero(voce(costanti, 'fattore_co2'), 1)}. Sui ${anni} anni il fattore resta quello di oggi: è una proiezione.`,
-    'Fuori dal calcolo: imposte, agevolazioni (PNRR, detrazioni), accumuli, prezzo ora per ora, quarto d\'ora, sostituzione dell\'inverter, assicurazione.',
+    'Fuori dal calcolo: imposte sui redditi, agevolazioni (PNRR, detrazioni), accumuli, prezzo ora per ora, quarto d\'ora, sostituzione dell\'inverter, assicurazione.',
   ];
 }
