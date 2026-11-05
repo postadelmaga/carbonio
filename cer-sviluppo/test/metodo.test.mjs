@@ -131,3 +131,7 @@ test('«Come calcoliamo» dice che la tariffa spetta «per 20 anni», come il DM
   assert.ok(HTML.includes('non oltre 1 MW di potenza, per 20 anni, e la calcoliamo'));
   assert.ok(!HTML.includes('fino a 20 anni'), 'nella pagina c\'è ancora «fino a 20 anni»');
 });
+
+test('«Che cosa resta fuori» ha la voce dei tagli dell\'inverter con la frase della spec §10.5, titolo e frase separati (esclude la voce riscritta con «quindi» e con il costo della connessione dopo un punto e virgola)', () => {
+  assert.ok(fuori().includes('<li>I tagli dell\'inverter e i limiti di immissione. La produzione è calcolata sui kWp dei pannelli, con un inverter della stessa potenza e una connessione che permette di immettere tutto: non contiamo tagli dell\'inverter né limiti di immissione, e il costo della connessione è escluso.</li>'));
+});

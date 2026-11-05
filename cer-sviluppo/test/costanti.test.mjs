@@ -73,3 +73,7 @@ test('la tabella pubblica delle fonti non cita la spec né i compiti del piano, 
   assert.equal(voci.comunita_tipo.note, 'I consumi di attività ed ente sono illustrativi. Il numero di famiglie è tarato sulla Spezia.');
   assert.equal(voci.predefiniti.fonte, 'Ipotesi del simulatore');
 });
+
+test('il corrispettivo del GSE porta la data dello scarico della copia letta, 18/10/2026 (esclude una data di consultazione posteriore a quella della lettura)', () => {
+  assert.equal(leggi('costanti.json').voci.corrispettivo_gse.consultato, '2026-10-18');
+});
