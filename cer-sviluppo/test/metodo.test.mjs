@@ -146,3 +146,8 @@ test('«Come calcoliamo» dice che la tariffa spetta «per 20 anni», come il DM
 test('«Che cosa resta fuori» ha la voce dei tagli dell\'inverter con la frase della spec §10.5, titolo e frase separati (esclude la voce riscritta con «quindi» e con il costo della connessione dopo un punto e virgola)', () => {
   assert.ok(fuori().includes('<li>I tagli dell\'inverter e i limiti di immissione. La produzione è calcolata sui kWp dei pannelli, con un inverter della stessa potenza e una connessione che permette di immettere tutto: non contiamo tagli dell\'inverter né limiti di immissione, e il costo della connessione è escluso.</li>'));
 });
+
+test('«Che cosa resta fuori» dice «Imposte sui redditi e agevolazioni», come la riga «Fuori dal calcolo» delle ipotesi (esclude «Imposte e agevolazioni», che contraddice IVA e accise contate nel costo evitato)', () => {
+  assert.match(fuori(), /<li>Imposte sui redditi e agevolazioni \(contributi PNRR, detrazioni, conto termico\) e gli accumuli\.<\/li>/);
+  assert.doesNotMatch(fuori(), /<li>Imposte e agevolazioni/);
+});
