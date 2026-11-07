@@ -36,7 +36,7 @@ SORGENTE = 'it'
 # cambiarlo non invalida le traduzioni: nel testo c'e' __CONTATTO__.
 # Finche' e' vuota la chat e la pagina della privacy non escono: niente
 # chat.js, niente privacy.html, e i collegamenti alla privacy si tolgono.
-CONTATTO = ''
+CONTATTO = 'co2.infos@gmail.com'
 RADICE   = 'en'
 
 INLINE = {'b','i','em','strong','abbr','span','small','a','sub','sup','br','code','u','mark'}
