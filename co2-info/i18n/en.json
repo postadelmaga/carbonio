@@ -350,7 +350,7 @@
   "9%": "9%",
   "Altro, incluso il gas bruciato ai pozzi (flaring)": "Other, including gas flared at wells",
   "2%": "2%",
-  "Altro": "Other",
+  "Altro": "More",
   "variazione 2000–2024": "change 2000–2024",
   "È «solo la Cina»?": "Is it «just China»?",
   "No per il livello, in buona parte sì per la crescita. Sul totale attuale la Cina vale un terzo. Sull'aumento degli ultimi venticinque anni vale circa due terzi, perché nel frattempo Europa e Stati Uniti sono scesi.": "No for the level, largely yes for the growth. China accounts for a third of today's total. Of the increase over the last twenty-five years it accounts for about two thirds, because in the meantime Europe and the United States have come down.",
@@ -740,7 +740,13 @@
   "Le regole della chat dei lettori, come segnalare un messaggio, quali dati tratta il sito e chi contattare.": "The rules of the readers' chat, how to report a message, what data the site handles and whom to contact.",
   "Regole della chat, segnalazioni, dati trattati e contatti.": "Chat rules, reports, data handled and contacts.",
   "Regole e privacy — Il carbonio che resta": "Rules and privacy — The carbon that stays",
-  "<b>Chat.</b> Testo, nome scelto (facoltativo), ora e impronta: cancellati dopo trenta giorni. Accanto al nome compaiono quattro caratteri ricavati dall'impronta, per distinguere chi scrive senza nome. La chat compare solo quando sulla pagina ci sono almeno due persone: per contarle, ogni pagina aperta manda ogni venti secondi un codice casuale, che il server tiene solo in memoria per meno di un minuto e non salva.": "<b>Chat.</b> Text, chosen name (optional), time and fingerprint: deleted after thirty days. Next to the name appear four characters derived from the fingerprint, to tell apart people writing without a name. The chat only appears when at least two people are on the page: to count them, every open page sends a random code every twenty seconds, which the server keeps only in memory for less than a minute and never stores."
+  "<b>Chat.</b> Testo, nome scelto (facoltativo), ora e impronta: cancellati dopo trenta giorni. Accanto al nome compaiono quattro caratteri ricavati dall'impronta, per distinguere chi scrive senza nome. La chat compare solo quando sulla pagina ci sono almeno due persone: per contarle, ogni pagina aperta manda ogni venti secondi un codice casuale, che il server tiene solo in memoria per meno di un minuto e non salva.": "<b>Chat.</b> Text, chosen name (optional), time and fingerprint: deleted after thirty days. Next to the name appear four characters derived from the fingerprint, to tell apart people writing without a name. The chat only appears when at least two people are on the page: to count them, every open page sends a random code every twenty seconds, which the server keeps only in memory for less than a minute and never stores.",
+  "Indice": "Contents",
+  "La CO₂ in aria": "CO₂ in the air",
+  "Cosa comporta": "What it means",
+  "Dove finisce": "Where it goes",
+  "Chi la emette": "Who emits it",
+  "In fondo": "To finish"
  },
  "js": {
   "/anno": "/yr",

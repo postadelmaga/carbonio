@@ -149,13 +149,14 @@ function T(s){ var d=window.I18N; return (d && d[s]) || s; }
   prev.addEventListener('click', function(){ step(-1); });
   next.addEventListener('click', function(){ step(1); });
 
-  /* ── barra in alto sul telefono ──
-     Il menu a tendina con le voci; la barra sparisce scorrendo in giu' e
+  /* ── barra in alto ──
+     «Indice» apre il pannello con le sezioni (a ogni larghezza); sul
+     telefono la barra sparisce scorrendo in giu' e
      torna scorrendo in su o quando la navigazione e' programmatica (frecce,
      voci del menu), cosi' la sezione atterra sempre sotto una barra visibile. */
   var mobileMq = window.matchMedia ? window.matchMedia('(max-width:640px)') : null;
   var menuBtn = document.getElementById('menu-toggle');
-  var links = navEl ? navEl.querySelectorAll('.nav-links a') : [];
+  var links = navEl ? navEl.querySelectorAll('#nav-menu a') : [];
   var lastY = window.pageYOffset;
   /* dichiara la destinazione di uno scorrimento programmatico: l'arrivo non
      conta come "scorrere in giu'" e la barra resta visibile */
@@ -165,6 +166,7 @@ function T(s){ var d=window.I18N; return (d && d[s]) || s; }
   function setMenu(open){
     if(!navEl || !menuBtn || navEl.classList.contains('is-open') === open) return;
     navEl.classList.toggle('is-open', open);
+    document.documentElement.classList.toggle('menu-aperto', open);
     menuBtn.setAttribute('aria-expanded', String(open));
     menuBtn.setAttribute('aria-label', open ? T('Chiudi il menu') : T('Apri il menu'));
   }
@@ -188,11 +190,15 @@ function T(s){ var d=window.I18N; return (d && d[s]) || s; }
     lastY = y;
   }
   /* la voce del menu della sezione corrente resta evidenziata */
+  var navNow = document.getElementById('nav-now');
   function markLink(i){
-    var id = slides[i] && slides[i].id;
+    var id = slides[i] && slides[i].id, nome = '';
     Array.prototype.forEach.call(links, function(a){
-      if(a.hash === '#' + id) a.setAttribute('aria-current','true'); else a.removeAttribute('aria-current');
+      if(a.hash && a.hash === '#' + id){ a.setAttribute('aria-current','true'); nome = a.textContent; }
+      else a.removeAttribute('aria-current');
     });
+    // accanto a «Indice», il nome breve della sezione che si sta leggendo
+    if(navNow) navNow.textContent = nome;
   }
 
   /* sul telefono la pillola sparisce mentre si scorre e torna da fermi */

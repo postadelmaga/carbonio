@@ -34,6 +34,8 @@ SORGENTE = 'it'
 # Indirizzo di contatto della pagina delle regole e della privacy (titolare
 # del trattamento e punto di contatto DSA). Sta qui e non nel testo, cosi'
 # cambiarlo non invalida le traduzioni: nel testo c'e' __CONTATTO__.
+# Finche' e' vuota la chat e la pagina della privacy non escono: niente
+# chat.js, niente privacy.html, e i collegamenti alla privacy si tolgono.
 CONTATTO = ''
 RADICE   = 'en'
 
@@ -209,10 +211,12 @@ def genera(codice, dizionario, permissivo, pagina='index.html'):
 
     fuori = os.path.join(QUI, codice)
     os.makedirs(fuori, exist_ok=True)
-    if '__CONTATTO__' in src:
-        if not CONTATTO:
-            raise SystemExit('build.py: CONTATTO e\' vuoto (indirizzo della pagina privacy)')
-        src = src.replace('__CONTATTO__', CONTATTO)
+    if not CONTATTO:
+        # senza punto di contatto la chat non puo' uscire (DSA, art. 11-12)
+        src = src.replace('<script src="/assets/chat.js" defer></script>\n', '')
+        src = re.sub(r' · <a class="ref" href="(?:/[a-z]{2})?/privacy\.html">[^<]*</a>', '', src)
+        assert 'privacy.html' not in src or pagina == 'privacy.html', pagina
+    src = src.replace('__CONTATTO__', CONTATTO)
     open(os.path.join(fuori, pagina), 'w', encoding='utf-8').write(src)
     return mancanti, non_trovate
 
@@ -248,6 +252,11 @@ def main():
                 print('  %s: manca %s, saltata' % (codice, f)); guai += 1; continue
             d = json.load(open(f, encoding='utf-8'))
         for pagina in PAGINE:
+            if pagina == 'privacy.html' and not CONTATTO:
+                vecchia = os.path.join(QUI, codice, pagina)
+                if os.path.exists(vecchia): os.remove(vecchia)
+                print('  %s/%s  saltata: CONTATTO vuoto, chat e privacy restano fuori' % (codice, pagina))
+                continue
             mancanti, non_trovate = genera(codice, d, permissivo, pagina)
             stato = 'ok' if not mancanti and not non_trovate else 'INCOMPLETA'
             print('  %s/%s  %s  (%d voci mancanti, %d non agganciate)' % (codice, pagina, stato, len(mancanti), len(non_trovate)))

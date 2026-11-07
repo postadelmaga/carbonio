@@ -137,7 +137,7 @@
   function disegnaMessaggi(lista, messaggi) {
     lista.innerHTML = '';
     if (!messaggi.length) {
-      var p = document.createElement('p');
+      var p = document.createElement('li');
       p.className = 'bac-vuoto';
       p.textContent = T('Ancora nessun messaggio pubblicato. Il primo può essere il tuo.');
       lista.appendChild(p);

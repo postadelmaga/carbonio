@@ -350,7 +350,7 @@
   "9%": "9%",
   "Altro, incluso il gas bruciato ai pozzi (flaring)": "其他，包括油井放空燃烧的气体",
   "2%": "2%",
-  "Altro": "其他",
+  "Altro": "更多",
   "variazione 2000–2024": "2000–2024 年的变化",
   "È «solo la Cina»?": "真的「只是中国」吗？",
   "No per il livello, in buona parte sì per la crescita. Sul totale attuale la Cina vale un terzo. Sull'aumento degli ultimi venticinque anni vale circa due terzi, perché nel frattempo Europa e Stati Uniti sono scesi.": "论总量不是，论增量则在很大程度上是。按当前总量，中国占三分之一。按最近二十五年的增量，中国约占三分之二，因为在此期间欧洲和美国都在下降。",
@@ -740,7 +740,13 @@
   "Le regole della chat dei lettori, come segnalare un messaggio, quali dati tratta il sito e chi contattare.": "读者聊天室的规则、如何举报消息、本站处理哪些数据以及联系谁。",
   "Regole della chat, segnalazioni, dati trattati e contatti.": "聊天规则、举报、处理的数据与联系方式。",
   "Regole e privacy — Il carbonio che resta": "规则与隐私 — 留下的碳",
-  "<b>Chat.</b> Testo, nome scelto (facoltativo), ora e impronta: cancellati dopo trenta giorni. Accanto al nome compaiono quattro caratteri ricavati dall'impronta, per distinguere chi scrive senza nome. La chat compare solo quando sulla pagina ci sono almeno due persone: per contarle, ogni pagina aperta manda ogni venti secondi un codice casuale, che il server tiene solo in memoria per meno di un minuto e non salva.": "<b>聊天。</b>文字、自选名字（可选）、时间和指纹：三十天后删除。名字旁显示由指纹得出的四个字符，用来区分未署名的发言者。只有当至少两个人同时在本页时，聊天室才会出现：为了计数，每个打开的页面每二十秒发送一个随机代码，服务器只在内存中保留不到一分钟，不会存储。"
+  "<b>Chat.</b> Testo, nome scelto (facoltativo), ora e impronta: cancellati dopo trenta giorni. Accanto al nome compaiono quattro caratteri ricavati dall'impronta, per distinguere chi scrive senza nome. La chat compare solo quando sulla pagina ci sono almeno due persone: per contarle, ogni pagina aperta manda ogni venti secondi un codice casuale, che il server tiene solo in memoria per meno di un minuto e non salva.": "<b>聊天。</b>文字、自选名字（可选）、时间和指纹：三十天后删除。名字旁显示由指纹得出的四个字符，用来区分未署名的发言者。只有当至少两个人同时在本页时，聊天室才会出现：为了计数，每个打开的页面每二十秒发送一个随机代码，服务器只在内存中保留不到一分钟，不会存储。",
+  "Indice": "目录",
+  "La CO₂ in aria": "空气中的 CO₂",
+  "Cosa comporta": "意味着什么",
+  "Dove finisce": "去了哪里",
+  "Chi la emette": "谁在排放",
+  "In fondo": "最后"
  },
  "js": {
   "/anno": "/年",

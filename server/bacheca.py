@@ -68,7 +68,7 @@ SEZIONI = {'curva', 'passato', 'recenti', 'caldo', 'bilancio', 'senzapozzi',
 # sostituisce la risposta, non ne aggiunge una seconda.
 GRUPPO  = {'su': 'utile', 'giu': 'utile', 'chiaro': 'chiarezza', 'confuso': 'chiarezza'}
 TIPI    = set(GRUPPO)
-LINGUE  = {'it', 'en', 'es', 'zh'}
+LINGUE  = {'it', 'en', 'es', 'fr', 'zh'}
 
 MAX_TESTO   = 1500
 MAX_CHAT    = 500

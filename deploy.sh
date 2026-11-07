@@ -90,7 +90,9 @@ cp -R "$CO2/404.html" "$CO2/robots.txt" "$CO2/assets" "$BUILD_DIR/"
 # L'italiano, che nel repository e' il sorgente scritto a mano, viene
 # pubblicato come tutte le altre lingue, in it/.
 if [ -f "$CO2/en/index.html" ]; then
-  cp "$CO2/en/index.html" "$CO2/en/feedback.html" "$CO2/en/privacy.html" "$BUILD_DIR/"
+  cp "$CO2/en/index.html" "$CO2/en/feedback.html" "$BUILD_DIR/"
+  # la pagina della privacy c'e' solo quando build.py ha un CONTATTO
+  [ -f "$CO2/en/privacy.html" ] && cp "$CO2/en/privacy.html" "$BUILD_DIR/"
 else
   err "manca co2-info/en/index.html: lancia co2-info/build.py prima di pubblicare"
   exit 1

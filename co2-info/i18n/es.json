@@ -350,7 +350,7 @@
   "9%": "9%",
   "Altro, incluso il gas bruciato ai pozzi (flaring)": "Otros, incluido el gas quemado en los pozos (flaring)",
   "2%": "2%",
-  "Altro": "Otros",
+  "Altro": "Más",
   "variazione 2000–2024": "variación 2000–2024",
   "È «solo la Cina»?": "¿Es «solo China»?",
   "No per il livello, in buona parte sì per la crescita. Sul totale attuale la Cina vale un terzo. Sull'aumento degli ultimi venticinque anni vale circa due terzi, perché nel frattempo Europa e Stati Uniti sono scesi.": "No por el nivel, en buena parte sí por el crecimiento. Sobre el total actual China supone un tercio. Sobre el aumento de los últimos veinticinco años supone unos dos tercios, porque entretanto Europa y Estados Unidos han bajado.",
@@ -740,7 +740,13 @@
   "Le regole della chat dei lettori, come segnalare un messaggio, quali dati tratta il sito e chi contattare.": "Las reglas del chat de los lectores, cómo denunciar un mensaje, qué datos trata el sitio y a quién contactar.",
   "Regole della chat, segnalazioni, dati trattati e contatti.": "Reglas del chat, denuncias, datos tratados y contactos.",
   "Regole e privacy — Il carbonio che resta": "Reglas y privacidad — El carbono que queda",
-  "<b>Chat.</b> Testo, nome scelto (facoltativo), ora e impronta: cancellati dopo trenta giorni. Accanto al nome compaiono quattro caratteri ricavati dall'impronta, per distinguere chi scrive senza nome. La chat compare solo quando sulla pagina ci sono almeno due persone: per contarle, ogni pagina aperta manda ogni venti secondi un codice casuale, che il server tiene solo in memoria per meno di un minuto e non salva.": "<b>Chat.</b> Texto, nombre elegido (opcional), hora y huella: se borran a los treinta días. Junto al nombre aparecen cuatro caracteres derivados de la huella, para distinguir a quien escribe sin nombre. El chat solo aparece cuando hay al menos dos personas en la página: para contarlas, cada página abierta envía cada veinte segundos un código aleatorio, que el servidor guarda solo en memoria durante menos de un minuto y no almacena."
+  "<b>Chat.</b> Testo, nome scelto (facoltativo), ora e impronta: cancellati dopo trenta giorni. Accanto al nome compaiono quattro caratteri ricavati dall'impronta, per distinguere chi scrive senza nome. La chat compare solo quando sulla pagina ci sono almeno due persone: per contarle, ogni pagina aperta manda ogni venti secondi un codice casuale, che il server tiene solo in memoria per meno di un minuto e non salva.": "<b>Chat.</b> Texto, nombre elegido (opcional), hora y huella: se borran a los treinta días. Junto al nombre aparecen cuatro caracteres derivados de la huella, para distinguir a quien escribe sin nombre. El chat solo aparece cuando hay al menos dos personas en la página: para contarlas, cada página abierta envía cada veinte segundos un código aleatorio, que el servidor guarda solo en memoria durante menos de un minuto y no almacena.",
+  "Indice": "Índice",
+  "La CO₂ in aria": "El CO₂ en el aire",
+  "Cosa comporta": "Qué supone",
+  "Dove finisce": "Adónde va",
+  "Chi la emette": "Quién lo emite",
+  "In fondo": "Para terminar"
  },
  "js": {
   "/anno": "/año",

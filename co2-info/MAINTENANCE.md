@@ -609,5 +609,17 @@ Report emails need the `BACHECA_SMTP_*` variables in `/home/arch/bacheca/.env`
 
 Rules, data handled and the contact point are on `privacy.html`. The contact
 address is the `CONTATTO` constant at the top of `build.py`, not part of the
-text (`__CONTATTO__`), so changing it does not invalidate the translations;
-the build refuses to run while it is empty.
+text (`__CONTATTO__`), so changing it does not invalidate the translations.
+While it is empty the build leaves the chat out: no `chat.js` tag, no
+`privacy.html`, and the footer links to it are removed.
+
+## Top bar (since 7 November 2026)
+
+The bar holds the mark, an «Indice» button, the name of the section being
+read (`#nav-now`, set by `markLink()` in `slides.js`) and, on the right,
+Bacheca, Climate Atlas and CER. «Indice» opens `#nav-menu`: the fifteen
+sections in four chapters (CO₂ in the air, What it means, Where it goes, Who
+emits it) plus Summary and Sources; on phones the panel is two columns and
+also carries the three outside links. A new section needs its link in the
+right chapter group of `index.html`. Before, all seventeen links sat in a strip
+that scrolled sideways without showing it, and half of them were never seen.
