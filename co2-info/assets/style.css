@@ -452,6 +452,10 @@ img,svg{max-width:100%}
    disegnano e resta il codice della lingua accanto, che basta. */
 .lang{position:relative;flex:none;margin-left:auto}
 .lang+.theme-btn{margin-left:6px}
+/* fra lingua e tema c'e' il bottone di GitHub: senza questa regola anche il
+   tema prendeva margin-left:auto e lo spazio libero si divideva in due,
+   lasciando la lingua a meta' barra (bacheca e privacy) */
+.gh-btn+.theme-btn{margin-left:6px}
 .lang summary{
   display:flex;align-items:center;gap:5px;height:32px;padding:0 8px;
   border:1px solid var(--rule);border-radius:3px;cursor:pointer;
