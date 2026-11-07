@@ -9,6 +9,14 @@
 # repository:
 #   BACHECA_SALT=<stringa casuale lunga>
 #   BACHECA_TOKEN=<password della moderazione>
+#
+# Per gli avvisi delle segnalazioni della chat (facoltativi; senza, le
+# segnalazioni si leggono solo con modera.sh):
+#   BACHECA_SMTP_HOST=smtp.gmail.com
+#   BACHECA_SMTP_PORT=465
+#   BACHECA_SMTP_USER=<indirizzo che manda>
+#   BACHECA_SMTP_PASS=<password per le app di quell'account>
+#   BACHECA_AVVISI_A=<a chi arrivano gli avvisi; default lo stesso indirizzo>
 
 services:
   bacheca:
@@ -21,6 +29,11 @@ services:
       - BACHECA_SALT=${BACHECA_SALT}
       - BACHECA_TOKEN=${BACHECA_TOKEN}
       - BACHECA_PORT=8090
+      - BACHECA_SMTP_HOST=${BACHECA_SMTP_HOST:-}
+      - BACHECA_SMTP_PORT=${BACHECA_SMTP_PORT:-465}
+      - BACHECA_SMTP_USER=${BACHECA_SMTP_USER:-}
+      - BACHECA_SMTP_PASS=${BACHECA_SMTP_PASS:-}
+      - BACHECA_AVVISI_A=${BACHECA_AVVISI_A:-}
     volumes:
       - ./bacheca.py:/app/bacheca.py:ro
       - /home/arch/bachecadati:/dati

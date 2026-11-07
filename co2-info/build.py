@@ -20,7 +20,7 @@ import json, re, sys, os
 from bs4 import BeautifulSoup, NavigableString, Tag
 
 QUI = os.path.dirname(os.path.abspath(__file__))
-PAGINE = ['index.html', 'feedback.html']   # sorgenti italiani da tradurre
+PAGINE = ['index.html', 'feedback.html', 'privacy.html']   # sorgenti italiani da tradurre
 SRC = os.path.join(QUI, 'index.html')
 LINGUE = {'it': 'Italiano', 'en': 'English', 'es': 'Español', 'fr': 'Français', 'zh': '中文'}
 
@@ -31,6 +31,10 @@ LINGUE = {'it': 'Italiano', 'en': 'English', 'es': 'Español', 'fr': 'Français'
 # viene comunque scritta in una cartella (en/), ma con i collegamenti nella
 # forma della radice: e' deploy.sh a portarne il contenuto al livello di sopra.
 SORGENTE = 'it'
+# Indirizzo di contatto della pagina delle regole e della privacy (titolare
+# del trattamento e punto di contatto DSA). Sta qui e non nel testo, cosi'
+# cambiarlo non invalida le traduzioni: nel testo c'e' __CONTATTO__.
+CONTATTO = ''
 RADICE   = 'en'
 
 INLINE = {'b','i','em','strong','abbr','span','small','a','sub','sup','br','code','u','mark'}
@@ -188,6 +192,7 @@ def genera(codice, dizionario, permissivo, pagina='index.html'):
         if pagina != 'index.html':
             src = src.replace('href="/"', 'href="/%s/"' % codice)
         src = src.replace('href="/feedback.html"', 'href="/%s/feedback.html"' % codice)
+        src = src.replace('href="/privacy.html"', 'href="/%s/privacy.html"' % codice)
     # le pagine stanno in una sottocartella: percorsi assoluti per gli asset
     src = re.sub(r'(href|src)="assets/', r'\1="/assets/', src)
     # selettore: bandiera corrente e spunta sulla lingua attiva
@@ -204,6 +209,10 @@ def genera(codice, dizionario, permissivo, pagina='index.html'):
 
     fuori = os.path.join(QUI, codice)
     os.makedirs(fuori, exist_ok=True)
+    if '__CONTATTO__' in src:
+        if not CONTATTO:
+            raise SystemExit('build.py: CONTATTO e\' vuoto (indirizzo della pagina privacy)')
+        src = src.replace('__CONTATTO__', CONTATTO)
     open(os.path.join(fuori, pagina), 'w', encoding='utf-8').write(src)
     return mancanti, non_trovate
 
@@ -215,7 +224,7 @@ def main():
             if k not in chiavi: chiavi.append(k)
     if '--extract' in sys.argv:
         js = []
-        for f in ('charts.js', 'live.js', 'slides.js', 'feedback.js', 'tema.js'):
+        for f in ('charts.js', 'live.js', 'slides.js', 'feedback.js', 'tema.js', 'chat.js'):
             testo = open(os.path.join(QUI, 'assets', f), encoding='utf-8').read()
             for m in re.finditer(r"\b(?:T|tr)\('((?:[^'\\]|\\.)*)'\)", testo):
                 k = m.group(1).replace("\\'", "'")

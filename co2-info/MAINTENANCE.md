@@ -587,3 +587,27 @@ Code MIT, text and charts CC BY 4.0: see [LICENSE](LICENSE) and
 [LICENSE-CONTENT.md](LICENSE-CONTENT.md). The line in the page footer says so
 too, in all five languages, so a reader who wants to reuse a chart does not
 have to go looking for the repository first.
+
+
+## Readers' chat (since 7 November 2026)
+
+`assets/chat.js`, loaded only by `index.html` (all five languages, one shared
+room; never on `/cer/` or `/atlante/`). The button appears only when at least
+two people are on the page: every open page sends a random code with each poll
+(every 20 s, 4 s with the panel open) and `server/bacheca.py` counts distinct
+IP fingerprints seen in the last 45 s, in memory only.
+
+Messages appear immediately (unlike the message board). Safeguards: 500
+characters, two links at most and never clickable, one message every 4 s, 20
+per 10 minutes, 150 a day, no duplicates, deletion after 30 days. Every
+message has a report flag (EU Digital Services Act, art. 16): two reports from
+different people suspend it until a decision; reporters who leave an email are
+told the decision. Moderation: `server/modera.sh chat | segnalazioni |
+chat-nascondi <id> | chat-blocca <id> | chat-mostra <id> | chat-sblocca <id>`.
+Report emails need the `BACHECA_SMTP_*` variables in `/home/arch/bacheca/.env`
+(see `server/docker-compose.yml`).
+
+Rules, data handled and the contact point are on `privacy.html`. The contact
+address is the `CONTATTO` constant at the top of `build.py`, not part of the
+text (`__CONTATTO__`), so changing it does not invalidate the translations;
+the build refuses to run while it is empty.
