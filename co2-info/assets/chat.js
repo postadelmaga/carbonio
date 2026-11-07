@@ -72,7 +72,9 @@
   var regole = el('p', 'chat-regole');
   regole.appendChild(document.createTextNode(T('Messaggi pubblici, visibili subito, cancellati dopo 30 giorni. Niente insulti, dati personali, spam o contenuti illegali: ogni messaggio si può segnalare.') + ' '));
   var link = el('a', 'ref', T('Regole e privacy'));
-  link.href = '/privacy.html';
+  // la pagina delle regole nella lingua della pagina (l'inglese sta alla radice)
+  var LINGUA = document.documentElement.getAttribute('data-lingua') || 'en';
+  link.href = LINGUA === 'en' ? '/privacy.html' : '/' + LINGUA + '/privacy.html';
   regole.appendChild(link);
   pan.appendChild(regole);
 
