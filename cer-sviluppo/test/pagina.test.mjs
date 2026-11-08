@@ -221,7 +221,7 @@ test('testi della CO₂: niente «fino a», stima dichiarata, italiani e 20 anni
   assert.match(HTML, /<legend>Fattore di emissione per la CO₂ evitata<\/legend>/);
   assert.match(HTML, /<input type="radio" name="p-fattore" value="fossili" checked>/);
   assert.match(HTML, /· <b data-r="emissioni\.evitata" data-f="circa"><\/b> di CO₂ in meno \(stima\)<\/div>/);
-  assert.match(HTML, /<fieldset class="passo" data-solo-percorso="entrare" data-solo-tipo="famiglia">\s*<legend><span class="n">6<\/span>Le tue abitudini<\/legend>/);
+  assert.match(HTML, /<fieldset class="passo" data-solo-percorso="entrare" data-solo-tipo="famiglia" data-solo-con-consumi>\s*<legend><span class="n">6<\/span>Le tue abitudini<\/legend>/);
   assert.match(JS, /sceltaIo\(ingressi, \[\.\.\.selezione\.options\]\.map\(\(o\) => o\.value\)\)/);
   assert.match(JS, /o\.disabled = disabilitati\.includes\(o\.value\)/);
   assert.match(JS, /if \(percorso === 'fondare'\) sincronizzaIo\(ingressi\);/);
@@ -352,4 +352,16 @@ test('la frase sulla parte della CER ha il pezzo su che cosa si toglie, generato
 test('sotto il numero grande di «Per te» c\'è la nota sull\'eccedentaria, generata da testoEccedentariaTe con la quota del socio (esclude una cifra fatta quasi tutta di eccedentaria senza dirlo)', () => {
   assert.match(HTML, /<small>all'anno dalla CER, il primo anno<\/small><\/p>\s*<p class="nota-r" data-r="te\.eccedentariaTesto"><\/p>/);
   assert.match(JS, /eccedentariaTesto: testoEccedentariaTe\(te\.voci\?\.quotaEccedentaria\)/);
+});
+
+test('il produttore non ha consumi: spariscono consumo, contatore, tipo di attività e «Le tue abitudini», resta il tipo con la sua spiegazione, e senza consumo non scatta l\'avviso del consumo mancante (esclude il produttore con i consumi di casa, decisione dell\'utente dell\'08/11/2026, e un\'attività produttrice ferma sull\'avviso)', () => {
+  assert.match(HTML, /<b>Produttore<\/b><span>Metto un impianto a disposizione dove non consumo\.<\/span>/);
+  assert.doesNotMatch(HTML, /lì consumo poco/);
+  const da = HTML.indexOf('<legend><span class="n">4</span>Chi sei</legend>'), a = HTML.indexOf('</fieldset>', da);
+  const passo = HTML.slice(da, a);
+  for (const r of [/<label class="campo" data-solo-tipo="famiglia" data-solo-con-consumi>Potenza del contatore/, /<p class="aiuto" data-solo-tipo="famiglia" data-solo-con-consumi>Il contatore non limita/, /<label class="campo" data-solo-tipo="altri" data-solo-con-consumi>Che attività/, /<label class="campo" data-solo-con-consumi>Consumo annuo dalla bolletta, kWh/, /<p class="aiuto" id="aiuto-consumo" data-solo-con-consumi><\/p>/]) assert.match(passo, r);
+  assert.match(passo, /<input type="radio" name="tipo" value="famiglia" checked>/, 'il tipo resta anche per il produttore');
+  assert.match(passo, /<p class="aiuto" data-solo-produttore>Per il produttore non contiamo consumi: l'impianto sta in un punto dove non si consuma, e dalla CER ricevi solo la quota di titolare\. Famiglia, attività o ente cambia solo l'IVA sul prezzo dell'impianto\.<\/p>/);
+  assert.ok(CSS.includes('body[data-ruolo="produttore"] [data-solo-con-consumi], body:not([data-ruolo="produttore"]) [data-solo-produttore]{display:none}'));
+  assert.match(JS, /if \(percorso === 'entrare' && s\.utente\.ruolo !== 'produttore' && s\.utente\.tipo !== 'famiglia' && s\.utente\.consumo == null\)/);
 });

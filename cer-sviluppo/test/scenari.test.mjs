@@ -101,3 +101,29 @@ test('cursori del riparto: se la somma supera 100 l\'altro cursore scende, mai s
   assert.equal(limitaQuote(100, 40), 0);
   assert.equal(limitaQuote(60, 40), 40, 'somma 100: nulla cambia');
 });
+
+test('produttore: niente consumi né abitudini, qualunque cosa ci sia nei campi, e il tipo resta per l\'IVA; un\'attività produttrice senza consumo passa la validazione (esclude il produttore con i consumi di casa in un altro punto, la lettura tolta l\'08/11/2026)', () => {
+  for (const tipo of ['famiglia', 'attivita', 'ente']) {
+    const i = entra({ ruolo: 'produttore', tipo, consumo: 5000, abitudini: 0.2 });
+    const io = i.soci.find((s) => s.id === 'io');
+    assert.equal(io.consumo_kwh_anno, 0, tipo);
+    assert.equal(io.spostamento, 0, tipo);
+    assert.equal(io.tipo, tipo);
+  }
+  assert.deepEqual(valida(entra({ ruolo: 'produttore', tipo: 'attivita', consumo: null }), costanti), []);
+  const prosumer = entra({ ruolo: 'prosumer', consumo: 5000, abitudini: 0.2 }).soci.find((s) => s.id === 'io');
+  assert.deepEqual([prosumer.consumo_kwh_anno, prosumer.spostamento], [5000, 0.2], 'il prosumer tiene consumo e abitudini');
+});
+
+test('produttore: dalla CER solo la quota di titolare, con i dati veri della Spezia (esclude quote di tariffa o di contributo da consumatore)', async () => {
+  const { calcola } = await import('../../cer/simulatore/js/motore.js');
+  const leggi = (p) => JSON.parse(readFileSync(new URL(`../../cer/simulatore/dati/${p}`, import.meta.url), 'utf8'));
+  const dati = { pv: leggi('pv/011015.json').valori, forme: leggi('consumi/domestici/liguria.json'), attivita: leggi('consumi/attivita.json'), costanti };
+  const r = calcola(entra({ ruolo: 'produttore', kwp: 20, consumo: 5000, abitudini: 0.2 }), dati).perTe;
+  assert.equal(r.consumo, 0);
+  assert.equal(r.voci.quotaTariffa, 0);
+  assert.equal(r.voci.quotaContributo, 0);
+  assert.equal(r.voci.quotaEccedentaria, 0);
+  assert.ok(r.voci.quotaProduttore > 0);
+  assert.equal(r.cerAggiunge, r.voci.quotaProduttore - r.voci.quotaAssociativa);
+});

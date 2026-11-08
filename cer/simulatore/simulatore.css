@@ -14,6 +14,7 @@ body[data-ruolo="consumatore"] [data-solo-ruolo]{display:none}
 body:not([data-tipo="famiglia"]) [data-solo-tipo="famiglia"], body[data-tipo="famiglia"] [data-solo-tipo="altri"]{display:none}
 body:not([data-impianto]) [data-solo-impianto], body:not([data-investimento]) [data-solo-investimento], body:not([data-pagato]) [data-solo-pagato], body:not([data-fondatore]) [data-solo-fondatore], body:not([data-impianto-cer]) [data-solo-impianto-cer]{display:none}
 body:not([data-consumo]) [data-solo-consumo]{display:none}
+body[data-ruolo="produttore"] [data-solo-con-consumi], body:not([data-ruolo="produttore"]) [data-solo-produttore]{display:none}
 body:not([data-investimento-cer]) [data-solo-investimento-cer]{display:none}
 body[data-investimento-cer] [data-solo-pagato-cer], body:not([data-impianto-cer]) [data-solo-pagato-cer]{display:none}
 

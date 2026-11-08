@@ -9,12 +9,16 @@ const famiglia = (id, numero, classe, consumo, spostamento) => ({ id, tipo: 'fam
 const altro = (id, tipo, numero, archetipo, consumo) => ({ id, tipo, numero, archetipo, consumo_kwh_anno: consumo ?? null, spostamento: 0 });
 const impianto = (id, kwp, titolare, sulPod, perOgni, stato = 'nuovo') => ({ id, kwp, titolare, sul_pod_del_titolare: sulPod, per_ogni_membro: perOgni, stato });
 
+// Il produttore non ha consumi (decisione dell'utente, 08/11/2026): come il socio produttore di «fondare», l'impianto sta
+// in un punto dove non si consuma, e dalla CER riceve solo la quota di titolare. Il tipo resta: decide l'IVA sull'impianto.
 export function ingressiEntrare(stato, costanti) {
   const u = stato.utente;
   const cm = { ...voce(costanti, 'comunita_tipo'), ...Object.fromEntries(Object.entries(stato.comunita ?? {}).filter(([, v]) => v != null)) };
+  const produttore = u.ruolo === 'produttore';
+  const consumo = produttore ? 0 : u.consumo, abitudini = produttore ? 0 : u.abitudini;
   const io = u.tipo === 'famiglia'
-    ? famiglia('io', 1, u.classe, u.consumo, u.abitudini)
-    : altro('io', u.tipo, 1, u.archetipo, u.consumo);
+    ? famiglia('io', 1, u.classe, consumo, abitudini)
+    : altro('io', u.tipo, 1, u.archetipo, consumo);
   const soci = [io];
   if (cm.famiglie > 0) soci.push(famiglia('famiglie', cm.famiglie, cm.classe, cm.consumo_famiglie, cm.abitudini_altri));
   if (cm.attivita > 0) soci.push(altro('attivita', 'attivita', cm.attivita, cm.archetipo_attivita, cm.consumo_attivita));

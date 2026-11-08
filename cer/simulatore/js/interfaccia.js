@@ -223,7 +223,7 @@ function aggiorna() {
   aggiornaUscite();
   const s = stato(), percorso = scelto('percorso');
   aggiornaAiuto(s);
-  if (percorso === 'entrare' && s.utente.tipo !== 'famiglia' && s.utente.consumo == null) {
+  if (percorso === 'entrare' && s.utente.ruolo !== 'produttore' && s.utente.tipo !== 'famiglia' && s.utente.consumo == null) {
     document.body.dataset.nonAggiornato = '';
     mostraAvvisi([{ codice: 'consumo_mancante', testo: 'Per un\'attività o un ente serve il consumo annuo: lo trovi in bolletta.' }]);
     return;

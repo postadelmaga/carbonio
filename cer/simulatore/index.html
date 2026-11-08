@@ -81,7 +81,7 @@
     <div class="scelte tre">
       <label class="scelta"><input type="radio" name="ruolo" value="consumatore" checked><b>Consumatore</b><span>Non ho pannelli.</span></label>
       <label class="scelta"><input type="radio" name="ruolo" value="prosumer"><b>Prosumer</b><span>Ho o metterei pannelli sul mio tetto.</span></label>
-      <label class="scelta"><input type="radio" name="ruolo" value="produttore"><b>Produttore</b><span>Metto un impianto a disposizione e lì consumo poco.</span></label>
+      <label class="scelta"><input type="radio" name="ruolo" value="produttore"><b>Produttore</b><span>Metto un impianto a disposizione dove non consumo.</span></label>
     </div>
   </fieldset>
 
@@ -92,7 +92,7 @@
       <label class="scelta piccola"><input type="radio" name="tipo" value="attivita"><b>Attività</b><span>È una piccola o media impresa (PMI).</span></label>
       <label class="scelta piccola"><input type="radio" name="tipo" value="ente"><b>Ente o associazione</b><span>Non è un'impresa.</span></label>
     </div>
-    <label class="campo" data-solo-tipo="famiglia">Potenza del contatore
+    <label class="campo" data-solo-tipo="famiglia" data-solo-con-consumi>Potenza del contatore
       <select name="classe">
         <option value="1,5-3" selected>3 kW</option>
         <option value="3-4,5">4,5 kW</option>
@@ -101,17 +101,18 @@
         <option value="1,5-3">non so (usiamo 3 kW)</option>
       </select>
     </label>
-    <p class="aiuto" data-solo-tipo="famiglia">Il contatore non limita i pannelli: serve a stimare i consumi.</p>
-    <label class="campo" data-solo-tipo="altri">Che attività
+    <p class="aiuto" data-solo-tipo="famiglia" data-solo-con-consumi>Il contatore non limita i pannelli: serve a stimare i consumi.</p>
+    <label class="campo" data-solo-tipo="altri" data-solo-con-consumi>Che attività
       <select name="archetipo">
         <option value="com_orario_apertura">Negozio o ufficio con orario di apertura</option>
         <option value="com_carico_base">Attività con carico continuo (frigoriferi, macchine sempre accese)</option>
       </select>
     </label>
-    <label class="campo">Consumo annuo dalla bolletta, kWh
+    <label class="campo" data-solo-con-consumi>Consumo annuo dalla bolletta, kWh
       <input name="consumo" type="number" min="0" max="2000000" step="1" inputmode="numeric">
     </label>
-    <p class="aiuto" id="aiuto-consumo"></p>
+    <p class="aiuto" id="aiuto-consumo" data-solo-con-consumi></p>
+    <p class="aiuto" data-solo-produttore>Per il produttore non contiamo consumi: l'impianto sta in un punto dove non si consuma, e dalla CER ricevi solo la quota di titolare. Famiglia, attività o ente cambia solo l'IVA sul prezzo dell'impianto.</p>
   </fieldset>
 
   <fieldset class="passo" data-solo-percorso="entrare" data-solo-ruolo>
@@ -129,7 +130,7 @@
     <p class="aiuto" id="aiuto-esercizio" hidden></p>
   </fieldset>
 
-  <fieldset class="passo" data-solo-percorso="entrare" data-solo-tipo="famiglia">
+  <fieldset class="passo" data-solo-percorso="entrare" data-solo-tipo="famiglia" data-solo-con-consumi>
     <legend><span class="n">6</span>Le tue abitudini</legend>
     <div class="scelte tre" data-solo-modo="semplice">
       <label class="scelta piccola"><input type="radio" name="abitudini" value="0" checked><b>Come oggi</b></label>
