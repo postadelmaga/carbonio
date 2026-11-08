@@ -169,7 +169,7 @@ function previewMode() {
 }
 
 // variabili senza anteprima: gia' leggere (Mediterraneo, terraferma)
-const NO_PREVIEW = new Set(['med', 'precip', 'soil', 'sla', 'ice', 'co2', 'co2foss', 'co2nat']);
+const NO_PREVIEW = new Set(['med', 'precip', 'soil', 'sla', 'ice', 'co2', 'co2foss', 'co2nat', 't2m']);
 // ...salvo quelle che il manifest elenca con un'anteprima a 8 bit generica
 // (pipeline/preview.py, P8: pioggia, suolo, livello del mare, ghiaccio)
 const noPrev = (v) => NO_PREVIEW.has(v) && !manifest?.preview?.p8?.[v];
@@ -211,11 +211,13 @@ function needed(f) {
 function needKey() { return [needSst(), needCur(), medOn(), landOn() && ui.landVar, ...oceanVars(), ...airVars()].join(); }
 function needsChanged() { if (current && current.nk !== needKey()) onTime('source'); }
 
-// aria (CO₂ a 1°): solo serie mensile, fino all'ultimo anno pubblicato da CAMS
+// aria (CO₂ e temperatura a 1°): solo serie mensile; la CO₂ arriva fino
+// all'ultimo anno pubblicato da CAMS, la temperatura (ERA5) al mese scorso
 function airVars() {
   const L = globe.state.layers, out = [];
   if (L.co2 > 0) out.push('co2');
   if (L.flux > 0) out.push('co2foss', 'co2nat');
+  if (L.tair > 0) out.push('t2m');
   return out.filter(monthlyHas);
 }
 // media globale pesata sull'area di un campo a 1° (per "rispetto alla media")
@@ -707,7 +709,7 @@ function pointValues(p) {
   const ice = current.gA ? valueAt(current.gA, current.gB, c.i, 'scalar') : NaN;
   const ai = airCell(p.lat, p.lon), af = current.airF || {};
   const air = (v) => (af[v] && af[v][0] ? valueAt(af[v][0], af[v][1], ai, 'scalar') : NaN);
-  return { c, sst, anom: model - cl, u, v, speed, dirDeg, med, land, sla, ice, co2: air('co2'), foss: air('co2foss'), nat: air('co2nat') };
+  return { c, sst, anom: model - cl, u, v, speed, dirDeg, med, land, sla, ice, co2: air('co2'), foss: air('co2foss'), nat: air('co2nat'), tair: air('t2m') };
 }
 
 
@@ -725,10 +727,11 @@ function refreshPoint() {
     const extra = [];
     if (Number.isFinite(v.sla)) extra.push(`<dt>${t('sla_short')}</dt><dd><b>${v.sla >= 0 ? '+' : ''}${fmtNum(v.sla, 1)} cm</b> <span class="muted">${t('sla_ref')}</span></dd>`);
     if (Number.isFinite(v.ice) && v.ice >= 0.5) extra.push(`<dt>${t('ice_short')}</dt><dd><b>${fmtNum(v.ice, 0)}%</b> <span class="muted">${t('ice_conc')}</span></dd>`);
+    if (Number.isFinite(v.tair)) extra.push(`<dt>${t('tair_short')}</dt><dd><b class="${v.tair >= 0 ? 'warm' : 'cold'}">${v.tair >= 0 ? '+' : ''}${fmtNum(v.tair, 1)} °C</b> <span class="muted">${t('tair_ref')} 1991–2020</span></dd>`);
     if (Number.isFinite(v.co2)) extra.push(`<dt>${t('co2_short')}</dt><dd><b>${fmtNum(v.co2, 1)} ppm</b> <span class="muted">${(() => { const d = v.co2 - globe.state.airMean; return `${d >= 0 ? '+' : ''}${fmtNum(d, 1)} ${t('vs_global')}`; })()}</span></dd>`);
     if (Number.isFinite(v.foss) || Number.isFinite(v.nat)) extra.push(`<dt>${t('flux_short')}</dt><dd>${t('flux_foss')} <b>${fmtNum(v.foss, 2)}</b> · ${t('flux_nat')} <b>${fmtNum(v.nat, 2)}</b> <span class="muted">g C/m² ${t('per_day')}</span></dd>`);
     if (extra.length) rows.push(`<dl class="vals">${extra.join('')}</dl>`);
-    if (!Number.isFinite(v.sst) && !Number.isFinite(v.speed)) { if (!Number.isFinite(v.land)) rows.push(`<div class="muted">${t('no_data')}</div>`); return; }
+    if (!Number.isFinite(v.sst) && !Number.isFinite(v.speed)) { if (!Number.isFinite(v.land) && !extra.length) rows.push(`<div class="muted">${t('no_data')}</div>`); return; }
     const dir = compass(v.dirDeg);
     rows.push(`<dl class="vals">
       <dt>${t('temp')}</dt><dd>${Number.isFinite(v.sst) ? `<b>${fmtNum(v.sst, 2)} °C</b>` : '—'}${v.med ? ` <span class="muted">· ${store.source(current.A.med)?.name}, 1/16°</span>` : ''}</dd>
@@ -738,11 +741,12 @@ function refreshPoint() {
   };
   one(ui.point, ui.pointB ? 'a' : null);
   if (ui.pointB) one(ui.pointB, 'b');
-  const srcS = store.source(current.A[current.svA]);
-  const srcC = store.source(current.A.cur);
+  // le fonti dei livelli davvero sul globo (una vista dell'aria non usa il mare)
+  const shownVars = [current.sA && current.svA, current.cA && 'cur', current.lv, ...(current.ov || []), ...(current.av || [])].filter(Boolean);
+  const srcs = [...new Set(shownVars.map((v) => store.source(current.A[v])).filter(Boolean))];
   rows.push(`<dl class="vals meta">
     <dt>${t('datum')}</dt><dd>${timeLabel()}</dd>
-    <dt>${t('dataset')}</dt><dd>${srcS ? srcLine(srcS) : '—'}<br>${srcC ? srcLine(srcC) : '—'}${current.lv && store.source(current.A[current.lv]) ? '<br>' + srcLine(store.source(current.A[current.lv])) : ''}</dd>
+    <dt>${t('dataset')}</dt><dd>${srcs.length ? srcs.map(srcLine).join('<br>') : '—'}</dd>
   </dl>`);
   $('#pt-values').innerHTML = rows.join('');
 }
@@ -760,7 +764,7 @@ function srcUrl(s) {
 }
 
 function srcLine(s) {
-  return `<a href="${srcUrl(s)}" target="_blank" rel="noopener">${s.name}</a> <span class="muted">· ${t(s.kind)} · ${freqLabel(s)} · ${s.res}${s.res !== '0.25°' ? ` → ${fmtNum(0.25, 2)}°` : ''}</span>`;
+  return `<a href="${srcUrl(s)}" target="_blank" rel="noopener">${s.name}</a> <span class="muted">· ${t(s.kind)} · ${freqLabel(s)} · ${s.res}${s.res !== '0.25°' && s.res !== '1°' && !s.res.includes('→') ? ` → ${fmtNum(0.25, 2)}°` : ''}</span>`;
 }
 
 // l'istante dei valori del pannello: quello sul globo, non quello richiesto
@@ -1088,14 +1092,16 @@ function updateStatus() {
   if (sS) parts.push(`<b>${t('temp')}</b> ${sS.name} <span class="muted">(${t(sS.kind)}, ${freqLabel(sS)}, ${sS.res})</span>`);
   if (sC) parts.push(`<b>${t('cur_speed')}</b> ${sC.name} <span class="muted">(${t(sC.kind)}, ${freqLabel(sC)}, ${sC.res})</span>`);
   if (current.av?.length) {
-    const s = store.source(current.A[current.av[0]]);
-    if (s) parts.push(`<b>${t('group_air')}</b> ${s.name} <span class="muted">(${t(s.kind)}, ${freqLabel(s)}, ${s.res})</span>`);
-  } else if ((globe.state.layers.co2 > 0 || globe.state.layers.flux > 0) && timeline.tierName === 'monthly') notes.push(t('air_until'));
+    // una riga per fonte: CAMS per la CO₂, ERA5 per la temperatura
+    for (const s of new Set(current.av.map((v) => store.source(current.A[v])).filter(Boolean))) parts.push(`<b>${t('group_air')}</b> ${s.name} <span class="muted">(${t(s.kind)}, ${freqLabel(s)}, ${s.res})</span>`);
+  }
+  const Ly = globe.state.layers, av = current.av || [];
+  if (timeline.tierName === 'monthly' && ((Ly.co2 > 0 && !av.includes('co2')) || (Ly.flux > 0 && !av.includes('co2foss')))) notes.push(t('air_until'));
   for (const v of current.ov || []) {
     const s = store.source(current.A[v]);
     if (s) parts.push(`<b>${t(v + '_short')}</b> ${s.name} <span class="muted">(${t(s.kind)}, ${freqLabel(s)}, ${s.res})</span>`);
   }
-  if (timeline.tierName !== 'monthly' && ['sla', 'ice', 'co2', 'flux'].some((v) => globe.state.layers[v] > 0)) notes.push(t('monthly_only'));
+  if (timeline.tierName !== 'monthly' && ['sla', 'ice', 'co2', 'flux', 'tair'].some((v) => globe.state.layers[v] > 0)) notes.push(t('monthly_only'));
   if (current.lv) {
     const l = store.source(current.A[current.lv]);
     if (l) parts.push(`<b>${t(current.lv + '_short')}</b> ${l.name} <span class="muted">(${t(l.kind)}, ${freqLabel(l)}, ${l.res})</span>`);
@@ -1166,7 +1172,7 @@ function bindControls() {
   // livelli
   // viste i cui dati non sono ancora pubblicati (manifest): nascoste
   const mv = manifest.tiers.monthly?.vars || [];
-  const NEEDS = { sla: ['sla'], ice: ['ice'], drought: ['soil'], co2: ['co2'], emis: ['co2foss', 'co2nat'] };
+  const NEEDS = { sla: ['sla'], ice: ['ice'], drought: ['soil'], co2: ['co2'], emis: ['co2foss', 'co2nat'], tair: ['t2m'] };
   $$('.quick-mode button[data-mode]').forEach((b) => { b.hidden = !(NEEDS[b.dataset.mode] || []).every((v) => mv.includes(v)); });
   $$('.quick-mode button[data-mode]').forEach((b) => b.addEventListener('click', () => { closeMenus(); chooseView(b.dataset.mode); }));
   // i campioni di colore nei menu: la scala di ogni vista
@@ -1315,24 +1321,24 @@ function autoRange() {
 // in alto sono scorciatoie: un livello solo, oppure "Mix" con tutti e tre.
 // Viste pronte: ognuna fissa tutti i pesi. Quelle con livello del mare,
 // ghiaccio o terraferma esistono solo nella serie mensile e ci portano.
-const OFF = { sst: 0, anom: 0, speed: 0, land: 0, sla: 0, ice: 0, co2: 0, flux: 0 };
+const OFF = { sst: 0, anom: 0, speed: 0, land: 0, sla: 0, ice: 0, co2: 0, flux: 0, tair: 0 };
 const PRESETS = {
   sst: { ...OFF, sst: 1 }, anom: { ...OFF, anom: 1 }, speed: { ...OFF, speed: 1 },
   sla: { ...OFF, sla: 1 }, ice: { ...OFF, ice: 1 },
   rain: { ...OFF, land: 1, landVar: 'precip' },
   drought: { ...OFF, land: 1, landVar: 'soil' },
-  co2: { ...OFF, co2: 1, airMode: 1 }, emis: { ...OFF, flux: 1, fluxMode: 0 },
+  co2: { ...OFF, co2: 1, airMode: 1 }, emis: { ...OFF, flux: 1, fluxMode: 0 }, tair: { ...OFF, tair: 1 },
   mix: { ...OFF, sst: 1, anom: 0.7, speed: 0.6 },
 };
 const LAYERS = ['sst', 'anom', 'speed'];      // quelli del mare: decidono il livello principale
-const ALL_LAYERS = [...LAYERS, 'sla', 'ice', 'land', 'co2', 'flux'];
-const MONTHLY_ONLY = ['sla', 'ice', 'land', 'co2', 'flux'];
+const ALL_LAYERS = [...LAYERS, 'sla', 'ice', 'land', 'co2', 'flux', 'tair'];
+const MONTHLY_ONLY = ['sla', 'ice', 'land', 'co2', 'flux', 'tair'];
 function saveAir() { keep('oe-air', JSON.stringify([ui.airMode, ui.fluxMode])); }
 // schede e viste: la scheda raggruppa le viste, la vista fissa i livelli
-const DOMAIN = { sst: 'sea', anom: 'sea', speed: 'sea', sla: 'sea', ice: 'sea', mix: 'mix', rain: 'land', drought: 'land', co2: 'air', emis: 'air' };
-const CAPTION = { sst: 'cap_sst', anom: 'cap_anom', speed: 'cap_speed', sla: 'sla_title', ice: 'ice_title', mix: 'mix_title', rain: 'rain_title', drought: 'drought_title', co2: 'co2_title', emis: 'emis_title' };
+const DOMAIN = { sst: 'sea', anom: 'sea', speed: 'sea', sla: 'sea', ice: 'sea', mix: 'mix', rain: 'land', drought: 'land', co2: 'air', emis: 'air', tair: 'air' };
+const CAPTION = { sst: 'cap_sst', anom: 'cap_anom', speed: 'cap_speed', sla: 'sla_title', ice: 'ice_title', mix: 'mix_title', rain: 'rain_title', drought: 'drought_title', co2: 'co2_title', emis: 'emis_title', tair: 'tair_title' };
 // nell'indirizzo: nomi stabili, uguali in tutte le lingue
-const SLUG = { sst: 'temperatura', anom: 'anomalia', speed: 'correnti', sla: 'livello-mare', ice: 'ghiaccio', mix: 'mix', rain: 'pioggia', drought: 'siccita', co2: 'co2', emis: 'emissioni' };
+const SLUG = { sst: 'temperatura', anom: 'anomalia', speed: 'correnti', sla: 'livello-mare', ice: 'ghiaccio', mix: 'mix', rain: 'pioggia', drought: 'siccita', co2: 'co2', emis: 'emissioni', tair: 'temperatura-aria' };
 // la vista con cui si apre ogni scheda: la piu' eloquente sul clima che cambia
 // (prima voce di ogni menu); poi quella scelta l'ultima volta in quella scheda
 const DEFAULT_VIEW = { sea: 'anom', land: 'drought', air: 'co2' };
@@ -1351,7 +1357,7 @@ function chooseView(m) {
   toDataTime(m);
 }
 // i dati che ogni vista deve avere nel mese mostrato
-const VIEW_VARS = { sst: ['sst'], anom: ['sst'], speed: ['cur'], sla: ['sla'], ice: ['ice'], rain: ['precip'], drought: ['soil'], co2: ['co2'], emis: ['co2foss', 'co2nat'] };
+const VIEW_VARS = { sst: ['sst'], anom: ['sst'], speed: ['cur'], sla: ['sla'], ice: ['ice'], rain: ['precip'], drought: ['soil'], co2: ['co2'], emis: ['co2foss', 'co2nat'], tair: ['t2m'] };
 // una vista senza dati nell'istante mostrato (la CO₂ arriva un anno dopo, il
 // suolo qualche mese dopo): si va al mese piu' vicino che li ha, prima indietro
 function toDataTime(m) {
@@ -1367,7 +1373,7 @@ function toDataTime(m) {
   timeline.seek(k);
   note(`${t(k < i ? 'view_until' : 'view_from')} ${fmtStamp(F[k].t)}`);
 }
-const SWATCH = { sst: null, anom: 'anomaly', speed: 'speedField', sla: 'sla', ice: null, rain: 'precip', drought: 'precip', co2: 'co2', emis: 'flux' };
+const SWATCH = { sst: null, anom: 'anomaly', speed: 'speedField', sla: 'sla', ice: null, rain: 'precip', drought: 'precip', co2: 'co2', emis: 'flux', tair: 'anomaly' };
 function swatch(m) {
   if (m === 'ice') return 'linear-gradient(90deg,#20364a,#b8d6ed 45%,#f7fcff)';
   return cssGradient(m === 'sst' ? globe.state.paletteSst : SWATCH[m]);
@@ -1552,7 +1558,7 @@ function drawLegend() {
   // in cima: cosa si sta guardando
   if (ui.view) L.push(`<div class="lg-cap"><b>${viewName(ui.view)}</b><span>${t(CAPTION[ui.view])}</span></div>`);
   // mix: gruppi Mare / Terra / Aria; aperti quelli con un livello acceso e quelli aperti a mano
-  const GROUP_LAYERS = { sea: ['sst', 'anom', 'speed', 'sla', 'ice'], land: ['land'], air: ['co2', 'flux'] };
+  const GROUP_LAYERS = { sea: ['sst', 'anom', 'speed', 'sla', 'ice'], land: ['land'], air: ['tair', 'co2', 'flux'] };
   let inGroup = false;
   const group = (g) => {
     if (!mix) return;
@@ -1578,8 +1584,9 @@ function drawLegend() {
     row('land', mix ? t('land_label') : `${t('land_label')} · ${t(ui.landVar + '_short')}`, `<div class="lg-bar" style="background:${cssGradient('precip')}"></div><div class="lg-ticks">${ticks}</div><div class="lg-ends"><span>${t('drier')}</span><span>${t('wetter')}</span></div>`,
       `<div class="mx-var">${mix ? `<select id="land-var" aria-label="${t('land_label')}">${opt('precip')}${opt('soil')}</select> ` : ''}${of}</div>`);
   }
+  if (vars.includes('t2m') || vars.includes('co2')) group('air');
+  if (vars.includes('t2m')) row('tair', `${t('tair_label')} 1991–2020`, scale('anomaly', st.rangeTair[0], st.rangeTair[1], 0));
   if (vars.includes('co2')) {
-    group('air');
     const sel = (id, cur, opts) => `<select id="${id}">${opts.map(([v, k]) => `<option value="${v}"${cur === v ? ' selected' : ''}>${t(k)}</option>`).join('')}</select>`;
     const r = ui.airMode ? st.rangeCo2Rel : st.rangeCo2;
     row('co2', `${t('co2_label')} · ppm`, scale(ui.airMode ? 'anomaly' : 'co2', r[0], r[1], 0),

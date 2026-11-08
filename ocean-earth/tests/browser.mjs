@@ -191,13 +191,30 @@ async function open(w, h, mobile, theme) {
     c = __oe.shown();
     out.mean = +__oe.globe.state.airMean.toFixed(1);
     out.status = /CAMS/.test(document.querySelector('#status').innerText);
+    // temperatura dell'aria (ERA5, 1°): dato su mare e terra, e luglio 2024 piu'
+    // caldo di giugno 1994 nella media globale
+    const tb = document.querySelector('.quick-mode button[data-mode=tair]');
+    if (tb && !tb.hidden) {
+      const gmean = (f) => {
+        let s = 0, w = 0;
+        for (let r = 0; r < 180; r++) for (let q = 0; q < 360; q++) { const v = __oe.store.scalarValue(f.codes, r * 360 + q, f.off), cw = Math.cos((89.5 - r) * Math.PI / 180); if (Number.isFinite(v)) { s += v * cw; w += cw; } }
+        return s / w;
+      };
+      tb.click();
+      await wait(() => __oe.shown()?.airF?.t2m?.[0] && __oe.shown().A.t === '1994-06');
+      const a = gmean(__oe.shown().airF.t2m[0]);
+      tl.seek(tl.findStamp('2024-07'));
+      await wait(() => __oe.shown()?.airF?.t2m?.[0] && __oe.shown().A.t === '2024-07');
+      c = __oe.shown();
+      out.tair = { sea: val(c.airF.t2m[0], -20.5, -150.5), land: val(c.airF.t2m[0], 48.5, 2.5), warmer: gmean(c.airF.t2m[0]) > a, era5: /ERA5/.test(document.querySelector('#status').innerText) };
+    }
     document.querySelector('.quick-mode button[data-mode=sst]').click();
     await new Promise((r) => setTimeout(r, 500));
     tl.setTier('daily');
     await new Promise((r) => setTimeout(r, 1500));
     return out;
   });
-  check('aria: CO₂ ed emissioni', airv.skip || (airv.ruhr > 1 && Math.abs(airv.pacific) < 0.05 && airv.mean > 350 && airv.mean < 365 && airv.status), JSON.stringify(airv));
+  check('aria: CO₂ ed emissioni', airv.skip || (airv.ruhr > 1 && Math.abs(airv.pacific) < 0.05 && airv.mean > 350 && airv.mean < 365 && airv.status && (!airv.tair || (Number.isFinite(airv.tair.sea) && Number.isFinite(airv.tair.land) && airv.tair.warmer && airv.tair.era5))), JSON.stringify(airv));
   // il pannello laterale parte chiuso: lo si apre come farebbe chi usa la pagina
   check('pannello laterale chiuso all\'avvio', await page.evaluate(() => !document.body.classList.contains('side-open')));
   await page.click('#side-btn');

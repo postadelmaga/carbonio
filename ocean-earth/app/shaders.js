@@ -44,10 +44,12 @@ uniform sampler2D uOceanA, uOceanB;  // livello del mare (R/G, cm) e ghiaccio (B
 uniform bool uOceanOn, uHasP90;
 uniform vec2 uRangeSla;
 uniform vec2 uLayers2;               // pesi: livello del mare, ghiaccio marino
-// aria, griglia 1°: strati 0/1 CO₂ (ppm) A/B, 2/3 fossili, 4/5 naturali (g C/m² al giorno)
+// aria, griglia 1°: strati 0/1 CO₂ (ppm) A/B, 2/3 fossili, 4/5 naturali (g C/m² al giorno),
+// 6/7 anomalia della temperatura a 2 m (°C, rispetto al 1991–2020)
 uniform sampler2DArray uAir;
 uniform bool uAirOn;
-uniform vec2 uLayers3;               // pesi: CO₂ nell'aria, flussi
+uniform vec3 uLayers3;               // pesi: CO₂ nell'aria, flussi, temperatura dell'aria
+uniform vec2 uRangeTair;
 uniform vec3 uAirOpt;                // modo CO₂ (0 ppm, 1 rispetto alla media), modo flussi (0 totale, 1 fossili, 2 naturali), media globale
 uniform vec2 uRangeCo2;
 uniform float uBiasW, uBiasWCmp;     // quanto del dato mostrato viene da anfc (0…1)
@@ -209,6 +211,12 @@ void main() {
   // aria: sopra mare e terra. Prima i flussi (dove la CO₂ esce o entra), poi
   // la concentrazione, velata, cosi' i continenti restano leggibili
   if (uAirOn && !cmpSide) {
+    // temperatura dell'aria: un campo pieno su mare e terra, sotto i flussi e
+    // la CO₂; le coste restano leggibili con le linee disegnate sopra
+    if (uLayers3.z > 0.0) {
+      vec2 ta = air(uv, 6.0);
+      if (ta.y > 0.5) col = mix(col, lut((ta.x - uRangeTair.x) / (uRangeTair.y - uRangeTair.x), 1.0), uLayers3.z * 0.9);
+    }
     if (uLayers3.y > 0.0) {
       vec2 fo = air(uv, 2.0), na = air(uv, 4.0);
       float f = uAirOpt.y < 0.5 ? fo.x + na.x : uAirOpt.y < 1.5 ? fo.x : na.x;

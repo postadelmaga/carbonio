@@ -29,6 +29,7 @@ Atlas du climat, 气候地图集.
 | Sea level | sea level anomaly from the 1993–2012 mean, satellite altimetry (monthly time step only) | cm |
 | Sea ice | sea ice concentration, drawn from 15% (monthly time step only) | % |
 | CO₂ in the air | column-mean CO₂ (XCO2), in ppm or as the difference from the global mean of the month, CAMS inversion, 1° (monthly time step only) | ppm |
+| Air temperature | 2 m air temperature anomaly from the 1991–2020 mean of the same month, over land and sea, ERA5, 1° (monthly time step only) | °C |
 | Carbon fluxes | surface CO₂ flux: total, fossil or natural (land with fires, and ocean), CAMS inversion, 1° (monthly time step only) | g C/m²/day |
 | Land | precipitation or soil moisture (0–7 cm) as a percentage of the 1993–2020 normal of the same month, ERA5 (monthly time step only) | % |
 
@@ -117,7 +118,7 @@ series), DOI 10.24381/ed2851d2, CC BY 4.0, 1979 → end of 2025 on 1°.
   the month to g C/m² per day so that the city maxima (~40) fit the 16-bit code
   (own zero −50, `encode.SCALAR_OFFSETS`).
 
-Frames stay on the native 1° grid (180 × 360) and go into one 6-layer texture
+Frames stay on the native 1° grid (180 × 360) and go into one 8-layer texture
 array on the GPU (A/B for each field). The service queues every request and
 rejects parallel ones, so `co2.py` asks for a whole year per request.
 Checks (`validate.py` section 7d) against the Global Carbon Budget 2025 CSV:
@@ -125,6 +126,22 @@ yearly fossil totals within 10%, and the rise of the global mean CO₂ against
 the GCB cumulative atmospheric growth (1 ppm = 2.124 GtC) within 10%. First
 look: March 1993 fossil flux, annualised, 6.18 GtC/yr against GCB 6.21; north of
 30° N 358.5 ppm against 354 south of 30° S.
+
+**Air temperature** (`pipeline/t2m.py`), from the Copernicus Climate Change
+Service, Climate Data Store (same token as the land layers):
+`reanalysis-era5-single-levels-monthly-means`, `2m_temperature`, 0.25°, from
+1991. Each frame is the difference from the **1991–2020** mean of the same
+month — the reference Copernicus itself uses (Climate Pulse, Global Climate
+Highlights), so the numbers compare directly; 1991 and 1992 feed the
+climatology but are not frames. The field is averaged onto the 1° air grid
+(area-weighted 4 × 4 blocks of the 0.25° grid): an anomaly varies slowly in
+space, and a month weighs about 65 kB instead of a megabyte. Encoded with its
+own zero (−50 °C, `encode.SCALAR_OFFSETS`); layers 6–7 of the air texture.
+Check (`validate.py` section 7e): the area-weighted global mean of every frame
+against the monthly mean of the daily global anomalies of
+[Climate Pulse](https://sites.ecmwf.int/data/climatepulse/data/series/era5_daily_series_2t_global.csv)
+(months whose days are all FINAL), within 0.03 °C. First run, 8 Nov 2026: 406
+months 1993-01 → 2026-10, mean difference −0.0001 °C, largest +0.005 °C.
 
 **Land** (`pipeline/land.py`), from the Copernicus Climate Change Service
 Climate Data Store, not Copernicus Marine:

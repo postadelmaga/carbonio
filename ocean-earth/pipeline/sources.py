@@ -80,6 +80,12 @@ DATASETS = {
         product='reanalysis-era5-single-levels-monthly-means', name='ERA5 reanalysis, total precipitation',
         kind='model', res='0.25°', freq='P1M', var='total_precipitation', depth=False,
         cds=True, doi='10.24381/cds.f17050d7'),
+    # aria (pipeline/t2m.py): stesso dataset della pioggia, altra variabile; la
+    # chiave porta la variabile perche' nome e descrizione sono diversi
+    'reanalysis-era5-single-levels-monthly-means/2t': dict(
+        product='reanalysis-era5-single-levels-monthly-means', name='ERA5 reanalysis, 2 m air temperature (anomaly from 1991–2020)',
+        kind='model', res='0.25° → 1°', freq='P1M', var='2m_temperature', depth=False,
+        cds=True, doi='10.24381/cds.f17050d7'),
     'reanalysis-era5-land-monthly-means': dict(
         product='reanalysis-era5-land-monthly-means', name='ERA5-Land reanalysis, soil moisture 0–7 cm',
         kind='model', res='0.1°', freq='P1M', var='volumetric_soil_water_layer_1', depth=False,

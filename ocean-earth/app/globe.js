@@ -68,12 +68,12 @@ export class Globe {
       sstA: null, sstB: null, curA: null, curB: null, mix: 0,
       medA: null, medB: null, medBox: [0, 0, 1, 1],
       air: false, airMean: 0,           // aria (CO₂, 1°): texture array, vedi setAir
-      airMode: 0, fluxMode: 0, rangeCo2: [350, 430], rangeCo2Rel: [-6, 6],
+      airMode: 0, fluxMode: 0, rangeCo2: [350, 430], rangeCo2Rel: [-6, 6], rangeTair: [-5, 5],
       oceanA: null, oceanB: null,       // livello del mare (R/G) e ghiaccio (B/A), RGBA16F
       landA: null, landB: null, landSpan: 2,   // terraferma: % del normale (ERA5), scala log ±landSpan ottave
       sstC: null, sstD: null, mixCmp: 0, compare: false, split: 0.5,
       climSel: [0, 0, 0, 0], climSelCmp: [0, 0, 0, 0], biasW: 0, biasWCmp: 0,
-      layers: { sst: 1, anom: 0, speed: 0, land: 0, sla: 0, ice: 0, co2: 0, flux: 0 }, rangeSla: [-30, 30], hotspot: false, opacity: 1,
+      layers: { sst: 1, anom: 0, speed: 0, land: 0, sla: 0, ice: 0, co2: 0, flux: 0, tair: 0 }, rangeSla: [-30, 30], hotspot: false, opacity: 1,
       paletteSst: 'classic', rangeSst: [-2, 32], rangeAnom: [-3, 3], rangeSpeed: [0, 1.2],
       particles: true, particleCount: 8000, particleSpeed: 1, particleWidth: 1.6,
       arrows: false, arrowDensity: 1, coast: true,
@@ -89,8 +89,8 @@ export class Globe {
     this.setPalette('co2', 'co2');
     this.setPalette('flux', 'flux');
     // aria: 6 strati a 1° (CO₂, fossili, naturali; per ognuno l'istante A e il B)
-    this.airTex = this.makeArray(360, 180, 6, null);
-    this.airKeys = new Array(6).fill(null);
+    this.airTex = this.makeArray(360, 180, 8, null);
+    this.airKeys = new Array(8).fill(null);
   }
 
   makeTex(w, h, ifmt, fmt, type, data, filter, clampS = false) {
@@ -233,13 +233,13 @@ export class Globe {
     return t;
   }
 
-  // aria: frames = { co2: [A, B], co2foss: [A, B], co2nat: [A, B] }, ognuno un
+  // aria: frames = { co2: [A, B], co2foss: [A, B], co2nat: [A, B], t2m: [A, B] }, ognuno un
   // risultato 'scalar' a 1° o null; si ricarica solo lo strato che cambia
   setAir(frames, keys) {
     const gl = this.gl;
     gl.bindTexture(gl.TEXTURE_2D_ARRAY, this.airTex);
     gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
-    ['co2', 'co2foss', 'co2nat'].forEach((v, k) => [0, 1].forEach((j) => {
+    ['co2', 'co2foss', 'co2nat', 't2m'].forEach((v, k) => [0, 1].forEach((j) => {
       const layer = k * 2 + j, f = frames[v]?.[j], key = f ? keys[v][j] : null;
       if (this.airKeys[layer] === key) return;
       const data = f && f.w === 360 && f.h === 180 ? f.gpu : new Uint16Array(360 * 180 * 2);
@@ -428,7 +428,8 @@ export class Globe {
     gl.uniform2fv(P.u.uLayers2, [st.layers.sla || 0, st.layers.ice || 0]);
     this.bind(P, 'uAir', 15, this.airTex, gl.TEXTURE_2D_ARRAY);
     gl.uniform1i(P.u.uAirOn, st.air ? 1 : 0);
-    gl.uniform2fv(P.u.uLayers3, [st.layers.co2 || 0, st.layers.flux || 0]);
+    gl.uniform3fv(P.u.uLayers3, [st.layers.co2 || 0, st.layers.flux || 0, st.layers.tair || 0]);
+    gl.uniform2fv(P.u.uRangeTair, st.rangeTair);
     gl.uniform3fv(P.u.uAirOpt, [st.airMode, st.fluxMode, st.airMean]);
     gl.uniform2fv(P.u.uRangeCo2, st.airMode ? st.rangeCo2Rel : st.rangeCo2);
     gl.uniform1i(P.u.uHasClim, this.hasClim ? 1 : 0);

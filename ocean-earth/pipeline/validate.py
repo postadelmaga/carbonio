@@ -460,6 +460,55 @@ def check_co2():
     summary['co2 salita vs GCB'] = ok2
 
 
+PULSE_CSV = 'https://sites.ecmwf.int/data/climatepulse/data/series/era5_daily_series_2t_global.csv'
+
+
+def check_t2m():
+    """Temperatura dell'aria (ERA5): la media globale pesata sull'area di ogni
+    fotogramma contro la serie di Copernicus Climate Pulse (media del mese delle
+    anomalie giornaliere globali rispetto al 1991–2020, stessa reanalisi).
+    Gli ultimi giorni di Climate Pulse sono provvisori: si confrontano solo i mesi
+    con tutti i giorni FINAL."""
+    import csv, io, urllib.request
+    log('## 7e. Temperatura dell\'aria (ERA5)\n')
+    idx = sorted(frames.load_index('monthly', 't2m'))
+    if not idx:
+        log('- nessun fotogramma (CDS non configurato?)\n')
+        return
+    try:
+        txt = urllib.request.urlopen(PULSE_CSV, timeout=60).read().decode()
+    except Exception as e:
+        log(f'- Climate Pulse non raggiungibile ({e}): controllo saltato\n')
+        return
+    acc = {}
+    for r in csv.DictReader(l for l in io.StringIO(txt) if not l.startswith('#')):
+        a = acc.setdefault(r['date'][:7], [0.0, 0, True])
+        a[0] += float(r['ano_91-20']); a[1] += 1; a[2] &= r['status'] == 'FINAL'
+    ref = {m: a[0] / a[1] for m, a in acc.items() if a[2]}
+    lat = 89.5 - np.arange(180)
+    w = np.cos(np.radians(lat))[:, None] * np.ones((1, 360))
+    diff = {}
+    for s in idx:
+        if s not in ref:
+            continue
+        f = published('monthly', 't2m', s)
+        if np.isnan(f).any():
+            diff[s] = np.inf
+            continue
+        diff[s] = float((f * w).sum() / w.sum()) - ref[s]
+    if not diff:
+        log('- nessun mese in comune con Climate Pulse\n')
+        summary['temperatura dell\'aria vs Climate Pulse'] = False
+        return
+    d = np.array(list(diff.values()))
+    worst = max(diff, key=lambda k: abs(diff[k]))
+    # stessa reanalisi: medie mensili ERA5 contro media dei giorni, a 1°
+    ok = bool(np.all(np.abs(d) < 0.03))
+    log(f'- {len(diff)} mesi ({min(diff)} → {max(diff)}): scarto medio {d.mean():+.4f} °C, '
+        f'massimo {diff[worst]:+.4f} °C ({worst}) → **{"OK" if ok else "FALLITO"}**\n')
+    summary['temperatura dell\'aria vs Climate Pulse'] = ok
+
+
 def check_anomaly():
     log('## 7. Anomalie\n')
     idx = sorted(frames.load_index('monthly', 'sst'))
@@ -526,7 +575,7 @@ def check_bias(idx, clim):
 def main():
     log(f'# Ocean Earth: validazione dei dati\n\nEseguita il {dt.datetime.now(dt.timezone.utc):%Y-%m-%d %H:%M} UTC '
         f'con `pipeline/validate.py`.\n')
-    for fn in (check_continuity, check_ranges, check_land, check_orientation, check_anomaly, check_era5_land, check_sea_level_ice, check_co2, check_points, check_seams):
+    for fn in (check_continuity, check_ranges, check_land, check_orientation, check_anomaly, check_era5_land, check_sea_level_ice, check_co2, check_t2m, check_points, check_seams):
         try:
             fn()
         except Exception as e:  # una verifica che non parte e' un fallimento, non un silenzio

@@ -11,14 +11,14 @@
 
 export const W = 1080, H = 1920;
 
-export const VIEWS = ['sst', 'anom', 'speed', 'sla', 'ice', 'mix', 'rain', 'drought', 'co2', 'emis'];
-export const DOMAIN = { sst: 'sea', anom: 'sea', speed: 'sea', sla: 'sea', ice: 'sea', mix: 'sea', rain: 'land', drought: 'land', co2: 'air', emis: 'air' };
+export const VIEWS = ['sst', 'anom', 'speed', 'sla', 'ice', 'mix', 'rain', 'drought', 'co2', 'tair', 'emis'];
+export const DOMAIN = { sst: 'sea', anom: 'sea', speed: 'sea', sla: 'sea', ice: 'sea', mix: 'sea', rain: 'land', drought: 'land', co2: 'air', tair: 'air', emis: 'air' };
 // dati che servono a ogni vista (per sapere da quando a quando esistono)
-export const NEEDS = { sst: ['sst'], anom: ['sst'], speed: ['cur'], sla: ['sla'], ice: ['ice'], mix: ['sst', 'cur'], rain: ['precip', 'sst'], drought: ['soil', 'sst'], co2: ['co2'], emis: ['co2foss', 'co2nat'] };
+export const NEEDS = { sst: ['sst'], anom: ['sst'], speed: ['cur'], sla: ['sla'], ice: ['ice'], mix: ['sst', 'cur'], rain: ['precip', 'sst'], drought: ['soil', 'sst'], co2: ['co2'], tair: ['t2m'], emis: ['co2foss', 'co2nat'] };
 // righe della legenda nel video
-export const LEGEND = { sst: ['sst'], anom: ['anom'], speed: ['speed'], sla: ['sla'], ice: ['ice'], mix: ['anom'], rain: ['land'], drought: ['land'], co2: ['co2'], emis: ['flux'] };
+export const LEGEND = { sst: ['sst'], anom: ['anom'], speed: ['speed'], sla: ['sla'], ice: ['ice'], mix: ['anom'], rain: ['land'], drought: ['land'], co2: ['co2'], tair: ['tair'], emis: ['flux'] };
 // colori delle clip nella timeline (le scale dell'atlante)
-export const PALETTE_OF = { sst: 'thermal', anom: 'anomaly', speed: 'speedField', sla: 'sla', ice: null, mix: 'anomaly', rain: 'precip', drought: 'precip', co2: 'co2', emis: 'flux' };
+export const PALETTE_OF = { sst: 'thermal', anom: 'anomaly', speed: 'speedField', sla: 'sla', ice: null, mix: 'anomaly', rain: 'precip', drought: 'precip', co2: 'co2', tair: 'anomaly', emis: 'flux' };
 export const SEA_PARTICLES = ['sst', 'anom', 'speed', 'mix', 'sla', 'ice'];
 
 export function newClip(over = {}) {

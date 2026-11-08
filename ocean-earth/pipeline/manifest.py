@@ -26,7 +26,8 @@ TIERS = {
     # precip e soil: terraferma da ERA5 (pipeline/land.py), percentuale del normale
     # sla: livello del mare (altimetria), ice: ghiaccio marino (GLORYS12 → analisi)
     # co2, co2foss, co2nat: aria (pipeline/co2.py), griglia 1°
-    'monthly': dict(step='P1M', vars=['sst', 'cur', 'precip', 'soil', 'sla', 'ice', 'co2', 'co2foss', 'co2nat']),
+    # t2m: anomalia della temperatura dell'aria a 2 m (pipeline/t2m.py), griglia 1°
+    'monthly': dict(step='P1M', vars=['sst', 'cur', 'precip', 'soil', 'sla', 'ice', 'co2', 'co2foss', 'co2nat', 't2m']),
     'daily': dict(step='P1D', vars=['sst', 'cur', 'ostia', 'med']),
     'hourly': dict(step='PT1H', vars=['sst', 'cur']),
 }
