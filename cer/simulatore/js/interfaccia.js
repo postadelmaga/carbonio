@@ -7,7 +7,7 @@ import { voce } from './economia.js';
 import { consumoMedioClasse } from './profili.js';
 import { numero, euro, kwh, perc, tonnellate, anni, circa } from './formato.js';
 import { giornata, anno, incentivi, vociIncentivi, scenaComunita, tabella, MESI } from './grafici.js';
-import { ipotesi, testoScadenza, notaScadenza, testoEccedentaria, testoItaliani, testoStimaCo2, testoVentiAnniCo2, testoGiaInEsercizio, testoFondatori } from './testi.js';
+import { ipotesi, testoScadenza, notaScadenza, testoEccedentaria, testoTolti, testoItaliani, testoStimaCo2, testoVentiAnniCo2, testoGiaInEsercizio, testoFondatori } from './testi.js';
 import { attivaInfo } from './info.js';
 
 const $ = (s) => document.querySelector(s);
@@ -195,7 +195,7 @@ function mostra(r, s, percorso, ingressi) {
       paragrafoCo2: [testoItaliani(em.italiani, voce(dati.costanti, 'co2_pro_capite')), testoVentiAnniCo2(r.emissioni.principale, em.ventiAnni, dati.costanti)].filter(Boolean).join(' '),
       giaInEsercizioTesto: em.giaInEsercizio > 0 ? `Gli impianti già in esercizio evitano, con la stessa ipotesi, altre ${circa(em.giaInEsercizio)} l'anno: non le attribuiamo alla CER.` : '',
     },
-    com: { ...com, incentivi: com.tariffa + com.contributo, frazioneCer: 1 - p.quota_produttore - p.quota_consumatori, eccedentariaTesto: testoEccedentaria(com), costituzione: p.costituzione_eur, fondatoriTesto: testoFondatori(p.costituzione_eur) },
+    com: { ...com, incentivi: com.tariffa + com.contributo, frazioneCer: 1 - p.quota_produttore - p.quota_consumatori, eccedentariaTesto: testoEccedentaria(com), toltiTesto: testoTolti(com), costituzione: p.costituzione_eur, fondatoriTesto: testoFondatori(p.costituzione_eur) },
     cost: {
       g1990: voce(dati.costanti, 'fattore_co2_1990')['1990'],
       g2024: voce(dati.costanti, 'fattore_co2_1990')['2024'],

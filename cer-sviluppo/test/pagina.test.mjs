@@ -109,7 +109,7 @@ test('«Per la comunità» dice che il 20% resta alla CER, senza il fondo contro
   assert.doesNotMatch(HTML, /povertà energetica/);
   assert.doesNotMatch(HTML, /artt\. 2 e 12/);
   assert.doesNotMatch(HTML, /[Ff]ondo sociale/);
-  assert.match(HTML, /della tariffa resta alla CER: in questa simulazione <b data-r="com\.quotaCer" data-f="euro"><\/b> l'anno\. L'assemblea decide come usarlo\./);
+  assert.match(HTML, /della tariffa, <span data-r="com\.toltiTesto"><\/span>, resta alla CER: in questa simulazione <b data-r="com\.quotaCer" data-f="euro"><\/b> l'anno\. L'assemblea decide come usarlo\./);
   assert.match(HTML, /<span data-r="com\.frazioneCer" data-f="perc"><\/span> della tariffa/);
   assert.match(HTML, /<dt>Alla CER<\/dt><dd data-r="com\.quotaCer"/);
   assert.match(HTML, /<p class="testo-emissioni" data-r="com\.eccedentariaTesto"><\/p>/);
@@ -355,4 +355,9 @@ test('le etichette del costo evitato dicono se l\'IVA è compresa (famiglie ed e
 test('le schede dei risultati vanno in quest\'ordine: «Per te», «Per la comunità», «L\'impianto della CER», «Per il clima» (esclude «Per il clima» prima della comunità, com\'era fino all\'08/11/2026, e l\'impianto della CER staccato dalla comunità)', () => {
   const schede = tutti(HTML, /<section class="ris (ris-[a-z-]+)"/g);
   assert.deepEqual(schede, ['ris-te', 'ris-comunita', 'ris-impianto-cer', 'ris-emissioni']);
+});
+
+test('la frase sulla parte della CER ha il pezzo su che cosa si toglie, generato da testoTolti (esclude la frase di prima, «Il 20% della tariffa resta alla CER», senza i costi)', () => {
+  assert.ok(HTML.includes('<p class="testo-emissioni">Il <span data-r="com.frazioneCer" data-f="perc"></span> della tariffa, <span data-r="com.toltiTesto"></span>, resta alla CER: in questa simulazione <b data-r="com.quotaCer" data-f="euro"></b> l\'anno. L\'assemblea decide come usarlo.</p>'));
+  assert.match(JS, /toltiTesto: testoTolti\(com\)/);
 });

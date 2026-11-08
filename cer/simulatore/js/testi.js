@@ -33,6 +33,10 @@ export function notaScadenza(impiantoNuovo, oggi, costanti) {
     : `Per avere la tariffa premio l'impianto deve entrare in esercizio dopo la costituzione della CER ed entro il ${data}. Se entra in esercizio dopo, con le regole di oggi la tariffa non c'è: la sua energia conta lo stesso per la comunità, ma su di essa la comunità riceve solo il contributo ARERA, molto più piccolo. La data può arrivare prima, se in Italia si raggiungono 5 GW di impianti incentivati, e cambierebbe solo con una proroga, che a oggi non c'è.`;
 }
 
+// Che cosa si toglie dalla tariffa prima della parte della CER (spec del sito §6.8-§6.9): i costi della CER, con κ, e la
+// quota eccedentaria, che resta fuori dal riparto. Senza eccedentaria la frase non la nomina. `com` è `comunita`.
+export const testoTolti = (com) => (com.quotaEccedentaria > 0 ? 'tolti i costi della CER e la quota eccedentaria' : 'tolti i costi della CER');
+
 // La quota eccedentaria della tariffa. Il DM 414/2023 (art. 3 c. 2 lett. g) e lo statuto (art. 12) la destinano «ai soli
 // consumatori diversi dalle imprese e/o» a finalità sociali; la scelta di darla tutta ai primi, e alle finalità sociali solo
 // se non ce ne sono, è del simulatore, e la frase lo dice. Vuota quando non c'è eccedentaria. `com` è `comunita` del

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { mesiAllaScadenza, testoScadenza, notaScadenza, ipotesi, testoEccedentaria, testoItaliani, testoStimaCo2, testoVentiAnniCo2, testoGiaInEsercizio, testoFondatori } from '../../cer/simulatore/js/testi.js';
+import { mesiAllaScadenza, testoScadenza, notaScadenza, ipotesi, testoEccedentaria, testoTolti, testoItaliani, testoStimaCo2, testoVentiAnniCo2, testoGiaInEsercizio, testoFondatori } from '../../cer/simulatore/js/testi.js';
 
 const costanti = JSON.parse(readFileSync(new URL('../../cer/simulatore/dati/costanti.json', import.meta.url), 'utf8'));
 
@@ -224,4 +224,9 @@ test('la riga dei costi della CER dice che l\'eccedentaria non li copre e resta 
   const riga = ipotesiCon(115.94).find((l) => l.startsWith('Costi della CER:'));
   assert.equal(riga, 'Costi della CER: 500 € l\'anno di gestione più i corrispettivi del GSE, tolti dagli incentivi prima del riparto. La quota eccedentaria non copre i costi della CER: resta intera a chi la riceve (i consumatori che non sono imprese o, senza di loro, le finalità sociali). È la lettura prudente, perché le regole non dicono se possa coprirli.');
   assert.ok(!riga.includes('resta intera ai consumatori che non sono imprese'), riga);
+});
+
+test('la frase sulla parte della CER dice che cosa si toglie prima del 20%: i costi della CER e, quando c\'è, la quota eccedentaria (esclude «il 20% della tariffa» accanto a un importo che è il 20% della tariffa già senza costi, trovato l\'08/11/2026)', () => {
+  assert.equal(testoTolti({ quotaEccedentaria: 0 }), 'tolti i costi della CER');
+  assert.equal(testoTolti({ quotaEccedentaria: 0.12 }), 'tolti i costi della CER e la quota eccedentaria');
 });
