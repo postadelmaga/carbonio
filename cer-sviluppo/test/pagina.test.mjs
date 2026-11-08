@@ -365,3 +365,12 @@ test('il produttore non ha consumi: spariscono consumo, contatore, tipo di attiv
   assert.ok(CSS.includes('body[data-ruolo="produttore"] [data-solo-con-consumi], body:not([data-ruolo="produttore"]) [data-solo-produttore]{display:none}'));
   assert.match(JS, /if \(percorso === 'entrare' && s\.utente\.ruolo !== 'produttore' && s\.utente\.tipo !== 'famiglia' && s\.utente\.consumo == null\)/);
 });
+
+test('l\'aiuto di «Le tue abitudini» dice a chi ha i pannelli che ciò che sposta lo prende soprattutto dai suoi pannelli, prima della CO₂, e «Se hai pannelli» compare una volta sola (esclude chi legge la condivisa in crescita come la regola anche per il prosumer, osservazione dell\'utente dell\'08/11/2026)', () => {
+  const da = HTML.indexOf('<legend><span class="n">6</span>Le tue abitudini</legend>'), a = HTML.indexOf('</fieldset>', da);
+  const aiuto = HTML.slice(da, a);
+  const frase = "e gli incentivi restano nella comunità. Se hai pannelli sul tetto, ciò che sposti lo prendi soprattutto dai tuoi pannelli: cresce il risparmio, in «Il tuo impianto», e la cifra dalla CER può scendere un po', perché immetti meno. La CO₂ evitata dai pannelli non cambia";
+  assert.ok(aiuto.includes(frase));
+  assert.equal(aiuto.split('Se hai pannelli').length - 1, 1);
+  assert.ok(aiuto.includes('Con i pannelli, la tua impronta scende perché prelevi meno dalla rete, ma quel kWh l\'avresti immesso per gli altri'));
+});
