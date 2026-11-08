@@ -227,10 +227,13 @@ test('testi della CO₂: niente «fino a», stima dichiarata, italiani e 20 anni
   assert.match(JS, /if \(percorso === 'fondare'\) sincronizzaIo\(ingressi\);/);
 });
 
-test('la nota sulla scadenza sotto «Per te» c\'è in tutti e due i percorsi e dipende da un impianto tuo nuovo, non dal ruolo; vuota non occupa spazio (esclude la nota solo in «entrare», che il produttore di «fondare» non vedeva, e il testo vecchio rimasto a mano)', () => {
+test('la nota sulla scadenza sotto «Per te» c\'è solo in «entrare» e dipende da un impianto tuo nuovo, non dal ruolo; in «fondare» la frase sta solo in «Tu e i fondatori»; vuota non occupa spazio (esclude la frase due volte in «fondare», decisione dell\'utente dell\'08/11/2026, e il testo vecchio rimasto a mano)', () => {
   assert.match(HTML, /<p class="nota-r" data-r="te\.notaScadenza"><\/p>/);
   assert.doesNotMatch(HTML, /la tua parte di tariffa potrebbe non esserci/);
-  assert.match(JS, /notaScadenza: notaScadenza\(te\.haImpianto && !te\.soloGiaInEsercizio, new Date\(\), dati\.costanti\)/);
+  assert.match(JS, /notaScadenza: notaScadenza\(percorso === 'entrare' && te\.haImpianto && !te\.soloGiaInEsercizio, new Date\(\), dati\.costanti\)/);
+  const da = HTML.indexOf('<legend><span class="n">4</span>Tu e i fondatori</legend>');
+  assert.ok(da > 0 && HTML.indexOf('<p class="scadenza" id="scadenza"></p>', da) > da && HTML.indexOf('<p class="scadenza" id="scadenza"></p>', da) < HTML.indexOf('</fieldset>', da));
+  assert.match(JS, /\$\('#scadenza'\)\.textContent = testoScadenza\(new Date\(\), dati\.costanti\);/);
   assert.doesNotMatch(JS, /notaScadenza\(s\.utente\.ruolo/);
   assert.match(CSS, /\.nota-r:empty[^{]*\{display:none\}/);
 });

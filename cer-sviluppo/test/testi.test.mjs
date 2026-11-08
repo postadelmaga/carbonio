@@ -1,16 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { mesiAllaScadenza, testoScadenza, notaScadenza, ipotesi, testoEccedentaria, testoEccedentariaTe, testoTolti, testoItaliani, testoStimaCo2, testoVentiAnniCo2, testoGiaInEsercizio, testoFondatori } from '../../cer/simulatore/js/testi.js';
+import { testoScadenza, notaScadenza, ipotesi, testoEccedentaria, testoEccedentariaTe, testoTolti, testoItaliani, testoStimaCo2, testoVentiAnniCo2, testoGiaInEsercizio, testoFondatori } from '../../cer/simulatore/js/testi.js';
 
 const costanti = JSON.parse(readFileSync(new URL('../../cer/simulatore/dati/costanti.json', import.meta.url), 'utf8'));
 
-test('mesi alla scadenza del 31/12/2027', () => {
-  assert.equal(mesiAllaScadenza(new Date(2026, 10, 2), '2027-12-31'), 13);
-  assert.equal(mesiAllaScadenza(new Date(2028, 0, 5), '2027-12-31'), -1);
-  assert.match(testoScadenza(new Date(2026, 10, 2), costanti), /31\/12\/2027.*13 mesi/);
-  assert.match(testoScadenza(new Date(2028, 1, 1), costanti), /si è chiusa/);
-});
 
 test('le ipotesi dicono riparto d\'esempio, scelta prudente, anno meteo e fattore', () => {
   const r = {
@@ -42,13 +36,11 @@ test('con la media dei consumi come fattore, i 20 anni scendono del 2,9% l\'anno
   assert.equal(riga, 'CO₂ evitata: ipotesi che ogni kWh dei pannelli valga la CO₂ media di un kWh consumato in Italia, 199,6 g/kWh (media nazionale annua, ISPRA, 2025 preliminare); con il metodo ISPRA delle emissioni evitate sarebbe 413,3. Sui 20 anni il fattore scende del 2,9% l\'anno, come in media dal 1990: è una proiezione.');
 });
 
-test('la scadenza ragiona al giorno: ultimo giorno aperto, poi chiusa', () => {
-  assert.match(testoScadenza(new Date(2027, 10, 15, 9), costanti), /manca un mese/);
-  assert.match(testoScadenza(new Date(2027, 11, 15, 9), costanti), /manca meno di un mese/);
-  const ultimo = testoScadenza(new Date(2027, 11, 31, 12), costanti);
-  assert.match(ultimo, /entro il 31\/12\/2027/);
-  assert.match(ultimo, /manca meno di un mese/);
-  assert.match(testoScadenza(new Date(2028, 0, 1, 0, 30), costanti), /si è chiusa il 31\/12\/2027/);
+test('la scadenza ragiona al giorno: ultimo giorno aperto, poi chiusa (esclude una finestra chiusa a mezzanotte del giorno prima o aperta il giorno dopo)', () => {
+  assert.match(testoScadenza(new Date(2027, 11, 31, 23, 59), costanti), /^Per avere la tariffa premio l'impianto deve entrare in esercizio dopo la costituzione della CER ed entro il 31\/12\/2027\./);
+  assert.equal(testoScadenza(new Date(2028, 0, 1, 0, 30), costanti), 'La finestra della tariffa premio si è chiusa il 31/12/2027, salvo proroghe.');
+  assert.match(notaScadenza(true, new Date(2027, 11, 31, 23, 59), costanti), /^Per avere la tariffa premio/);
+  assert.match(notaScadenza(true, new Date(2028, 0, 1, 0, 30), costanti), /si è chiusa il 31\/12\/2027/);
 });
 
 test('l\'anno meteorologico viene dal file PV, non è scritto a mano', () => {
@@ -159,13 +151,14 @@ test('il testo sugli impianti già in esercizio dice che il contributo ARERA lo 
   }
 });
 
-test('la scadenza in «fondare»: esercizio dopo la costituzione, solo contributo ARERA dopo, senza la frase sulla domanda al GSE, tolta come nella nota di «Per te» l\'08/11/2026 (esclude anche «va presentata», che nessuna fonte scrive)', () => {
-  const t = testoScadenza(new Date(2026, 10, 2), costanti);
-  assert.equal(t, 'Per avere la tariffa premio gli impianti devono entrare in esercizio dopo la costituzione della CER ed entro il 31/12/2027: mancano 13 mesi. Dopo, con le regole di oggi, su un impianto nuovo la comunità riceve solo il contributo ARERA, molto più piccolo. La data cambierebbe solo con una proroga, che a oggi non c\'è.');
-  assert.ok(!t.includes('va presentata') && !t.includes('domanda'));
+test('la scadenza in «Tu e i fondatori» è la frase dell\'utente dell\'08/11/2026, la stessa della nota di «Per te», con i 5 GW (esclude i mesi che mancano, «gli impianti devono», la domanda al GSE e una seconda copia della frase che possa divergere)', () => {
+  const t = testoScadenza(new Date(2026, 10, 8), costanti);
+  assert.equal(t, 'Per avere la tariffa premio l\'impianto deve entrare in esercizio dopo la costituzione della CER ed entro il 31/12/2027. Se entra in esercizio dopo, con le regole di oggi la tariffa non c\'è: la sua energia conta lo stesso per la comunità, ma su di essa la comunità riceve solo il contributo ARERA, molto più piccolo. La data può arrivare prima, se in Italia si raggiungono 5 GW di impianti incentivati, e cambierebbe solo con una proroga, che a oggi non c\'è.');
+  assert.equal(t, notaScadenza(true, new Date(2026, 10, 8), costanti));
+  assert.doesNotMatch(t, /mancano|manca|domanda|gli impianti devono/);
 });
 
-test('la nota sotto «Per te» c\'è solo con un impianto nuovo, in tutti e due i percorsi, e non parla di chi entra dopo la scadenza (esclude la nota al consumatore e a chi ha l\'impianto già in esercizio, la frase sulla domanda al GSE e quella su chi entra, tolte l\'08/11/2026); a finestra chiusa il contributo ARERA lo riceve la comunità (esclude il contributo attribuito all\'impianto)', () => {
+test('la nota sotto «Per te» c\'è solo con un impianto nuovo e non parla di chi entra dopo la scadenza (esclude la nota al consumatore e a chi ha l\'impianto già in esercizio, la frase sulla domanda al GSE e quella su chi entra, tolte l\'08/11/2026); a finestra chiusa il contributo ARERA lo riceve la comunità (esclude il contributo attribuito all\'impianto)', () => {
   const oggi = new Date(2026, 10, 8);
   const impianto = 'Per avere la tariffa premio l\'impianto deve entrare in esercizio dopo la costituzione della CER ed entro il 31/12/2027. Se entra in esercizio dopo, con le regole di oggi la tariffa non c\'è: la sua energia conta lo stesso per la comunità, ma su di essa la comunità riceve solo il contributo ARERA, molto più piccolo. La data può arrivare prima, se in Italia si raggiungono 5 GW di impianti incentivati, e cambierebbe solo con una proroga, che a oggi non c\'è.';
   assert.equal(notaScadenza(true, oggi, costanti), impianto);

@@ -2,11 +2,6 @@
 import { numero, euro, perc, circa } from './formato.js';
 import { costoEvitato, voce } from './economia.js';
 
-export function mesiAllaScadenza(oggi, scadenza) {
-  const [a, m] = scadenza.split('-').map(Number);
-  return (a - oggi.getFullYear()) * 12 + (m - 1 - oggi.getMonth());
-}
-
 const dataIt = (iso) => iso.split('-').reverse().join('/');
 
 const chiusa = (oggi, scadenza) => {
@@ -14,23 +9,26 @@ const chiusa = (oggi, scadenza) => {
   return oggi > new Date(a, m - 1, g, 23, 59, 59, 999);
 };
 
+// La frase della finestra aperta è una sola, scritta dall'utente (08/11/2026): la usano la nota di «Per te» e il passo
+// «Tu e i fondatori».
+const finestraAperta = (data) => `Per avere la tariffa premio l'impianto deve entrare in esercizio dopo la costituzione della CER ed entro il ${data}. Se entra in esercizio dopo, con le regole di oggi la tariffa non c'è: la sua energia conta lo stesso per la comunità, ma su di essa la comunità riceve solo il contributo ARERA, molto più piccolo. La data può arrivare prima, se in Italia si raggiungono 5 GW di impianti incentivati, e cambierebbe solo con una proroga, che a oggi non c'è.`;
+
+// Nel passo «Tu e i fondatori» di «fondare», sempre: in quel percorso è l'unico posto della frase (decisione dell'utente,
+// 08/11/2026). Senza più i mesi che mancano.
 export function testoScadenza(oggi, costanti) {
   const scadenza = voce(costanti, 'scadenza_esercizio'), data = dataIt(scadenza);
-  if (chiusa(oggi, scadenza)) return `La finestra della tariffa premio si è chiusa il ${data}, salvo proroghe.`;
-  const mesi = mesiAllaScadenza(oggi, scadenza);
-  const quando = mesi > 1 ? `mancano ${mesi} mesi` : mesi === 1 ? 'manca un mese' : 'manca meno di un mese';
-  return `Per avere la tariffa premio gli impianti devono entrare in esercizio dopo la costituzione della CER ed entro il ${data}: ${quando}. Dopo, con le regole di oggi, su un impianto nuovo la comunità riceve solo il contributo ARERA, molto più piccolo. La data cambierebbe solo con una proroga, che a oggi non c'è.`;
+  return chiusa(oggi, scadenza) ? `La finestra della tariffa premio si è chiusa il ${data}, salvo proroghe.` : finestraAperta(data);
 }
 
-// Sotto «Per te», in tutti e due i percorsi (revisione §6, cambiata l'08/11/2026): solo a chi ha un impianto nuovo, che
-// per la tariffa deve entrare in esercizio entro la data. Al consumatore e a chi ha l'impianto già in esercizio la nota
-// non c'è, e non c'è più la parte su chi entra dopo la scadenza (decisione dell'utente, 08/11/2026).
+// Sotto «Per te», solo in «entrare» e solo a chi ha un impianto nuovo, che per la tariffa deve entrare in esercizio entro
+// la data (decisioni dell'utente dell'08/11/2026). Al consumatore e a chi ha l'impianto già in esercizio la nota non c'è;
+// in «fondare» la frase sta nel passo «Tu e i fondatori», e chi chiama passa falso.
 export function notaScadenza(impiantoNuovo, oggi, costanti) {
   if (!impiantoNuovo) return '';
   const scadenza = voce(costanti, 'scadenza_esercizio'), data = dataIt(scadenza);
   return chiusa(oggi, scadenza)
     ? `La finestra della tariffa premio si è chiusa il ${data}, salvo proroghe: su un impianto nuovo la comunità riceve solo il contributo ARERA.`
-    : `Per avere la tariffa premio l'impianto deve entrare in esercizio dopo la costituzione della CER ed entro il ${data}. Se entra in esercizio dopo, con le regole di oggi la tariffa non c'è: la sua energia conta lo stesso per la comunità, ma su di essa la comunità riceve solo il contributo ARERA, molto più piccolo. La data può arrivare prima, se in Italia si raggiungono 5 GW di impianti incentivati, e cambierebbe solo con una proroga, che a oggi non c'è.`;
+    : finestraAperta(data);
 }
 
 // Sotto il numero grande di «Per te» (decisione dell'utente, 08/11/2026): quanto della cifra è quota eccedentaria, che il
