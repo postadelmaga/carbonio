@@ -1409,7 +1409,9 @@ function saveAir() { keep('oe-air', JSON.stringify([ui.airMode, ui.fluxMode])); 
 const DOMAIN = { sst: 'sea', anom: 'sea', speed: 'sea', sla: 'sea', ice: 'sea', mix: 'mix', rain: 'land', drought: 'land', co2: 'air', emis: 'air', tair: 'air', ltair: 'land' };
 const CAPTION = { sst: 'cap_sst', anom: 'cap_anom', speed: 'cap_speed', sla: 'sla_title', ice: 'ice_title', mix: 'mix_title', rain: 'rain_title', drought: 'drought_title', co2: 'co2_title', emis: 'emis_title', tair: 'tair_title', ltair: 'ltair_title' };
 // nell'indirizzo: nomi stabili, uguali in tutte le lingue
-const SLUG = { sst: 'temperatura', anom: 'anomalia', speed: 'correnti', sla: 'livello-mare', ice: 'ghiaccio', mix: 'mix', rain: 'pioggia', drought: 'siccita', co2: 'co2', emis: 'emissioni', tair: 'temperatura-aria', ltair: 'temperatura-terra' };
+const SLUG = { sst: 'temperatura', anom: 'anomalia-mare', speed: 'correnti', sla: 'livello-mare', ice: 'ghiaccio', mix: 'mix', rain: 'pioggia', drought: 'siccita', co2: 'co2', emis: 'emissioni', tair: 'anomalia-aria', ltair: 'anomalia-terra' };
+// indirizzi di prima (8 nov 2026): i link gia' condivisi portano alla stessa vista
+const OLD_SLUG = { anomalia: 'anom', 'temperatura-aria': 'tair', 'temperatura-terra': 'ltair' };
 // la vista con cui si apre ogni scheda: la piu' eloquente sul clima che cambia
 // (prima voce di ogni menu); poi quella scelta l'ultima volta in quella scheda
 // (8 nov 2026, scelta dell'utente: in ogni scheda l'anomalia di temperatura;
@@ -1519,7 +1521,7 @@ function applyOverlays() {
   drawLegend();
 }
 
-// vista e data nell'indirizzo (#anomalia/2022-09): un link mostra la stessa mappa
+// vista e data nell'indirizzo (#anomalia-mare/2022-09): un link mostra la stessa mappa
 function writeHash() {
   if (REEL || !timeline || !ui.view || !hashReady) return;
   const f = timeline.frames[Math.round(timeline.index)];
@@ -1528,8 +1530,10 @@ function writeHash() {
 }
 function readHash() {
   const [slug, stamp] = decodeURIComponent(location.hash.slice(1)).split('/');
-  const mode = Object.keys(SLUG).find((m) => SLUG[m] === slug);
+  const mode = Object.keys(SLUG).find((m) => SLUG[m] === slug) || OLD_SLUG[slug];
   if (!mode || !viewAvailable(mode)) return false;
+  // un indirizzo vecchio si riscrive col nome nuovo, stessa data
+  if (OLD_SLUG[slug] && !REEL) history.replaceState(null, '', `#${SLUG[mode]}${stamp ? '/' + stamp : ''}`);
   setMode(mode);
   if (stamp) {
     const tier = stamp.length === 7 ? 'monthly' : stamp.length === 10 ? 'daily' : stamp.length === 13 ? 'hourly' : null;

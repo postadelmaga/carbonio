@@ -39,6 +39,17 @@ async function open(w, h, mobile, theme) {
       t2m: !!__oe.shown()?.airF?.t2m?.[0], order: [...document.querySelectorAll('.quick-mode .dd')].map((d) => d.dataset.domain).join() };
     return out;
   });
+  // indirizzi: un link vecchio porta alla vista e si riscrive col nome nuovo
+  const slug = await page.evaluate(async () => {
+    location.hash = '#temperatura-terra/2024-07';
+    for (let k = 0; k < 20 && __oe.ui.view !== 'ltair'; k++) await new Promise((r) => setTimeout(r, 250));
+    const out = { view: __oe.ui.view, hash: location.hash };
+    location.hash = '#anomalia-aria/2024-07';
+    for (let k = 0; k < 20 && __oe.ui.view !== 'tair'; k++) await new Promise((r) => setTimeout(r, 250));
+    out.back = __oe.ui.view;
+    return out;
+  });
+  check('indirizzi delle viste (anche quelli vecchi)', slug.view === 'ltair' && slug.hash === '#anomalia-terra/2024-07' && slug.back === 'tair', JSON.stringify(slug));
   // storia del punto nella vista dell'aria: la serie ERA5 a 1°, non quella del mare
   await page.mouse.click(620, 430);
   for (let i = 0; i < 20 && !(await page.evaluate(() => document.querySelectorAll('#pt-chart path').length)); i++) await sleep(500);
