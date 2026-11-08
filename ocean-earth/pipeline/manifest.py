@@ -135,7 +135,9 @@ def build():
                         # alla climatologia quando la temperatura viene da anfc
                         'bias': bias_meta()},
         'series': {'tile': derived.TILE,
-                   'available': (frames.DATA / 'series' / 'sst.json').exists()},
+                   'available': (frames.DATA / 'series' / 'sst.json').exists(),
+                   # temperatura dell'aria a 1° (pipeline/t2m.py): anomalia + media 1991–2020
+                   't2m': (frames.DATA / 'series' / 't2m.json').exists()},
         # terraferma: percentuale del normale dello stesso mese (pipeline/land.py)
         'land': {'clim_years': list(land.CLIM), 'encoding': 'percent'},
         'regional': {n: json.loads((frames.DATA / 'index' / f'{n}-grid.json').read_text())

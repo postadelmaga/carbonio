@@ -37,11 +37,19 @@ async function open(w, h, mobile, theme) {
     await wait(() => __oe.shown()?.airF?.t2m?.[0]);
     const out = { view: __oe.ui.view, air: document.querySelector('.dd[data-domain=air]').classList.contains('on'), cur: document.querySelector('.dd[data-domain=air] .dd-cur').textContent,
       t2m: !!__oe.shown()?.airF?.t2m?.[0], order: [...document.querySelectorAll('.quick-mode .dd')].map((d) => d.dataset.domain).join() };
-    // il resto dei controlli parte dall'anomalia del mare
-    document.querySelector('.dd[data-domain=sea] .dd-btn').click();
-    out.sea = __oe.ui.view;
-    await wait(() => __oe.shown()?.sA);
     return out;
+  });
+  // storia del punto nella vista dell'aria: la serie ERA5 a 1°, non quella del mare
+  await page.mouse.click(620, 430);
+  for (let i = 0; i < 20 && !(await page.evaluate(() => document.querySelectorAll('#pt-chart path').length)); i++) await sleep(500);
+  const airHist = await page.evaluate(() => ({ paths: document.querySelectorAll('#pt-chart path').length, title: document.querySelector('#info .ch-head b').textContent, res: document.querySelector('#pt-values .pt-head').innerText }));
+  check('storia della temperatura dell\'aria', airHist.paths > 0 && /1°/.test(airHist.res), JSON.stringify(airHist));
+  start.sea = await page.evaluate(async () => {
+    // il resto dei controlli parte dall'anomalia del mare
+    document.querySelector('#info-close').click();
+    document.querySelector('.dd[data-domain=sea] .dd-btn').click();
+    for (let k = 0; k < 40 && !__oe.shown()?.sA; k++) await new Promise((r) => setTimeout(r, 250));
+    return __oe.ui.view;
   });
   check('vista iniziale: anomalia dell\'aria', start.view === 'tair' && start.air && start.cur.length > 0 && start.t2m && start.order === 'air,sea,land' && start.sea === 'anom', JSON.stringify(start));
   // clic al centro del globo (Atlantico)

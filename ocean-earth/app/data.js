@@ -217,6 +217,24 @@ export class DataStore {
     return { r, c, i: r * g.nlon + c, lat: 90 - (r + 0.5) * g.step, lon: -180 + (c + 0.5) * g.step };
   }
 
+  // temperatura dell'aria (pipeline/t2m.py): tessere di 10° a 1°, per ogni
+  // cella l'anomalia di ogni mese e in coda le 12 medie 1991–2020
+  async seriesT2m(lat, lon) {
+    if (!this.manifest.series?.t2m) return null;
+    if (!this.t2mMeta) this.t2mMeta = fetch(this.url('series/t2m.json')).then((r) => r.json());
+    const meta = await this.t2mMeta;
+    const T = meta.tile, n = meta.stamps.length;
+    const r = Math.min(179, Math.max(0, Math.floor(90 - lat))), c = ((Math.floor(lon + 180) % 360) + 360) % 360;
+    const tile = await this.get(`series/t2m/${Math.floor(r / T)}_${Math.floor(c / T)}.png`, 'series');
+    const row = (r % T) * T + (c % T), w = tile.w;
+    const anom = new Float32Array(n), values = new Float32Array(n);
+    for (let k = 0; k < n; k++) {
+      anom[k] = this.scalarValue(tile.codes, row * w + k, meta.offset);
+      values[k] = anom[k] + this.scalarValue(tile.codes, row * w + n + (+meta.stamps[k].slice(5, 7)) - 1, meta.offset);
+    }
+    return { stamps: meta.stamps, values, anom, base: meta.clim };
+  }
+
   // serie mensile di una cella: Float32Array (NaN dove manca)
   async series(lat, lon) {
     const s = this.manifest.series;

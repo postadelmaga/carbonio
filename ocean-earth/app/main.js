@@ -722,7 +722,9 @@ function refreshPoint() {
     const v = pointValues(p);
     if (!v) return;
     const head = tag ? `<span class="tag ${tag}">${tag.toUpperCase()}</span> ` : '';
-    rows.push(`<div class="pt-head">${head}${fmtLat(p.lat)}, ${fmtLon(p.lon)} <span class="muted">· ${t('resolution')} ${fmtNum(0.25, 2)}° (${fmtLat(v.c.lat)}, ${fmtLon(v.c.lon)})</span></div>`);
+    // nelle viste della sola aria la cella e' quella da 1° dei dati ERA5
+    const a1 = seriesVar() === 't2m', cl = a1 ? Math.floor(p.lat) + 0.5 : v.c.lat, co = a1 ? Math.floor(wrapLon(p.lon)) + 0.5 : v.c.lon;
+    rows.push(`<div class="pt-head">${head}${fmtLat(p.lat)}, ${fmtLon(p.lon)} <span class="muted">· ${t('resolution')} ${a1 ? '1' : fmtNum(0.25, 2)}° (${fmtLat(cl)}, ${fmtLon(co)})</span></div>`);
     if (Number.isFinite(v.land)) {
       rows.push(`<dl class="vals"><dt>${t(current.lv + '_short')}</dt><dd><b class="${v.land >= 100 ? 'wet' : 'dry'}">${fmtNum(v.land, 0)}%</b> <span class="muted">${t('of_normal')} ${manifest.land.clim_years.join('–')}</span></dd></dl>`);
     }
@@ -777,10 +779,18 @@ function timeLabel() {
   return `${fmtStamp((mix >= 1 - 1e-3 ? B : A).t)} <span class="orig">${t('original')}</span>`;
 }
 
+// quale storia mostrano punto e regione: quella dell'aria (ERA5, 1°) nelle viste
+// con la sola temperatura dell'aria (Aria e Terra), altrimenti quella del mare
+function seriesVar() {
+  const L = globe.state.layers;
+  return L.tair > 0 && !(L.sst > 0 || L.anom > 0) && manifest.series?.t2m ? 't2m' : 'sst';
+}
+
 async function getSeries(p) {
-  const c = store.cell(p.lat, p.lon);
-  const k = `${c.r}/${c.c}`;
-  if (!seriesCache.has(k)) seriesCache.set(k, store.series(p.lat, p.lon).catch(() => null));
+  const v = seriesVar();
+  const c = v === 't2m' ? { r: Math.floor(90 - p.lat), c: Math.floor(wrapLon(p.lon) + 180) } : store.cell(p.lat, p.lon);
+  const k = `${v}/${c.r}/${c.c}`;
+  if (!seriesCache.has(k)) seriesCache.set(k, (v === 't2m' ? store.seriesT2m(p.lat, p.lon) : store.series(p.lat, p.lon)).catch(() => null));
   return seriesCache.get(k);
 }
 
@@ -791,6 +801,8 @@ async function loadSeries() {
     pointChart.onRange = (r) => { $('#pt-range').textContent = r ? `${r[0].toFixed(1)} – ${r[1].toFixed(1)}` : '1993 – ' + timeline.frames.at(-1).t.slice(0, 4); };
   }
   const pts = [ui.point, ui.pointB].filter(Boolean);
+  const air = seriesVar() === 't2m';
+  $('#info .ch-head b').textContent = t(air ? 'history_air' : 'history');
   const all = await Promise.all(pts.map(getSeries));
   const colors = ['var(--oe-a)', 'var(--oe-b)'];
   const series = [];
@@ -798,7 +810,8 @@ async function loadSeries() {
     if (!s) return;
     const x = new Float64Array(s.stamps.map(stampToYear));
     let y = s.values;
-    if (showAnomSeries && climFrames) {
+    if (showAnomSeries && s.anom) y = s.anom;            // aria: anomalia gia' calcolata (1991–2020)
+    else if (showAnomSeries && climFrames) {
       const c = store.cell(pts[k].lat, pts[k].lon);
       y = y.map((v, i) => v - monthlyBase(s.stamps[i], c.i));
     }
@@ -839,6 +852,7 @@ async function regionStatsInner(token) {
   panel.hidden = false;
   $('#reg-box').textContent = `${fmtLat(s)} – ${fmtLat(n)}, ${fmtLon(wrapLon(w))} – ${fmtLon(wrapLon(e))}`;
   $('#reg-values').textContent = t('loading');
+  if (seriesVar() === 't2m') return regionAir(token);
   await loadClim();                       // l'anomalia della regione ne ha bisogno
   const g = manifest.grid;
   const meta = await fetch(store.url('series/sst.json')).then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); });
@@ -893,6 +907,60 @@ async function regionStatsInner(token) {
     <dt>${t('reg_mean')}</dt><dd><b>${fmtNum(mean[k], 2)} °C</b> <span class="muted">${fmtStamp(meta.stamps[k])}</span></dd>
     <dt>${t('reg_max')}</dt><dd><b>${fmtNum(mx[k], 2)} °C</b></dd>
     <dt>${t('reg_anom')}</dt><dd><b class="${an[k] >= 0 ? 'warm' : 'cold'}">${an[k] >= 0 ? '+' : ''}${fmtNum(an[k], 2)} °C</b> <span class="muted">${t('clim_base')} ${manifest.climatology.years.join('–')}</span></dd>
+  </dl>`;
+  if (!regionChart) regionChart = new LineChart($('#reg-chart'));
+  drawRegionChart();
+}
+
+// regione nelle viste dell'aria: tessere di 1° di pipeline/t2m.py (anomalia
+// e medie 1991–2020 dentro la stessa tessera), media pesata sull'area
+async function regionAir(token) {
+  const [s, w, n, e] = ui.region;
+  const meta = await fetch(store.url('series/t2m.json')).then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); });
+  const T = meta.tile, nm = meta.stamps.length, off = meta.offset;
+  const mon = meta.stamps.map((x) => +x.slice(5, 7) - 1);
+  const r0 = Math.max(0, Math.floor(90 - n)), r1 = Math.min(179, Math.floor(90 - s));
+  const c0 = Math.floor(w + 180), c1 = Math.floor(e + 180);
+  const sum = new Float64Array(nm), wsum = new Float64Array(nm), max = new Float64Array(nm).fill(-Infinity), asum = new Float64Array(nm);
+  let cells = 0;
+  const tiles = [];
+  for (let tr = Math.floor(r0 / T); tr <= Math.floor(r1 / T); tr++) for (let tc = Math.floor(c0 / T); tc <= Math.floor(c1 / T); tc++) tiles.push([tr, tc]);
+  await Promise.all(tiles.map(async ([tr, tcRaw]) => {
+    const tc = ((tcRaw % (360 / T)) + 360 / T) % (360 / T);
+    let tile;
+    try { tile = await store.decode(`series/t2m/${tr}_${tc}.png`, 'series'); } catch (err) { return; }
+    const tw = tile.w;
+    for (let rr = 0; rr < T; rr++) {
+      const r = tr * T + rr;
+      if (r < r0 || r > r1) continue;
+      const wt = Math.cos((89.5 - r) * DEG);
+      for (let cc = 0; cc < T; cc++) {
+        const cAbs = tcRaw * T + cc;
+        if (cAbs < c0 || cAbs > c1) continue;
+        const row = (rr * T + cc) * tw;
+        cells++;
+        for (let k = 0; k < nm; k++) {
+          const a = store.scalarValue(tile.codes, row + k, off);
+          if (!Number.isFinite(a)) continue;
+          const v = a + store.scalarValue(tile.codes, row + nm + mon[k], off);
+          sum[k] += v * wt; wsum[k] += wt; asum[k] += a * wt;
+          if (v > max[k]) max[k] = v;
+        }
+      }
+    }
+  }));
+  if (token !== regionToken) return;
+  const x = new Float64Array(meta.stamps.map(stampToYear));
+  const mean = Float32Array.from(sum, (v, k) => (wsum[k] ? v / wsum[k] : NaN));
+  const mx = Float32Array.from(max, (v) => (Number.isFinite(v) ? v : NaN));
+  const an = Float32Array.from(asum, (v, k) => (wsum[k] ? v / wsum[k] : NaN));
+  ui.regionSeries = { x, mean, mx, an };
+  const k = nm - 1;
+  $('#reg-values').innerHTML = `<dl class="vals">
+    <dt>${t('reg_cells_air')}</dt><dd>${cells} <span class="muted">· 1° · ${t('tair_short')}</span></dd>
+    <dt>${t('reg_mean')}</dt><dd><b>${fmtNum(mean[k], 2)} °C</b> <span class="muted">${fmtStamp(meta.stamps[k])}</span></dd>
+    <dt>${t('reg_max')}</dt><dd><b>${fmtNum(mx[k], 2)} °C</b></dd>
+    <dt>${t('reg_anom')}</dt><dd><b class="${an[k] >= 0 ? 'warm' : 'cold'}">${an[k] >= 0 ? '+' : ''}${fmtNum(an[k], 2)} °C</b> <span class="muted">${t('clim_base')} ${meta.clim.join('–')}</span></dd>
   </dl>`;
   if (!regionChart) regionChart = new LineChart($('#reg-chart'));
   drawRegionChart();
@@ -1493,6 +1561,9 @@ function setMode(mode) {
   else if (landVar && current) onTime('source');
   applyOverlays();
   writeHash();
+  // la storia del punto e della regione segue la vista (mare o aria)
+  if (ui.point && !REEL) loadSeries();
+  if (ui.region && !REEL) regionStats();
 }
 
 function setLayers(w) {

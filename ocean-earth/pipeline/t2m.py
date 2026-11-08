@@ -19,8 +19,10 @@ Codifica scalare con zero proprio (encode.SCALAR_OFFSETS['t2m'] = -50 °C).
                           scrive i fotogrammi mancanti in data/m/t2m
 
 Cache: ~/.cache/ocean-earth/land/t2m/<anno>.npy (float32, 12 × 180 × 360, °C).
+Serie per il grafico del punto e della regione: vedi write_series.
 """
 import fcntl
+import json
 import pathlib
 import sys
 import tempfile
@@ -149,6 +151,46 @@ def write_frames():
     print(f't2m: {made} fotogrammi nuovi, {len(idx)} in tutto', flush=True)
 
 
+SERIES_TILE = 10              # celle di 1° per lato di tessera (10°)
+SERIES_OFFSET = -100.0        # zero delle serie: le medie dell'Antartide scendono sotto -60 °C
+
+
+def write_series():
+    """series/t2m/R_C.png: per ogni tessera di 10° una riga per cella di 1°
+    (100 righe) e una colonna per mese dal 1993 (l'anomalia, °C), piu' 12
+    colonne finali con la media 1991–2020 di ogni mese: la pagina ricava la
+    temperatura assoluta come anomalia + media. series/t2m.json elenca i mesi.
+    Si riscrivono solo quando arriva un mese nuovo."""
+    clim = climatology()
+    stamps, rows = [], []
+    for year in range(FIRST_FRAME, 9999):
+        arr = load_year(year)
+        if arr is None:
+            break
+        for m in range(12):
+            if np.isfinite(arr[m]).all():
+                stamps.append(f'{year}-{m + 1:02d}')
+                rows.append(arr[m] - clim[m])
+    meta_p = frames.DATA / 'series' / 't2m.json'
+    meta = {'tile': SERIES_TILE, 'grid': 1.0, 'offset': SERIES_OFFSET, 'clim': list(CLIM), 'stamps': stamps}
+    out = frames.DATA / 'series' / 't2m'
+    if meta_p.exists() and json.loads(meta_p.read_text()) == meta and out.exists():
+        print('t2m: serie gia\' aggiornate', flush=True)
+        return
+    out.mkdir(parents=True, exist_ok=True)
+    stack = np.stack(rows)                                   # (mesi, 180, 360)
+    T = SERIES_TILE
+    for r in range(NLAT // T):
+        for c in range(NLON // T):
+            a = stack[:, r * T:(r + 1) * T, c * T:(c + 1) * T].reshape(len(stamps), T * T).T
+            cl = clim[:, r * T:(r + 1) * T, c * T:(c + 1) * T].reshape(12, T * T).T
+            encode.save_png(encode.encode_scalar(np.concatenate([a, cl], axis=1), SERIES_OFFSET), out / f'{r}_{c}.png')
+    tmp = meta_p.with_suffix('.tmp')
+    tmp.write_text(json.dumps(meta))
+    tmp.replace(meta_p)                                      # per ultimo: le tessere ci sono gia'
+    print(f't2m: serie di {len(stamps)} mesi in {(NLAT // T) * (NLON // T)} tessere', flush=True)
+
+
 def main():
     # un processo alla volta: lo scaricamento iniziale (36 anni) dura ore e il
     # timer giornaliero non deve scrivere la stessa cache insieme
@@ -161,6 +203,7 @@ def main():
         return
     update_cache()
     write_frames()
+    write_series()
 
 
 if __name__ == '__main__':
