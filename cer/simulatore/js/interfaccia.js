@@ -7,7 +7,7 @@ import { voce } from './economia.js';
 import { consumoMedioClasse } from './profili.js';
 import { numero, euro, kwh, perc, tonnellate, anni, circa } from './formato.js';
 import { giornata, anno, incentivi, vociIncentivi, scenaComunita, tabella, MESI } from './grafici.js';
-import { ipotesi, testoScadenza, notaScadenza, testoEccedentaria, testoTolti, testoItaliani, testoStimaCo2, testoVentiAnniCo2, testoGiaInEsercizio, testoFondatori } from './testi.js';
+import { ipotesi, testoScadenza, notaScadenza, testoEccedentaria, testoEccedentariaTe, testoTolti, testoItaliani, testoStimaCo2, testoVentiAnniCo2, testoGiaInEsercizio, testoFondatori } from './testi.js';
 import { attivaInfo } from './info.js';
 
 const $ = (s) => document.querySelector(s);
@@ -172,23 +172,21 @@ function sincronizzaIo(ingressi) {
   if (selezione.value !== (io ?? '')) selezione.value = io ?? '';
 }
 
-function mostra(r, s, percorso, ingressi) {
+function mostra(r, percorso, ingressi) {
   const te = r.perTe ?? {}, com = r.comunita, em = r.emissioni.comunita, p = r.parametri, b = document.body.dataset;
   // tre attributi distinti: chi ha un impianto, chi lo deve ancora pagare, chi ha solo impianti già in esercizio
   if (te.haImpianto) b.impianto = ''; else delete b.impianto;
   if (te.investimento > 0) b.investimento = ''; else delete b.investimento;
   if (te.soloGiaInEsercizio) b.pagato = ''; else delete b.pagato;
   if (percorso === 'fondare') b.fondatore = ''; else delete b.fondatore;
-  // senza consumi (il socio produttore) le righe dei prelievi e della spesa non hanno senso; al produttore che entra la percentuale
-  // sulla spesa mescolerebbe la sua quota di produttore con la bolletta di casa
+  // senza consumi (il socio produttore) la riga dei prelievi non ha senso
   if (te.consumo > 0) b.consumo = ''; else delete b.consumo;
-  if (te.consumo > 0 && !(percorso === 'entrare' && s.utente.ruolo === 'produttore') && te.id !== 'produttore') b.spesa = ''; else delete b.spesa;
   // il riquadro dell'impianto della CER c'è con ogni impianto della CER; l'investimento da finanziare solo se uno è nuovo
   if (com.haImpiantoCer) b.impiantoCer = ''; else delete b.impiantoCer;
   if (com.investimentoCer > 0) b.investimentoCer = ''; else delete b.investimentoCer;
   // la nota sulla scadenza va a chi ha un impianto nuovo, in «entrare» e in «fondare»
   const vista = {
-    te: { ...te, notaScadenza: notaScadenza(te.haImpianto && !te.soloGiaInEsercizio, new Date(), dati.costanti) },
+    te: { ...te, notaScadenza: notaScadenza(te.haImpianto && !te.soloGiaInEsercizio, new Date(), dati.costanti), eccedentariaTesto: testoEccedentariaTe(te.voci?.quotaEccedentaria) },
     emissioni: {
       ...em,
       stimaTesto: testoStimaCo2(r.emissioni.principale, em.evitataAltra, dati.costanti),
@@ -239,7 +237,7 @@ function aggiorna() {
     ultimo = calcola(ingressi, dati);
     document.body.dataset.ms = String(Math.round(performance.now() - t0));
     delete document.body.dataset.nonAggiornato;
-    mostra(ultimo, s, percorso, ingressi);
+    mostra(ultimo, percorso, ingressi);
   } catch (e) {
     console.error(e);
     segnalaErrore(e.message);

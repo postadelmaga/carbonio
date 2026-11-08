@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { mesiAllaScadenza, testoScadenza, notaScadenza, ipotesi, testoEccedentaria, testoTolti, testoItaliani, testoStimaCo2, testoVentiAnniCo2, testoGiaInEsercizio, testoFondatori } from '../../cer/simulatore/js/testi.js';
+import { mesiAllaScadenza, testoScadenza, notaScadenza, ipotesi, testoEccedentaria, testoEccedentariaTe, testoTolti, testoItaliani, testoStimaCo2, testoVentiAnniCo2, testoGiaInEsercizio, testoFondatori } from '../../cer/simulatore/js/testi.js';
 
 const costanti = JSON.parse(readFileSync(new URL('../../cer/simulatore/dati/costanti.json', import.meta.url), 'utf8'));
 
@@ -159,10 +159,10 @@ test('il testo sugli impianti già in esercizio dice che il contributo ARERA lo 
   }
 });
 
-test('la scadenza in «fondare»: esercizio dopo la costituzione, domanda che conviene presentare entro la data, solo contributo ARERA dopo (esclude «va presentata», che nessuna fonte scrive)', () => {
+test('la scadenza in «fondare»: esercizio dopo la costituzione, solo contributo ARERA dopo, senza la frase sulla domanda al GSE, tolta come nella nota di «Per te» l\'08/11/2026 (esclude anche «va presentata», che nessuna fonte scrive)', () => {
   const t = testoScadenza(new Date(2026, 10, 2), costanti);
-  assert.equal(t, 'Per avere la tariffa premio gli impianti devono entrare in esercizio dopo la costituzione della CER ed entro il 31/12/2027: mancano 13 mesi. Conviene presentare la domanda al GSE entro la stessa data. Dopo, con le regole di oggi, su un impianto nuovo la comunità riceve solo il contributo ARERA, molto più piccolo. La data cambierebbe solo con una proroga, che a oggi non c\'è.');
-  assert.ok(!t.includes('va presentata'));
+  assert.equal(t, 'Per avere la tariffa premio gli impianti devono entrare in esercizio dopo la costituzione della CER ed entro il 31/12/2027: mancano 13 mesi. Dopo, con le regole di oggi, su un impianto nuovo la comunità riceve solo il contributo ARERA, molto più piccolo. La data cambierebbe solo con una proroga, che a oggi non c\'è.');
+  assert.ok(!t.includes('va presentata') && !t.includes('domanda'));
 });
 
 test('la nota sotto «Per te» c\'è solo con un impianto nuovo, in tutti e due i percorsi, e non parla di chi entra dopo la scadenza (esclude la nota al consumatore e a chi ha l\'impianto già in esercizio, la frase sulla domanda al GSE e quella su chi entra, tolte l\'08/11/2026); a finestra chiusa il contributo ARERA lo riceve la comunità (esclude il contributo attribuito all\'impianto)', () => {
@@ -229,4 +229,10 @@ test('la riga dei costi della CER dice che l\'eccedentaria non li copre e resta 
 test('la frase sulla parte della CER dice che cosa si toglie prima del 20%: la parte dei costi che tocca alla tariffa e, quando c\'è, la quota eccedentaria (esclude «il 20% della tariffa» accanto a un importo già senza costi, trovato l\'08/11/2026, e «tolti i costi», che farebbe togliere tutti i costi dalla tariffa)', () => {
   assert.equal(testoTolti({ quotaEccedentaria: 0 }), 'tolta la sua parte dei costi della CER');
   assert.equal(testoTolti({ quotaEccedentaria: 0.12 }), 'tolte la quota eccedentaria e la sua parte dei costi della CER');
+});
+
+test('la nota sull\'eccedentaria di «Per te» dice quanto della cifra è eccedentaria e che la sua destinazione la decide il regolamento; senza eccedentaria è vuota (esclude una cifra fatta di eccedentaria senza dirlo, decisione dell\'utente dell\'08/11/2026)', () => {
+  assert.equal(testoEccedentariaTe(1299.4), 'Di questi, 1299 € sono la quota eccedentaria della tariffa. Il simulatore la dà tutta ai consumatori che non sono imprese, in proporzione all\'energia condivisa: quanta ne va a loro e quanta a finalità sociali lo decide il regolamento della CER.');
+  assert.equal(testoEccedentariaTe(0), '');
+  assert.equal(testoEccedentariaTe(undefined), '');
 });

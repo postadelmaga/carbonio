@@ -19,7 +19,7 @@ export function testoScadenza(oggi, costanti) {
   if (chiusa(oggi, scadenza)) return `La finestra della tariffa premio si è chiusa il ${data}, salvo proroghe.`;
   const mesi = mesiAllaScadenza(oggi, scadenza);
   const quando = mesi > 1 ? `mancano ${mesi} mesi` : mesi === 1 ? 'manca un mese' : 'manca meno di un mese';
-  return `Per avere la tariffa premio gli impianti devono entrare in esercizio dopo la costituzione della CER ed entro il ${data}: ${quando}. Conviene presentare la domanda al GSE entro la stessa data. Dopo, con le regole di oggi, su un impianto nuovo la comunità riceve solo il contributo ARERA, molto più piccolo. La data cambierebbe solo con una proroga, che a oggi non c'è.`;
+  return `Per avere la tariffa premio gli impianti devono entrare in esercizio dopo la costituzione della CER ed entro il ${data}: ${quando}. Dopo, con le regole di oggi, su un impianto nuovo la comunità riceve solo il contributo ARERA, molto più piccolo. La data cambierebbe solo con una proroga, che a oggi non c'è.`;
 }
 
 // Sotto «Per te», in tutti e due i percorsi (revisione §6, cambiata l'08/11/2026): solo a chi ha un impianto nuovo, che
@@ -31,6 +31,14 @@ export function notaScadenza(impiantoNuovo, oggi, costanti) {
   return chiusa(oggi, scadenza)
     ? `La finestra della tariffa premio si è chiusa il ${data}, salvo proroghe: su un impianto nuovo la comunità riceve solo il contributo ARERA.`
     : `Per avere la tariffa premio l'impianto deve entrare in esercizio dopo la costituzione della CER ed entro il ${data}. Se entra in esercizio dopo, con le regole di oggi la tariffa non c'è: la sua energia conta lo stesso per la comunità, ma su di essa la comunità riceve solo il contributo ARERA, molto più piccolo. La data può arrivare prima, se in Italia si raggiungono 5 GW di impianti incentivati, e cambierebbe solo con una proroga, che a oggi non c'è.`;
+}
+
+// Sotto il numero grande di «Per te» (decisione dell'utente, 08/11/2026): quanto della cifra è quota eccedentaria, che il
+// simulatore dà tutta ai consumatori non imprese, e che la destinazione vera la decide il regolamento. Vuota senza
+// eccedentaria. `quota` è la quotaEccedentaria del socio, per membro.
+export function testoEccedentariaTe(quota) {
+  if (!(quota > 0)) return '';
+  return `Di questi, ${euro(quota)} sono la quota eccedentaria della tariffa. Il simulatore la dà tutta ai consumatori che non sono imprese, in proporzione all'energia condivisa: quanta ne va a loro e quanta a finalità sociali lo decide il regolamento della CER.`;
 }
 
 // Che cosa si toglie dalla tariffa prima della parte della CER (spec del sito §6.8-§6.9): la quota eccedentaria, che resta

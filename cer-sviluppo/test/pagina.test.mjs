@@ -237,11 +237,11 @@ test('la nota sulla scadenza sotto «Per te» c\'è in tutti e due i percorsi e 
 
 test('ogni icona «i» è un pulsante con aria-expanded, aria-controls verso un testo nascosto della pagina e aria-label, fuori dalle label (esclude testi raggiungibili solo con il mouse, pulsanti dentro una label e icone staccate dall\'etichetta)', () => {
   const pulsanti = [...HTML.matchAll(/<button type="button" class="info" aria-expanded="false" aria-controls="([^"]+)" aria-label="Spiegazione: [^"]+">i<\/button>/g)].map((m) => m[1]);
-  assert.ok(pulsanti.length >= 5, `icone trovate: ${pulsanti.length}`);
+  assert.ok(pulsanti.length >= 4, `icone trovate: ${pulsanti.length}`);
   assert.equal((HTML.match(/class="info"/g) ?? []).length, pulsanti.length, 'ogni icona ha tutti gli attributi');
   for (const id of pulsanti) assert.match(HTML, new RegExp(`<span class="info-testo" id="${id}" hidden>`), id);
   for (const l of HTML.matchAll(/<label[^>]*>([\s\S]*?)<\/label>/g)) assert.ok(!l[1].includes('class="info"'), 'un\'icona dentro una label');
-  for (const id of ['info-spesa', 'info-fossili', 'info-media', 'info-fondatori', 'info-esercizio']) assert.ok(pulsanti.includes(id), id);
+  for (const id of ['info-fossili', 'info-media', 'info-fondatori', 'info-esercizio']) assert.ok(pulsanti.includes(id), id);
   // l'icona sta nello stesso contenitore della sua label, subito dopo (non dentro: un pulsante in una label non è ammesso)
   for (const [id, segno] of [['info-fossili', 'value="fossili"'], ['info-media', 'value="media"'], ['info-fondatori', 'name="f-fondatori"']]) {
     const m = HTML.match(new RegExp(`<div class="con-info">\\s*(<label[^>]*>(?:(?!</label>)[\\s\\S])*</label>)\\s*<span class="info-gruppo"><button type="button" class="info" aria-expanded="false" aria-controls="${id}"`));
@@ -253,7 +253,6 @@ test('ogni icona «i» è un pulsante con aria-expanded, aria-controls verso un 
   assert.match(JS, /import \{ attivaInfo \} from '\.\/info\.js';/);
   assert.match(JS, /attivaInfo\(document\)/);
   assert.match(HTML, /Il contatore non limita i pannelli: serve a stimare i consumi\./);
-  assert.match(HTML, /La spesa variabile è la parte della bolletta che cresce con i kWh/);
 });
 
 test('menu del simulatore come quello dello statuto, «Avanzato», cursore delle abitudini di «fondare» nella sezione 3, quote del riparto legate (esclude il menu vecchio e il cursore nella sezione dei fondatori)', () => {
@@ -286,23 +285,16 @@ function attributoDelCorpo(attributo) {
   };
 }
 
-test('spesa variabile e prelievi si nascondono senza consumi, e la percentuale anche al produttore che entra (esclude un «—» o uno «0 kWh» in pagina e una percentuale che mescola la quota di produttore con la bolletta di casa)', () => {
-  const consumo = attributoDelCorpo('consumo'), spesa = attributoDelCorpo('spesa');
-  const ruolo = (r) => ({ utente: { ruolo: r } });
+test('i prelievi si nascondono senza consumi, e la riga «Sulla spesa variabile della bolletta» non c\'è più, con la sua icona e il suo attributo (esclude uno «0 kWh» in pagina e la percentuale tolta dall\'utente l\'08/11/2026)', () => {
+  const consumo = attributoDelCorpo('consumo');
   assert.equal(consumo({ te: { consumo: 3000 } }), true);
   assert.equal(consumo({ te: { consumo: 0 } }), false, 'il socio produttore non consuma sul posto: niente riga dei prelievi');
   assert.equal(consumo({ te: {} }), false, 'senza un «io» nel risultato non c\'è nulla da mostrare');
-  assert.equal(spesa({ te: { id: 'io', consumo: 3000 }, s: ruolo('consumatore') }), true);
-  assert.equal(spesa({ te: { id: 'io', consumo: 3000 }, s: ruolo('prosumer') }), true);
-  assert.equal(spesa({ te: { id: 'io', consumo: 3000 }, s: ruolo('produttore') }), false, 'il produttore che entra: la percentuale mescolerebbe la sua quota di produttore con la bolletta di casa');
-  assert.equal(spesa({ te: { id: 'io', consumo: 0 }, s: ruolo('consumatore') }), false);
-  // in «fondare» il ruolo del modulo «Il tuo ruolo» è nascosto ma il suo pulsante resta scelto: non conta
-  assert.equal(spesa({ te: { id: 'famiglie', consumo: 3000 }, s: ruolo('produttore'), percorso: 'fondare' }), true, 'un ruolo rimasto scelto in «entrare» non nasconde la riga a chi fonda');
-  assert.equal(spesa({ te: { id: 'produttore', consumo: 0 }, s: ruolo('consumatore'), percorso: 'fondare' }), false, 'il socio produttore che fonda non consuma');
-  assert.equal(spesa({ te: { id: 'produttore', consumo: 5 }, s: ruolo('consumatore'), percorso: 'fondare' }), false, '«Io sono» il socio produttore');
-  assert.match(CSS, /body:not\(\[data-spesa\]\) \[data-solo-spesa\], body:not\(\[data-consumo\]\) \[data-solo-consumo\]\{display:none\}/);
-  assert.match(HTML, /<div data-solo-spesa><dt>Sulla spesa variabile della bolletta /);
+  assert.match(CSS, /body:not\(\[data-consumo\]\) \[data-solo-consumo\]\{display:none\}/);
   assert.match(HTML, /<p data-solo-consumo>I tuoi prelievi dalla rete pesano /);
+  assert.doesNotMatch(HTML, /Sulla spesa variabile|info-spesa|data-solo-spesa|te\.quotaSpesa|te\.costoEvitatoKwh/);
+  assert.doesNotMatch(CSS, /data-spesa|data-solo-spesa/);
+  assert.doesNotMatch(JS, /b\.spesa/);
 });
 
 test('il paragrafo della CO₂ in italiani e sui 20 anni è uno solo e sparisce se è vuoto (esclude una riga vuota nel riquadro «Per il clima» quando non ci sono impianti nuovi)', () => {
@@ -311,11 +303,6 @@ test('il paragrafo della CO₂ in italiani e sui 20 anni è uno solo e sparisce 
   assert.equal((HTML.match(/data-r="emissioni\.paragrafoCo2"/g) ?? []).length, 1);
   assert.match(HTML, /<p class="testo-emissioni" data-r="emissioni\.paragrafoCo2"><\/p>/, 'il paragrafo non è vuoto nella sorgente o non ha la classe che lo nasconde da vuoto');
   assert.match(CSS, /\.testo-emissioni:empty\{display:none\}/, 'un paragrafo vuoto resterebbe una riga bianca');
-});
-
-test('l\'icona della spesa variabile dice che il margine del venditore non è pubblicato e che il dispacciamento lo è, ma il venditore lo ribalta secondo il contratto (esclude il dispacciamento detto «non pubblicato»)', () => {
-  assert.ok(HTML.includes('<span data-r="te.consumo" data-f="kwh"></span>. La stima della spesa non conta il margine del venditore, che non è pubblicato, né il dispacciamento, che il venditore ribalta secondo il contratto: la spesa vera è più alta e la percentuale più bassa.</span></span></dt>'), 'l\'icona della spesa non dice come stanno margine e dispacciamento, e che la spesa vera è più alta e la percentuale più bassa');
-  assert.ok(!HTML.includes('né il dispacciamento, che non sono pubblicati'), 'il dispacciamento è pubblicato');
 });
 
 test('l\'og:description del simulatore ha il punto dopo «Stima indicativa», come la spec §9.4 (esclude i due punti che legavano la frase sulle fonti)', () => {
@@ -360,4 +347,9 @@ test('le schede dei risultati vanno in quest\'ordine: «Per te», «Per la comun
 test('la frase sulla parte della CER ha il pezzo su che cosa si toglie, generato da testoTolti (esclude la frase di prima, «Il 20% della tariffa resta alla CER», senza i costi)', () => {
   assert.ok(HTML.includes('<p class="testo-emissioni">Il <span data-r="com.frazioneCer" data-f="perc"></span> della tariffa, <span data-r="com.toltiTesto"></span>, resta alla CER: in questa simulazione <b data-r="com.quotaCer" data-f="euro"></b> l\'anno. L\'assemblea decide come usarlo.</p>'));
   assert.match(JS, /toltiTesto: testoTolti\(com\)/);
+});
+
+test('sotto il numero grande di «Per te» c\'è la nota sull\'eccedentaria, generata da testoEccedentariaTe con la quota del socio (esclude una cifra fatta quasi tutta di eccedentaria senza dirlo)', () => {
+  assert.match(HTML, /<small>all'anno dalla CER, il primo anno<\/small><\/p>\s*<p class="nota-r" data-r="te\.eccedentariaTesto"><\/p>/);
+  assert.match(JS, /eccedentariaTesto: testoEccedentariaTe\(te\.voci\?\.quotaEccedentaria\)/);
 });
