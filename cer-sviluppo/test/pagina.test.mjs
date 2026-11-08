@@ -227,10 +227,12 @@ test('testi della CO₂: niente «fino a», stima dichiarata, italiani e 20 anni
   assert.match(JS, /if \(percorso === 'fondare'\) sincronizzaIo\(ingressi\);/);
 });
 
-test('la nota sulla scadenza sotto «Per te» è generata dal ruolo, e il testo vecchio non c\'è più (esclude la nota di prima, rimasta a mano)', () => {
-  assert.match(HTML, /<p class="nota-r" data-solo-percorso="entrare" data-r="te\.notaScadenza"><\/p>/);
+test('la nota sulla scadenza sotto «Per te» c\'è in tutti e due i percorsi e dipende da un impianto tuo nuovo, non dal ruolo; vuota non occupa spazio (esclude la nota solo in «entrare», che il produttore di «fondare» non vedeva, e il testo vecchio rimasto a mano)', () => {
+  assert.match(HTML, /<p class="nota-r" data-r="te\.notaScadenza"><\/p>/);
   assert.doesNotMatch(HTML, /la tua parte di tariffa potrebbe non esserci/);
-  assert.match(JS, /notaScadenza: percorso === 'entrare' \? notaScadenza\(s\.utente\.ruolo, new Date\(\), dati\.costanti, s\.utente\.stato\) : ''/);
+  assert.match(JS, /notaScadenza: notaScadenza\(te\.haImpianto && !te\.soloGiaInEsercizio, new Date\(\), dati\.costanti\)/);
+  assert.doesNotMatch(JS, /notaScadenza\(s\.utente\.ruolo/);
+  assert.match(CSS, /\.nota-r:empty[^{]*\{display:none\}/);
 });
 
 test('ogni icona «i» è un pulsante con aria-expanded, aria-controls verso un testo nascosto della pagina e aria-label, fuori dalle label (esclude testi raggiungibili solo con il mouse, pulsanti dentro una label e icone staccate dall\'etichetta)', () => {

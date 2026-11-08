@@ -165,20 +165,18 @@ test('la scadenza in «fondare»: esercizio dopo la costituzione, domanda che co
   assert.ok(!t.includes('va presentata'));
 });
 
-test('la nota sotto «Per te» in «Voglio entrare»: al consumatore solo la parte su chi entra, a prosumer e produttore una nota sola che comincia dall\'impianto (esclude la nota sull\'impianto mostrata al consumatore), e con l\'impianto già in esercizio solo la parte su chi entra (esclude la scadenza degli impianti nuovi mostrata a chi ha l\'impianto già in esercizio), e a finestra chiusa dice che il contributo ARERA lo riceve la comunità (esclude il contributo attribuito all\'impianto)', () => {
-  const oggi = new Date(2026, 10, 4);
-  const chi = 'La scadenza del 31/12/2027 riguarda gli impianti, non chi consuma. Se entri dopo quella data in una comunità i cui impianti hanno già la tariffa, la tua energia condivisa dovrebbe contare ancora, per gli anni che restano dei loro 20: nessuna regola lo esclude, ma nessuna lo scrive, e il GSE non l\'ha chiarito.';
-  const impianto = 'Per avere la tariffa premio l\'impianto deve entrare in esercizio dopo la costituzione della CER ed entro il 31/12/2027, e conviene presentare la domanda al GSE entro la stessa data. Se entra in esercizio dopo, con le regole di oggi la tariffa non c\'è: la sua energia conta lo stesso per la comunità, ma su di essa la comunità riceve solo il contributo ARERA, molto più piccolo. La data può arrivare prima, se in Italia si raggiungono 5 GW di impianti incentivati, e cambierebbe solo con una proroga, che a oggi non c\'è.';
-  assert.equal(notaScadenza('consumatore', oggi, costanti), chi);
-  assert.equal(notaScadenza('prosumer', oggi, costanti), `${impianto} ${chi}`);
-  assert.equal(notaScadenza('produttore', oggi, costanti), `${impianto} ${chi}`);
-  assert.equal(notaScadenza('prosumer', oggi, costanti, 'precedente'), chi);
-  assert.equal(notaScadenza('produttore', oggi, costanti, 'esistente'), chi);
-  assert.equal(notaScadenza('prosumer', oggi, costanti, 'nuovo'), `${impianto} ${chi}`);
+test('la nota sotto «Per te» c\'è solo con un impianto nuovo, in tutti e due i percorsi, e non parla di chi entra dopo la scadenza (esclude la nota al consumatore e a chi ha l\'impianto già in esercizio, la frase sulla domanda al GSE e quella su chi entra, tolte l\'08/11/2026); a finestra chiusa il contributo ARERA lo riceve la comunità (esclude il contributo attribuito all\'impianto)', () => {
+  const oggi = new Date(2026, 10, 8);
+  const impianto = 'Per avere la tariffa premio l\'impianto deve entrare in esercizio dopo la costituzione della CER ed entro il 31/12/2027. Se entra in esercizio dopo, con le regole di oggi la tariffa non c\'è: la sua energia conta lo stesso per la comunità, ma su di essa la comunità riceve solo il contributo ARERA, molto più piccolo. La data può arrivare prima, se in Italia si raggiungono 5 GW di impianti incentivati, e cambierebbe solo con una proroga, che a oggi non c\'è.';
+  assert.equal(notaScadenza(true, oggi, costanti), impianto);
+  assert.equal(notaScadenza(false, oggi, costanti), '');
+  for (const t of [notaScadenza(true, oggi, costanti), notaScadenza(true, new Date(2028, 1, 1), costanti)]) {
+    assert.doesNotMatch(t, /domanda al GSE|chi consuma|Se entri/);
+  }
   const chiusa = 'La finestra della tariffa premio si è chiusa il 31/12/2027, salvo proroghe: su un impianto nuovo la comunità riceve solo il contributo ARERA.';
-  assert.equal(notaScadenza('prosumer', new Date(2028, 1, 1), costanti), `${chiusa} ${chi}`);
-  assert.equal(notaScadenza('consumatore', new Date(2028, 1, 1), costanti), chi);
-  assert.ok(!notaScadenza('produttore', new Date(2028, 1, 1), costanti).includes('un impianto nuovo riceve solo il contributo ARERA'), 'a finestra chiusa il contributo ARERA lo riceve la comunità, non l\'impianto');
+  assert.equal(notaScadenza(true, new Date(2028, 1, 1), costanti), chiusa);
+  assert.equal(notaScadenza(false, new Date(2028, 1, 1), costanti), '');
+  assert.ok(!notaScadenza(true, new Date(2028, 1, 1), costanti).includes('un impianto nuovo riceve solo il contributo ARERA'), 'a finestra chiusa il contributo ARERA lo riceve la comunità, non l\'impianto');
 });
 
 test('le ipotesi seguono gli impianti: la riga dei nuovi solo con impianti nuovi, quella dei già in esercizio solo con loro (esclude un\'ipotesi in conflitto con il modulo)', () => {

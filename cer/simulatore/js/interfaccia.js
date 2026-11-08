@@ -186,8 +186,9 @@ function mostra(r, s, percorso, ingressi) {
   // il riquadro dell'impianto della CER c'è con ogni impianto della CER; l'investimento da finanziare solo se uno è nuovo
   if (com.haImpiantoCer) b.impiantoCer = ''; else delete b.impiantoCer;
   if (com.investimentoCer > 0) b.investimentoCer = ''; else delete b.investimentoCer;
+  // la nota sulla scadenza va a chi ha un impianto nuovo, in «entrare» e in «fondare»
   const vista = {
-    te: { ...te, notaScadenza: percorso === 'entrare' ? notaScadenza(s.utente.ruolo, new Date(), dati.costanti, s.utente.stato) : '' },
+    te: { ...te, notaScadenza: notaScadenza(te.haImpianto && !te.soloGiaInEsercizio, new Date(), dati.costanti) },
     emissioni: {
       ...em,
       stimaTesto: testoStimaCo2(r.emissioni.principale, em.evitataAltra, dati.costanti),
