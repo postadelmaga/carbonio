@@ -109,9 +109,12 @@ OE_DATA="$SRC_DIR/ocean-earth/data"
 if [ -f "$SRC_DIR/ocean-earth/index.html" ]; then
   mkdir -p "$BUILD_DIR/atlante" "$BUILD_DIR/ocean-earth"
   cp -R "$SRC_DIR/ocean-earth/index.html" "$SRC_DIR/ocean-earth/app" "$SRC_DIR/ocean-earth/reel" "$BUILD_DIR/atlante/"
-  # i dati restano dove la chiave di arm_php puo' scriverli (/ocean-earth/data/)
-  sed -i 's|<meta name="data-base" content="data/">|<meta name="data-base" content="/ocean-earth/data/">|; s|<link rel="preload" href="data/manifest.json"|<link rel="preload" href="/ocean-earth/data/manifest.json"|' "$BUILD_DIR/atlante/index.html"
-  grep -q 'content="/ocean-earth/data/"' "$BUILD_DIR/atlante/index.html" || { err "atlante: percorso dei dati non sostituito"; exit 1; }
+  # dati: arm_php li pubblica su Cloudflare Pages (banda gratuita, CDN) e,
+  # come riserva, sul server del sito in /ocean-earth/data/ (dove la sua
+  # chiave puo' scrivere). OE_DATA_URL=/ocean-earth/data/ per tornare indietro.
+  OE_URL="${OE_DATA_URL:-https://co2-info-atlas.pages.dev/}"
+  sed -i "s|<meta name=\"data-base\" content=\"data/\">|<meta name=\"data-base\" content=\"$OE_URL\"><meta name=\"data-fallback\" content=\"/ocean-earth/data/\">|; s|<link rel=\"preload\" href=\"data/manifest.json\"|<link rel=\"preload\" href=\"${OE_URL}manifest.json\"|" "$BUILD_DIR/atlante/index.html"
+  grep -q "content=\"$OE_URL\"" "$BUILD_DIR/atlante/index.html" || { err "atlante: percorso dei dati non sostituito"; exit 1; }
   # il vecchio indirizzo porta al nuovo, con parametri e ancora
   cat > "$BUILD_DIR/ocean-earth/index.html" <<'RINVIO'
 <!doctype html>

@@ -49,8 +49,9 @@ function netInfo(url, t0) {
 // nulla al server, anche alle visite successive. I file fissi (terra, coste,
 // climatologia) seguono la versione del manifest. Il resto passa dalla rete.
 let CACHES = null;
-const FRAME_RE = /\/data\/(p\/)?[mdh]\/[a-z0-9]+\/[^/]+\.(png|webp)$/;
-const STATIC_RE = /\/data\/(static|clim|p90|bias)\//;
+// senza /data/ nel percorso: su Cloudflare Pages i dati stanno alla radice
+const FRAME_RE = /\/(p\/)?[mdh]\/[a-z0-9]+\/[^/]+\.(png|webp)$/;
+const STATIC_RE = /\/(static|clim|p90|bias)\/[^/]+$/;
 
 function cacheFor(url) {
   if (!CACHES) return null;

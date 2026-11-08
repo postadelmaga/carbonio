@@ -6,6 +6,7 @@
 #   2. validate.py    controlli scientifici; se falliscono NON si pubblica niente
 #   3. rsync          verso il server del sito: prima i fotogrammi, il manifest per
 #                     ultimo, cosi' nessuno vede un istante elencato e non arrivato
+#   4. pages.sh       la stessa cartella su Cloudflare Pages, da cui legge la pagina
 #
 # La chiave ~/.ssh/oe_to_arch e' autorizzata sul server solo per rrsync dentro
 # /home/arch/carbonioweb/ocean-earth/data (niente shell, solo da questo IP):
@@ -43,4 +44,10 @@ OPTS=(-a --omit-dir-times --no-perms --delete --max-delete=400 -e "$SSH"
       --exclude '/index/' --exclude '/logs/' --exclude '*.tmp.*')
 rsync "${OPTS[@]}" --exclude '/manifest.json' data/ "$DEST"
 rsync "${OPTS[@]}" data/manifest.json "${DEST}manifest.json"
+# copia principale per i lettori: Cloudflare Pages (pipeline/pages.sh); quella
+# sul server del sito resta come riserva. Se Pages non risponde si va avanti:
+# la pagina ripiega da sola sul server.
+if [ -f "$HOME/.cloudflare-pages" ]; then
+  ./pipeline/pages.sh || echo "=== Cloudflare Pages NON aggiornato (resta la copia sul server)"
+fi
 echo "=== $(date -u +%FT%TZ) pubblicato: $(python3 -c 'import json;m=json.load(open("data/manifest.json"));print(m.get("generated"))')"

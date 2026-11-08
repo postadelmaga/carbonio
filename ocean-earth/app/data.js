@@ -1,9 +1,12 @@
 // Accesso ai dati: manifest, decodifica nei worker, cache dei fotogrammi.
 
-// dove stanno i dati: <meta name="data-base"> (deploy.sh la punta a /ocean-earth/data/,
-// che arm_php aggiorna; la pagina vive in /atlante/), altrimenti data/ accanto alla pagina
-const META_BASE = globalThis.document?.querySelector('meta[name=data-base]')?.content;
-const BASE = META_BASE ? new URL(META_BASE, globalThis.document.baseURI) : new URL('../data/', import.meta.url);
+// dove stanno i dati: <meta name="data-base"> (deploy.sh la punta a Cloudflare
+// Pages, che arm_php aggiorna; la pagina vive in /atlante/), altrimenti data/
+// accanto alla pagina. <meta name="data-fallback">: la copia sul server del
+// sito (/ocean-earth/data/), usata se la prima non da' il manifest.
+const meta = (n) => globalThis.document?.querySelector(`meta[name=${n}]`)?.content;
+const META_BASE = meta('data-base'), META_FALLBACK = meta('data-fallback');
+let BASE = META_BASE ? new URL(META_BASE, globalThis.document.baseURI) : new URL('../data/', import.meta.url);
 
 // byte occupati da un fotogramma decodificato (gli array che contiene)
 function sizeOf(v) {
@@ -38,8 +41,12 @@ export class DataStore {
   }
 
   async init() {
-    const res = await fetch(new URL('manifest.json', BASE), { cache: 'no-cache' });
-    if (!res.ok) throw new Error('manifest ' + res.status);
+    let res = await fetch(new URL('manifest.json', BASE), { cache: 'no-cache' }).catch(() => null);
+    if ((!res || !res.ok) && META_FALLBACK) {
+      BASE = new URL(META_FALLBACK, globalThis.document.baseURI);
+      res = await fetch(new URL('manifest.json', BASE), { cache: 'no-cache' });
+    }
+    if (!res || !res.ok) throw new Error('manifest ' + (res ? res.status : 'rete'));
     this.manifest = await res.json();
     const c = this.manifest.cache;
     this.cacheNames = c && self.caches ? { frames: `oe-frames-${c.frames}`, static: `oe-static-${c.static}` } : null;

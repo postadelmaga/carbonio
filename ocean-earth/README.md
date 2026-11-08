@@ -387,6 +387,21 @@ Log: `~/ocean-earth/data/logs/auto.log` on arm_php. `deploy.sh --oe-data`
 still pushes the local copy, for emergencies only: it is normally older than
 the server's.
 
+**Readers download from Cloudflare Pages** (since 8 Nov 2026): after the
+rsync, `auto.sh` runs `pipeline/pages.sh`, which deploys the same folder to
+the Pages project `co2-info-atlas` (https://co2-info-atlas.pages.dev/: free
+bandwidth, CDN, `Access-Control-Allow-Origin: *`, `Cache-Control: no-cache`
+like the server). Pages deploys are atomic and upload only new files (the
+first one, 5 GB, took 44 min; a day is tens of MB). Free plan limit: 20,000
+files per deploy (15,059 on 8 Nov 2026; `pages.sh` stops at 19,500). It needs
+`~/.cloudflare-pages` on arm_php (`CLOUDFLARE_API_TOKEN`, a token with only
+*Account · Cloudflare Pages · Edit*, and `CLOUDFLARE_ACCOUNT_ID`; chmod 600,
+never in the repository) and Node 20 + wrangler 3 in `~/cf`. `deploy.sh`
+points `<meta name="data-base">` at Pages and `<meta name="data-fallback">` at
+`/ocean-earth/data/`: if Pages does not give the manifest, the page reads
+from the server. `OE_DATA_URL=/ocean-earth/data/ ./publish.sh --apply` goes
+back to the server only.
+
 First setup on arm_php (once): pipeline code and `data/index/` copied from
 the repository, `./pipeline/auto.sh --pull` to take the published series from
 the server, then the two unit files into `/etc/systemd/system/` and
