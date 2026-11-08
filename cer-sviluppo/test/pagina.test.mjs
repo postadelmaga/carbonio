@@ -349,3 +349,8 @@ test('le etichette del costo evitato dicono se l\'IVA è compresa (famiglie ed e
   assert.match(HTML, /<option value="1,5-3">non so \(usiamo 3 kW\)<\/option>/);
   assert.doesNotMatch(HTML, /il più comune/);
 });
+
+test('le schede dei risultati vanno in quest\'ordine: «Per te», «Per la comunità», «L\'impianto della CER», «Per il clima» (esclude «Per il clima» prima della comunità, com\'era fino all\'08/11/2026, e l\'impianto della CER staccato dalla comunità)', () => {
+  const schede = tutti(HTML, /<section class="ris (ris-[a-z-]+)"/g);
+  assert.deepEqual(schede, ['ris-te', 'ris-comunita', 'ris-impianto-cer', 'ris-emissioni']);
+});
