@@ -84,7 +84,7 @@ async function start() {
   bindControls();
   buildAbout();
   timeline.setTier(manifest.tiers.monthly ? 'monthly' : Object.keys(manifest.tiers)[0], false);
-  if (REEL || !readHash()) { setMode(!REEL && ui.view && viewAvailable(ui.view) ? ui.view : firstView('sea')); toDataTime(ui.view); }
+  if (REEL || !readHash()) { setMode(!REEL && ui.view && viewAvailable(ui.view) ? ui.view : firstView('air') || firstView('sea')); toDataTime(ui.view); }
   hashReady = true;
   $('#loading').hidden = true;
   // per i test automatici e per chi vuole curiosare dalla console
@@ -1172,7 +1172,7 @@ function bindControls() {
   // livelli
   // viste i cui dati non sono ancora pubblicati (manifest): nascoste
   const mv = manifest.tiers.monthly?.vars || [];
-  const NEEDS = { sla: ['sla'], ice: ['ice'], drought: ['soil'], co2: ['co2'], emis: ['co2foss', 'co2nat'], tair: ['t2m'] };
+  const NEEDS = { sla: ['sla'], ice: ['ice'], drought: ['soil'], co2: ['co2'], emis: ['co2foss', 'co2nat'], tair: ['t2m'], ltair: ['t2m'] };
   $$('.quick-mode button[data-mode]').forEach((b) => { b.hidden = !(NEEDS[b.dataset.mode] || []).every((v) => mv.includes(v)); });
   $$('.quick-mode button[data-mode]').forEach((b) => b.addEventListener('click', () => { closeMenus(); chooseView(b.dataset.mode); }));
   // i campioni di colore nei menu: la scala di ogni vista
@@ -1327,7 +1327,7 @@ const PRESETS = {
   sla: { ...OFF, sla: 1 }, ice: { ...OFF, ice: 1 },
   rain: { ...OFF, land: 1, landVar: 'precip' },
   drought: { ...OFF, land: 1, landVar: 'soil' },
-  co2: { ...OFF, co2: 1, airMode: 1 }, emis: { ...OFF, flux: 1, fluxMode: 0 }, tair: { ...OFF, tair: 1 },
+  co2: { ...OFF, co2: 1, airMode: 1 }, emis: { ...OFF, flux: 1, fluxMode: 0 }, tair: { ...OFF, tair: 1 }, ltair: { ...OFF, tair: 1, tairLand: true },
   mix: { ...OFF, sst: 1, anom: 0.7, speed: 0.6 },
 };
 const LAYERS = ['sst', 'anom', 'speed'];      // quelli del mare: decidono il livello principale
@@ -1335,13 +1335,15 @@ const ALL_LAYERS = [...LAYERS, 'sla', 'ice', 'land', 'co2', 'flux', 'tair'];
 const MONTHLY_ONLY = ['sla', 'ice', 'land', 'co2', 'flux', 'tair'];
 function saveAir() { keep('oe-air', JSON.stringify([ui.airMode, ui.fluxMode])); }
 // schede e viste: la scheda raggruppa le viste, la vista fissa i livelli
-const DOMAIN = { sst: 'sea', anom: 'sea', speed: 'sea', sla: 'sea', ice: 'sea', mix: 'mix', rain: 'land', drought: 'land', co2: 'air', emis: 'air', tair: 'air' };
-const CAPTION = { sst: 'cap_sst', anom: 'cap_anom', speed: 'cap_speed', sla: 'sla_title', ice: 'ice_title', mix: 'mix_title', rain: 'rain_title', drought: 'drought_title', co2: 'co2_title', emis: 'emis_title', tair: 'tair_title' };
+const DOMAIN = { sst: 'sea', anom: 'sea', speed: 'sea', sla: 'sea', ice: 'sea', mix: 'mix', rain: 'land', drought: 'land', co2: 'air', emis: 'air', tair: 'air', ltair: 'land' };
+const CAPTION = { sst: 'cap_sst', anom: 'cap_anom', speed: 'cap_speed', sla: 'sla_title', ice: 'ice_title', mix: 'mix_title', rain: 'rain_title', drought: 'drought_title', co2: 'co2_title', emis: 'emis_title', tair: 'tair_title', ltair: 'ltair_title' };
 // nell'indirizzo: nomi stabili, uguali in tutte le lingue
-const SLUG = { sst: 'temperatura', anom: 'anomalia', speed: 'correnti', sla: 'livello-mare', ice: 'ghiaccio', mix: 'mix', rain: 'pioggia', drought: 'siccita', co2: 'co2', emis: 'emissioni', tair: 'temperatura-aria' };
+const SLUG = { sst: 'temperatura', anom: 'anomalia', speed: 'correnti', sla: 'livello-mare', ice: 'ghiaccio', mix: 'mix', rain: 'pioggia', drought: 'siccita', co2: 'co2', emis: 'emissioni', tair: 'temperatura-aria', ltair: 'temperatura-terra' };
 // la vista con cui si apre ogni scheda: la piu' eloquente sul clima che cambia
 // (prima voce di ogni menu); poi quella scelta l'ultima volta in quella scheda
-const DEFAULT_VIEW = { sea: 'anom', land: 'drought', air: 'co2' };
+// (8 nov 2026, scelta dell'utente: in ogni scheda l'anomalia di temperatura;
+// all'avvio l'Aria, che copre tutto il globo)
+const DEFAULT_VIEW = { sea: 'anom', land: 'ltair', air: 'tair' };
 const lastView = {};
 function firstView(d) {
   for (const m of [lastView[d], DEFAULT_VIEW[d], ...Object.keys(DOMAIN).filter((k) => DOMAIN[k] === d)]) if (m && viewAvailable(m)) return m;
@@ -1357,7 +1359,7 @@ function chooseView(m) {
   toDataTime(m);
 }
 // i dati che ogni vista deve avere nel mese mostrato
-const VIEW_VARS = { sst: ['sst'], anom: ['sst'], speed: ['cur'], sla: ['sla'], ice: ['ice'], rain: ['precip'], drought: ['soil'], co2: ['co2'], emis: ['co2foss', 'co2nat'], tair: ['t2m'] };
+const VIEW_VARS = { sst: ['sst'], anom: ['sst'], speed: ['cur'], sla: ['sla'], ice: ['ice'], rain: ['precip'], drought: ['soil'], co2: ['co2'], emis: ['co2foss', 'co2nat'], tair: ['t2m'], ltair: ['t2m'] };
 // una vista senza dati nell'istante mostrato (la CO₂ arriva un anno dopo, il
 // suolo qualche mese dopo): si va al mese piu' vicino che li ha, prima indietro
 function toDataTime(m) {
@@ -1373,7 +1375,7 @@ function toDataTime(m) {
   timeline.seek(k);
   note(`${t(k < i ? 'view_until' : 'view_from')} ${fmtStamp(F[k].t)}`);
 }
-const SWATCH = { sst: null, anom: 'anomaly', speed: 'speedField', sla: 'sla', ice: null, rain: 'precip', drought: 'precip', co2: 'co2', emis: 'flux', tair: 'anomaly' };
+const SWATCH = { sst: null, anom: 'anomaly', speed: 'speedField', sla: 'sla', ice: null, rain: 'precip', drought: 'precip', co2: 'co2', emis: 'flux', tair: 'anomaly', ltair: 'anomaly' };
 function swatch(m) {
   if (m === 'ice') return 'linear-gradient(90deg,#20364a,#b8d6ed 45%,#f7fcff)';
   return cssGradient(m === 'sst' ? globe.state.paletteSst : SWATCH[m]);
@@ -1470,7 +1472,9 @@ function readHash() {
 function setMode(mode) {
   ui.view = mode;
   setDomain(DOMAIN[mode]);
-  let { landVar, airMode, fluxMode, ...w } = PRESETS[mode];
+  let { landVar, airMode, fluxMode, tairLand, ...w } = PRESETS[mode];
+  // la temperatura dell'aria nella scheda Terra: solo sulla terraferma
+  globe.state.tairLand = !!tairLand;
   // il mix riprende la combinazione lasciata l'ultima volta
   if (mode === 'mix' && !REEL) try {
     const m = JSON.parse(localStorage.getItem('oe-mix') || 'null');
@@ -1500,8 +1504,12 @@ function setLayers(w) {
   syncModeButtons();
   // quale file serve (OSTIA, Mediterraneo) dipende da quali livelli sono accesi
   const on = (o) => ALL_LAYERS.map((k) => o[k] > 0).join();
-  if (!current) return;               // all'avvio: i fotogrammi non ci sono ancora
+  if (!timeline) return;
+  // anche all'avvio, quando i primi fotogrammi sono ancora in arrivo: erano
+  // stati chiesti con i livelli di partenza (il mare), e una vista dell'aria o
+  // della terra restava vuota
   if (on(before) !== on(st.layers)) onTime('source');
+  else if (!current) return;
   else if (changedMain) refreshPoint();
 }
 

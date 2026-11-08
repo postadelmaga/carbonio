@@ -68,7 +68,7 @@ export class Globe {
       sstA: null, sstB: null, curA: null, curB: null, mix: 0,
       medA: null, medB: null, medBox: [0, 0, 1, 1],
       air: false, airMean: 0,           // aria (CO₂, 1°): texture array, vedi setAir
-      airMode: 0, fluxMode: 0, rangeCo2: [350, 430], rangeCo2Rel: [-6, 6], rangeTair: [-5, 5],
+      airMode: 0, fluxMode: 0, rangeCo2: [350, 430], rangeCo2Rel: [-6, 6], rangeTair: [-5, 5], tairLand: false,
       oceanA: null, oceanB: null,       // livello del mare (R/G) e ghiaccio (B/A), RGBA16F
       landA: null, landB: null, landSpan: 2,   // terraferma: % del normale (ERA5), scala log ±landSpan ottave
       sstC: null, sstD: null, mixCmp: 0, compare: false, split: 0.5,
@@ -430,6 +430,7 @@ export class Globe {
     gl.uniform1i(P.u.uAirOn, st.air ? 1 : 0);
     gl.uniform3fv(P.u.uLayers3, [st.layers.co2 || 0, st.layers.flux || 0, st.layers.tair || 0]);
     gl.uniform2fv(P.u.uRangeTair, st.rangeTair);
+    gl.uniform1i(P.u.uTairLand, st.tairLand ? 1 : 0);
     gl.uniform3fv(P.u.uAirOpt, [st.airMode, st.fluxMode, st.airMean]);
     gl.uniform2fv(P.u.uRangeCo2, st.airMode ? st.rangeCo2Rel : st.rangeCo2);
     gl.uniform1i(P.u.uHasClim, this.hasClim ? 1 : 0);

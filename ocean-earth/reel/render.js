@@ -6,7 +6,7 @@ import { A, legendNow } from './atlas.js';
 
 const SRC = {
   sst: ['m:GLORYS12'], anom: ['m:GLORYS12'], mix: ['m:GLORYS12'], speed: ['m:Copernicus-GlobCurrent'], sla: ['m:DUACS'], ice: ['m:GLORYS12'],
-  rain: ['c:ERA5'], drought: ['c:ERA5-Land'], co2: ['a:CAMS'], tair: ['c:ERA5'], emis: ['a:CAMS'],
+  rain: ['c:ERA5'], drought: ['c:ERA5-Land'], co2: ['a:CAMS'], tair: ['c:ERA5'], ltair: ['c:ERA5'], emis: ['a:CAMS'],
 };
 const SERVICE = { m: 'Copernicus Marine Service', c: 'Copernicus Climate Change Service', a: 'Copernicus Atmosphere Monitoring Service' };
 const DATA_WORD = { it: 'Dati', en: 'Data', es: 'Datos', fr: 'Données', zh: '数据' };

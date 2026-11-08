@@ -50,6 +50,7 @@ uniform sampler2DArray uAir;
 uniform bool uAirOn;
 uniform vec3 uLayers3;               // pesi: CO₂ nell'aria, flussi, temperatura dell'aria
 uniform vec2 uRangeTair;
+uniform bool uTairLand;               // vista Terra: la temperatura dell'aria solo sulla terraferma
 uniform vec3 uAirOpt;                // modo CO₂ (0 ppm, 1 rispetto alla media), modo flussi (0 totale, 1 fossili, 2 naturali), media globale
 uniform vec2 uRangeCo2;
 uniform float uBiasW, uBiasWCmp;     // quanto del dato mostrato viene da anfc (0…1)
@@ -215,7 +216,7 @@ void main() {
     // la CO₂; le coste restano leggibili con le linee disegnate sopra
     if (uLayers3.z > 0.0) {
       vec2 ta = air(uv, 6.0);
-      if (ta.y > 0.5) col = mix(col, lut((ta.x - uRangeTair.x) / (uRangeTair.y - uRangeTair.x), 1.0), uLayers3.z * 0.9);
+      if (ta.y > 0.5) col = mix(col, lut((ta.x - uRangeTair.x) / (uRangeTair.y - uRangeTair.x), 1.0), uLayers3.z * 0.9 * (uTairLand ? smoothstep(0.35, 0.65, land) : 1.0));
     }
     if (uLayers3.y > 0.0) {
       vec2 fo = air(uv, 2.0), na = air(uv, 4.0);

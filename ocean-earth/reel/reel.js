@@ -337,7 +337,7 @@ $('#song-file').addEventListener('change', (e) => { const f = e.target.files[0];
 function renderLibrary() {
   const box = $('#lib-views');
   const fmt = (i) => A.frames[i].t.slice(0, 4);
-  box.innerHTML = ['sea', 'land', 'air'].map((d) => {
+  box.innerHTML = ['air', 'sea', 'land'].map((d) => {
     const vs = VIEWS.filter((v) => DOMAIN[v] === d && A.views[v]);
     if (!vs.length) return '';
     return `<div class="lib-group">${t(d)}</div>` + vs.map((v) => `<button type="button" class="tile" draggable="true" data-view="${v}" title="${esc(A.views[v].title)}">

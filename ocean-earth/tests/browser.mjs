@@ -30,9 +30,20 @@ async function open(w, h, mobile, theme) {
   check('caricamento senza errori', errors.length === 0, errors.join(' | '));
   const loaded = await page.evaluate(() => document.querySelector('#loading').hidden);
   check('manifest caricato', loaded);
-  // al primo accesso il mare si apre sull'anomalia
-  const start = await page.evaluate(() => ({ view: __oe.ui.view, sea: document.querySelector('.dd[data-domain=sea]').classList.contains('on'), cur: document.querySelector('.dd[data-domain=sea] .dd-cur').textContent }));
-  check('vista iniziale: anomalia del mare', start.view === 'anom' && start.sea && start.cur.length > 0, JSON.stringify(start));
+  // al primo accesso l'Aria, sull'anomalia di temperatura, con i suoi dati;
+  // le schede in ordine Aria, Mare, Terra e ognuna si apre sull'anomalia
+  const start = await page.evaluate(async () => {
+    const wait = async (ok) => { for (let k = 0; k < 40 && !ok(); k++) await new Promise((r) => setTimeout(r, 250)); };
+    await wait(() => __oe.shown()?.airF?.t2m?.[0]);
+    const out = { view: __oe.ui.view, air: document.querySelector('.dd[data-domain=air]').classList.contains('on'), cur: document.querySelector('.dd[data-domain=air] .dd-cur').textContent,
+      t2m: !!__oe.shown()?.airF?.t2m?.[0], order: [...document.querySelectorAll('.quick-mode .dd')].map((d) => d.dataset.domain).join() };
+    // il resto dei controlli parte dall'anomalia del mare
+    document.querySelector('.dd[data-domain=sea] .dd-btn').click();
+    out.sea = __oe.ui.view;
+    await wait(() => __oe.shown()?.sA);
+    return out;
+  });
+  check('vista iniziale: anomalia dell\'aria', start.view === 'tair' && start.air && start.cur.length > 0 && start.t2m && start.order === 'air,sea,land' && start.sea === 'anom', JSON.stringify(start));
   // clic al centro del globo (Atlantico)
   await page.mouse.click(620, 430);
   // la serie storica arriva con una tessera da scaricare e decodificare
@@ -127,7 +138,7 @@ async function open(w, h, mobile, theme) {
     return out;
   });
   check('viste livello del mare e ghiaccio', views.tier === 'monthly' && Math.abs(views.sla) < 60 && views.icePole > 50 && !(views.iceEq > 0) && views.status, JSON.stringify(views));
-  // menu Mare / Terra / Aria, Mix per ultimo, vista nell'indirizzo; ogni vista
+  // menu Aria / Mare / Terra, Mix per ultimo, vista nell'indirizzo; ogni vista
   // ha solo la sua legenda e scarica solo i suoi file
   const nav = await page.evaluate(async () => {
     const wait = async (ok) => { for (let k = 0; k < 60 && !ok(); k++) await new Promise((r) => setTimeout(r, 250)); };
@@ -169,7 +180,7 @@ async function open(w, h, mobile, theme) {
     await new Promise((r) => setTimeout(r, 1500));
     return out;
   });
-  check('menu delle viste e indirizzo', nav.land === 'drought' && nav.noMenu && nav.open && nav.closed && nav.openOn && nav.closedOut && nav.items === 'drought,rain' && nav.view === 'rain' && nav.on && nav.hash.startsWith('#pioggia/') && nav.last === 'mix' && nav.sea === 'sst' && nav.cap, JSON.stringify(nav));
+  check('menu delle viste e indirizzo', nav.land === 'ltair' && nav.noMenu && nav.open && nav.closed && nav.openOn && nav.closedOut && nav.items === 'ltair,drought,rain' && nav.view === 'rain' && nav.on && nav.hash.startsWith('#pioggia/') && nav.last === 'mix' && nav.sea === 'sst' && nav.cap, JSON.stringify(nav));
   check('ogni vista: solo la sua legenda e i suoi dati', nav.rows === 'land' && nav.sliders === 0 && nav.onlyOwn && nav.mix.view === 'mix' && nav.mix.on && nav.mix.sliders >= 5, JSON.stringify(nav));
   check('pulsante della legenda', nav.hidden && nav.shownAgain, JSON.stringify(nav));
   // aria (CAMS, 1°): CO₂ e flussi di giugno 1994 (presenti anche con la serie parziale)
