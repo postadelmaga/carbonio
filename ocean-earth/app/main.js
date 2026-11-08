@@ -209,7 +209,9 @@ function needed(f) {
 
 // quali file chiede la combinazione accesa (se cambia, si ricarica)
 function needKey() { return [needSst(), needCur(), medOn(), landOn() && ui.landVar, ...oceanVars(), ...airVars()].join(); }
-function needsChanged() { if (current && current.nk !== needKey()) onTime('source'); }
+// anche con i fotogrammi ancora in arrivo (current nullo): all'avvio le scie
+// si spengono dopo la prima richiesta, che altrimenti scaricava le correnti
+function needsChanged() { if (timeline && (!current || current.nk !== needKey())) onTime('source'); }
 
 // aria (CO₂ e temperatura a 1°): solo serie mensile; la CO₂ arriva fino
 // all'ultimo anno pubblicato da CAMS, la temperatura (ERA5) al mese scorso
@@ -1095,8 +1097,9 @@ function updateStatus() {
     // una riga per fonte: CAMS per la CO₂, ERA5 per la temperatura
     for (const s of new Set(current.av.map((v) => store.source(current.A[v])).filter(Boolean))) parts.push(`<b>${t('group_air')}</b> ${s.name} <span class="muted">(${t(s.kind)}, ${freqLabel(s)}, ${s.res})</span>`);
   }
-  const Ly = globe.state.layers, av = current.av || [];
-  if (timeline.tierName === 'monthly' && ((Ly.co2 > 0 && !av.includes('co2')) || (Ly.flux > 0 && !av.includes('co2foss')))) notes.push(t('air_until'));
+  const Ly = globe.state.layers;
+  const airF = current.airF || {};
+  if (timeline.tierName === 'monthly' && ((Ly.co2 > 0 && !airF.co2?.[0]) || (Ly.flux > 0 && !airF.co2foss?.[0]))) notes.push(t('air_until'));
   for (const v of current.ov || []) {
     const s = store.source(current.A[v]);
     if (s) parts.push(`<b>${t(v + '_short')}</b> ${s.name} <span class="muted">(${t(s.kind)}, ${freqLabel(s)}, ${s.res})</span>`);
@@ -1465,7 +1468,7 @@ function readHash() {
     if (tier && manifest.tiers[tier] && timeline.tierName !== tier) timeline.setTier(tier);
     const i = timeline.findStamp(stamp);
     if (i != null && i >= 0 && timeline.frames[i]?.t === stamp) timeline.seek(i);
-  }
+  } else toDataTime(mode);           // #co2 senza data: al mese piu' vicino che ha i dati
   return true;
 }
 
