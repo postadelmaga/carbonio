@@ -226,7 +226,7 @@ test('la riga dei costi della CER dice che l\'eccedentaria non li copre e resta 
   assert.ok(!riga.includes('resta intera ai consumatori che non sono imprese'), riga);
 });
 
-test('la frase sulla parte della CER dice che cosa si toglie prima del 20%: i costi della CER e, quando c\'è, la quota eccedentaria (esclude «il 20% della tariffa» accanto a un importo che è il 20% della tariffa già senza costi, trovato l\'08/11/2026)', () => {
-  assert.equal(testoTolti({ quotaEccedentaria: 0 }), 'tolti i costi della CER');
-  assert.equal(testoTolti({ quotaEccedentaria: 0.12 }), 'tolti i costi della CER e la quota eccedentaria');
+test('la frase sulla parte della CER dice che cosa si toglie prima del 20%: la parte dei costi che tocca alla tariffa e, quando c\'è, la quota eccedentaria (esclude «il 20% della tariffa» accanto a un importo già senza costi, trovato l\'08/11/2026, e «tolti i costi», che farebbe togliere tutti i costi dalla tariffa)', () => {
+  assert.equal(testoTolti({ quotaEccedentaria: 0 }), 'tolta la sua parte dei costi della CER');
+  assert.equal(testoTolti({ quotaEccedentaria: 0.12 }), 'tolte la quota eccedentaria e la sua parte dei costi della CER');
 });
