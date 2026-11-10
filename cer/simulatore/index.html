@@ -116,18 +116,18 @@
   </fieldset>
 
   <fieldset class="passo" data-solo-percorso="entrare" data-solo-ruolo>
-    <legend><span class="n">5</span>Il tuo impianto</legend>
+    <legend><span class="n">5</span>Il tuo impianto<span class="info-gruppo" data-solo-modo="semplice"><button type="button" class="info" aria-expanded="false" aria-controls="info-tuo-impianto" aria-label="Spiegazione: impianto già in esercizio">i</button><span class="info-testo" id="info-tuo-impianto" hidden>Il simulatore conta un impianto da costruire, che entra in esercizio dopo la costituzione della CER. Se il tuo è già in esercizio, passa alla modalità avanzata e indicalo in «L'impianto è»: vedrai che cosa cambia per te e per la comunità.</span></span></legend>
     <label class="campo" for="kwp">Potenza <output name="kwp-valore"></output>
       <input id="kwp" name="kwp" type="range" min="1" max="20" step="0.5" value="4.5">
     </label>
-    <label class="campo">L'impianto è
+    <label class="campo" data-solo-modo="esperto">L'impianto è
       <select name="stato-impianto">
         <option value="nuovo" selected>da costruire</option>
         <option value="precedente">già in esercizio, dopo il 15/12/2021</option>
         <option value="esistente">già in esercizio, fino al 15/12/2021</option>
       </select>
     </label>
-    <p class="aiuto" id="aiuto-esercizio" hidden></p>
+    <p class="aiuto" id="aiuto-esercizio" data-solo-modo="esperto" hidden></p>
   </fieldset>
 
   <fieldset class="passo" data-solo-percorso="entrare" data-solo-tipo="famiglia" data-solo-con-consumi>

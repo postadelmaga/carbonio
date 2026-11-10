@@ -187,7 +187,7 @@ test('lo stato dell\'impianto è un campo a tre scelte in «Voglio entrare», e 
   assert.match(HTML, /<option value="pannelli_esistenti">una delle famiglie con pannelli già in esercizio<\/option>/);
   assert.match(HTML, /<label data-solo-modo="esperto">L'impianto è <select name="f-comune-stato"><option value="nuovo" selected>da costruire<\/option><option value="precedente">già in esercizio, dopo il 15\/12\/2021<\/option><option value="esistente">già in esercizio, fino al 15\/12\/2021<\/option><\/select><\/label>/);
   assert.doesNotMatch(HTML, /<label data-solo-modo="esperto">in esercizio <select name="f-comune-stato">|>già, (dopo|fino al) 15\/12\/2021</);
-  assert.match(JS, /testoGiaInEsercizio\(campo\('stato-impianto'\)\.value\)/);
+  assert.match(JS, /testoGiaInEsercizio\(esperto \? campo\('stato-impianto'\)\.value : 'nuovo'\)/);
 });
 
 test('i numeri della regione viva si riscrivono solo se il testo cambia, e gli avvisi sono una regione di stato', () => {
@@ -386,4 +386,13 @@ test('le regole che nascondono per modo, percorso, ruolo, tipo e risultato vinco
   assert.ok(CSS.includes('body[data-modo="semplice"] [data-solo-modo="esperto"], body[data-modo="esperto"] [data-solo-modo="semplice"]{display:none!important}'));
   assert.match(JS, /famiglie: \{ numero: numeroDi\('f-famiglie', tipo\.famiglie\), classe: esperto \? campo\('f-famiglie-classe'\)\.value : tipo\.classe,/);
   assert.match(JS, /pannelli: \{ numero: numeroDi\('f-pannelli', 0\), classe: esperto \? campo\('f-pannelli-classe'\)\.value : tipo\.classe,/);
+});
+
+test('in «entrare» lo stato del tuo impianto sta in avanzato, e in semplice l\'impianto è da costruire; un\'icona su «Il tuo impianto», solo in semplice, dice di passare all\'avanzato per un impianto già in esercizio (esclude in semplice uno stato scelto in avanzato e rimasto nascosto, decisione dell\'utente del 10/11/2026)', () => {
+  const da = HTML.indexOf('<span class="n">5</span>Il tuo impianto'), a = HTML.indexOf('</fieldset>', da);
+  const passo = HTML.slice(da, a);
+  assert.match(passo, /^<span class="n">5<\/span>Il tuo impianto<span class="info-gruppo" data-solo-modo="semplice"><button type="button" class="info" aria-expanded="false" aria-controls="info-tuo-impianto" aria-label="Spiegazione: impianto già in esercizio">i<\/button><span class="info-testo" id="info-tuo-impianto" hidden>Il simulatore conta un impianto da costruire, che entra in esercizio dopo la costituzione della CER\. Se il tuo è già in esercizio, passa alla modalità avanzata e indicalo in «L'impianto è»: vedrai che cosa cambia per te e per la comunità\.<\/span><\/span><\/legend>/);
+  assert.match(passo, /<label class="campo" data-solo-modo="esperto">L'impianto è\s*<select name="stato-impianto">/);
+  assert.match(passo, /<p class="aiuto" id="aiuto-esercizio" data-solo-modo="esperto" hidden><\/p>/);
+  assert.match(JS, /kwp: numeroDi\('kwp', pred\.kwp_prosumer\), stato: esperto \? campo\('stato-impianto'\)\.value : 'nuovo',/);
 });

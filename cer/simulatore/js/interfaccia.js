@@ -49,7 +49,7 @@ function stato() {
     parametri: esperto ? parametriEsperto() : {},
     utente: {
       ruolo: scelto('ruolo'), tipo: scelto('tipo'), classe: campo('classe').value, consumo: numeroDi('consumo', null),
-      archetipo: campo('archetipo').value, kwp: numeroDi('kwp', pred.kwp_prosumer), stato: campo('stato-impianto').value,
+      archetipo: campo('archetipo').value, kwp: numeroDi('kwp', pred.kwp_prosumer), stato: esperto ? campo('stato-impianto').value : 'nuovo',
       abitudini: esperto ? numeroDi('abitudini-cursore', 0) : Number(scelto('abitudini')),
     },
     comunita: esperto ? {
@@ -78,7 +78,7 @@ function aggiornaCorpo() {
   const esperto = b.modo === 'esperto';
   campo('kwp').max = String(b.ruolo === 'produttore' ? (esperto ? 1000 : 200) : (esperto ? 50 : 20));
   const aiuto = $('#aiuto-esercizio');
-  aiuto.textContent = testoGiaInEsercizio(campo('stato-impianto').value);
+  aiuto.textContent = testoGiaInEsercizio(esperto ? campo('stato-impianto').value : 'nuovo');
   aiuto.hidden = aiuto.textContent === '';
 }
 
