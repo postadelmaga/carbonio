@@ -2,7 +2,7 @@
 // mostra risultati, grafici, avvisi e ipotesi. Con grafici.js e dati.js è l'unico modulo che tocca il DOM.
 import { caricaLocalita, caricaDati } from './dati.js';
 import { calcola, valida, asse } from './motore.js';
-import { ingressiEntrare, ingressiFondare, sceltaIo, limitaQuote } from './scenari.js';
+import { ingressiEntrare, ingressiFondare, etichetteRighe, opzioniIo, PROFILI, limitaQuote } from './scenari.js';
 import { voce } from './economia.js';
 import { consumoMedioClasse } from './profili.js';
 import { numero, euro, kwh, perc, tonnellate, anni, circa } from './formato.js';
@@ -16,19 +16,18 @@ const form = $('#moduli');
 const campo = (nome) => form.elements[nome];
 const scelto = (nome) => document.querySelector(`input[name="${nome}"]:checked`)?.value;
 const FORMATI = { euro: (v) => euro(v), eur3: (v) => euro(v, 3), euroOppure: (v) => (v == null ? 'da verificare' : euro(v)), perc: (v) => perc(v), t: tonnellate, circa, kwh, anni: (v) => anni(v, voce(dati.costanti, 'durata_tariffa_anni')), int: (v) => numero(v), g: (v) => numero(v, Number.isInteger(v) ? 0 : 1) };
-const NOMI = { famiglie: 'Famiglia', pannelli: 'Famiglia con pannelli', pannelli_esistenti: 'Famiglia con pannelli già in esercizio', attivita: 'Attività', enti: 'Ente o associazione', produttore: 'Socio produttore' };
-const validi = {};
-let elenco = [], loc = null, dati = null, ultimo = null, scena = null, richiestaLocalita = 0, avvisiMostrati = null;
-
+const validi = new WeakMap();
 // Valore numerico di un campo: vuoto → predefinito; fuori intervallo → resta segnato e vale l'ultimo valido.
-function numeroDi(nome, predefinito) {
-  const e = campo(nome);
+function numeroElemento(e, predefinito) {
   if (!e || e.value === '') { e?.removeAttribute('aria-invalid'); return predefinito; }
   const v = Number(e.value);
-  if (!e.checkValidity() || !Number.isFinite(v)) { e.setAttribute('aria-invalid', 'true'); return validi[nome] ?? predefinito; }
+  if (!e.checkValidity() || !Number.isFinite(v)) { e.setAttribute('aria-invalid', 'true'); return validi.get(e) ?? predefinito; }
   e.removeAttribute('aria-invalid');
-  return (validi[nome] = v);
+  validi.set(e, v);
+  return v;
 }
+const numeroDi = (nome, predefinito) => numeroElemento(campo(nome), predefinito);
+let elenco = [], loc = null, dati = null, ultimo = null, scena = null, richiestaLocalita = 0, avvisiMostrati = null;
 
 function parametriEsperto() {
   const quota = (nome) => { const v = numeroDi(nome, null); return v == null ? null : v / 100; };
@@ -59,13 +58,7 @@ function stato() {
       abitudini_altri: numeroDi('c-abitudini', 0),
     } : {},
     fondare: {
-      famiglie: { numero: numeroDi('f-famiglie', tipo.famiglie), classe: esperto ? campo('f-famiglie-classe').value : tipo.classe, consumo: esperto ? numeroDi('f-famiglie-consumo', null) : null },
-      pannelli: { numero: numeroDi('f-pannelli', 0), classe: esperto ? campo('f-pannelli-classe').value : tipo.classe, consumo: null, kwp: numeroDi('f-pannelli-kwp', pred.kwp_prosumer) },
-      pannelliEsistenti: esperto
-        ? { numero: numeroDi('f-pannelli-es', 0), classe: campo('f-pannelli-es-classe').value, consumo: null, kwp: numeroDi('f-pannelli-es-kwp', pred.kwp_prosumer), stato: campo('f-pannelli-es-stato').value }
-        : { numero: 0, classe: '1,5-3', consumo: null, kwp: pred.kwp_prosumer, stato: 'precedente' },
-      attivita: { numero: numeroDi('f-attivita', tipo.attivita), archetipo: esperto ? campo('f-attivita-archetipo').value : tipo.archetipo_attivita, consumo: numeroDi('f-attivita-consumo', tipo.consumo_attivita), kwp: esperto ? numeroDi('f-attivita-kwp', 0) : 0 },
-      enti: { numero: numeroDi('f-enti', tipo.enti), archetipo: esperto ? campo('f-enti-archetipo').value : tipo.archetipo_ente, consumo: numeroDi('f-enti-consumo', tipo.consumo_ente), kwp: esperto ? numeroDi('f-enti-kwp', 0) : 0 },
+      famiglie: righeDi('famiglie', esperto), attivita: righeDi('attivita', esperto), enti: righeDi('enti', esperto),
       comune: { kwp: numeroDi('f-comune-kwp', tipo.kwp_comune), titolare: campo('f-comune-titolare').value, stato: esperto ? campo('f-comune-stato').value : 'nuovo' },
       fondatori: numeroDi('f-fondatori', pred.fondatori), io: campo('f-io').value, abitudini: numeroDi('f-abitudini', 0),
     },
@@ -147,8 +140,69 @@ function disegnaScena(ingressi) {
     : `Intorno a te: ${n('famiglie')} ${n('famiglie') === 1 ? 'famiglia' : 'famiglie'}, ${n('attivita')} attività, ${n('enti')} ${n('enti') === 1 ? 'ente' : 'enti'}, nessun impianto comune.`;
 }
 
-function tabellaRuoli(r) {
-  const righe = Object.entries(r.membri).map(([id, m]) => [NOMI[id] ?? id, numero(m.numero), euro(m.totale), euro(m.cerAggiunge), perc(m.co2.copertura)]);
+// Righe di «fondare» (spec della composizione §2-§3): da una a cinque per profilo, ciascuna con un id che non torna
+// indietro, così «Io sono» resta sulla sua riga quando se ne toglie un'altra. I campi numerici ricordano il loro
+// predefinito in data-predefinito: vuoto vale quello, come i campi con nome.
+const MAX_RIGHE = 5;
+const contatori = { famiglie: 0, attivita: 0, enti: 0 };
+
+function predefinitaRiga(profilo, prima) {
+  const tipo = voce(dati.costanti, 'comunita_tipo'), pred = voce(dati.costanti, 'predefiniti');
+  if (profilo === 'famiglie') return { numero: prima ? tipo.famiglie : 1, kwp: prima ? 0 : pred.kwp_prosumer, classe: tipo.classe, consumo: '', stato: 'nuovo' };
+  if (profilo === 'attivita') return { numero: prima ? tipo.attivita : 1, consumo: tipo.consumo_attivita, kwp: 0, archetipo: tipo.archetipo_attivita, stato: 'nuovo' };
+  return { numero: prima ? tipo.enti : 1, consumo: tipo.consumo_ente, kwp: 0, archetipo: tipo.archetipo_ente, stato: 'nuovo' };
+}
+
+function numeraRighe(profilo) {
+  const blocco = $(`[data-profilo="${profilo}"]`), righe = [...blocco.querySelectorAll('.riga')];
+  righe.forEach((r, i) => { r.setAttribute('aria-label', `${PROFILI[profilo].titolo}, riga ${i + 1}`); r.querySelector('.togli').hidden = i === 0; });
+  const piena = righe.length >= MAX_RIGHE;
+  blocco.querySelector('[data-aggiungi]').disabled = piena;
+  blocco.querySelector('.limite').hidden = !piena;
+}
+
+function aggiungiRiga(profilo, valori) {
+  const riga = $(`#modello-${profilo}`).content.firstElementChild.cloneNode(true);
+  riga.dataset.riga = `${profilo}-${++contatori[profilo]}`;
+  for (const [c, v] of Object.entries(valori)) {
+    const e = riga.querySelector(`[data-campo="${c}"]`);
+    e.value = String(v);
+    if (e.type === 'number') e.dataset.predefinito = String(v);
+  }
+  $(`[data-profilo="${profilo}"] .righe-profilo`).append(riga);
+  numeraRighe(profilo);
+  return riga;
+}
+
+// All'avvio e con «Torna ai valori predefiniti»: una riga per profilo, con i valori della comunità tipo.
+function preparaRighe() {
+  for (const profilo of Object.keys(PROFILI)) {
+    $(`[data-profilo="${profilo}"] .righe-profilo`).replaceChildren();
+    contatori[profilo] = 0;
+    aggiungiRiga(profilo, predefinitaRiga(profilo, true));
+  }
+}
+
+// «L'impianto è» di una riga conta solo con dei kWp: senza, si disabilita.
+function aggiornaRighe() {
+  for (const r of $$('[data-profilo] .riga')) r.querySelector('[data-campo="stato"]').disabled = !(Number(r.querySelector('[data-campo="kwp"]').value) > 0);
+}
+
+// Le righe di un profilo come le vuole ingressiFondare; in semplice i campi avanzati valgono i predefiniti.
+function righeDi(profilo, esperto) {
+  const tipo = voce(dati.costanti, 'comunita_tipo');
+  return $$(`[data-profilo="${profilo}"] .riga`).map((r) => {
+    const e = (c) => r.querySelector(`[data-campo="${c}"]`);
+    const n = (c) => numeroElemento(e(c), e(c).dataset.predefinito === '' ? null : Number(e(c).dataset.predefinito));
+    const base = { riga: r.dataset.riga, numero: n('numero'), kwp: n('kwp'), stato: esperto ? e('stato').value : 'nuovo' };
+    if (profilo === 'famiglie') return { ...base, classe: esperto ? e('classe').value : tipo.classe, consumo: esperto ? n('consumo') : null };
+    const archetipo = profilo === 'attivita' ? 'archetipo_attivita' : 'archetipo_ente';
+    return { ...base, archetipo: esperto ? e('archetipo').value : tipo[archetipo], consumo: n('consumo') };
+  });
+}
+
+function tabellaRuoli(r, etichette) {
+  const righe = Object.entries(r.membri).map(([id, m]) => [etichette[id]?.socio ?? 'Socio produttore', numero(m.numero), euro(m.totale), euro(m.cerAggiunge), perc(m.co2.copertura)]);
   tabella($('#tabella-ruoli'), ['Socio', 'Quanti', 'Ciascuno, l\'anno', 'Di cui dalla CER', 'Consumi coperti'], righe);
 }
 
@@ -164,15 +218,19 @@ function aggiornaAiuto(s) {
   }
 }
 
-// «Io sono»: i gruppi che nella comunità composta non ci sono si disabilitano, e la scelta passa al gruppo che il calcolo usa.
-function sincronizzaIo(ingressi) {
-  const selezione = campo('f-io');
-  const { io, disabilitati } = sceltaIo(ingressi, [...selezione.options].map((o) => o.value));
-  for (const o of selezione.options) o.disabled = disabilitati.includes(o.value);
-  if (selezione.value !== (io ?? '')) selezione.value = io ?? '';
+// «Io sono» (spec della composizione §4): le voci sono i soci che entrano nel calcolo, con le etichette delle righe; si
+// riscrivono solo se cambiano. La scelta è quella che il calcolo usa: la prima riga, se la propria non c'è più.
+function sincronizzaIo(ingressi, etichette) {
+  const selezione = campo('f-io'), voci = opzioniIo(ingressi, etichette);
+  const chiave = voci.map((v) => `${v.valore}=${v.testo}`).join('|');
+  if (selezione.dataset.voci !== chiave) {
+    selezione.replaceChildren(...voci.map((v) => new Option(v.testo, v.valore)));
+    selezione.dataset.voci = chiave;
+  }
+  if (selezione.value !== (ingressi.io ?? '')) selezione.value = ingressi.io ?? '';
 }
 
-function mostra(r, percorso, ingressi) {
+function mostra(r, percorso, ingressi, etichette) {
   const te = r.perTe ?? {}, com = r.comunita, em = r.emissioni.comunita, p = r.parametri, b = document.body.dataset;
   // tre attributi distinti: chi ha un impianto, chi lo deve ancora pagare, chi ha solo impianti già in esercizio
   if (te.haImpianto) b.impianto = ''; else delete b.impianto;
@@ -214,13 +272,14 @@ function mostra(r, percorso, ingressi) {
   disegnaGrafici();
   $('#ipotesi').replaceChildren(...ipotesi(r, loc, dati.pvInfo, dati.costanti).map((t) => Object.assign(document.createElement('li'), { textContent: t })));
   $('#scadenza').textContent = testoScadenza(new Date(), dati.costanti);
-  if (percorso === 'entrare') disegnaScena(ingressi); else tabellaRuoli(r);
+  if (percorso === 'entrare') disegnaScena(ingressi); else tabellaRuoli(r, etichette);
 }
 
 function aggiorna() {
   if (!dati) return;
   aggiornaCorpo();
   aggiornaUscite();
+  aggiornaRighe();
   const s = stato(), percorso = scelto('percorso');
   aggiornaAiuto(s);
   if (percorso === 'entrare' && s.utente.ruolo !== 'produttore' && s.utente.tipo !== 'famiglia' && s.utente.consumo == null) {
@@ -230,14 +289,15 @@ function aggiorna() {
   }
   try {
     const ingressi = percorso === 'entrare' ? ingressiEntrare(s, dati.costanti) : ingressiFondare(s, dati.costanti);
-    if (percorso === 'fondare') sincronizzaIo(ingressi);
+    const etichette = percorso === 'fondare' ? etichetteRighe(s.fondare) : null;
+    if (percorso === 'fondare') sincronizzaIo(ingressi, etichette);
     const errori = valida(ingressi, dati.costanti);
     if (errori.length) { segnalaErrore(errori.join('; ')); return; }
     const t0 = performance.now();
     ultimo = calcola(ingressi, dati);
     document.body.dataset.ms = String(Math.round(performance.now() - t0));
     delete document.body.dataset.nonAggiornato;
-    mostra(ultimo, percorso, ingressi);
+    mostra(ultimo, percorso, ingressi, etichette);
   } catch (e) {
     console.error(e);
     segnalaErrore(e.message);
@@ -248,9 +308,7 @@ function preimposta() {
   const c = dati.costanti, tipo = voce(c, 'comunita_tipo'), pred = voce(c, 'predefiniti'), q = voce(c, 'quote_riparto');
   const valori = {
     'c-famiglie': tipo.famiglie, 'c-attivita': tipo.attivita, 'c-consumo-attivita': tipo.consumo_attivita, 'c-enti': tipo.enti,
-    'c-consumo-ente': tipo.consumo_ente, 'c-kwp': tipo.kwp_comune, 'f-famiglie': tipo.famiglie, 'f-pannelli': 0,
-    'f-pannelli-kwp': pred.kwp_prosumer, 'f-pannelli-es': 0, 'f-pannelli-es-kwp': pred.kwp_prosumer, 'f-attivita': tipo.attivita, 'f-attivita-consumo': tipo.consumo_attivita, 'f-attivita-kwp': 0,
-    'f-enti': tipo.enti, 'f-enti-consumo': tipo.consumo_ente, 'f-enti-kwp': 0, 'f-comune-kwp': tipo.kwp_comune,
+    'c-consumo-ente': tipo.consumo_ente, 'c-kwp': tipo.kwp_comune, 'f-comune-kwp': tipo.kwp_comune,
     'f-fondatori': pred.fondatori, 'p-pz': voce(c, 'prezzo_zonale'), 'p-gestione': voce(c, 'gestione'),
     'p-quota': voce(c, 'quota_associativa'), 'p-qp': q.produttore * 100, 'p-qc': q.consumatori * 100, 'p-om': voce(c, 'manutenzione'),
     kwp: pred.kwp_prosumer,
@@ -259,6 +317,7 @@ function preimposta() {
   const costituzione = voce(c, 'costituzione');
   campo('p-costituzione').value = costituzione == null ? '' : String(costituzione);
   campo('p-costituzione').placeholder = costituzione == null ? 'da verificare' : '';
+  preparaRighe();
 }
 
 async function scegliLocalita(etichetta) {
@@ -316,6 +375,21 @@ async function avvia() {
   $('#elenco-localita').replaceChildren(...elenco.map((l) => new Option(`${l.nome} (${l.sigla})`)));
   $('#mese').replaceChildren(...MESI.map((m, i) => new Option(m, String(i), i === 6, i === 6)));
   form.addEventListener('submit', (e) => e.preventDefault());
+  // «+ aggiungi» e «×» delle righe di «fondare»: il fuoco va al primo campo della riga nuova, o al pulsante del blocco.
+  form.addEventListener('click', (e) => {
+    const piu = e.target.closest('[data-aggiungi]'), meno = e.target.closest('.togli');
+    if (!dati || (!piu && !meno)) return;
+    if (piu) {
+      const profilo = piu.dataset.aggiungi;
+      aggiungiRiga(profilo, predefinitaRiga(profilo, false)).querySelector('[data-campo="numero"]').focus();
+    } else {
+      const riga = meno.closest('.riga'), profilo = riga.closest('[data-profilo]').dataset.profilo;
+      riga.remove();
+      numeraRighe(profilo);
+      $(`[data-aggiungi="${profilo}"]`).focus();
+    }
+    aggiorna();
+  });
   form.addEventListener('input', (e) => {
     if (e.target.name === 'p-qp' || e.target.name === 'p-qc') {
       const altro = campo(e.target.name === 'p-qp' ? 'p-qc' : 'p-qp');

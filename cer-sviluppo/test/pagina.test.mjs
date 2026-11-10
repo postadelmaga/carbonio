@@ -161,30 +161,9 @@ test('«Per te»: il numero grande è ciò che porta la CER, l\'impianto ha le s
   for (const a of ['impianto', 'investimento', 'pagato']) assert.ok(CSS.includes(`body:not([data-${a}]) [data-solo-${a}]`), `la CSS non nasconde [data-solo-${a}]`);
 });
 
-test('ogni riga di «Chi entra nella comunità» è un gruppo con il suo nome: i campi «quante», «kWp ciascuna» non sono uguali su quattro righe', () => {
-  const da = HTML.indexOf('<div class="righe">');
-  assert.ok(da >= 0, 'manca il modulo «fondare»');
-  const modulo = HTML.slice(da, HTML.indexOf('</fieldset>', da));
-  const aperture = modulo.match(/<div class="riga"/g) ?? [];
-  const righe = [...modulo.matchAll(/<div class="riga"([^>]*)>\s*<b([^>]*)>([^<]+)<\/b>/g)];
-  assert.equal(aperture.length, 6, 'le righe del modulo sono sei');
-  assert.equal(righe.length, aperture.length, 'ogni riga comincia con il suo nome in un <b>');
-  const id = [];
-  for (const [, riga, titolo, testo] of righe) {
-    assert.match(riga, /\brole="group"/, `«${testo}»: manca role="group"`);
-    const rif = riga.match(/\baria-labelledby="([^"]+)"/)?.[1];
-    assert.ok(rif, `«${testo}»: manca aria-labelledby`);
-    assert.equal(titolo.match(/\bid="([^"]+)"/)?.[1], rif, `«${testo}»: il nome non ha l'id che la riga indica`);
-    id.push(rif);
-  }
-  assert.equal(new Set(id).size, id.length, 'gli id dei nomi sono ripetuti');
-});
-
 test('lo stato dell\'impianto è un campo a tre scelte in «Voglio entrare», e in «fondare» la riga dei pannelli già in esercizio e lo stato del comune stanno in avanzato, con l\'etichetta «L\'impianto è» e le stesse opzioni di «entrare» (esclude la spunta unica e un «in esercizio: nuovo» che non dice di che cosa si parla)', () => {
   assert.doesNotMatch(HTML, /name="esistente"|name="f-pannelli-esistenti"|name="f-comune-esistente"/);
   assert.match(HTML, /<select name="stato-impianto">\s*<option value="nuovo" selected>da costruire<\/option>\s*<option value="precedente">già in esercizio, dopo il 15\/12\/2021<\/option>\s*<option value="esistente">già in esercizio, fino al 15\/12\/2021<\/option>/);
-  assert.match(HTML, /<div class="riga" role="group" aria-labelledby="riga-pannelli-es" data-solo-modo="esperto"><b id="riga-pannelli-es">Famiglie con pannelli già in esercizio<\/b>/);
-  assert.match(HTML, /<option value="pannelli_esistenti">una delle famiglie con pannelli già in esercizio<\/option>/);
   assert.match(HTML, /<label data-solo-modo="esperto">L'impianto è <select name="f-comune-stato"><option value="nuovo" selected>da costruire<\/option><option value="precedente">già in esercizio, dopo il 15\/12\/2021<\/option><option value="esistente">già in esercizio, fino al 15\/12\/2021<\/option><\/select><\/label>/);
   assert.doesNotMatch(HTML, /<label data-solo-modo="esperto">in esercizio <select name="f-comune-stato">|>già, (dopo|fino al) 15\/12\/2021</);
   assert.match(JS, /testoGiaInEsercizio\(esperto \? campo\('stato-impianto'\)\.value : 'nuovo'\)/);
@@ -222,9 +201,8 @@ test('testi della CO₂: niente «fino a», stima dichiarata, italiani e 20 anni
   assert.match(HTML, /<input type="radio" name="p-fattore" value="fossili" checked>/);
   assert.match(HTML, /· <b data-r="emissioni\.evitata" data-f="circa"><\/b> di CO₂ in meno \(stima\)<\/div>/);
   assert.match(HTML, /<fieldset class="passo" data-solo-percorso="entrare" data-solo-tipo="famiglia" data-solo-con-consumi>\s*<legend><span class="n">6<\/span>Le tue abitudini<\/legend>/);
-  assert.match(JS, /sceltaIo\(ingressi, \[\.\.\.selezione\.options\]\.map\(\(o\) => o\.value\)\)/);
-  assert.match(JS, /o\.disabled = disabilitati\.includes\(o\.value\)/);
-  assert.match(JS, /if \(percorso === 'fondare'\) sincronizzaIo\(ingressi\);/);
+  assert.match(JS, /const selezione = campo\('f-io'\), voci = opzioniIo\(ingressi, etichette\);/);
+  assert.match(JS, /if \(percorso === 'fondare'\) sincronizzaIo\(ingressi, etichette\);/);
 });
 
 test('la nota sulla scadenza sotto «Per te» c\'è solo in «entrare» e dipende da un impianto tuo nuovo, non dal ruolo; in «fondare» la frase sta solo in «Tu e i fondatori»; vuota non occupa spazio (esclude la frase due volte in «fondare», decisione dell\'utente dell\'08/11/2026, e il testo vecchio rimasto a mano)', () => {
@@ -383,8 +361,7 @@ test('le regole che nascondono per modo, percorso, ruolo, tipo e risultato vinco
   assert.ok(nascondono.length >= 9, `regole trovate: ${nascondono.length}`);
   for (const r of nascondono) assert.match(r.corpo, /display:none!important/, r.selettore);
   assert.ok(CSS.includes('body[data-modo="semplice"] [data-solo-modo="esperto"], body[data-modo="esperto"] [data-solo-modo="semplice"]{display:none!important}'));
-  assert.match(JS, /famiglie: \{ numero: numeroDi\('f-famiglie', tipo\.famiglie\), classe: esperto \? campo\('f-famiglie-classe'\)\.value : tipo\.classe,/);
-  assert.match(JS, /pannelli: \{ numero: numeroDi\('f-pannelli', 0\), classe: esperto \? campo\('f-pannelli-classe'\)\.value : tipo\.classe,/);
+  assert.match(JS, /classe: esperto \? e\('classe'\)\.value : tipo\.classe, consumo: esperto \? n\('consumo'\) : null/);
 });
 
 test('in «entrare» lo stato del tuo impianto sta in avanzato, e in semplice l\'impianto è da costruire; un\'icona su «Il tuo impianto», solo in semplice, dice di passare all\'avanzato per un impianto già in esercizio (esclude in semplice uno stato scelto in avanzato e rimasto nascosto, decisione dell\'utente del 10/11/2026)', () => {
@@ -394,4 +371,42 @@ test('in «entrare» lo stato del tuo impianto sta in avanzato, e in semplice l\
   assert.match(passo, /<label class="campo" data-solo-modo="esperto">L'impianto è\s*<select name="stato-impianto">/);
   assert.match(passo, /<p class="aiuto" id="aiuto-esercizio" data-solo-modo="esperto" hidden><\/p>/);
   assert.match(JS, /kwp: numeroDi\('kwp', pred\.kwp_prosumer\), stato: esperto \? campo\('stato-impianto'\)\.value : 'nuovo',/);
+});
+
+test('«fondare», sezione 3: tre blocchi a righe con il loro nome, il pulsante per aggiungere e il limite, righe da un modello per profilo con i campi di semplice e di avanzato, niente righe fisse dei pannelli, «Io sono» vuoto da riempire (spec della composizione §2, §5; esclude le righe fisse e un campo avanzato senza data-solo-modo)', () => {
+  const da = HTML.indexOf('<legend><span class="n">3</span>Chi entra nella comunità</legend>'), a = HTML.indexOf('</fieldset>', da);
+  const sez = HTML.slice(da, a);
+  const modello = (p) => { const m = sez.indexOf(`<template id="modello-${p}">`); assert.ok(m > 0, `manca il modello di ${p}`); return sez.slice(m, sez.indexOf('</template>', m)); };
+  for (const [p, titolo, piu] of [['famiglie', 'Famiglie', 'famiglie'], ['attivita', 'Attività', 'attività'], ['enti', 'Enti e associazioni', 'enti']]) {
+    assert.ok(sez.includes(`<div class="blocco" data-profilo="${p}" role="group" aria-labelledby="blocco-${p}"><b id="blocco-${p}">${titolo}</b>`), p);
+    assert.ok(sez.includes(`<button type="button" class="btn aggiungi" data-aggiungi="${p}">+ aggiungi ${piu}</button> <small class="limite" hidden>al massimo 5 righe</small>`), p);
+    const m = modello(p);
+    assert.match(m, /^<template id="modello-[a-z]+"><div class="riga" role="group">/);
+    assert.match(m, /<label>(quante|quanti) <input data-campo="numero" type="number" min="0" max="500" step="1"><\/label>/);
+    assert.match(m, /<label data-solo-modo="esperto">L'impianto è <select data-campo="stato"><option value="nuovo" selected>da costruire<\/option><option value="precedente">già in esercizio, dopo il 15\/12\/2021<\/option><option value="esistente">già in esercizio, fino al 15\/12\/2021<\/option><\/select><\/label>/);
+    assert.match(m, /<button type="button" class="togli" aria-label="Togli questa riga">×<\/button><\/div>$/);
+  }
+  assert.match(modello('famiglie'), /<label>kWp ciascuna <input data-campo="kwp" type="number" min="0" max="50" step="0.5"><\/label>\s*<label data-solo-modo="esperto">contatore <select data-campo="classe"><option value="1,5-3">3 kW<\/option><option value="3-4,5">4,5 kW<\/option><option value="4,5-6">6 kW<\/option><option value="oltre_6">oltre 6 kW<\/option><\/select><\/label>/);
+  assert.match(modello('famiglie'), /<label data-solo-modo="esperto">kWh l'anno <input data-campo="consumo" type="number" min="0" max="2000000" step="1" placeholder="media ARERA"><\/label>/);
+  assert.match(modello('attivita'), /<label>kWh l'anno ciascuna <input data-campo="consumo" type="number" min="0" max="2000000" step="1"><\/label>\s*<label>kWp ciascuna <input data-campo="kwp" type="number" min="0" max="1000" step="0\.5"><\/label>\s*<label data-solo-modo="esperto">tipo <select data-campo="archetipo"><option value="com_orario_apertura">con orario<\/option><option value="com_carico_base">carico continuo<\/option><\/select><\/label>/);
+  assert.match(modello('enti'), /<label>kWh l'anno ciascuno <input data-campo="consumo" type="number" min="0" max="2000000" step="1"><\/label>\s*<label>kWp ciascuno <input data-campo="kwp" type="number" min="0" max="1000" step="0\.5"><\/label>\s*<label data-solo-modo="esperto">tipo <select data-campo="archetipo"><option value="com_orario_apertura">con orario<\/option><option value="com_carico_base">carico continuo<\/option><\/select><\/label>/);
+  assert.match(sez, /<div class="riga" role="group" aria-labelledby="riga-comune"><b id="riga-comune">Impianto comune<\/b>/);
+  assert.doesNotMatch(HTML, /f-pannelli|f-famiglie|f-attivita|f-enti|pannelli_esistenti|riga-pannelli|riga-famiglie|riga-attivita|riga-enti/);
+  assert.match(HTML, /<select name="f-io"><\/select>/);
+  assert.match(CSS, /\.righe \.blocco\{padding:10px 0;border-top:1px solid var\(--rule\)\}/);
+});
+
+test('le righe di «fondare» nel codice della pagina: id che non tornano indietro, al massimo 5, la riga nuova di famiglie con 4,5 kWp, in semplice stato nuovo e campi avanzati predefiniti, «Io sono» e la tabella dalle etichette, stato disabilitato senza kWp (esclude NOMI e sceltaIo, e un campo avanzato nascosto che conta in semplice)', () => {
+  assert.match(JS, /import \{ ingressiEntrare, ingressiFondare, etichetteRighe, opzioniIo, PROFILI, limitaQuote \} from '\.\/scenari\.js';/);
+  assert.match(JS, /const MAX_RIGHE = 5;/);
+  assert.match(JS, /riga\.dataset\.riga = `\$\{profilo\}-\$\{\+\+contatori\[profilo\]\}`;/);
+  assert.match(JS, /numero: prima \? tipo\.famiglie : 1, kwp: prima \? 0 : pred\.kwp_prosumer/);
+  assert.match(JS, /stato: esperto \? e\('stato'\)\.value : 'nuovo'/);
+  assert.match(JS, /archetipo: esperto \? e\('archetipo'\)\.value : tipo\[archetipo\]/);
+  assert.match(JS, /famiglie: righeDi\('famiglie', esperto\), attivita: righeDi\('attivita', esperto\), enti: righeDi\('enti', esperto\),/);
+  assert.match(JS, /const etichette = percorso === 'fondare' \? etichetteRighe\(s\.fondare\) : null;/);
+  assert.match(JS, /else tabellaRuoli\(r, etichette\);/);
+  assert.match(JS, /\[etichette\[id\]\?\.socio \?\? 'Socio produttore', numero\(m\.numero\)/);
+  assert.match(JS, /\.disabled = !\(Number\(r\.querySelector\('\[data-campo="kwp"\]'\)\.value\) > 0\)/);
+  assert.doesNotMatch(JS, /\bNOMI\b|sceltaIo|'f-famiglie|'f-pannelli|'f-attivita|'f-enti/);
 });

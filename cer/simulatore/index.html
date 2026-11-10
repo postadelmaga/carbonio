@@ -162,33 +162,17 @@
   <fieldset class="passo" data-solo-percorso="fondare">
     <legend><span class="n">3</span>Chi entra nella comunità</legend>
     <div class="righe">
-      <div class="riga" role="group" aria-labelledby="riga-famiglie"><b id="riga-famiglie">Famiglie</b>
-        <label>quante <input name="f-famiglie" type="number" min="0" max="500" step="1"></label>
-        <label data-solo-modo="esperto">contatore <select name="f-famiglie-classe"><option value="1,5-3">3 kW</option><option value="3-4,5">4,5 kW</option><option value="4,5-6">6 kW</option><option value="oltre_6">oltre 6 kW</option></select></label>
-        <label data-solo-modo="esperto">kWh l'anno <input name="f-famiglie-consumo" type="number" min="0" max="2000000" step="1" placeholder="media ARERA"></label>
+      <div class="blocco" data-profilo="famiglie" role="group" aria-labelledby="blocco-famiglie"><b id="blocco-famiglie">Famiglie</b>
+        <div class="righe-profilo"></div>
+        <button type="button" class="btn aggiungi" data-aggiungi="famiglie">+ aggiungi famiglie</button> <small class="limite" hidden>al massimo 5 righe</small>
       </div>
-      <div class="riga" role="group" aria-labelledby="riga-pannelli"><b id="riga-pannelli">Famiglie con pannelli</b>
-        <label>quante <input name="f-pannelli" type="number" min="0" max="500" step="1"></label>
-        <label>kWp ciascuna <input name="f-pannelli-kwp" type="number" min="0.5" max="50" step="0.5"></label>
-        <label data-solo-modo="esperto">contatore <select name="f-pannelli-classe"><option value="1,5-3">3 kW</option><option value="3-4,5">4,5 kW</option><option value="4,5-6">6 kW</option><option value="oltre_6">oltre 6 kW</option></select></label>
+      <div class="blocco" data-profilo="attivita" role="group" aria-labelledby="blocco-attivita"><b id="blocco-attivita">Attività</b>
+        <div class="righe-profilo"></div>
+        <button type="button" class="btn aggiungi" data-aggiungi="attivita">+ aggiungi attività</button> <small class="limite" hidden>al massimo 5 righe</small>
       </div>
-      <div class="riga" role="group" aria-labelledby="riga-pannelli-es" data-solo-modo="esperto"><b id="riga-pannelli-es">Famiglie con pannelli già in esercizio</b>
-        <label>quante <input name="f-pannelli-es" type="number" min="0" max="500" step="1"></label>
-        <label>kWp ciascuna <input name="f-pannelli-es-kwp" type="number" min="0.5" max="50" step="0.5"></label>
-        <label>contatore <select name="f-pannelli-es-classe"><option value="1,5-3">3 kW</option><option value="3-4,5">4,5 kW</option><option value="4,5-6">6 kW</option><option value="oltre_6">oltre 6 kW</option></select></label>
-        <label>in esercizio <select name="f-pannelli-es-stato"><option value="precedente">dopo il 15/12/2021</option><option value="esistente">fino al 15/12/2021</option></select></label>
-      </div>
-      <div class="riga" role="group" aria-labelledby="riga-attivita"><b id="riga-attivita">Attività</b>
-        <label>quante <input name="f-attivita" type="number" min="0" max="500" step="1"></label>
-        <label>kWh l'anno ciascuna <input name="f-attivita-consumo" type="number" min="0" max="2000000" step="1"></label>
-        <label data-solo-modo="esperto">tipo <select name="f-attivita-archetipo"><option value="com_orario_apertura">con orario</option><option value="com_carico_base">carico continuo</option></select></label>
-        <label data-solo-modo="esperto">kWp ciascuna <input name="f-attivita-kwp" type="number" min="0" max="1000" step="0.5"></label>
-      </div>
-      <div class="riga" role="group" aria-labelledby="riga-enti"><b id="riga-enti">Enti e associazioni</b>
-        <label>quanti <input name="f-enti" type="number" min="0" max="500" step="1"></label>
-        <label>kWh l'anno ciascuno <input name="f-enti-consumo" type="number" min="0" max="2000000" step="1"></label>
-        <label data-solo-modo="esperto">tipo <select name="f-enti-archetipo"><option value="com_orario_apertura">con orario</option><option value="com_carico_base">carico continuo</option></select></label>
-        <label data-solo-modo="esperto">kWp ciascuno <input name="f-enti-kwp" type="number" min="0" max="1000" step="0.5"></label>
+      <div class="blocco" data-profilo="enti" role="group" aria-labelledby="blocco-enti"><b id="blocco-enti">Enti e associazioni</b>
+        <div class="righe-profilo"></div>
+        <button type="button" class="btn aggiungi" data-aggiungi="enti">+ aggiungi enti</button> <small class="limite" hidden>al massimo 5 righe</small>
       </div>
       <div class="riga" role="group" aria-labelledby="riga-comune"><b id="riga-comune">Impianto comune</b>
         <label>kWp <input name="f-comune-kwp" type="number" min="0" max="1000" step="0.5"></label>
@@ -196,6 +180,27 @@
         <label data-solo-modo="esperto">L'impianto è <select name="f-comune-stato"><option value="nuovo" selected>da costruire</option><option value="precedente">già in esercizio, dopo il 15/12/2021</option><option value="esistente">già in esercizio, fino al 15/12/2021</option></select></label>
       </div>
     </div>
+    <template id="modello-famiglie"><div class="riga" role="group">
+      <label>quante <input data-campo="numero" type="number" min="0" max="500" step="1"></label>
+      <label>kWp ciascuna <input data-campo="kwp" type="number" min="0" max="50" step="0.5"></label>
+      <label data-solo-modo="esperto">contatore <select data-campo="classe"><option value="1,5-3">3 kW</option><option value="3-4,5">4,5 kW</option><option value="4,5-6">6 kW</option><option value="oltre_6">oltre 6 kW</option></select></label>
+      <label data-solo-modo="esperto">kWh l'anno <input data-campo="consumo" type="number" min="0" max="2000000" step="1" placeholder="media ARERA"></label>
+      <label data-solo-modo="esperto">L'impianto è <select data-campo="stato"><option value="nuovo" selected>da costruire</option><option value="precedente">già in esercizio, dopo il 15/12/2021</option><option value="esistente">già in esercizio, fino al 15/12/2021</option></select></label>
+      <button type="button" class="togli" aria-label="Togli questa riga">×</button></div></template>
+    <template id="modello-attivita"><div class="riga" role="group">
+      <label>quante <input data-campo="numero" type="number" min="0" max="500" step="1"></label>
+      <label>kWh l'anno ciascuna <input data-campo="consumo" type="number" min="0" max="2000000" step="1"></label>
+      <label>kWp ciascuna <input data-campo="kwp" type="number" min="0" max="1000" step="0.5"></label>
+      <label data-solo-modo="esperto">tipo <select data-campo="archetipo"><option value="com_orario_apertura">con orario</option><option value="com_carico_base">carico continuo</option></select></label>
+      <label data-solo-modo="esperto">L'impianto è <select data-campo="stato"><option value="nuovo" selected>da costruire</option><option value="precedente">già in esercizio, dopo il 15/12/2021</option><option value="esistente">già in esercizio, fino al 15/12/2021</option></select></label>
+      <button type="button" class="togli" aria-label="Togli questa riga">×</button></div></template>
+    <template id="modello-enti"><div class="riga" role="group">
+      <label>quanti <input data-campo="numero" type="number" min="0" max="500" step="1"></label>
+      <label>kWh l'anno ciascuno <input data-campo="consumo" type="number" min="0" max="2000000" step="1"></label>
+      <label>kWp ciascuno <input data-campo="kwp" type="number" min="0" max="1000" step="0.5"></label>
+      <label data-solo-modo="esperto">tipo <select data-campo="archetipo"><option value="com_orario_apertura">con orario</option><option value="com_carico_base">carico continuo</option></select></label>
+      <label data-solo-modo="esperto">L'impianto è <select data-campo="stato"><option value="nuovo" selected>da costruire</option><option value="precedente">già in esercizio, dopo il 15/12/2021</option><option value="esistente">già in esercizio, fino al 15/12/2021</option></select></label>
+      <button type="button" class="togli" aria-label="Togli questa riga">×</button></div></template>
     <p class="aiuto" data-solo-modo="esperto">Impianti già in esercizio: che cosa cambia <span class="info-gruppo"><button type="button" class="info" aria-expanded="false" aria-controls="info-esercizio" aria-label="Spiegazione: impianti già in esercizio">i</button><span class="info-testo" id="info-esercizio" hidden></span></span></p>
     <label class="campo" for="f-abitudini">Consumi spostati nelle ore di sole, per tutte le famiglie <output name="f-abitudini-valore"></output>
       <input id="f-abitudini" name="f-abitudini" type="range" min="0" max="0.3" step="0.01" value="0"></label>
@@ -204,14 +209,7 @@
   <fieldset class="passo" data-solo-percorso="fondare">
     <legend><span class="n">4</span>Tu e i fondatori</legend>
     <label class="campo">Io sono
-      <select name="f-io">
-        <option value="famiglie">una delle famiglie</option>
-        <option value="pannelli">una delle famiglie con pannelli</option>
-        <option value="pannelli_esistenti">una delle famiglie con pannelli già in esercizio</option>
-        <option value="attivita">una delle attività</option>
-        <option value="enti">uno degli enti</option>
-        <option value="produttore">il socio produttore</option>
-      </select>
+      <select name="f-io"></select>
     </label>
     <div class="con-info">
       <label class="campo"><span data-r="com.fondatoriTesto"></span> <input name="f-fondatori" type="number" min="1" max="500" step="1"></label>

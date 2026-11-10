@@ -53,6 +53,15 @@ body[data-investimento-cer] [data-solo-pagato-cer], body:not([data-impianto-cer]
 .righe .riga{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:end;padding:10px 0;border-top:1px solid var(--rule)}
 .righe .riga>b{flex-basis:100%}
 .righe .riga label{display:grid;gap:4px;font-size:.88rem;color:var(--ink-2);flex:1 1 8rem}
+.righe .blocco{padding:10px 0;border-top:1px solid var(--rule)}
+.righe .blocco>b{display:block}
+.righe .blocco .riga{border-top:0;padding:8px 0 4px}
+.righe .blocco .riga+.riga{border-top:1px dashed var(--rule)}
+.righe .togli{width:32px;height:32px;padding:0;border:1px solid var(--rule);border-radius:50%;background:var(--surface);color:var(--ink-2);font-size:1.1rem;line-height:1;cursor:pointer}
+.righe .aggiungi{margin-top:6px}
+.righe .aggiungi:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
+.righe .limite{font-size:.85rem;color:var(--ink-2)}
+.righe select:disabled{opacity:.55}
 .scelte-in-linea{border:0;padding:0;margin:14px 0}
 .scelte-in-linea label{display:block;margin:4px 0}
 .scadenza{margin:12px 0 0;padding:10px 12px;border-radius:12px;background:var(--sun-soft);font-size:.92rem}

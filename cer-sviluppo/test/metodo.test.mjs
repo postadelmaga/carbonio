@@ -38,7 +38,7 @@ test('i numeri del testo di «Come calcoliamo» coincidono con costanti.json (es
     'Sui 20 anni il fattore delle centrali fossili resta quello di oggi; con la media dei consumi scende come ha fatto in media dal 1990 al 2024.',
     `la simulazione assume che gli impianti nuovi entrino in esercizio dopo la costituzione ed entro il ${scadenza}, con la domanda al GSE entro la stessa data, e che tu entri prima di quella data; per chi entra dopo la condivisa dovrebbe contare ancora, ma le regole non lo scrivono`,
     'non contiamo tagli dell\'inverter né limiti di immissione',
-    'gli impianti di attività ed enti sono sempre nuovi',
+    'in avanzato ogni riga di famiglie, attività o enti può avere un impianto già in esercizio',
     'ha la tariffa ma è già pagato, e il simulatore non lo distingue',
   ];
   const mancanti = frasi.filter((f) => !HTML.includes(f));
