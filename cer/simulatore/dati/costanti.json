@@ -206,7 +206,7 @@
     "quote_riparto": {
       "descrizione": "Riparto della tariffa non eccedentaria: al titolare dell'impianto, ai consumatori; il resto alla CER",
       "valore": { "produttore": 0.40, "consumatori": 0.40 }, "unita": "frazione",
-      "fonte": "Regolamento di CERS Eliodora, art. 3 (esempio, non il regolamento della nostra CER)",
+      "fonte": "Regolamento di CERS Eliodora, art. 3, preso come esempio",
       "url": "https://eliodoracers.it/wp-content/uploads/2025/09/Regolamento-CER-Eliodora.pdf",
       "consultato": "2026-10-19",
       "note": "Contributo ARERA tutto ai consumatori; eccedentaria ai consumatori non imprese."

@@ -157,3 +157,8 @@ test('«Come calcoliamo», il riparto: è un esempio, le quote le stabilisce il 
   assert.ok(!HTML.includes('Eliodora'));
   assert.ok(!HTML.includes("Il regolamento della nostra CER non c'è ancora"));
 });
+
+test('la fonte delle quote del riparto, che la tabella delle fonti di «Come calcoliamo» mostra, la dice presa come esempio, senza «il regolamento della nostra CER» (esclude la frase tolta dalle ipotesi il 10/11/2026 rimasta nei dati)', () => {
+  const costanti = JSON.parse(readFileSync(new URL('../../cer/simulatore/dati/costanti.json', import.meta.url), 'utf8'));
+  assert.equal(costanti.voci.quote_riparto.fonte, 'Regolamento di CERS Eliodora, art. 3, preso come esempio');
+});
