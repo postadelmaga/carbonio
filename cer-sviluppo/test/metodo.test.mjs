@@ -23,7 +23,7 @@ test('i numeri del testo di «Come calcoliamo» coincidono con costanti.json (es
     `Il ${perc(v('spostamento_massimo'))} massimo`,
     `per ${durata} anni`,
     `supera il ${perc(v('soglia_eccedentaria'))}`,
-    `Il ${perc(riparto.produttore)} della tariffa va al titolare`,
+    `il ${perc(riparto.produttore)} della tariffa va al titolare`,
     `il ${perc(riparto.consumatori)} ai consumatori`,
     `il ${perc(fondo)} resta alla CER, che ne decide l'uso`,
     `lo ${perc(v('degrado'), 1)} di produzione l'anno`,
@@ -150,4 +150,10 @@ test('«Che cosa resta fuori» ha la voce dei tagli dell\'inverter con la frase 
 test('«Che cosa resta fuori» dice «Imposte sui redditi e agevolazioni», come la riga «Fuori dal calcolo» delle ipotesi (esclude «Imposte e agevolazioni», che contraddice IVA e accise contate nel costo evitato)', () => {
   assert.match(fuori(), /<li>Imposte sui redditi e agevolazioni \(contributi PNRR, detrazioni, conto termico\) e gli accumuli\.<\/li>/);
   assert.doesNotMatch(fuori(), /<li>Imposte e agevolazioni/);
+});
+
+test('«Come calcoliamo», il riparto: è un esempio, le quote le stabilisce il regolamento della CER e si cambiano in avanzato, senza Eliodora né il regolamento che non c\'è (esclude i riferimenti tolti dalle ipotesi il 10/11/2026)', () => {
+  assert.ok(HTML.includes("<li><b>Il riparto.</b> È un esempio: il 40% della tariffa va al titolare dell'impianto, il 40% ai consumatori secondo quanto consumano nelle ore di produzione, il 20% resta alla CER, che ne decide l'uso. Il contributo ARERA va ai consumatori. Le quote vengono stabilite dal regolamento della CER; in modalità avanzata si possono cambiare.</li>"));
+  assert.ok(!HTML.includes('Eliodora'));
+  assert.ok(!HTML.includes("Il regolamento della nostra CER non c'è ancora"));
 });

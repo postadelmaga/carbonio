@@ -14,10 +14,11 @@ test('le ipotesi dicono riparto d\'esempio, scelta prudente, anno meteo e fattor
   };
   const loc = { nome: 'La Spezia', sigla: 'SP', regione: 'Liguria' };
   const t = ipotesi(r, loc, { inclinazione: 33, anno_meteo: 2023, valori: [1000, 2000] }, costanti).join('\n');
-  for (const parola of ['La Spezia (SP)', '2023', '33°', 'Eliodora', 'prudente', '130 €/MWh', '413,3', '199,6', '0,5%']) {
+  for (const parola of ['La Spezia (SP)', '2023', '33°', 'È un esempio.', 'prudente', '130 €/MWh', '413,3', '199,6', '0,5%']) {
     assert.ok(t.includes(parola), parola);
   }
   assert.ok(t.includes('degrado dei pannelli: 0,5% della produzione l\'anno'), 'frase del degrado');
+  assert.ok(!t.includes('Eliodora') && !t.includes('non è ancora scritto'), 'il riparto non nomina Eliodora né il regolamento non scritto (decisione dell\'utente del 10/11/2026)');
   assert.ok(!t.includes('il 0,5%'), 'nessun articolo davanti alla percentuale');
   assert.ok(t.includes('La produzione è calcolata sui kWp dei pannelli, con un inverter della stessa potenza e una connessione che permette di immettere tutto: non contiamo tagli dell\'inverter né limiti di immissione, e il costo della connessione è escluso.'), 'ipotesi sulla potenza dichiarata, senza tagli né limiti di immissione (esclude un\'ipotesi che tace sui limiti dell\'impianto)');
   const riga = t.split('\n').find((l) => l.startsWith('CO₂ evitata:'));
@@ -68,7 +69,7 @@ test('le ipotesi dicono che il 20% resta alla CER, non che va a un fondo sociale
   assert.ok(riga.includes('40% della tariffa al titolare dell\'impianto, 40% ai consumatori'), riga);
 });
 
-test('con quote del riparto cambiate in avanzato la riga non le chiama «l\'esempio di CERS Eliodora» (esclude un riparto 60/30/10 attribuito a un regolamento che dice 40/40/20)', () => {
+test('con quote del riparto cambiate in avanzato la riga non le chiama un esempio, e dice che le quote le stabilisce il regolamento della CER; con le predefinite è un esempio; nessuna delle due nomina Eliodora (esclude un riparto 60/30/10 chiamato esempio, e i riferimenti tolti il 10/11/2026)', () => {
   const r = (qp, qc) => ({
     parametri: { prezzo_zonale: 115.94, quota_produttore: qp, quota_consumatori: qc, gestione_eur_anno: 500, costo_evitato: {} },
     impianti: [{ incentivato: true, tip: 130 }],
@@ -78,9 +79,9 @@ test('con quote del riparto cambiate in avanzato la riga non le chiama «l\'esem
   const riga = (qp, qc) => ipotesi(r(qp, qc), loc, { inclinazione: 33, anno_meteo: 2023, valori: [1000, 2000] }, costanti).find((l) => l.startsWith('Riparto:'));
   const cambiata = riga(0.6, 0.3);
   assert.ok(cambiata.startsWith('Riparto: 60% della tariffa al titolare dell\'impianto, 30% ai consumatori'), cambiata);
-  assert.ok(!cambiata.includes('È l\'esempio di CERS Eliodora'), cambiata);
-  assert.ok(cambiata.includes('Sono le quote scelte in modalità avanzata: l\'esempio predefinito, quello di CERS Eliodora, è 40%, 40% e 20%; il regolamento della nostra CER non è ancora scritto.'), cambiata);
-  assert.ok(riga(0.4, 0.4).endsWith('È l\'esempio di CERS Eliodora, non il regolamento della nostra CER, che non è ancora scritto.'), 'con le quote predefinite resta l\'esempio');
+  assert.ok(cambiata.endsWith('il contributo ARERA ai consumatori. Le quote vengono stabilite dal regolamento della CER.'), cambiata);
+  assert.ok(riga(0.4, 0.4).endsWith('il contributo ARERA ai consumatori. È un esempio.'), 'con le quote predefinite resta l\'esempio');
+  for (const t of [cambiata, riga(0.4, 0.4)]) assert.doesNotMatch(t, /Eliodora|non è ancora scritto|nostra CER/, 'testi dell\'utente del 10/11/2026');
 });
 
 test('la frase sull\'eccedentaria compare solo se c\'è, e dice dove va', () => {

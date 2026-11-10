@@ -108,12 +108,11 @@ export function ipotesi(r, loc, pvInfo, costanti) {
   const prezzo = prezzoDelFile
     ? `Prezzo dell'energia: ${numero(p.prezzo_zonale, 2)} €/MWh, la media nazionale del 2025 (PUN Index), uguale tutto l'anno: nella tua zona di mercato il prezzo può essere diverso`
     : `Prezzo dell'energia: ${numero(p.prezzo_zonale, 2)} €/MWh, scelto in modalità avanzata, uguale tutto l'anno`;
-  // Le quote dell'esempio sono quelle del regolamento di CERS Eliodora (art. 3): con quote cambiate in avanzato non lo sono più.
+  // Le quote dell'esempio vengono dal regolamento di CERS Eliodora (art. 3, fonte in costanti.json); la pagina non lo
+  // nomina e con quote cambiate in avanzato non parla di esempio (testi dell'utente del 10/11/2026).
   const q = voce(costanti, 'quote_riparto');
   const esempio = Math.abs(p.quota_produttore - q.produttore) < 1e-9 && Math.abs(p.quota_consumatori - q.consumatori) < 1e-9;
-  const fonteRiparto = esempio
-    ? 'È l\'esempio di CERS Eliodora, non il regolamento della nostra CER, che non è ancora scritto.'
-    : `Sono le quote scelte in modalità avanzata: l'esempio predefinito, quello di CERS Eliodora, è ${perc(q.produttore)}, ${perc(q.consumatori)} e ${perc(1 - q.produttore - q.consumatori)}; il regolamento della nostra CER non è ancora scritto.`;
+  const fonteRiparto = esempio ? 'È un esempio.' : 'Le quote vengono stabilite dal regolamento della CER.';
   return [
     `Località: ${loc.nome} (${loc.sigla}). Produzione PVGIS dell'anno meteorologico ${pvInfo.anno_meteo}, pannelli rivolti a sud con l'inclinazione ottimale di ${numero(pvInfo.inclinazione)}°: ${numero(resa)} kWh per kWp l'anno. Un altro anno sposta la produzione di qualche punto percentuale.`,
     'La produzione è calcolata sui kWp dei pannelli, con un inverter della stessa potenza e una connessione che permette di immettere tutto: non contiamo tagli dell\'inverter né limiti di immissione, e il costo della connessione è escluso.',
