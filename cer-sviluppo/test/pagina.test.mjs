@@ -216,7 +216,7 @@ test('testi della CO₂: niente «fino a», stima dichiarata, italiani e 20 anni
   assert.doesNotMatch(HTML, /La comunità serve a farli nascere/);
   assert.match(HTML, /con un fattore annuo, come in questo calcolo, non è CO₂ in meno per il sistema/);
   assert.doesNotMatch(HTML, /In questo calcolo la CO₂ non cambia/);
-  assert.match(HTML, /La CO₂ evitata dai pannelli non cambia: dipende da quanta energia producono, non da quando la consumi\./);
+  assert.match(HTML, /La CO₂ evitata non cambia: dipende da quanto producono i pannelli, non da quando consumi\./);
   assert.match(HTML, /Per avere il 50% di probabilità di restare sotto 1,5 °C restano circa <span data-r="cost\.budget" data-f="int"><\/span> miliardi di tonnellate di CO₂ dall'inizio del 2026, circa quattro anni alle emissioni attuali \(Global Carbon Budget 2025\)/);
   assert.match(HTML, /<legend>Fattore di emissione per la CO₂ evitata<\/legend>/);
   assert.match(HTML, /<input type="radio" name="p-fattore" value="fossili" checked>/);
@@ -369,13 +369,12 @@ test('il produttore non ha consumi: spariscono consumo, contatore, tipo di attiv
   assert.match(JS, /if \(percorso === 'entrare' && s\.utente\.ruolo !== 'produttore' && s\.utente\.tipo !== 'famiglia' && s\.utente\.consumo == null\)/);
 });
 
-test('l\'aiuto di «Le tue abitudini» dice a chi ha i pannelli che ciò che sposta lo prende soprattutto dai suoi pannelli, prima della CO₂, e «Se hai pannelli» compare una volta sola (esclude chi legge la condivisa in crescita come la regola anche per il prosumer, osservazione dell\'utente dell\'08/11/2026)', () => {
+test('l\'aiuto di «Le tue abitudini» è il testo breve dell\'utente del 10/11/2026, con la condivisa, i pannelli e la CO₂ evitata; impronta e CO₂ ora per ora stanno in un\'icona (esclude il paragrafo lungo di prima e la parte sull\'impronta persa)', () => {
   const da = HTML.indexOf('<legend><span class="n">6</span>Le tue abitudini</legend>'), a = HTML.indexOf('</fieldset>', da);
-  const aiuto = HTML.slice(da, a);
-  const frase = "e gli incentivi restano nella comunità. Se hai pannelli sul tetto, ciò che sposti lo prendi soprattutto dai tuoi pannelli: cresce il risparmio, in «Il tuo impianto», e la cifra dalla CER può scendere un po', perché immetti meno. La CO₂ evitata dai pannelli non cambia";
-  assert.ok(aiuto.includes(frase));
-  assert.equal(aiuto.split('Se hai pannelli').length - 1, 1);
-  assert.ok(aiuto.includes('Con i pannelli, la tua impronta scende perché prelevi meno dalla rete, ma quel kWh l\'avresti immesso per gli altri'));
+  const passo = HTML.slice(da, a);
+  const testo = "<p class=\"aiuto\">Usare lavatrice, lavastoviglie, scaldabagno o la ricarica dell'auto nelle ore di sole fa crescere l'energia condivisa, e con lei gli incentivi della comunità. Se hai i pannelli, invece, ciò che sposti lo prendi soprattutto da loro: risparmi di più in bolletta, ma immetti meno, e la cifra dalla CER può scendere un po'. La CO₂ evitata non cambia: dipende da quanto producono i pannelli, non da quando consumi.<span class=\"info-gruppo\"><button type=\"button\" class=\"info\" aria-expanded=\"false\" aria-controls=\"info-impronta\" aria-label=\"Spiegazione: la tua impronta di CO₂\">i</button><span class=\"info-testo\" id=\"info-impronta\" hidden>Con i pannelli, la tua impronta scende perché prelevi meno dalla rete, ma quel kWh l'avresti immesso per gli altri: con un fattore annuo, come in questo calcolo, non è CO₂ in meno per il sistema. Ora per ora probabilmente lo è, perché nelle ore di sole la rete emette meno, ma non lo stimiamo: ISPRA pubblica solo fattori annui, e i dati orari di Terna ed ENTSO-E dicono quanto produce ogni fonte, non quale centrale si ferma.</span></span></p>";
+  assert.ok(passo.includes(testo));
+  assert.doesNotMatch(passo, /Lavatrice, lavastoviglie, scaldabagno, ricarica dell'auto: usarli|Se hai pannelli sul tetto/);
 });
 
 test('le regole che nascondono per modo, percorso, ruolo, tipo e risultato vincono su ogni regola di impaginazione, e in «fondare» semplice i contatori nascosti valgono 3 kW (esclude i campi avanzati delle righe di «fondare» visibili in semplice e ignorati dal calcolo, trovati il 10/11/2026: «.righe .riga label» aveva lo stesso peso e veniva dopo)', () => {
