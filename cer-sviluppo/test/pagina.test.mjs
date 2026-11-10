@@ -136,8 +136,8 @@ test('l\'impianto della CER ha il suo riquadro, che compare con ogni impianto de
   assert.equal(investimentoCer({ com: { haImpiantoCer: true, investimentoCer: 51200 } }), true);
   assert.equal(investimentoCer({ com: { haImpiantoCer: true, investimentoCer: 0 } }), false, 'già in esercizio: niente investimento da finanziare');
   assert.match(CSS, /body:not\(\[data-impianto-cer\]\) \[data-solo-impianto-cer\]/);
-  assert.ok(CSS.includes('body:not([data-investimento-cer]) [data-solo-investimento-cer]{display:none}'));
-  assert.ok(CSS.includes('body[data-investimento-cer] [data-solo-pagato-cer], body:not([data-impianto-cer]) [data-solo-pagato-cer]{display:none}'));
+  assert.ok(CSS.includes('body:not([data-investimento-cer]) [data-solo-investimento-cer]{display:none!important}'));
+  assert.ok(CSS.includes('body[data-investimento-cer] [data-solo-pagato-cer], body:not([data-impianto-cer]) [data-solo-pagato-cer]{display:none!important}'));
 });
 
 test('«Per te»: il numero grande è ciò che porta la CER, l\'impianto ha le sue righe, rientro e 20 anni con l\'impianto solo per un impianto nuovo (esclude un numero grande che sommi ciò che l\'impianto dà comunque)', () => {
@@ -293,7 +293,7 @@ test('i prelievi si nascondono senza consumi, e la riga «Sulla spesa variabile 
   assert.equal(consumo({ te: { consumo: 3000 } }), true);
   assert.equal(consumo({ te: { consumo: 0 } }), false, 'il socio produttore non consuma sul posto: niente riga dei prelievi');
   assert.equal(consumo({ te: {} }), false, 'senza un «io» nel risultato non c\'è nulla da mostrare');
-  assert.match(CSS, /body:not\(\[data-consumo\]\) \[data-solo-consumo\]\{display:none\}/);
+  assert.match(CSS, /body:not\(\[data-consumo\]\) \[data-solo-consumo\]\{display:none!important\}/);
   assert.match(HTML, /<p data-solo-consumo>I tuoi prelievi dalla rete pesano /);
   assert.doesNotMatch(HTML, /Sulla spesa variabile|info-spesa|data-solo-spesa|te\.quotaSpesa|te\.costoEvitatoKwh/);
   assert.doesNotMatch(CSS, /data-spesa|data-solo-spesa/);
@@ -365,7 +365,7 @@ test('il produttore non ha consumi: spariscono consumo, contatore, tipo di attiv
   for (const r of [/<label class="campo" data-solo-tipo="famiglia" data-solo-con-consumi>Potenza del contatore/, /<p class="aiuto" data-solo-tipo="famiglia" data-solo-con-consumi>Il contatore non limita/, /<label class="campo" data-solo-tipo="altri" data-solo-con-consumi>Che attività/, /<label class="campo" data-solo-con-consumi>Consumo annuo dalla bolletta, kWh/, /<p class="aiuto" id="aiuto-consumo" data-solo-con-consumi><\/p>/]) assert.match(passo, r);
   assert.match(passo, /<input type="radio" name="tipo" value="famiglia" checked>/, 'il tipo resta anche per il produttore');
   assert.match(passo, /<p class="aiuto" data-solo-produttore>Per il produttore non contiamo consumi: l'impianto sta in un punto dove non si consuma, e dalla CER ricevi solo la quota di titolare\. Famiglia, attività o ente cambia solo l'IVA sul prezzo dell'impianto\.<\/p>/);
-  assert.ok(CSS.includes('body[data-ruolo="produttore"] [data-solo-con-consumi], body:not([data-ruolo="produttore"]) [data-solo-produttore]{display:none}'));
+  assert.ok(CSS.includes('body[data-ruolo="produttore"] [data-solo-con-consumi], body:not([data-ruolo="produttore"]) [data-solo-produttore]{display:none!important}'));
   assert.match(JS, /if \(percorso === 'entrare' && s\.utente\.ruolo !== 'produttore' && s\.utente\.tipo !== 'famiglia' && s\.utente\.consumo == null\)/);
 });
 
@@ -376,4 +376,14 @@ test('l\'aiuto di «Le tue abitudini» dice a chi ha i pannelli che ciò che spo
   assert.ok(aiuto.includes(frase));
   assert.equal(aiuto.split('Se hai pannelli').length - 1, 1);
   assert.ok(aiuto.includes('Con i pannelli, la tua impronta scende perché prelevi meno dalla rete, ma quel kWh l\'avresti immesso per gli altri'));
+});
+
+test('le regole che nascondono per modo, percorso, ruolo, tipo e risultato vincono su ogni regola di impaginazione, e in «fondare» semplice i contatori nascosti valgono 3 kW (esclude i campi avanzati delle righe di «fondare» visibili in semplice e ignorati dal calcolo, trovati il 10/11/2026: «.righe .riga label» aveva lo stesso peso e veniva dopo)', () => {
+  const regole = [...CSS.replace(/\/\*[\s\S]*?\*\//g, '').matchAll(/([^{}]+)\{([^{}]*)\}/g)].map((m) => ({ selettore: m[1].trim(), corpo: m[2] }));
+  const nascondono = regole.filter((r) => r.selettore.includes('[data-solo-') && /display:\s*none/.test(r.corpo));
+  assert.ok(nascondono.length >= 9, `regole trovate: ${nascondono.length}`);
+  for (const r of nascondono) assert.match(r.corpo, /display:none!important/, r.selettore);
+  assert.ok(CSS.includes('body[data-modo="semplice"] [data-solo-modo="esperto"], body[data-modo="esperto"] [data-solo-modo="semplice"]{display:none!important}'));
+  assert.match(JS, /famiglie: \{ numero: numeroDi\('f-famiglie', tipo\.famiglie\), classe: esperto \? campo\('f-famiglie-classe'\)\.value : tipo\.classe,/);
+  assert.match(JS, /pannelli: \{ numero: numeroDi\('f-pannelli', 0\), classe: esperto \? campo\('f-pannelli-classe'\)\.value : tipo\.classe,/);
 });

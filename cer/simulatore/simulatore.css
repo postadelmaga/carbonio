@@ -7,16 +7,17 @@
 @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){ --g-prod:#B9841A; --g-cons:#4C95EA; --g-cond:#22A070; --g-sociale:#9085E9; --g-costi:#DC6A3A; } }
 :root[data-theme="dark"]{ --g-prod:#B9841A; --g-cons:#4C95EA; --g-cond:#22A070; --g-sociale:#9085E9; --g-costi:#DC6A3A; }
 
-/* visibilità per modo, percorso, ruolo, tipo */
-body[data-modo="semplice"] [data-solo-modo="esperto"], body[data-modo="esperto"] [data-solo-modo="semplice"]{display:none}
-body:not([data-percorso="entrare"]) [data-solo-percorso="entrare"], body:not([data-percorso="fondare"]) [data-solo-percorso="fondare"]{display:none}
-body[data-ruolo="consumatore"] [data-solo-ruolo]{display:none}
-body:not([data-tipo="famiglia"]) [data-solo-tipo="famiglia"], body[data-tipo="famiglia"] [data-solo-tipo="altri"]{display:none}
-body:not([data-impianto]) [data-solo-impianto], body:not([data-investimento]) [data-solo-investimento], body:not([data-pagato]) [data-solo-pagato], body:not([data-fondatore]) [data-solo-fondatore], body:not([data-impianto-cer]) [data-solo-impianto-cer]{display:none}
-body:not([data-consumo]) [data-solo-consumo]{display:none}
-body[data-ruolo="produttore"] [data-solo-con-consumi], body:not([data-ruolo="produttore"]) [data-solo-produttore]{display:none}
-body:not([data-investimento-cer]) [data-solo-investimento-cer]{display:none}
-body[data-investimento-cer] [data-solo-pagato-cer], body:not([data-impianto-cer]) [data-solo-pagato-cer]{display:none}
+/* visibilità per modo, percorso, ruolo, tipo e risultato: !important perché nessuna regola di impaginazione le scavalchi
+   (il 10/11/2026 «.righe .riga label{display:grid}», di pari peso e scritta dopo, mostrava in semplice i campi avanzati) */
+body[data-modo="semplice"] [data-solo-modo="esperto"], body[data-modo="esperto"] [data-solo-modo="semplice"]{display:none!important}
+body:not([data-percorso="entrare"]) [data-solo-percorso="entrare"], body:not([data-percorso="fondare"]) [data-solo-percorso="fondare"]{display:none!important}
+body[data-ruolo="consumatore"] [data-solo-ruolo]{display:none!important}
+body:not([data-tipo="famiglia"]) [data-solo-tipo="famiglia"], body[data-tipo="famiglia"] [data-solo-tipo="altri"]{display:none!important}
+body:not([data-impianto]) [data-solo-impianto], body:not([data-investimento]) [data-solo-investimento], body:not([data-pagato]) [data-solo-pagato], body:not([data-fondatore]) [data-solo-fondatore], body:not([data-impianto-cer]) [data-solo-impianto-cer]{display:none!important}
+body:not([data-consumo]) [data-solo-consumo]{display:none!important}
+body[data-ruolo="produttore"] [data-solo-con-consumi], body:not([data-ruolo="produttore"]) [data-solo-produttore]{display:none!important}
+body:not([data-investimento-cer]) [data-solo-investimento-cer]{display:none!important}
+body[data-investimento-cer] [data-solo-pagato-cer], body:not([data-impianto-cer]) [data-solo-pagato-cer]{display:none!important}
 
 .sim-testa{padding:44px 0 18px}
 .sim-testa h1{font-size:clamp(2rem,4.2vw,3.3rem);font-weight:850;font-stretch:108%;max-width:24ch}

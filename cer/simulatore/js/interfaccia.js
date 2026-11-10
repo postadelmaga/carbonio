@@ -59,8 +59,8 @@ function stato() {
       abitudini_altri: numeroDi('c-abitudini', 0),
     } : {},
     fondare: {
-      famiglie: { numero: numeroDi('f-famiglie', tipo.famiglie), classe: campo('f-famiglie-classe').value, consumo: esperto ? numeroDi('f-famiglie-consumo', null) : null },
-      pannelli: { numero: numeroDi('f-pannelli', 0), classe: campo('f-pannelli-classe').value, consumo: null, kwp: numeroDi('f-pannelli-kwp', pred.kwp_prosumer) },
+      famiglie: { numero: numeroDi('f-famiglie', tipo.famiglie), classe: esperto ? campo('f-famiglie-classe').value : tipo.classe, consumo: esperto ? numeroDi('f-famiglie-consumo', null) : null },
+      pannelli: { numero: numeroDi('f-pannelli', 0), classe: esperto ? campo('f-pannelli-classe').value : tipo.classe, consumo: null, kwp: numeroDi('f-pannelli-kwp', pred.kwp_prosumer) },
       pannelliEsistenti: esperto
         ? { numero: numeroDi('f-pannelli-es', 0), classe: campo('f-pannelli-es-classe').value, consumo: null, kwp: numeroDi('f-pannelli-es-kwp', pred.kwp_prosumer), stato: campo('f-pannelli-es-stato').value }
         : { numero: 0, classe: '1,5-3', consumo: null, kwp: pred.kwp_prosumer, stato: 'precedente' },
