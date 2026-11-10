@@ -407,6 +407,9 @@ test('le righe di «fondare» nel codice della pagina: id che non tornano indiet
   assert.match(JS, /const etichette = percorso === 'fondare' \? etichetteRighe\(s\.fondare\) : null;/);
   assert.match(JS, /else tabellaRuoli\(r, etichette\);/);
   assert.match(JS, /\[etichette\[id\]\?\.socio \?\? 'Socio produttore', numero\(m\.numero\)/);
-  assert.match(JS, /\.disabled = !\(Number\(r\.querySelector\('\[data-campo="kwp"\]'\)\.value\) > 0\)/);
+  assert.match(JS, /function aggiornaRighe\(fondare\) \{/);
+  assert.match(JS, /r\.querySelector\('\[data-campo="stato"\]'\)\.disabled = !conImpianto\.has\(r\.dataset\.riga\);/);
+  assert.match(JS, /const s = stato\(\), percorso = scelto\('percorso'\);\n  aggiornaRighe\(s\.fondare\);/);
+  assert.doesNotMatch(JS, /Number\(r\.querySelector\('\[data-campo="kwp"\]'\)\.value\)/, 'il kWp grezzo del campo, non quello del calcolo (esclude il select spento su un impianto che conta, revisione finale del 10/11/2026)');
   assert.doesNotMatch(JS, /\bNOMI\b|sceltaIo|'f-famiglie|'f-pannelli|'f-attivita|'f-enti/);
 });

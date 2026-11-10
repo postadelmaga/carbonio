@@ -183,9 +183,11 @@ function preparaRighe() {
   }
 }
 
-// «L'impianto è» di una riga conta solo con dei kWp: senza, si disabilita.
-function aggiornaRighe() {
-  for (const r of $$('[data-profilo] .riga')) r.querySelector('[data-campo="stato"]').disabled = !(Number(r.querySelector('[data-campo="kwp"]').value) > 0);
+// «L'impianto è» di una riga conta solo con dei kWp: senza, si disabilita. I kWp sono quelli che conta il calcolo
+// (righeDi): un campo vuoto vale il predefinito, uno non valido l'ultimo valore valido.
+function aggiornaRighe(fondare) {
+  const conImpianto = new Set(Object.keys(PROFILI).flatMap((p) => fondare[p].filter((r) => r.kwp > 0).map((r) => r.riga)));
+  for (const r of $$('[data-profilo] .riga')) r.querySelector('[data-campo="stato"]').disabled = !conImpianto.has(r.dataset.riga);
 }
 
 // Le righe di un profilo come le vuole ingressiFondare; in semplice i campi avanzati valgono i predefiniti.
@@ -279,8 +281,8 @@ function aggiorna() {
   if (!dati) return;
   aggiornaCorpo();
   aggiornaUscite();
-  aggiornaRighe();
   const s = stato(), percorso = scelto('percorso');
+  aggiornaRighe(s.fondare);
   aggiornaAiuto(s);
   if (percorso === 'entrare' && s.utente.ruolo !== 'produttore' && s.utente.tipo !== 'famiglia' && s.utente.consumo == null) {
     document.body.dataset.nonAggiornato = '';

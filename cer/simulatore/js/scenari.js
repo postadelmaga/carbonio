@@ -76,13 +76,14 @@ const ORDINALI = ['prima', 'seconda', 'terza', 'quarta', 'quinta'];
 const kwpTesto = (kwp) => numero(kwp, Number.isInteger(kwp) ? 0 : 1);
 
 // Le etichette delle righe di «fondare» (spec della composizione §4): `io` per «Io sono», `socio` per la tabella dei soci.
-// Sono fatte dal contenuto della riga; se una riga ha la stessa etichetta di una riga prima di lei nello stesso profilo,
+// Sono fatte dal contenuto della riga; le righe con 0 membri, che non entrano nel calcolo, non ne hanno; se una riga ha la stessa etichetta di una riga prima di lei nello stesso profilo,
 // aggiunge la sua posizione, «(seconda riga)», in ciascuna delle due etichette per conto suo. `fondare` è stato().fondare.
 export function etichetteRighe(fondare) {
   const etichette = {};
   for (const [profilo, p] of Object.entries(PROFILI)) {
     const visteIo = new Set(), visteSocio = new Set();
     (fondare[profilo] ?? []).forEach((r, i) => {
+      if (!(r.numero > 0)) return;
       const pannelli = r.kwp > 0 ? `con ${kwpTesto(r.kwp)} kWp${(r.stato ?? 'nuovo') !== 'nuovo' ? ' già in esercizio' : ''}` : 'senza pannelli';
       const posizione = ` (${ORDINALI[i]} riga)`;
       let io = `${r.numero === 1 ? p.uno : p.alcuni(numero(r.numero))} ${pannelli}`, socio = `${p.titolo} ${pannelli}`;

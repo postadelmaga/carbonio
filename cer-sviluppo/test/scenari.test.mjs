@@ -127,6 +127,9 @@ test('etichette delle righe: singolare e plurale, con e senza pannelli, già in 
   assert.deepEqual(e['enti-1'], { io: 'uno dei 3 enti senza pannelli', socio: 'Enti e associazioni senza pannelli' });
   assert.deepEqual(e['enti-2'], { io: 'l\'ente con 10 kWp', socio: 'Enti e associazioni con 10 kWp' });
   assert.deepEqual(e['enti-3'], { io: 'uno dei 3 enti senza pannelli (terza riga)', socio: 'Enti e associazioni senza pannelli (terza riga)' });
+  const vuota = etichetteRighe({ famiglie: [], attivita: [riga('attivita-1', { numero: 0 }), riga('attivita-2', { numero: 1 })], enti: [] });
+  assert.equal(vuota['attivita-1'], undefined, 'una riga con 0 membri non entra nel calcolo e non ha etichetta');
+  assert.deepEqual(vuota['attivita-2'], { io: 'l\'attività senza pannelli', socio: 'Attività senza pannelli' }, 'senza il suffisso dovuto alla riga vuota (revisione finale del 10/11/2026)');
 });
 
 test('«Io sono»: le voci sono i soci che entrano nel calcolo, nell\'ordine degli ingressi, con le etichette delle righe e il socio produttore (esclude voci di righe vuote o assenti)', () => {
