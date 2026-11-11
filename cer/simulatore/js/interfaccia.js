@@ -184,18 +184,25 @@ function preparaRighe() {
   }
 }
 
-// «L'impianto è» di una riga conta solo con dei kWp: senza, si disabilita. I kWp sono quelli che conta il calcolo
-// (righeDi): un campo vuoto vale il predefinito, uno non valido l'ultimo valore valido. Una riga uguale a una
-// precedente ha l'avviso con «Unisci», che nomina i campi visibili nella modalità (spec della composizione §11.2).
+// I campi che l'avviso di una riga uguale nomina: quelli visibili nella modalità (spec della composizione §11.2).
 const CAMPI_UGUALI = {
   famiglie: { semplice: 'i kWp', esperto: 'contatore, kWp o kWh l\'anno' },
   altri: { semplice: 'kWp o kWh l\'anno', esperto: 'tipo, kWp o kWh l\'anno' },
 };
+// Gli avvisi già annunciati, per riga: si annunciano solo quelli nuovi o cambiati.
+let avvisiAnnunciati = new Map();
 
+// «L'impianto è» di una riga conta solo con dei kWp: senza, si disabilita. I kWp sono quelli che conta il calcolo
+// (righeDi): un campo vuoto vale il predefinito, uno non valido l'ultimo valore valido. Una riga uguale a una
+// precedente ha l'avviso con «Unisci»; se unite supererebbero il massimo di «quante», l'avviso lo dice e «Unisci» non
+// c'è (spec della composizione §11.2). Gli avvisi nuovi o cambiati si leggono dalla regione viva #annuncio-righe, che
+// c'è dall'apertura della pagina: un avviso che nasce nascosto, o in una riga appena creata, con molti lettori di
+// schermo non si annuncia (revisione finale dell'11/11/2026).
 function aggiornaRighe(fondare) {
   const conImpianto = new Set(Object.keys(PROFILI).flatMap((p) => fondare[p].filter((r) => r.kwp > 0).map((r) => r.riga)));
   const uguali = righeUguali(fondare), modo = scelto('modo');
   const membri = Object.fromEntries(Object.keys(PROFILI).flatMap((p) => fondare[p].map((r) => [r.riga, r.numero])));
+  const avvisi = new Map(), nuovi = [];
   for (const r of $$('[data-profilo] .riga')) {
     r.querySelector('[data-campo="stato"]').disabled = !conImpianto.has(r.dataset.riga);
     const avviso = r.querySelector('.uguale'), verso = uguali[r.dataset.riga];
@@ -203,15 +210,26 @@ function aggiornaRighe(fondare) {
     if (!verso) continue;
     const profilo = r.closest('[data-profilo]').dataset.profilo;
     const n = $$(`[data-profilo="${profilo}"] .riga`).findIndex((x) => x.dataset.riga === verso) + 1;
-    const testo = `Questa riga è uguale alla riga ${n}: cambia ${CAMPI_UGUALI[profilo === 'famiglie' ? 'famiglie' : 'altri'][modo]}, oppure`;
+    const campi = CAMPI_UGUALI[profilo === 'famiglie' ? 'famiglie' : 'altri'][modo];
+    // oltre il massimo di «quante» il calcolo terrebbe l'ultimo valore valido, e i membri della riga tolta sparirebbero
+    const massimo = Number(r.querySelector('[data-campo="numero"]').max), troppi = membri[r.dataset.riga] + membri[verso] > massimo;
+    const testo = troppi
+      ? `Questa riga è uguale alla riga ${n}: cambia ${campi}. Unite supererebbero il massimo di ${massimo} per riga.`
+      : `Questa riga è uguale alla riga ${n}: cambia ${campi}, oppure`;
     const span = avviso.querySelector('span'), pulsante = avviso.querySelector('[data-unisci]');
-    // si scrive solo se il testo cambia: l'avviso è una regione viva
     if (span.textContent !== testo) span.textContent = testo;
     if (pulsante.textContent !== `Unisci alla riga ${n}`) pulsante.textContent = `Unisci alla riga ${n}`;
     pulsante.dataset.unisci = verso;
-    // oltre il massimo di «quante» il calcolo terrebbe l'ultimo valore valido, e i membri della riga tolta sparirebbero
-    pulsante.disabled = membri[r.dataset.riga] + membri[verso] > Number(r.querySelector('[data-campo="numero"]').max);
+    pulsante.hidden = troppi;
+    const annuncio = `${r.getAttribute('aria-label')}: ${troppi ? testo : `${testo} ${pulsante.textContent}`}`;
+    avvisi.set(r.dataset.riga, annuncio);
+    if (avvisiAnnunciati.get(r.dataset.riga) !== annuncio) nuovi.push(annuncio);
   }
+  // un avviso sparito svuota la regione, così se torna uguale si annuncia di nuovo
+  const sparito = [...avvisiAnnunciati.keys()].some((id) => !avvisi.has(id));
+  if (nuovi.length) $('#annuncio-righe').textContent = nuovi.join(' ');
+  else if (sparito) $('#annuncio-righe').textContent = '';
+  avvisiAnnunciati = avvisi;
 }
 
 // Le righe di un profilo come le vuole ingressiFondare; in semplice i campi avanzati valgono i predefiniti.

@@ -59,12 +59,15 @@ body[data-investimento-cer] [data-solo-pagato-cer], body:not([data-impianto-cer]
 .righe .blocco .riga+.riga{border-top:1px dashed var(--rule)}
 .righe .togli{width:32px;height:32px;padding:0;border:1px solid var(--rule);border-radius:50%;background:var(--surface);color:var(--ink-2);font-size:1.1rem;line-height:1;cursor:pointer}
 .righe .aggiungi{margin-top:6px}
-.righe .aggiungi:disabled,.righe .unisci:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
+.righe .aggiungi:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
 .righe .limite{font-size:.85rem;color:var(--ink-2)}
 .righe select:disabled{opacity:.55}
 /* avviso di una riga uguale a una precedente (spec della composizione §11.2): senza display, così hidden la nasconde */
 .righe .riga .uguale{flex-basis:100%;margin:0;padding:8px 12px;border-radius:12px;background:var(--ember-soft);color:var(--ink);font-size:.88rem}
 .righe .riga .uguale .unisci{margin-left:4px}
+.righe .riga .uguale .unisci[hidden]{display:none}
+/* testo letto solo dai lettori di schermo: la regione viva degli avvisi delle righe uguali */
+.solo-lettori{position:absolute;width:1px;height:1px;margin:-1px;padding:0;border:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
 .scelte-in-linea{border:0;padding:0;margin:14px 0}
 .scelte-in-linea label{display:block;margin:4px 0}
 .scadenza{margin:12px 0 0;padding:10px 12px;border-radius:12px;background:var(--sun-soft);font-size:.92rem}

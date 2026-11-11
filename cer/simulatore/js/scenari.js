@@ -99,7 +99,7 @@ export function righeUguali(fondare) {
   return uguali;
 }
 
-// I parametri che possono distinguere due righe con la stessa etichetta (§11.4), nell'ordine del modulo: contatore o
+// I parametri che possono distinguere due righe con la stessa etichetta (§11.4), in quest'ordine: contatore o
 // tipo, consumo, data dell'esercizio; null se la riga non ne ha.
 const parametri = (profilo, r) => [
   profilo === 'famiglie' ? (r.classe != null ? `contatore ${CONTATORI[r.classe]}` : null) : (r.archetipo != null ? TIPI[r.archetipo] : null),
