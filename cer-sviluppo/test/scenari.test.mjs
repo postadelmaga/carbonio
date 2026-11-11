@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { ingressiEntrare, ingressiFondare, etichetteRighe, opzioniIo, limitaQuote } from '../../cer/simulatore/js/scenari.js';
+import { ingressiEntrare, ingressiFondare, etichetteRighe, opzioniIo, righeUguali, limitaQuote } from '../../cer/simulatore/js/scenari.js';
 import { valida } from '../../cer/simulatore/js/motore.js';
 
 const costanti = JSON.parse(readFileSync(new URL('../../cer/simulatore/dati/costanti.json', import.meta.url), 'utf8'));
@@ -130,6 +130,54 @@ test('etichette delle righe: singolare e plurale, con e senza pannelli, già in 
   const vuota = etichetteRighe({ famiglie: [], attivita: [riga('attivita-1', { numero: 0 }), riga('attivita-2', { numero: 1 })], enti: [] });
   assert.equal(vuota['attivita-1'], undefined, 'una riga con 0 membri non entra nel calcolo e non ha etichetta');
   assert.deepEqual(vuota['attivita-2'], { io: 'l\'attività senza pannelli', socio: 'Attività senza pannelli' }, 'senza il suffisso dovuto alla riga vuota (revisione finale del 10/11/2026)');
+});
+
+test('etichette con la stessa etichetta di base: i parametri che cambiano nel gruppo, separati per «Io sono» e per la tabella, e la posizione solo per le righe identiche (spec della composizione §11.4; esclude «(seconda riga)» dove un parametro distingue le righe)', () => {
+  const e = etichetteRighe({
+    famiglie: [
+      riga('famiglie-1', { numero: 1, kwp: 4.5, classe: '1,5-3', consumo: null }),
+      riga('famiglie-2', { numero: 1, kwp: 4.5, classe: '4,5-6', consumo: null }),
+      riga('famiglie-3', { numero: 3, kwp: 4.5, classe: '1,5-3', consumo: 3000 }),
+    ],
+    attivita: [
+      riga('attivita-1', { numero: 2, archetipo: 'com_orario_apertura', consumo: 10000 }),
+      riga('attivita-2', { numero: 1, archetipo: 'com_carico_base', consumo: 10000 }),
+    ],
+    enti: [
+      riga('enti-1', { numero: 1, kwp: 5, archetipo: 'com_orario_apertura', consumo: 5000, stato: 'precedente' }),
+      riga('enti-2', { numero: 1, kwp: 5, archetipo: 'com_orario_apertura', consumo: 5000, stato: 'esistente' }),
+      riga('enti-3', { numero: 1, kwp: 5, archetipo: 'com_orario_apertura', consumo: 5000, stato: 'esistente' }),
+    ],
+  });
+  assert.deepEqual(e['famiglie-1'], { io: 'la famiglia con 4,5 kWp, contatore 3 kW', socio: 'Famiglie con 4,5 kWp, contatore 3 kW, consumo medio' });
+  assert.deepEqual(e['famiglie-2'], { io: 'la famiglia con 4,5 kWp, contatore 6 kW', socio: 'Famiglie con 4,5 kWp, contatore 6 kW, consumo medio' });
+  assert.deepEqual(e['famiglie-3'], { io: 'una delle 3 famiglie con 4,5 kWp', socio: 'Famiglie con 4,5 kWp, contatore 3 kW, 3000 kWh l\'anno' }, 'in «Io sono» il numero basta a distinguerla, nella tabella no');
+  assert.deepEqual(e['attivita-1'], { io: 'una delle 2 attività senza pannelli', socio: 'Attività senza pannelli, con orario' });
+  assert.deepEqual(e['attivita-2'], { io: 'l\'attività senza pannelli', socio: 'Attività senza pannelli, carico continuo' });
+  assert.deepEqual(e['enti-1'], { io: 'l\'ente con 5 kWp già in esercizio, dopo il 15/12/2021', socio: 'Enti e associazioni con 5 kWp già in esercizio, dopo il 15/12/2021' });
+  assert.deepEqual(e['enti-2'], { io: 'l\'ente con 5 kWp già in esercizio, fino al 15/12/2021', socio: 'Enti e associazioni con 5 kWp già in esercizio, fino al 15/12/2021' });
+  assert.deepEqual(e['enti-3'], { io: 'l\'ente con 5 kWp già in esercizio, fino al 15/12/2021 (terza riga)', socio: 'Enti e associazioni con 5 kWp già in esercizio, fino al 15/12/2021 (terza riga)' }, 'identica alla seconda: la posizione resta');
+  const sole = etichetteRighe({ famiglie: [riga('famiglie-1', { numero: 30, classe: '1,5-3', consumo: null })], attivita: [riga('attivita-1', { numero: 2, archetipo: 'com_carico_base', consumo: 20000 })], enti: [] });
+  assert.deepEqual(sole['famiglie-1'], { io: 'una delle 30 famiglie senza pannelli', socio: 'Famiglie senza pannelli' }, 'una riga sola non aggiunge parametri');
+  assert.deepEqual(sole['attivita-1'], { io: 'una delle 2 attività senza pannelli', socio: 'Attività senza pannelli' });
+});
+
+test('righe uguali: stessa chiave di contatore o tipo, kWp, consumo e stato con dei kWp; «quante» non conta, le righe con 0 membri non si confrontano, ogni riga uguale rimanda alla prima, e i profili restano separati (spec della composizione §11.1; esclude doppioni non segnalati e righe diverse segnalate)', () => {
+  const F = (id, x = {}) => riga(id, { numero: 2, kwp: 4.5, classe: '1,5-3', consumo: null, ...x });
+  const A = (id, x = {}) => riga(id, { numero: 1, kwp: 20, archetipo: 'com_orario_apertura', consumo: 10000, ...x });
+  const u = (famiglie = [], attivita = [], enti = []) => righeUguali({ famiglie, attivita, enti });
+  assert.deepEqual(u([F('famiglie-1'), F('famiglie-2', { numero: 5 })]), { 'famiglie-2': 'famiglie-1' }, '«quante» non conta');
+  assert.deepEqual(u([F('famiglie-1'), F('famiglie-2', { classe: '4,5-6' })]), {}, 'contatore');
+  assert.deepEqual(u([F('famiglie-1'), F('famiglie-2', { kwp: 6 })]), {}, 'kWp');
+  assert.deepEqual(u([F('famiglie-1'), F('famiglie-2', { consumo: 3000 })]), {}, 'consumo');
+  assert.deepEqual(u([F('famiglie-1'), F('famiglie-2', { stato: 'precedente' })]), {}, 'stato, con dei kWp');
+  assert.deepEqual(u([F('famiglie-1', { kwp: 0 }), F('famiglie-2', { kwp: 0, stato: 'esistente' })]), { 'famiglie-2': 'famiglie-1' }, 'senza kWp lo stato non conta');
+  assert.deepEqual(u([F('famiglie-1'), F('famiglie-2', { numero: 0 }), F('famiglie-3', { numero: 0 })]), {}, 'le righe con 0 membri non si confrontano');
+  assert.deepEqual(u([F('famiglie-1', { numero: 0 }), F('famiglie-2'), F('famiglie-3')]), { 'famiglie-3': 'famiglie-2' }, 'una riga vuota prima non fa da riferimento');
+  assert.deepEqual(u([F('famiglie-1', { kwp: 0 }), F('famiglie-2'), F('famiglie-4'), F('famiglie-5')]), { 'famiglie-4': 'famiglie-2', 'famiglie-5': 'famiglie-2' }, 'tre righe uguali rimandano tutte alla prima');
+  assert.deepEqual(u([], [A('attivita-1'), A('attivita-2', { archetipo: 'com_carico_base' }), A('attivita-3', { consumo: 20000 }), A('attivita-4', { numero: 3 })]), { 'attivita-4': 'attivita-1' }, 'tipo e consumo di attività');
+  assert.deepEqual(u([], [A('attivita-1')], [A('enti-1')]), {}, 'un\'attività e un ente con gli stessi valori non si confrontano');
+  assert.deepEqual(u([F('famiglie-1', { numero: 30, kwp: 0 }), F('famiglie-2', { numero: 1 }), F('famiglie-3', { numero: 1 })]), { 'famiglie-3': 'famiglie-2' }, 'in semplice (contatore 3 kW e consumo null per tutte) le famiglie con gli stessi kWp sono uguali');
 });
 
 test('«Io sono»: le voci sono i soci che entrano nel calcolo, nell\'ordine degli ingressi, con le etichette delle righe e il socio produttore (esclude voci di righe vuote o assenti)', () => {

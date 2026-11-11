@@ -75,22 +75,70 @@ export function ingressiFondare(stato, costanti) {
 const ORDINALI = ['prima', 'seconda', 'terza', 'quarta', 'quinta'];
 const kwpTesto = (kwp) => numero(kwp, Number.isInteger(kwp) ? 0 : 1);
 
-// Le etichette delle righe di «fondare» (spec della composizione §4): `io` per «Io sono», `socio` per la tabella dei soci.
-// Sono fatte dal contenuto della riga; le righe con 0 membri, che non entrano nel calcolo, non ne hanno; se una riga ha la stessa etichetta di una riga prima di lei nello stesso profilo,
-// aggiunge la sua posizione, «(seconda riga)», in ciascuna delle due etichette per conto suo. `fondare` è stato().fondare.
+// Le voci dei select delle righe, per le etichette (spec della composizione §11.4): uguali al testo delle option.
+export const CONTATORI = { '1,5-3': '3 kW', '3-4,5': '4,5 kW', '4,5-6': '6 kW', oltre_6: 'oltre 6 kW' };
+export const TIPI = { com_orario_apertura: 'con orario', com_carico_base: 'carico continuo' };
+const DATE_ESERCIZIO = { precedente: 'dopo il 15/12/2021', esistente: 'fino al 15/12/2021' };
+
+// La chiave di una riga (spec della composizione §11.1): i valori che il calcolo conta, tranne quanti sono; lo stato
+// conta solo con dei kWp.
+export const chiaveRiga = (r) => JSON.stringify([r.classe ?? null, r.archetipo ?? null, r.kwp, r.consumo ?? null, r.kwp > 0 ? r.stato ?? 'nuovo' : null]);
+
+// Le righe uguali a una riga precedente dello stesso profilo (§11.1): `{ [idRiga]: idPrimaRigaUguale }`. Le righe con
+// 0 membri, che non entrano nel calcolo, non si confrontano. `fondare` è stato().fondare.
+export function righeUguali(fondare) {
+  const uguali = {};
+  for (const profilo of Object.keys(PROFILI)) {
+    const prime = new Map();
+    for (const r of fondare[profilo] ?? []) {
+      if (!(r.numero > 0)) continue;
+      const k = chiaveRiga(r);
+      if (prime.has(k)) uguali[r.riga] = prime.get(k); else prime.set(k, r.riga);
+    }
+  }
+  return uguali;
+}
+
+// I parametri che possono distinguere due righe con la stessa etichetta (§11.4), nell'ordine del modulo: contatore o
+// tipo, consumo, data dell'esercizio; null se la riga non ne ha.
+const parametri = (profilo, r) => [
+  profilo === 'famiglie' ? (r.classe != null ? `contatore ${CONTATORI[r.classe]}` : null) : (r.archetipo != null ? TIPI[r.archetipo] : null),
+  r.consumo != null ? `${numero(r.consumo)} kWh l'anno` : (profilo === 'famiglie' ? 'consumo medio' : null),
+  r.kwp > 0 ? DATE_ESERCIZIO[r.stato] ?? null : null,
+];
+
+// Le etichette di un gruppo di righe con la stessa etichetta di base (`tipo` è 'io' o 'socio'): ognuna aggiunge i
+// parametri che non sono uguali in tutto il gruppo; se due restano uguali, la seconda aggiunge la sua posizione.
+function distingui(gruppo, tipo) {
+  const variano = [0, 1, 2].filter((k) => new Set(gruppo.map((r) => r.parametri[k])).size > 1);
+  const viste = new Set();
+  return gruppo.map((r) => {
+    let testo = [r[tipo], ...variano.map((k) => r.parametri[k]).filter(Boolean)].join(', ');
+    if (viste.has(testo)) testo += ` (${ORDINALI[r.i]} riga)`; else viste.add(testo);
+    return testo;
+  });
+}
+
+// Le etichette delle righe di «fondare» (spec della composizione §4 e §11.4): `io` per «Io sono», `socio` per la tabella
+// dei soci. La base è fatta da quanti sono e dai kWp; le righe con la stessa base, contate a parte per `io` e per
+// `socio`, aggiungono i parametri che le distinguono. Le righe con 0 membri non hanno etichetta. `fondare` è
+// stato().fondare.
 export function etichetteRighe(fondare) {
   const etichette = {};
   for (const [profilo, p] of Object.entries(PROFILI)) {
-    const visteIo = new Set(), visteSocio = new Set();
+    const righe = [];
     (fondare[profilo] ?? []).forEach((r, i) => {
       if (!(r.numero > 0)) return;
       const pannelli = r.kwp > 0 ? `con ${kwpTesto(r.kwp)} kWp${(r.stato ?? 'nuovo') !== 'nuovo' ? ' già in esercizio' : ''}` : 'senza pannelli';
-      const posizione = ` (${ORDINALI[i]} riga)`;
-      let io = `${r.numero === 1 ? p.uno : p.alcuni(numero(r.numero))} ${pannelli}`, socio = `${p.titolo} ${pannelli}`;
-      if (visteIo.has(io)) io += posizione; else visteIo.add(io);
-      if (visteSocio.has(socio)) socio += posizione; else visteSocio.add(socio);
-      etichette[r.riga] = { io, socio };
+      righe.push({ id: r.riga, i, parametri: parametri(profilo, r), io: `${r.numero === 1 ? p.uno : p.alcuni(numero(r.numero))} ${pannelli}`, socio: `${p.titolo} ${pannelli}` });
     });
+    for (const tipo of ['io', 'socio']) {
+      const gruppi = new Map();
+      for (const r of righe) gruppi.set(r[tipo], [...(gruppi.get(r[tipo]) ?? []), r]);
+      for (const gruppo of gruppi.values()) {
+        distingui(gruppo, tipo).forEach((testo, k) => { etichette[gruppo[k].id] = { ...etichette[gruppo[k].id], [tipo]: testo }; });
+      }
+    }
   }
   return etichette;
 }
