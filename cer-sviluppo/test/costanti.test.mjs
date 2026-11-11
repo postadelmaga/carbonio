@@ -77,3 +77,8 @@ test('la tabella pubblica delle fonti non cita la spec né i compiti del piano, 
 test('il corrispettivo del GSE porta la data dello scarico della copia letta, 18/10/2026 (esclude una data di consultazione posteriore a quella della lettura)', () => {
   assert.equal(leggi('costanti.json').voci.corrispettivo_gse.consultato, '2026-10-18');
 });
+
+test('la nota dei valori predefiniti dice dove si usano i kWp proposti (spec della composizione §11.3; esclude i 20 kWp della riga nuova di attività ed enti senza spiegazione nella tabella delle fonti)', () => {
+  const { voci } = leggi('costanti.json');
+  assert.equal(voci.predefiniti.note, '4,5 kWp: l\'impianto di chi ha i pannelli in «Voglio entrare» e la riga nuova di famiglie in «Voglio fondarne una». 20 kWp: l\'impianto del produttore in «Voglio entrare» e la riga nuova di attività ed enti in «Voglio fondarne una».');
+});

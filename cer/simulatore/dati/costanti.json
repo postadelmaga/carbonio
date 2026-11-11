@@ -280,7 +280,7 @@
     "predefiniti": {
       "descrizione": "Valori proposti dai moduli",
       "valore": { "kwp_prosumer": 4.5, "kwp_produttore": 20, "fondatori": 3 },
-      "unita": "—", "fonte": "Ipotesi del simulatore", "url": "", "consultato": "2026-11-02", "note": ""
+      "unita": "—", "fonte": "Ipotesi del simulatore", "url": "", "consultato": "2026-11-02", "note": "4,5 kWp: l'impianto di chi ha i pannelli in «Voglio entrare» e la riga nuova di famiglie in «Voglio fondarne una». 20 kWp: l'impianto del produttore in «Voglio entrare» e la riga nuova di attività ed enti in «Voglio fondarne una»."
     }
   }
 }

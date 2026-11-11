@@ -4,6 +4,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { CONTATORI, TIPI } from '../../cer/simulatore/js/scenari.js';
 
 const leggi = (p) => readFileSync(new URL(`../../cer/simulatore/${p}`, import.meta.url), 'utf8');
 const HTML = leggi('index.html'), JS = leggi('js/interfaccia.js'), CSS = leggi('simulatore.css');
@@ -384,7 +385,7 @@ test('«fondare», sezione 3: tre blocchi a righe con il loro nome, il pulsante 
     assert.match(m, /^<template id="modello-[a-z]+"><div class="riga" role="group">/);
     assert.match(m, /<label>(quante|quanti) <input data-campo="numero" type="number" min="0" max="500" step="1"><\/label>/);
     assert.match(m, /<label data-solo-modo="esperto">L'impianto è <select data-campo="stato"><option value="nuovo" selected>da costruire<\/option><option value="precedente">già in esercizio, dopo il 15\/12\/2021<\/option><option value="esistente">già in esercizio, fino al 15\/12\/2021<\/option><\/select><\/label>/);
-    assert.match(m, /<button type="button" class="togli" aria-label="Togli questa riga">×<\/button><\/div>$/);
+    assert.match(m, /<button type="button" class="togli" aria-label="Togli questa riga">×<\/button>\s*<p class="uguale" aria-live="polite" hidden><span><\/span> <button type="button" class="btn unisci" data-unisci><\/button><\/p><\/div>$/);
   }
   assert.match(modello('famiglie'), /<label>kWp ciascuna <input data-campo="kwp" type="number" min="0" max="50" step="0.5"><\/label>\s*<label data-solo-modo="esperto">contatore <select data-campo="classe"><option value="1,5-3">3 kW<\/option><option value="3-4,5">4,5 kW<\/option><option value="4,5-6">6 kW<\/option><option value="oltre_6">oltre 6 kW<\/option><\/select><\/label>/);
   assert.match(modello('famiglie'), /<label data-solo-modo="esperto">kWh l'anno <input data-campo="consumo" type="number" min="0" max="2000000" step="1" placeholder="media ARERA"><\/label>/);
@@ -397,7 +398,7 @@ test('«fondare», sezione 3: tre blocchi a righe con il loro nome, il pulsante 
 });
 
 test('le righe di «fondare» nel codice della pagina: id che non tornano indietro, al massimo 5, la riga nuova di famiglie con 4,5 kWp, in semplice stato nuovo e campi avanzati predefiniti, «Io sono» e la tabella dalle etichette, stato disabilitato senza kWp (esclude NOMI e sceltaIo, e un campo avanzato nascosto che conta in semplice)', () => {
-  assert.match(JS, /import \{ ingressiEntrare, ingressiFondare, etichetteRighe, opzioniIo, PROFILI, limitaQuote \} from '\.\/scenari\.js';/);
+  assert.match(JS, /import \{ ingressiEntrare, ingressiFondare, etichetteRighe, opzioniIo, righeUguali, PROFILI, limitaQuote \} from '\.\/scenari\.js';/);
   assert.match(JS, /const MAX_RIGHE = 5;/);
   assert.match(JS, /riga\.dataset\.riga = `\$\{profilo\}-\$\{\+\+contatori\[profilo\]\}`;/);
   assert.match(JS, /numero: prima \? tipo\.famiglie : 1, kwp: prima \? 0 : pred\.kwp_prosumer/);
@@ -422,4 +423,22 @@ test('i testi che si leggono nominano le modalità con i nomi dei pulsanti, «mo
   }
   assert.match(HTML, /<label><input type="radio" name="modo" value="semplice" checked> Semplice<\/label>/);
   assert.match(HTML, /<label><input type="radio" name="modo" value="esperto"> Avanzato<\/label>/);
+});
+
+test('righe uguali, riga nuova e valori predefiniti nel codice della pagina: avviso con i campi visibili nella modalità, «Unisci» che somma, sposta «Io sono» e si disabilita oltre il massimo, la riga nuova di attività ed enti con 20 kWp, «Torna ai valori predefiniti» che resta sul percorso, le voci delle etichette come quelle dei select (spec della composizione §11; esclude un avviso che nomina campi nascosti, un «Unisci» che perde membri e il ritorno a «Voglio entrare»)', () => {
+  assert.match(JS, /famiglie: \{ semplice: 'i kWp', esperto: 'contatore, kWp o kWh l\\'anno' \},/);
+  assert.match(JS, /altri: \{ semplice: 'kWp o kWh l\\'anno', esperto: 'tipo, kWp o kWh l\\'anno' \},/);
+  assert.match(JS, /`Questa riga è uguale alla riga \$\{n\}: cambia \$\{CAMPI_UGUALI\[profilo === 'famiglie' \? 'famiglie' : 'altri'\]\[modo\]\}, oppure`/);
+  assert.match(JS, /`Unisci alla riga \$\{n\}`/);
+  assert.match(JS, /pulsante\.disabled = membri\[r\.dataset\.riga\] \+ membri\[verso\] > Number\(r\.querySelector\('\[data-campo="numero"\]'\)\.max\);/);
+  assert.match(JS, /quante\.value = String\(membri\[verso\.dataset\.riga\] \+ membri\[riga\.dataset\.riga\]\);/);
+  assert.match(JS, /if \(campo\('f-io'\)\.value === riga\.dataset\.riga\) campo\('f-io'\)\.value = verso\.dataset\.riga;/);
+  assert.match(JS, /numero: prima \? tipo\.attivita : 1, consumo: tipo\.consumo_attivita, kwp: prima \? 0 : pred\.kwp_produttore,/);
+  assert.match(JS, /numero: prima \? tipo\.enti : 1, consumo: tipo\.consumo_ente, kwp: prima \? 0 : pred\.kwp_produttore,/);
+  assert.match(JS, /const percorso = scelto\('percorso'\);\n    form\.reset\(\);\n    campo\('percorso'\)\.value = percorso;/);
+  assert.match(CSS, /\.righe \.riga \.uguale\{flex-basis:100%;/);
+  assert.doesNotMatch(CSS, /\.uguale\{[^}]*display:/, 'senza display, così l\'attributo hidden nasconde l\'avviso');
+  assert.match(CSS, /\.righe \.aggiungi:disabled,\.righe \.unisci:disabled\{/);
+  for (const [v, t] of Object.entries(CONTATORI)) assert.ok(HTML.includes(`<option value="${v}">${t}</option>`), `contatore ${v}`);
+  for (const [v, t] of Object.entries(TIPI)) assert.ok(HTML.includes(`<option value="${v}">${t}</option>`), `tipo ${v}`);
 });

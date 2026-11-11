@@ -2,7 +2,7 @@
 // mostra risultati, grafici, avvisi e ipotesi. Con grafici.js e dati.js è l'unico modulo che tocca il DOM.
 import { caricaLocalita, caricaDati } from './dati.js';
 import { calcola, valida, asse } from './motore.js';
-import { ingressiEntrare, ingressiFondare, etichetteRighe, opzioniIo, PROFILI, limitaQuote } from './scenari.js';
+import { ingressiEntrare, ingressiFondare, etichetteRighe, opzioniIo, righeUguali, PROFILI, limitaQuote } from './scenari.js';
 import { voce } from './economia.js';
 import { consumoMedioClasse } from './profili.js';
 import { numero, euro, kwh, perc, tonnellate, anni, circa } from './formato.js';
@@ -149,8 +149,9 @@ const contatori = { famiglie: 0, attivita: 0, enti: 0 };
 function predefinitaRiga(profilo, prima) {
   const tipo = voce(dati.costanti, 'comunita_tipo'), pred = voce(dati.costanti, 'predefiniti');
   if (profilo === 'famiglie') return { numero: prima ? tipo.famiglie : 1, kwp: prima ? 0 : pred.kwp_prosumer, classe: tipo.classe, consumo: '', stato: 'nuovo' };
-  if (profilo === 'attivita') return { numero: prima ? tipo.attivita : 1, consumo: tipo.consumo_attivita, kwp: 0, archetipo: tipo.archetipo_attivita, stato: 'nuovo' };
-  return { numero: prima ? tipo.enti : 1, consumo: tipo.consumo_ente, kwp: 0, archetipo: tipo.archetipo_ente, stato: 'nuovo' };
+  // la riga nuova di attività ed enti ha i pannelli del produttore, così nasce diversa dalla prima (spec della composizione §11.3)
+  if (profilo === 'attivita') return { numero: prima ? tipo.attivita : 1, consumo: tipo.consumo_attivita, kwp: prima ? 0 : pred.kwp_produttore, archetipo: tipo.archetipo_attivita, stato: 'nuovo' };
+  return { numero: prima ? tipo.enti : 1, consumo: tipo.consumo_ente, kwp: prima ? 0 : pred.kwp_produttore, archetipo: tipo.archetipo_ente, stato: 'nuovo' };
 }
 
 function numeraRighe(profilo) {
@@ -184,10 +185,33 @@ function preparaRighe() {
 }
 
 // «L'impianto è» di una riga conta solo con dei kWp: senza, si disabilita. I kWp sono quelli che conta il calcolo
-// (righeDi): un campo vuoto vale il predefinito, uno non valido l'ultimo valore valido.
+// (righeDi): un campo vuoto vale il predefinito, uno non valido l'ultimo valore valido. Una riga uguale a una
+// precedente ha l'avviso con «Unisci», che nomina i campi visibili nella modalità (spec della composizione §11.2).
+const CAMPI_UGUALI = {
+  famiglie: { semplice: 'i kWp', esperto: 'contatore, kWp o kWh l\'anno' },
+  altri: { semplice: 'kWp o kWh l\'anno', esperto: 'tipo, kWp o kWh l\'anno' },
+};
+
 function aggiornaRighe(fondare) {
   const conImpianto = new Set(Object.keys(PROFILI).flatMap((p) => fondare[p].filter((r) => r.kwp > 0).map((r) => r.riga)));
-  for (const r of $$('[data-profilo] .riga')) r.querySelector('[data-campo="stato"]').disabled = !conImpianto.has(r.dataset.riga);
+  const uguali = righeUguali(fondare), modo = scelto('modo');
+  const membri = Object.fromEntries(Object.keys(PROFILI).flatMap((p) => fondare[p].map((r) => [r.riga, r.numero])));
+  for (const r of $$('[data-profilo] .riga')) {
+    r.querySelector('[data-campo="stato"]').disabled = !conImpianto.has(r.dataset.riga);
+    const avviso = r.querySelector('.uguale'), verso = uguali[r.dataset.riga];
+    avviso.hidden = !verso;
+    if (!verso) continue;
+    const profilo = r.closest('[data-profilo]').dataset.profilo;
+    const n = $$(`[data-profilo="${profilo}"] .riga`).findIndex((x) => x.dataset.riga === verso) + 1;
+    const testo = `Questa riga è uguale alla riga ${n}: cambia ${CAMPI_UGUALI[profilo === 'famiglie' ? 'famiglie' : 'altri'][modo]}, oppure`;
+    const span = avviso.querySelector('span'), pulsante = avviso.querySelector('[data-unisci]');
+    // si scrive solo se il testo cambia: l'avviso è una regione viva
+    if (span.textContent !== testo) span.textContent = testo;
+    if (pulsante.textContent !== `Unisci alla riga ${n}`) pulsante.textContent = `Unisci alla riga ${n}`;
+    pulsante.dataset.unisci = verso;
+    // oltre il massimo di «quante» il calcolo terrebbe l'ultimo valore valido, e i membri della riga tolta sparirebbero
+    pulsante.disabled = membri[r.dataset.riga] + membri[verso] > Number(r.querySelector('[data-campo="numero"]').max);
+  }
 }
 
 // Le righe di un profilo come le vuole ingressiFondare; in semplice i campi avanzati valgono i predefiniti.
@@ -377,18 +401,30 @@ async function avvia() {
   $('#elenco-localita').replaceChildren(...elenco.map((l) => new Option(`${l.nome} (${l.sigla})`)));
   $('#mese').replaceChildren(...MESI.map((m, i) => new Option(m, String(i), i === 6, i === 6)));
   form.addEventListener('submit', (e) => e.preventDefault());
-  // «+ aggiungi» e «×» delle righe di «fondare»: il fuoco va al primo campo della riga nuova, o al pulsante del blocco.
+  // «+ aggiungi», «×» e «Unisci» delle righe di «fondare»: il fuoco va al primo campo della riga nuova, al pulsante del
+  // blocco o al «quante» della riga che riceve i membri.
   form.addEventListener('click', (e) => {
-    const piu = e.target.closest('[data-aggiungi]'), meno = e.target.closest('.togli');
-    if (!dati || (!piu && !meno)) return;
+    const piu = e.target.closest('[data-aggiungi]'), meno = e.target.closest('.togli'), unisci = e.target.closest('[data-unisci]');
+    if (!dati || (!piu && !meno && !unisci)) return;
     if (piu) {
       const profilo = piu.dataset.aggiungi;
       aggiungiRiga(profilo, predefinitaRiga(profilo, false)).querySelector('[data-campo="numero"]').focus();
-    } else {
+    } else if (meno) {
       const riga = meno.closest('.riga'), profilo = riga.closest('[data-profilo]').dataset.profilo;
       riga.remove();
       numeraRighe(profilo);
       $(`[data-aggiungi="${profilo}"]`).focus();
+    } else {
+      // «Unisci alla riga N» (spec della composizione §11.2): i membri della riga uguale passano alla riga N, «Io sono»
+      // la segue, e il fuoco va al suo «quante».
+      const riga = unisci.closest('.riga'), profilo = riga.closest('[data-profilo]').dataset.profilo;
+      const verso = $(`[data-riga="${unisci.dataset.unisci}"]`), quante = verso.querySelector('[data-campo="numero"]');
+      const membri = Object.fromEntries(stato().fondare[profilo].map((r) => [r.riga, r.numero]));
+      quante.value = String(membri[verso.dataset.riga] + membri[riga.dataset.riga]);
+      if (campo('f-io').value === riga.dataset.riga) campo('f-io').value = verso.dataset.riga;
+      riga.remove();
+      numeraRighe(profilo);
+      quante.focus();
     }
     aggiorna();
   });
@@ -415,7 +451,10 @@ async function avvia() {
   attivaInfo(document);
   $('#ripristina').addEventListener('click', () => {
     if (!dati) return;
+    // resta sul percorso in cui si è (spec della composizione §11.5): form.reset() rimetterebbe «Voglio entrare»
+    const percorso = scelto('percorso');
     form.reset();
+    campo('percorso').value = percorso;
     preimposta();
     campo('localita').value = `${loc.nome} (${loc.sigla})`;
     aggiorna();
