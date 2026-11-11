@@ -217,7 +217,7 @@
       "fonte": "ISPRA, Rapporto 430/2026, Tabella 1.7, 2025 preliminare",
       "url": "https://www.isprambiente.gov.it/files2026/pubblicazioni/rapporti/r430-2026-2.pdf",
       "consultato": "2026-11-04",
-      "note": "La CO₂ di un kWh consumato (ISPRA, p. 91: «CO2 evitata per kWh non consumato»): per l'impronta dei prelievi e, in modalità avanzata, come alternativa per la CO₂ evitata."
+      "note": "La CO₂ di un kWh consumato (ISPRA, p. 91: «CO2 evitata per kWh non consumato»): per l'impronta dei prelievi e, in modalità Avanzato, come alternativa per la CO₂ evitata."
     },
     "fattore_co2_fossili": {
       "descrizione": "CO₂ per kWh: produzione termoelettrica lorda da sole fonti fossili",

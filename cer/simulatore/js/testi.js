@@ -107,7 +107,7 @@ export function ipotesi(r, loc, pvInfo, costanti) {
   const prezzoDelFile = Math.abs(p.prezzo_zonale - voce(costanti, 'prezzo_zonale')) < 1e-9;
   const prezzo = prezzoDelFile
     ? `Prezzo dell'energia: ${numero(p.prezzo_zonale, 2)} €/MWh, la media nazionale del 2025 (PUN Index), uguale tutto l'anno: nella tua zona di mercato il prezzo può essere diverso`
-    : `Prezzo dell'energia: ${numero(p.prezzo_zonale, 2)} €/MWh, scelto in modalità avanzata, uguale tutto l'anno`;
+    : `Prezzo dell'energia: ${numero(p.prezzo_zonale, 2)} €/MWh, scelto in modalità Avanzato, uguale tutto l'anno`;
   // Le quote dell'esempio vengono dal regolamento di CERS Eliodora (art. 3, fonte in costanti.json); la pagina non lo
   // nomina e con quote cambiate in avanzato non parla di esempio (testi dell'utente del 10/11/2026).
   const q = voce(costanti, 'quote_riparto');

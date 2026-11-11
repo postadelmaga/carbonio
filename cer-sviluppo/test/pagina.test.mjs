@@ -367,7 +367,7 @@ test('le regole che nascondono per modo, percorso, ruolo, tipo e risultato vinco
 test('in «entrare» lo stato del tuo impianto sta in avanzato, e in semplice l\'impianto è da costruire; un\'icona su «Il tuo impianto», solo in semplice, dice di passare all\'avanzato per un impianto già in esercizio (esclude in semplice uno stato scelto in avanzato e rimasto nascosto, decisione dell\'utente del 10/11/2026)', () => {
   const da = HTML.indexOf('<span class="n">5</span>Il tuo impianto'), a = HTML.indexOf('</fieldset>', da);
   const passo = HTML.slice(da, a);
-  assert.match(passo, /^<span class="n">5<\/span>Il tuo impianto<span class="info-gruppo" data-solo-modo="semplice"><button type="button" class="info" aria-expanded="false" aria-controls="info-tuo-impianto" aria-label="Spiegazione: impianto già in esercizio">i<\/button><span class="info-testo" id="info-tuo-impianto" hidden>Il simulatore conta un impianto da costruire, che entra in esercizio dopo la costituzione della CER\. Se il tuo è già in esercizio, passa alla modalità avanzata e indicalo in «L'impianto è»: vedrai che cosa cambia per te e per la comunità\.<\/span><\/span><\/legend>/);
+  assert.match(passo, /^<span class="n">5<\/span>Il tuo impianto<span class="info-gruppo" data-solo-modo="semplice"><button type="button" class="info" aria-expanded="false" aria-controls="info-tuo-impianto" aria-label="Spiegazione: impianto già in esercizio">i<\/button><span class="info-testo" id="info-tuo-impianto" hidden>Il simulatore conta un impianto da costruire, che entra in esercizio dopo la costituzione della CER\. Se il tuo è già in esercizio, passa alla modalità Avanzato e indicalo in «L'impianto è»: vedrai che cosa cambia per te e per la comunità\.<\/span><\/span><\/legend>/);
   assert.match(passo, /<label class="campo" data-solo-modo="esperto">L'impianto è\s*<select name="stato-impianto">/);
   assert.match(passo, /<p class="aiuto" id="aiuto-esercizio" data-solo-modo="esperto" hidden><\/p>/);
   assert.match(JS, /kwp: numeroDi\('kwp', pred\.kwp_prosumer\), stato: esperto \? campo\('stato-impianto'\)\.value : 'nuovo',/);
@@ -412,4 +412,14 @@ test('le righe di «fondare» nel codice della pagina: id che non tornano indiet
   assert.match(JS, /const s = stato\(\), percorso = scelto\('percorso'\);\n  aggiornaRighe\(s\.fondare\);/);
   assert.doesNotMatch(JS, /Number\(r\.querySelector\('\[data-campo="kwp"\]'\)\.value\)/, 'il kWp grezzo del campo, non quello del calcolo (esclude il select spento su un impianto che conta, revisione finale del 10/11/2026)');
   assert.doesNotMatch(JS, /\bNOMI\b|sceltaIo|'f-famiglie|'f-pannelli|'f-attivita|'f-enti/);
+});
+
+test('i testi che si leggono nominano le modalità con i nomi dei pulsanti, «modalità Semplice» e «modalità Avanzato» (esclude «modalità avanzata», «in avanzato» e «in semplice» nelle frasi della pagina, di «Come calcoliamo», delle ipotesi e delle fonti; decisione dell\'utente dell\'11/11/2026)', () => {
+  const testi = { 'index.html': HTML, 'metodo/index.html': leggi('metodo/index.html'), 'js/testi.js': leggi('js/testi.js'), 'dati/costanti.json': leggi('dati/costanti.json') };
+  for (const [nome, testo] of Object.entries(testi)) {
+    const visibile = nome.endsWith('.js') ? testo.split('\n').filter((r) => !r.trim().startsWith('//')).join('\n') : testo;
+    assert.deepEqual(tutti(visibile, /(modalità (?!Semplice|Avanzato)\p{L}+|\b[Ii]n (?:semplice|avanzato)\b)/gu), [], nome);
+  }
+  assert.match(HTML, /<label><input type="radio" name="modo" value="semplice" checked> Semplice<\/label>/);
+  assert.match(HTML, /<label><input type="radio" name="modo" value="esperto"> Avanzato<\/label>/);
 });

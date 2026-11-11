@@ -38,7 +38,7 @@ test('i numeri del testo di «Come calcoliamo» coincidono con costanti.json (es
     'Sui 20 anni il fattore delle centrali fossili resta quello di oggi; con la media dei consumi scende come ha fatto in media dal 1990 al 2024.',
     `la simulazione assume che gli impianti nuovi entrino in esercizio dopo la costituzione ed entro il ${scadenza}, con la domanda al GSE entro la stessa data, e che tu entri prima di quella data; per chi entra dopo la condivisa dovrebbe contare ancora, ma le regole non lo scrivono`,
     'non contiamo tagli dell\'inverter né limiti di immissione',
-    'in avanzato ogni riga di famiglie, attività o enti può avere un impianto già in esercizio',
+    'In modalità Semplice gli impianti sono tutti da costruire; in modalità Avanzato ogni riga di famiglie, attività o enti può avere un impianto già in esercizio.',
     'ha la tariffa ma è già pagato, e il simulatore non lo distingue',
   ];
   const mancanti = frasi.filter((f) => !HTML.includes(f));
@@ -153,7 +153,7 @@ test('«Che cosa resta fuori» dice «Imposte sui redditi e agevolazioni», come
 });
 
 test('«Come calcoliamo», il riparto: è un esempio, le quote le stabilisce il regolamento della CER e si cambiano in avanzato, senza Eliodora né il regolamento che non c\'è (esclude i riferimenti tolti dalle ipotesi il 10/11/2026)', () => {
-  assert.ok(HTML.includes("<li><b>Il riparto.</b> È un esempio: il 40% della tariffa va al titolare dell'impianto, il 40% ai consumatori secondo quanto consumano nelle ore di produzione, il 20% resta alla CER, che ne decide l'uso. Il contributo ARERA va ai consumatori. Le quote vengono stabilite dal regolamento della CER; in modalità avanzata si possono cambiare.</li>"));
+  assert.ok(HTML.includes("<li><b>Il riparto.</b> È un esempio: il 40% della tariffa va al titolare dell'impianto, il 40% ai consumatori secondo quanto consumano nelle ore di produzione, il 20% resta alla CER, che ne decide l'uso. Il contributo ARERA va ai consumatori. Le quote vengono stabilite dal regolamento della CER; in modalità Avanzato si possono cambiare.</li>"));
   assert.ok(!HTML.includes('Eliodora'));
   assert.ok(!HTML.includes("Il regolamento della nostra CER non c'è ancora"));
 });

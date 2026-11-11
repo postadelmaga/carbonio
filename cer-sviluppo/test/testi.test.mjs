@@ -204,9 +204,9 @@ const ipotesiCon = (prezzo, tip = 130) => ipotesi({
 test('la riga del prezzo dice che è la media nazionale del 2025 e che nella zona di mercato può essere diverso, e con un prezzo scelto in avanzato dice che è scelto (esclude un prezzo scelto presentato come la media nazionale e un prezzo nazionale presentato come quello della zona)', () => {
   const riga = (t) => t.find((l) => l.startsWith('Prezzo dell\'energia:'));
   assert.equal(riga(ipotesiCon(115.94)), 'Prezzo dell\'energia: 115,94 €/MWh, la media nazionale del 2025 (PUN Index), uguale tutto l\'anno: nella tua zona di mercato il prezzo può essere diverso; tariffa premio 130 €/MWh.');
-  assert.equal(riga(ipotesiCon(90)), 'Prezzo dell\'energia: 90,00 €/MWh, scelto in modalità avanzata, uguale tutto l\'anno; tariffa premio 130 €/MWh.');
+  assert.equal(riga(ipotesiCon(90)), 'Prezzo dell\'energia: 90,00 €/MWh, scelto in modalità Avanzato, uguale tutto l\'anno; tariffa premio 130 €/MWh.');
   assert.equal(riga(ipotesiCon(115.94, null)), 'Prezzo dell\'energia: 115,94 €/MWh, la media nazionale del 2025 (PUN Index), uguale tutto l\'anno: nella tua zona di mercato il prezzo può essere diverso.');
-  assert.equal(riga(ipotesiCon(90, null)), 'Prezzo dell\'energia: 90,00 €/MWh, scelto in modalità avanzata, uguale tutto l\'anno.');
+  assert.equal(riga(ipotesiCon(90, null)), 'Prezzo dell\'energia: 90,00 €/MWh, scelto in modalità Avanzato, uguale tutto l\'anno.');
 });
 
 test('«Fuori dal calcolo» elenca le imposte sui redditi, non «imposte» in generale, e anche la sostituzione dell\'inverter e l\'assicurazione (esclude un «imposte» che contraddice IVA e accise contate e costi dell\'impianto taciuti)', () => {
