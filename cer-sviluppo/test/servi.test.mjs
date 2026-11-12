@@ -1,5 +1,5 @@
 // Il server di prova del sito (cer-sviluppo/strumenti/servi.py): serve la radice del repository come il sito pubblicato,
-// con «Cache-Control: no-cache», come fa Caddy su /cer/ (verificato l'11/11/2026 su co2-info.duckdns.org).
+// con «Cache-Control: no-cache», come fa Caddy su /cer/ (verificato il 12/11/2026 su co2-info.duckdns.org).
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
