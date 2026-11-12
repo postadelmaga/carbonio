@@ -18,10 +18,13 @@ domestici; tiene le risposte in `../cache-simulatore-cer/` (fuori dal repo) e sc
 
 ## Vedere la pagina in locale
 
-    python3 -m http.server 8100 --bind 127.0.0.1
+    python3 cer-sviluppo/strumenti/servi.py
 
-poi http://127.0.0.1:8100/cer/simulatore/. Da Claude Code il server va lanciato fuori dalla sandbox, perché il browser
-gira fuori e non vede un server avviato dentro.
+poi http://127.0.0.1:8100/cer/simulatore/ (l'indirizzo lo stampa il server; un'altra porta come argomento). Il server
+manda «Cache-Control: no-cache», come il sito pubblicato su /cer/: il browser riconvalida ogni file a ogni caricamento
+e non mescola moduli vecchi e nuovi. Con `python3 -m http.server`, che non manda istruzioni di cache, serve un
+ricaricamento senza cache (ctrl+shift+r) dopo ogni modifica. Da Claude Code il server va lanciato fuori dalla sandbox,
+perché il browser gira fuori e non vede un server avviato dentro.
 
 ## Confronto con cersim
 
