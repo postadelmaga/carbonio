@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
-test('il server di prova serve i moduli dalla radice del repository con «Cache-Control: no-cache», anche nelle risposte 304 (esclude la cache euristica del browser che il 10/11/2026, con python3 -m http.server, mescolava moduli vecchi e nuovi)', async () => {
+test('il server di prova serve i moduli dalla radice del repository con «Cache-Control: no-cache», anche nelle risposte 304 (esclude la cache euristica del browser che l'08/11/2026, con python3 -m http.server, mescolava moduli vecchi e nuovi)', async () => {
   const server = spawn('python3', [fileURLToPath(new URL('../strumenti/servi.py', import.meta.url)), '0'], { stdio: ['ignore', 'pipe', 'ignore'] });
   try {
     const indirizzo = await new Promise((ok, ko) => {

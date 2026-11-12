@@ -6,7 +6,7 @@
 
 Serve la radice del repository come il sito pubblicato e manda «Cache-Control: no-cache», come Caddy su /cer/: il
 browser riconvalida ogni file a ogni caricamento (304 se non è cambiato) e non mescola moduli vecchi e nuovi.
-`python3 -m http.server` non manda istruzioni di cache, e il 10/11/2026 Chrome ha usato un modulo vecchio insieme a
+`python3 -m http.server` non manda istruzioni di cache, e l'08/11/2026 Chrome ha usato un modulo vecchio insieme a
 uno nuovo. Stampa l'indirizzo della pagina del simulatore.
 """
 import functools
