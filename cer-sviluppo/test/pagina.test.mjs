@@ -434,7 +434,9 @@ test('righe uguali, riga nuova e valori predefiniti nel codice della pagina: avv
   assert.doesNotMatch(JS, /pulsante\.disabled/);
   assert.match(JS, /`Unisci alla riga \$\{n\}`/);
   assert.match(JS, /if \(nuovi\.length\) \$\('#annuncio-righe'\)\.textContent = nuovi\.join\(' '\);\n\s*else if \(sparito\) \$\('#annuncio-righe'\)\.textContent = '';/);
-  assert.match(HTML, /<div class="righe">\n\s*<p class="solo-lettori" id="annuncio-righe" aria-live="polite"><\/p>/);
+  assert.match(HTML, /<form id="moduli" class="sim-moduli" novalidate>\n<p class="solo-lettori" id="annuncio-righe" aria-live="polite"><\/p>/, 'fuori dalla sezione 3, che in «Voglio entrare» è nascosta: la regione c\'è sempre');
+  assert.equal(HTML.match(/id="annuncio-righe"/g).length, 1);
+  assert.match(JS, /if \(scelto\('percorso'\) !== 'fondare'\) return;\n\s*\/\/ un avviso sparito/, 'in «Voglio entrare» gli avvisi non si annunciano e restano da annunciare al ritorno in «fondare» (revisione dell\'11/11/2026)');
   assert.doesNotMatch(HTML, /class="uguale" aria-live/, 'l\'avviso nella riga non è una regione viva: nasce nascosto o in una riga nuova');
   assert.match(JS, /quante\.value = String\(membri\[verso\.dataset\.riga\] \+ membri\[riga\.dataset\.riga\]\);/);
   assert.match(JS, /if \(campo\('f-io'\)\.value === riga\.dataset\.riga\) campo\('f-io'\)\.value = verso\.dataset\.riga;/);

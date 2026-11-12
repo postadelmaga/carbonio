@@ -196,8 +196,8 @@ let avvisiAnnunciati = new Map();
 // (righeDi): un campo vuoto vale il predefinito, uno non valido l'ultimo valore valido. Una riga uguale a una
 // precedente ha l'avviso con «Unisci»; se unite supererebbero il massimo di «quante», l'avviso lo dice e «Unisci» non
 // c'è (spec della composizione §11.2). Gli avvisi nuovi o cambiati si leggono dalla regione viva #annuncio-righe, che
-// c'è dall'apertura della pagina: un avviso che nasce nascosto, o in una riga appena creata, con molti lettori di
-// schermo non si annuncia (revisione finale dell'11/11/2026).
+// c'è dall'apertura della pagina, fuori dalla sezione 3: un avviso che nasce nascosto, o in una riga appena creata, con
+// molti lettori di schermo non si annuncia (revisione finale dell'11/11/2026).
 function aggiornaRighe(fondare) {
   const conImpianto = new Set(Object.keys(PROFILI).flatMap((p) => fondare[p].filter((r) => r.kwp > 0).map((r) => r.riga)));
   const uguali = righeUguali(fondare), modo = scelto('modo');
@@ -225,6 +225,8 @@ function aggiornaRighe(fondare) {
     avvisi.set(r.dataset.riga, annuncio);
     if (avvisiAnnunciati.get(r.dataset.riga) !== annuncio) nuovi.push(annuncio);
   }
+  // in «Voglio entrare» la sezione è nascosta: gli avvisi restano da annunciare al ritorno in «fondare»
+  if (scelto('percorso') !== 'fondare') return;
   // un avviso sparito svuota la regione, così se torna uguale si annuncia di nuovo
   const sparito = [...avvisiAnnunciati.keys()].some((id) => !avvisi.has(id));
   if (nuovi.length) $('#annuncio-righe').textContent = nuovi.join(' ');
