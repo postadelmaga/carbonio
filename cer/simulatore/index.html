@@ -1,0 +1,364 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Simulatore · Comunità Energetica Rinnovabile</title>
+<meta name="description" content="Che cosa porta una comunità energetica a chi ci entra e a chi la fonda: euro, energia condivisa e CO₂ evitata. Stima indicativa. Per ogni numero indichiamo la fonte o diciamo che è un'ipotesi nostra.">
+<link rel="canonical" href="https://co2-info.duckdns.org/cer/simulatore/">
+<meta property="og:title" content="Simulatore della Comunità Energetica Rinnovabile">
+<meta property="og:description" content="Per te, per la comunità, per il clima. Stima indicativa. Per ogni numero indichiamo la fonte o diciamo che è un'ipotesi nostra.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://co2-info.duckdns.org/cer/simulatore/">
+<meta property="og:image" content="https://co2-info.duckdns.org/cer/img/social.png">
+<meta name="theme-color" content="#F4F2EC">
+<link rel="icon" href="/cer/img/logo.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..900&family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400..600&display=swap">
+<link rel="stylesheet" href="/cer/cer.css">
+<link rel="stylesheet" href="/cer/simulatore/simulatore.css">
+<script src="/cer/cer.js"></script>
+<script type="module" src="/cer/simulatore/js/interfaccia.js"></script>
+<script defer src="https://cloud.umami.is/script.js" data-website-id="2cf64696-ed71-405e-9e22-b2b3e7b8bb6f"></script>
+</head>
+<body data-modo="semplice" data-percorso="entrare" data-ruolo="consumatore" data-tipo="famiglia">
+
+<header class="bar">
+  <div class="wrap">
+    <a class="logo" href="/cer/">
+      <svg width="34" height="34" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#14211C"/><circle cx="32" cy="26" r="11" fill="#E8A317"/><path d="M10 50 L32 37 L54 50" fill="none" stroke="#2DBA85" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="10" cy="50" r="5" fill="#F4F2EC"/><circle cx="54" cy="50" r="5" fill="#F4F2EC"/><circle cx="32" cy="37" r="4" fill="#2DBA85"/></svg>
+      <span>CER<small>Comunità Energetica Rinnovabile</small></span>
+    </a>
+    <nav aria-label="Sezioni">
+      <a href="/cer/">La comunità</a>
+      <a href="/cer/#progetti">Progetti</a>
+      <a href="/cer/simulatore/" aria-current="page">Simulatore</a>
+      <a href="/cer/statuto/">Statuto</a>
+    </nav>
+    <button id="theme" class="theme" type="button" aria-label="Tema">
+      <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9Z" fill="currentColor"/></svg>
+    </button>
+  </div>
+</header>
+
+<main>
+<section class="sim-testa">
+  <div class="wrap">
+    <p class="eyebrow"><i></i>Stima indicativa</p>
+    <h1>Che cosa porta una comunità energetica? <em>A te, a chi ti sta intorno, al clima.</em></h1>
+    <p class="lead">Scegli dove sei e che cosa vuoi fare. Il simulatore conta ora per ora, su un anno intero, l'energia prodotta dai pannelli e quella consumata nelle stesse ore dai soci.</p>
+    <div class="modo" role="radiogroup" aria-label="Livello di dettaglio">
+      <label><input type="radio" name="modo" value="semplice" checked> Semplice</label>
+      <label><input type="radio" name="modo" value="esperto"> Avanzato</label>
+    </div>
+  </div>
+</section>
+
+<div class="wrap sim-corpo">
+<form id="moduli" class="sim-moduli" novalidate>
+<p class="solo-lettori" id="annuncio-righe" aria-live="polite"></p>
+
+  <fieldset class="passo">
+    <legend><span class="n">1</span>Dove</legend>
+    <label class="campo">Capoluogo della tua provincia
+      <input name="localita" list="elenco-localita" autocomplete="off" value="La Spezia (SP)">
+    </label>
+    <datalist id="elenco-localita"></datalist>
+    <p class="aiuto" id="info-localita"></p>
+    <p class="aiuto">Per gli incentivi soci e impianti devono stare sotto la stessa cabina primaria: una CER che ne copre più d'una forma una configurazione per ciascuna. La mappa delle comunità energetiche del GSE indica l'area di ogni indirizzo o POD.</p>
+  </fieldset>
+
+  <fieldset class="passo">
+    <legend><span class="n">2</span>Che cosa vuoi fare</legend>
+    <div class="scelte due">
+      <label class="scelta"><input type="radio" name="percorso" value="entrare" checked><b>Voglio entrare in una CER</b><span>Che cosa ti porta, con una comunità tipo intorno.</span></label>
+      <label class="scelta"><input type="radio" name="percorso" value="fondare"><b>Voglio fondarne una</b><span>Componi la comunità e guarda i totali.</span></label>
+    </div>
+  </fieldset>
+
+  <fieldset class="passo" data-solo-percorso="entrare">
+    <legend><span class="n">3</span>Il tuo ruolo</legend>
+    <div class="scelte tre">
+      <label class="scelta"><input type="radio" name="ruolo" value="consumatore" checked><b>Consumatore</b><span>Non ho pannelli.</span></label>
+      <label class="scelta"><input type="radio" name="ruolo" value="prosumer"><b>Prosumer</b><span>Ho o metterei pannelli sul mio tetto.</span></label>
+      <label class="scelta"><input type="radio" name="ruolo" value="produttore"><b>Produttore</b><span>Metto un impianto a disposizione dove non consumo.</span></label>
+    </div>
+  </fieldset>
+
+  <fieldset class="passo" data-solo-percorso="entrare">
+    <legend><span class="n">4</span>Chi sei</legend>
+    <div class="scelte tre">
+      <label class="scelta piccola"><input type="radio" name="tipo" value="famiglia" checked><b>Famiglia</b></label>
+      <label class="scelta piccola"><input type="radio" name="tipo" value="attivita"><b>Attività</b><span>È una piccola o media impresa (PMI).</span></label>
+      <label class="scelta piccola"><input type="radio" name="tipo" value="ente"><b>Ente o associazione</b><span>Non è un'impresa.</span></label>
+    </div>
+    <label class="campo" data-solo-tipo="famiglia" data-solo-con-consumi>Potenza del contatore
+      <select name="classe">
+        <option value="1,5-3" selected>3 kW</option>
+        <option value="3-4,5">4,5 kW</option>
+        <option value="4,5-6">6 kW</option>
+        <option value="oltre_6">oltre 6 kW</option>
+        <option value="1,5-3">non so (usiamo 3 kW)</option>
+      </select>
+    </label>
+    <p class="aiuto" data-solo-tipo="famiglia" data-solo-con-consumi>Il contatore non limita i pannelli: serve a stimare i consumi.</p>
+    <label class="campo" data-solo-tipo="altri" data-solo-con-consumi>Che attività
+      <select name="archetipo">
+        <option value="com_orario_apertura">Negozio o ufficio con orario di apertura</option>
+        <option value="com_carico_base">Attività con carico continuo (frigoriferi, macchine sempre accese)</option>
+      </select>
+    </label>
+    <label class="campo" data-solo-con-consumi>Consumo annuo dalla bolletta, kWh
+      <input name="consumo" type="number" min="0" max="2000000" step="1" inputmode="numeric">
+    </label>
+    <p class="aiuto" id="aiuto-consumo" data-solo-con-consumi></p>
+    <p class="aiuto" data-solo-produttore>Per il produttore non contiamo consumi: l'impianto sta in un punto dove non si consuma, e dalla CER ricevi solo la quota di titolare. Famiglia, attività o ente cambia solo l'IVA sul prezzo dell'impianto.</p>
+  </fieldset>
+
+  <fieldset class="passo" data-solo-percorso="entrare" data-solo-ruolo>
+    <legend><span class="n">5</span>Il tuo impianto<span class="info-gruppo" data-solo-modo="semplice"><button type="button" class="info" aria-expanded="false" aria-controls="info-tuo-impianto" aria-label="Spiegazione: impianto già in esercizio">i</button><span class="info-testo" id="info-tuo-impianto" hidden>Il simulatore conta un impianto da costruire, che entra in esercizio dopo la costituzione della CER. Se il tuo è già in esercizio, passa alla modalità Avanzato e indicalo in «L'impianto è»: vedrai che cosa cambia per te e per la comunità.</span></span></legend>
+    <label class="campo" for="kwp">Potenza <output name="kwp-valore"></output>
+      <input id="kwp" name="kwp" type="range" min="1" max="20" step="0.5" value="4.5">
+    </label>
+    <label class="campo" data-solo-modo="esperto">L'impianto è
+      <select name="stato-impianto">
+        <option value="nuovo" selected>da costruire</option>
+        <option value="precedente">già in esercizio, dopo il 15/12/2021</option>
+        <option value="esistente">già in esercizio, fino al 15/12/2021</option>
+      </select>
+    </label>
+    <p class="aiuto" id="aiuto-esercizio" data-solo-modo="esperto" hidden></p>
+  </fieldset>
+
+  <fieldset class="passo" data-solo-percorso="entrare" data-solo-tipo="famiglia" data-solo-con-consumi>
+    <legend><span class="n">6</span>Le tue abitudini</legend>
+    <div class="scelte tre" data-solo-modo="semplice">
+      <label class="scelta piccola"><input type="radio" name="abitudini" value="0" checked><b>Come oggi</b></label>
+      <label class="scelta piccola"><input type="radio" name="abitudini" value="0.1"><b>Un po'</b><span>Sposto il 10% dei consumi.</span></label>
+      <label class="scelta piccola"><input type="radio" name="abitudini" value="0.2"><b>Molto</b><span>Sposto il 20%.</span></label>
+    </div>
+    <label class="campo" for="abitudini-cursore" data-solo-modo="esperto">Consumi spostati nelle ore di sole <output name="abitudini-valore"></output>
+      <input id="abitudini-cursore" name="abitudini-cursore" type="range" min="0" max="0.3" step="0.01" value="0">
+    </label>
+    <p class="aiuto">Usare lavatrice, lavastoviglie, scaldabagno o la ricarica dell'auto nelle ore di sole fa crescere l'energia condivisa, e con lei gli incentivi della comunità. Se hai i pannelli, invece, ciò che sposti lo prendi soprattutto da loro: risparmi di più in bolletta, ma immetti meno, e la cifra dalla CER può scendere un po'. La CO₂ evitata non cambia: dipende da quanto producono i pannelli, non da quando consumi.<span class="info-gruppo"><button type="button" class="info" aria-expanded="false" aria-controls="info-impronta" aria-label="Spiegazione: la tua impronta di CO₂">i</button><span class="info-testo" id="info-impronta" hidden>Con i pannelli, la tua impronta scende perché prelevi meno dalla rete, ma quel kWh l'avresti immesso per gli altri: con un fattore annuo, come in questo calcolo, non è CO₂ in meno per il sistema. Ora per ora probabilmente lo è, perché nelle ore di sole la rete emette meno, ma non lo stimiamo: ISPRA pubblica solo fattori annui, e i dati orari di Terna ed ENTSO-E dicono quanto produce ogni fonte, non quale centrale si ferma.</span></span></p>
+  </fieldset>
+
+  <fieldset class="passo" data-solo-percorso="entrare">
+    <legend><span class="n">7</span>La comunità intorno a te</legend>
+    <div id="scena" class="scena"></div>
+    <p class="aiuto" id="descrizione-comunita"></p>
+    <div class="griglia-campi" data-solo-modo="esperto">
+      <label class="campo">Famiglie <input name="c-famiglie" type="number" min="0" max="500" step="1"></label>
+      <label class="campo">Impianto comune, kWp <input name="c-kwp" type="number" min="0" max="1000" step="0.5"></label>
+      <label class="campo">Attività <input name="c-attivita" type="number" min="0" max="500" step="1"></label>
+      <label class="campo">kWh l'anno per attività <input name="c-consumo-attivita" type="number" min="0" max="2000000" step="1"></label>
+      <label class="campo">Enti <input name="c-enti" type="number" min="0" max="500" step="1"></label>
+      <label class="campo">kWh l'anno per ente <input name="c-consumo-ente" type="number" min="0" max="2000000" step="1"></label>
+      <label class="campo" for="c-abitudini">Abitudini delle altre famiglie <output name="c-abitudini-valore"></output>
+        <input id="c-abitudini" name="c-abitudini" type="range" min="0" max="0.3" step="0.01" value="0"></label>
+    </div>
+  </fieldset>
+
+  <fieldset class="passo" data-solo-percorso="fondare">
+    <legend><span class="n">3</span>Chi entra nella comunità</legend>
+    <div class="righe">
+      <div class="blocco" data-profilo="famiglie" role="group" aria-labelledby="blocco-famiglie"><b id="blocco-famiglie">Famiglie</b>
+        <div class="righe-profilo"></div>
+        <button type="button" class="btn aggiungi" data-aggiungi="famiglie">+ aggiungi famiglie</button> <small class="limite" hidden>al massimo 5 righe</small>
+      </div>
+      <div class="blocco" data-profilo="attivita" role="group" aria-labelledby="blocco-attivita"><b id="blocco-attivita">Attività</b>
+        <div class="righe-profilo"></div>
+        <button type="button" class="btn aggiungi" data-aggiungi="attivita">+ aggiungi attività</button> <small class="limite" hidden>al massimo 5 righe</small>
+      </div>
+      <div class="blocco" data-profilo="enti" role="group" aria-labelledby="blocco-enti"><b id="blocco-enti">Enti e associazioni</b>
+        <div class="righe-profilo"></div>
+        <button type="button" class="btn aggiungi" data-aggiungi="enti">+ aggiungi enti</button> <small class="limite" hidden>al massimo 5 righe</small>
+      </div>
+      <div class="riga" role="group" aria-labelledby="riga-comune"><b id="riga-comune">Impianto comune</b>
+        <label>kWp <input name="f-comune-kwp" type="number" min="0" max="1000" step="0.5"></label>
+        <label>di chi <select name="f-comune-titolare"><option value="produttore">di un socio produttore</option><option value="cer">della CER</option></select></label>
+        <label data-solo-modo="esperto">L'impianto è <select name="f-comune-stato"><option value="nuovo" selected>da costruire</option><option value="precedente">già in esercizio, dopo il 15/12/2021</option><option value="esistente">già in esercizio, fino al 15/12/2021</option></select></label>
+      </div>
+    </div>
+    <template id="modello-famiglie"><div class="riga" role="group">
+      <label>quante <input data-campo="numero" type="number" min="0" max="500" step="1"></label>
+      <label>kWp ciascuna <input data-campo="kwp" type="number" min="0" max="50" step="0.5"></label>
+      <label data-solo-modo="esperto">contatore <select data-campo="classe"><option value="1,5-3">3 kW</option><option value="3-4,5">4,5 kW</option><option value="4,5-6">6 kW</option><option value="oltre_6">oltre 6 kW</option></select></label>
+      <label data-solo-modo="esperto">kWh l'anno <input data-campo="consumo" type="number" min="0" max="2000000" step="1" placeholder="media ARERA"></label>
+      <label data-solo-modo="esperto">L'impianto è <select data-campo="stato"><option value="nuovo" selected>da costruire</option><option value="precedente">già in esercizio, dopo il 15/12/2021</option><option value="esistente">già in esercizio, fino al 15/12/2021</option></select></label>
+      <button type="button" class="togli" aria-label="Togli questa riga">×</button>
+      <p class="uguale" hidden><span></span> <button type="button" class="btn unisci" data-unisci></button></p></div></template>
+    <template id="modello-attivita"><div class="riga" role="group">
+      <label>quante <input data-campo="numero" type="number" min="0" max="500" step="1"></label>
+      <label>kWh l'anno ciascuna <input data-campo="consumo" type="number" min="0" max="2000000" step="1"></label>
+      <label>kWp ciascuna <input data-campo="kwp" type="number" min="0" max="1000" step="0.5"></label>
+      <label data-solo-modo="esperto">tipo <select data-campo="archetipo"><option value="com_orario_apertura">con orario</option><option value="com_carico_base">carico continuo</option></select></label>
+      <label data-solo-modo="esperto">L'impianto è <select data-campo="stato"><option value="nuovo" selected>da costruire</option><option value="precedente">già in esercizio, dopo il 15/12/2021</option><option value="esistente">già in esercizio, fino al 15/12/2021</option></select></label>
+      <button type="button" class="togli" aria-label="Togli questa riga">×</button>
+      <p class="uguale" hidden><span></span> <button type="button" class="btn unisci" data-unisci></button></p></div></template>
+    <template id="modello-enti"><div class="riga" role="group">
+      <label>quanti <input data-campo="numero" type="number" min="0" max="500" step="1"></label>
+      <label>kWh l'anno ciascuno <input data-campo="consumo" type="number" min="0" max="2000000" step="1"></label>
+      <label>kWp ciascuno <input data-campo="kwp" type="number" min="0" max="1000" step="0.5"></label>
+      <label data-solo-modo="esperto">tipo <select data-campo="archetipo"><option value="com_orario_apertura">con orario</option><option value="com_carico_base">carico continuo</option></select></label>
+      <label data-solo-modo="esperto">L'impianto è <select data-campo="stato"><option value="nuovo" selected>da costruire</option><option value="precedente">già in esercizio, dopo il 15/12/2021</option><option value="esistente">già in esercizio, fino al 15/12/2021</option></select></label>
+      <button type="button" class="togli" aria-label="Togli questa riga">×</button>
+      <p class="uguale" hidden><span></span> <button type="button" class="btn unisci" data-unisci></button></p></div></template>
+    <p class="aiuto" data-solo-modo="esperto">Impianti già in esercizio: che cosa cambia <span class="info-gruppo"><button type="button" class="info" aria-expanded="false" aria-controls="info-esercizio" aria-label="Spiegazione: impianti già in esercizio">i</button><span class="info-testo" id="info-esercizio" hidden></span></span></p>
+    <label class="campo" for="f-abitudini">Consumi spostati nelle ore di sole, per tutte le famiglie <output name="f-abitudini-valore"></output>
+      <input id="f-abitudini" name="f-abitudini" type="range" min="0" max="0.3" step="0.01" value="0"></label>
+  </fieldset>
+
+  <fieldset class="passo" data-solo-percorso="fondare">
+    <legend><span class="n">4</span>Tu e i fondatori</legend>
+    <label class="campo">Io sono
+      <select name="f-io"></select>
+    </label>
+    <div class="con-info">
+      <label class="campo"><span data-r="com.fondatoriTesto"></span> <input name="f-fondatori" type="number" min="1" max="500" step="1"></label>
+      <span class="info-gruppo"><button type="button" class="info" aria-expanded="false" aria-controls="info-fondatori" aria-label="Spiegazione: fondatori">i</button><span class="info-testo" id="info-fondatori" hidden>Per fondare la CER si registrano l'atto costitutivo e lo statuto: imposta di registro e bollo, <span data-r="com.costituzione" data-f="euroOppure"></span>. Il simulatore li divide in parti uguali fra i fondatori e toglie la tua parte dal conto dei 20 anni della CER.</span></span>
+    </div>
+    <p class="scadenza" id="scadenza"></p>
+  </fieldset>
+
+  <details class="passo" data-solo-modo="esperto">
+    <summary>Parametri economici e del riparto</summary>
+    <div class="griglia-campi">
+      <label class="campo" for="p-pz">Prezzo dell'energia <output name="p-pz-valore"></output>
+        <input id="p-pz" name="p-pz" type="range" min="50" max="250" step="0.01"></label>
+      <label class="campo">Gestione della CER, € l'anno <input name="p-gestione" type="number" min="0" max="100000" step="1"></label>
+      <label class="campo">Costituzione, € <input name="p-costituzione" type="number" min="0" max="100000" step="1"></label>
+      <label class="campo">Quota associativa, € l'anno <input name="p-quota" type="number" min="0" max="10000" step="1"></label>
+      <label class="campo" for="p-qp">Al titolare dell'impianto <output name="p-qp-valore"></output>
+        <input id="p-qp" name="p-qp" type="range" min="0" max="100" step="5"></label>
+      <label class="campo" for="p-qc">Ai consumatori <output name="p-qc-valore"></output>
+        <input id="p-qc" name="p-qc" type="range" min="0" max="100" step="5"></label>
+      <p class="aiuto">Alla CER: <output name="p-fondo-valore"></output>.</p>
+      <label class="campo">Manutenzione, € per kW l'anno <input name="p-om" type="number" min="0" max="200" step="1"></label>
+      <label class="campo">Prezzo dell'impianto, €/W, IVA esclusa <input name="p-eurw" type="number" min="0.3" max="5" step="0.01" placeholder="per taglia"></label>
+      <label class="campo">Costo evitato, famiglie, €/kWh, IVA compresa <input name="p-ce-famiglia" type="number" min="0" max="2" step="0.001"></label>
+      <label class="campo">Costo evitato, attività, €/kWh, IVA esclusa <input name="p-ce-attivita" type="number" min="0" max="2" step="0.001"></label>
+      <label class="campo">Costo evitato, enti, €/kWh, IVA compresa <input name="p-ce-ente" type="number" min="0" max="2" step="0.001"></label>
+    </div>
+    <fieldset class="scelte-in-linea">
+      <legend>Fattore di emissione per la CO₂ evitata</legend>
+      <div class="con-info">
+        <label><input type="radio" name="p-fattore" value="fossili" checked> Metodo ISPRA: centrali fossili, <span data-r="cost.fattoreFossili" data-f="g"></span> g/kWh</label>
+        <span class="info-gruppo"><button type="button" class="info" aria-expanded="false" aria-controls="info-fossili" aria-label="Spiegazione: metodo ISPRA">i</button><span class="info-testo" id="info-fossili" hidden>È il metodo con cui ISPRA calcola le emissioni evitate dalle rinnovabili: ogni kWh dei pannelli sostituisce un kWh prodotto dalle centrali fossili italiane (media del 2025, dato preliminare).</span></span>
+      </div>
+      <div class="con-info">
+        <label><input type="radio" name="p-fattore" value="media"> Media dei consumi, <span data-r="cost.fattore" data-f="g"></span> g/kWh</label>
+        <span class="info-gruppo"><button type="button" class="info" aria-expanded="false" aria-controls="info-media" aria-label="Spiegazione: media dei consumi">i</button><span class="info-testo" id="info-media" hidden>È la CO₂ media di un kWh consumato in Italia, importazioni comprese. ISPRA la usa per un kWh non consumato: applicata ai pannelli dà una stima circa dimezzata.</span></span>
+      </div>
+    </fieldset>
+    <button type="button" class="btn" id="ripristina">Torna ai valori predefiniti</button>
+  </details>
+</form>
+
+<aside class="sim-risultati" aria-label="Risultati">
+  <p class="avvertenza">Stima indicativa: non è un'offerta né un preventivo; il riparto mostrato è un esempio e può essere modificato in modalità Avanzato.</p>
+  <div id="avvisi" class="avvisi" role="status"></div>
+
+  <section class="ris ris-te">
+    <p class="kicker">Per te</p>
+    <p class="grande" aria-live="polite"><b data-r="te.cerAggiunge" data-f="euro"></b><small>all'anno dalla CER, il primo anno</small></p>
+    <p class="nota-r" data-r="te.eccedentariaTesto"></p>
+    <dl class="voci">
+      <div><dt>In <span data-r="cost.anni"></span> anni, dalla CER</dt><dd data-r="te.cerVentiAnniNetto" data-f="euro"></dd></div>
+      <div data-solo-fondatore><dt>Costituzione, la tua parte, già tolta dai <span data-r="cost.anni"></span> anni</dt><dd data-r="te.costituzione" data-f="euro"></dd></div>
+    </dl>
+    <div class="impianto-te" data-solo-impianto>
+      <p class="kicker">Il tuo impianto</p>
+      <dl class="voci">
+        <div><dt>Da solo, all'anno</dt><dd data-r="te.impiantoDaSolo" data-f="euro"></dd></div>
+        <div data-solo-investimento><dt>Investimento</dt><dd data-r="te.investimento" data-f="euro"></dd></div>
+        <div data-solo-pagato><dt>Investimento</dt><dd>già pagato</dd></div>
+        <div data-solo-investimento><dt>Rientro con la CER</dt><dd data-r="te.rientroConCer" data-f="anni"></dd></div>
+        <div data-solo-investimento><dt>Rientro senza CER</dt><dd data-r="te.rientroSenzaCer" data-f="anni"></dd></div>
+        <div data-solo-investimento><dt>In <span data-r="cost.anni"></span> anni, impianto e CER</dt><dd data-r="te.ventiAnni" data-f="euro"></dd></div>
+      </dl>
+    </div>
+    <p class="nota-r" data-r="te.notaScadenza"></p>
+  </section>
+
+  <section class="ris ris-comunita">
+    <p class="kicker">Per la comunità</p>
+    <dl class="voci">
+      <div><dt>Energia condivisa</dt><dd data-r="com.condivisa" data-f="kwh"></dd></div>
+      <div><dt>Dell'energia immessa, consumata nelle stesse ore</dt><dd data-r="com.contemporaneita" data-f="perc"></dd></div>
+      <div><dt>Dei prelievi, coperti dalla condivisa</dt><dd data-r="com.copertura" data-f="perc"></dd></div>
+      <div><dt>Incentivi del GSE</dt><dd data-r="com.incentivi" data-f="euro"></dd></div>
+      <div><dt>Costi della CER</dt><dd data-r="com.costi" data-f="euro"></dd></div>
+      <div><dt>Alla CER</dt><dd data-r="com.quotaCer" data-f="euro"></dd></div>
+    </dl>
+    <p class="testo-emissioni">Il <span data-r="com.frazioneCer" data-f="perc"></span> della tariffa, <span data-r="com.toltiTesto"></span>, resta alla CER: in questa simulazione <b data-r="com.quotaCer" data-f="euro"></b> l'anno. L'assemblea decide come usarlo.</p>
+    <p class="testo-emissioni" data-r="com.eccedentariaTesto"></p>
+    <div data-solo-percorso="fondare" id="tabella-ruoli"></div>
+  </section>
+
+  <section class="ris ris-impianto-cer" data-solo-impianto-cer>
+    <p class="kicker">L'impianto della CER</p>
+    <dl class="voci">
+      <div><dt>Quota di titolare, l'anno</dt><dd data-r="com.titolareCer" data-f="euro"></dd></div>
+      <div><dt>Vendita dell'energia immessa, l'anno</dt><dd data-r="com.venditaCer" data-f="euro"></dd></div>
+      <div><dt>Manutenzione, l'anno</dt><dd data-r="com.manutenzioneCer" data-f="euro"></dd></div>
+      <div data-solo-investimento-cer><dt>Investimento da finanziare</dt><dd data-r="com.investimentoCer" data-f="euro"></dd></div>
+      <div data-solo-pagato-cer><dt>Investimento</dt><dd>già pagato</dd></div>
+    </dl>
+    <p class="testo-emissioni" data-solo-investimento-cer>L'impianto va pagato dalla CER: con contributi, quote dei soci o un prestito.</p>
+  </section>
+
+  <section class="ris ris-emissioni">
+    <p class="kicker">Per il clima</p>
+    <p class="grande"><b data-r="emissioni.evitata" data-f="circa"></b><small>di CO₂ in meno ogni anno, una stima, dagli impianti nuovi della comunità</small></p>
+    <p class="testo-emissioni" data-r="emissioni.stimaTesto"></p>
+    <p class="testo-emissioni" data-r="emissioni.paragrafoCo2"></p>
+    <p data-solo-investimento>Il tuo impianto: <b data-r="te.co2.evitata" data-f="circa"></b> di CO₂ in meno l'anno (stima).</p>
+    <p data-solo-consumo>I tuoi prelievi dalla rete pesano <b data-r="te.co2.impronta" data-f="circa"></b> di CO₂ l'anno (CO₂ media di un kWh consumato). Nel <b data-r="te.co2.copertura" data-f="perc"></b> dei tuoi consumi, ora per ora, la produzione rinnovabile della comunità o del tuo tetto basta a coprirli: è un conteggio, la corrente resta quella della rete.</p>
+    <p class="testo-emissioni">La CO₂ la evitano i pannelli. La comunità può aiutare a realizzarli, perché l'energia condivisa porta un incentivo; ma non sappiamo quanti impianti nascerebbero comunque senza di essa, e la nostra stima conta tutta la produzione degli impianti nuovi.</p>
+    <p class="testo-emissioni">Un kWh preso dalla rete nel 1990 emetteva <span data-r="cost.g1990" data-f="g"></span> g di CO₂, nel 2024 <span data-r="cost.g2024" data-f="g"></span> e nel 2025, dato preliminare, <span data-r="cost.fattore" data-f="g"></span>. È sceso perché sono cresciute le rinnovabili e, fra i combustibili fossili, il gas naturale, che emette meno, ha preso il posto dei derivati del petrolio; il carbone si usa sempre meno e le centrali a gas sono più efficienti. Nel 2025 è risalito soprattutto perché l'idroelettrico, che dipende dal meteo, ha prodotto meno e il gas di più (ISPRA).</p>
+    <p class="testo-emissioni" data-r="emissioni.giaInEsercizioTesto"></p>
+    <p class="testo-emissioni">Per avere il 50% di probabilità di restare sotto 1,5 °C restano circa <span data-r="cost.budget" data-f="int"></span> miliardi di tonnellate di CO₂ dall'inizio del 2026, circa quattro anni alle emissioni attuali (Global Carbon Budget 2025): <a href="/it/">Il carbonio che resta</a>. Perché l'energia pesa su tutti i prezzi: <a href="/cer/#perche">la nostra pagina</a>.</p>
+  </section>
+</aside>
+</div>
+
+<section class="wrap sim-grafici">
+  <h2>Ora per ora, mese per mese</h2>
+  <figure>
+    <figcaption>Una giornata media di <select id="mese" aria-label="Mese"></select>: produzione, consumi e condivisa della comunità</figcaption>
+    <ul class="legenda"><li><i style="background:var(--g-prod)"></i>Produzione</li><li><i style="background:var(--g-cons)"></i>Consumi</li><li><i style="background:var(--g-cond)"></i>Condivisa</li></ul>
+    <svg id="g-giornata" role="img"></svg>
+    <details><summary>Tabella</summary><div id="t-giornata"></div></details>
+  </figure>
+  <figure>
+    <figcaption>Dodici mesi, in kWh</figcaption>
+    <ul class="legenda"><li><i style="background:var(--g-prod)"></i>Produzione</li><li><i style="background:var(--g-cons)"></i>Consumi</li><li><i style="background:var(--g-cond)"></i>Condivisa</li></ul>
+    <svg id="g-anno" role="img"></svg>
+    <details><summary>Tabella</summary><div id="t-anno"></div></details>
+  </figure>
+  <figure>
+    <figcaption>Dove vanno gli incentivi del primo anno</figcaption>
+    <div id="g-incentivi"></div>
+    <details><summary>Tabella</summary><div id="t-incentivi"></div></details>
+  </figure>
+</section>
+
+<section class="wrap sim-ipotesi">
+  <h2>Le ipotesi di questa simulazione</h2>
+  <ul id="ipotesi"></ul>
+  <p><a class="btn" href="/cer/simulatore/metodo/">Come calcoliamo <span aria-hidden="true">→</span></a></p>
+</section>
+</main>
+
+<div class="barra-riassunto" aria-hidden="true"><b data-r="te.cerAggiunge" data-f="euro"></b> l'anno dalla CER · <b data-r="emissioni.evitata" data-f="circa"></b> di CO₂ in meno (stima)</div>
+
+<footer>
+  <div class="wrap">
+    <span>Comunità Energetica Rinnovabile · associazione senza scopo di lucro, in costituzione</span>
+    <span><a href="/atlante/">Atlante del clima</a> · <a href="/it/">Il carbonio che resta</a> · <a href="https://github.com/postadelmaga/carbonio" rel="noopener">Codice su GitHub</a></span>
+  </div>
+</footer>
+</body>
+</html>

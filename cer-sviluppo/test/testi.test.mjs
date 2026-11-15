@@ -1,0 +1,232 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { testoScadenza, notaScadenza, ipotesi, testoEccedentaria, testoEccedentariaTe, testoTolti, testoItaliani, testoStimaCo2, testoVentiAnniCo2, testoGiaInEsercizio, testoFondatori } from '../../cer/simulatore/js/testi.js';
+
+const costanti = JSON.parse(readFileSync(new URL('../../cer/simulatore/dati/costanti.json', import.meta.url), 'utf8'));
+
+
+test('le ipotesi dicono riparto d\'esempio, scelta prudente, anno meteo e fattore', () => {
+  const r = {
+    parametri: { prezzo_zonale: 115.94, quota_produttore: 0.4, quota_consumatori: 0.4, gestione_eur_anno: 500, costo_evitato: {} },
+    impianti: [{ incentivato: true, tip: 130 }],
+    emissioni: { fattore: 413.3, fattoreAltro: 199.6, principale: 'fossili' },
+  };
+  const loc = { nome: 'La Spezia', sigla: 'SP', regione: 'Liguria' };
+  const t = ipotesi(r, loc, { inclinazione: 33, anno_meteo: 2023, valori: [1000, 2000] }, costanti).join('\n');
+  for (const parola of ['La Spezia (SP)', '2023', '33°', 'È un esempio.', 'prudente', '130 €/MWh', '413,3', '199,6', '0,5%']) {
+    assert.ok(t.includes(parola), parola);
+  }
+  assert.ok(t.includes('degrado dei pannelli: 0,5% della produzione l\'anno'), 'frase del degrado');
+  assert.ok(!t.includes('Eliodora') && !t.includes('non è ancora scritto'), 'il riparto non nomina Eliodora né il regolamento non scritto (decisione dell\'utente del 10/11/2026)');
+  assert.ok(!t.includes('il 0,5%'), 'nessun articolo davanti alla percentuale');
+  assert.ok(t.includes('La produzione è calcolata sui kWp dei pannelli, con un inverter della stessa potenza e una connessione che permette di immettere tutto: non contiamo tagli dell\'inverter né limiti di immissione, e il costo della connessione è escluso.'), 'ipotesi sulla potenza dichiarata, senza tagli né limiti di immissione (esclude un\'ipotesi che tace sui limiti dell\'impianto)');
+  const riga = t.split('\n').find((l) => l.startsWith('CO₂ evitata:'));
+  assert.equal(riga, 'CO₂ evitata: ipotesi che ogni kWh dei pannelli sostituisca un kWh delle centrali fossili italiane, 413,3 g/kWh (metodo ISPRA, media nazionale annua, 2025 preliminare); con la CO₂ media di un kWh consumato sarebbe 199,6. Sui 20 anni il fattore resta quello di oggi: è una proiezione.');
+});
+
+test('con la media dei consumi come fattore, i 20 anni scendono del 2,9% l\'anno', () => {
+  const r = {
+    parametri: { prezzo_zonale: 115.94, quota_produttore: 0.4, quota_consumatori: 0.4, gestione_eur_anno: 500, costo_evitato: {} },
+    impianti: [{ incentivato: true, tip: 130 }],
+    emissioni: { fattore: 199.6, fattoreAltro: 413.3, principale: 'media' },
+  };
+  const loc = { nome: 'La Spezia', sigla: 'SP', regione: 'Liguria' };
+  const t = ipotesi(r, loc, { inclinazione: 33, anno_meteo: 2023, valori: [1000, 2000] }, costanti).join('\n');
+  const riga = t.split('\n').find((l) => l.startsWith('CO₂ evitata:'));
+  assert.equal(riga, 'CO₂ evitata: ipotesi che ogni kWh dei pannelli valga la CO₂ media di un kWh consumato in Italia, 199,6 g/kWh (media nazionale annua, ISPRA, 2025 preliminare); con il metodo ISPRA delle emissioni evitate sarebbe 413,3. Sui 20 anni il fattore scende del 2,9% l\'anno, come in media dal 1990: è una proiezione.');
+});
+
+test('la scadenza ragiona al giorno: ultimo giorno aperto, poi chiusa (esclude una finestra chiusa a mezzanotte del giorno prima o aperta il giorno dopo)', () => {
+  assert.match(testoScadenza(new Date(2027, 11, 31, 23, 59), costanti), /^Per avere la tariffa premio l'impianto deve entrare in esercizio dopo la costituzione della CER ed entro il 31\/12\/2027\./);
+  assert.equal(testoScadenza(new Date(2028, 0, 1, 0, 30), costanti), 'La finestra della tariffa premio si è chiusa il 31/12/2027, salvo proroghe.');
+  assert.match(notaScadenza(true, new Date(2027, 11, 31, 23, 59), costanti), /^Per avere la tariffa premio/);
+  assert.match(notaScadenza(true, new Date(2028, 0, 1, 0, 30), costanti), /si è chiusa il 31\/12\/2027/);
+});
+
+test('l\'anno meteorologico viene dal file PV, non è scritto a mano', () => {
+  const r = {
+    parametri: { prezzo_zonale: 115.94, quota_produttore: 0.4, quota_consumatori: 0.4, gestione_eur_anno: 500, costo_evitato: {} },
+    impianti: [{ incentivato: true, tip: 130 }],
+    emissioni: { fattore: 413.3, fattoreAltro: 199.6, principale: 'fossili' },
+  };
+  const loc = { nome: 'La Spezia', sigla: 'SP', regione: 'Liguria' };
+  const t = ipotesi(r, loc, { inclinazione: 33, anno_meteo: 2024, valori: [1000, 2000] }, costanti).join('\n');
+  assert.ok(t.includes('anno meteorologico 2024'), 'anno meteorologico 2024');
+  assert.ok(!t.includes('2023'), 'nessun 2023 scritto a mano');
+});
+
+test('le ipotesi dicono che il 20% resta alla CER, non che va a un fondo sociale (la scelta del fondo è del regolamento di Eliodora)', () => {
+  const r = {
+    parametri: { prezzo_zonale: 115.94, quota_produttore: 0.4, quota_consumatori: 0.4, gestione_eur_anno: 500, costo_evitato: {} },
+    impianti: [{ incentivato: true, tip: 130 }],
+    emissioni: { fattore: 413.3, fattoreAltro: 199.6, principale: 'fossili' },
+  };
+  const loc = { nome: 'La Spezia', sigla: 'SP', regione: 'Liguria' };
+  const riga = ipotesi(r, loc, { inclinazione: 33, anno_meteo: 2023, valori: [1000, 2000] }, costanti).find((l) => l.startsWith('Riparto:'));
+  assert.ok(riga.includes('20% alla CER'), riga);
+  assert.ok(!/fondo sociale/i.test(riga), riga);
+  assert.ok(riga.includes('40% della tariffa al titolare dell\'impianto, 40% ai consumatori'), riga);
+});
+
+test('con quote del riparto cambiate in avanzato la riga non le chiama un esempio, e dice che le quote le stabilisce il regolamento della CER; con le predefinite è un esempio; nessuna delle due nomina Eliodora (esclude un riparto 60/30/10 chiamato esempio, e i riferimenti tolti il 10/11/2026)', () => {
+  const r = (qp, qc) => ({
+    parametri: { prezzo_zonale: 115.94, quota_produttore: qp, quota_consumatori: qc, gestione_eur_anno: 500, costo_evitato: {} },
+    impianti: [{ incentivato: true, tip: 130 }],
+    emissioni: { fattore: 413.3, fattoreAltro: 199.6, principale: 'fossili' },
+  });
+  const loc = { nome: 'La Spezia', sigla: 'SP', regione: 'Liguria' };
+  const riga = (qp, qc) => ipotesi(r(qp, qc), loc, { inclinazione: 33, anno_meteo: 2023, valori: [1000, 2000] }, costanti).find((l) => l.startsWith('Riparto:'));
+  const cambiata = riga(0.6, 0.3);
+  assert.ok(cambiata.startsWith('Riparto: 60% della tariffa al titolare dell\'impianto, 30% ai consumatori'), cambiata);
+  assert.ok(cambiata.endsWith('il contributo ARERA ai consumatori. Le quote vengono stabilite dal regolamento della CER.'), cambiata);
+  assert.ok(riga(0.4, 0.4).endsWith('il contributo ARERA ai consumatori. È un esempio.'), 'con le quote predefinite resta l\'esempio');
+  for (const t of [cambiata, riga(0.4, 0.4)]) assert.doesNotMatch(t, /Eliodora|non è ancora scritto|nostra CER/, 'testi dell\'utente del 10/11/2026');
+});
+
+test('la frase sull\'eccedentaria compare solo se c\'è, e dice dove va', () => {
+  assert.equal(testoEccedentaria({ quotaEccedentaria: 0, eccedentaria: 0, fondoSociale: 0 }), '');
+  assert.equal(
+    testoEccedentaria({ quotaEccedentaria: 0.1, eccedentaria: 300, fondoSociale: 0 }),
+    'La quota eccedentaria della tariffa, 300 € l\'anno, va ai consumatori che non sono imprese. Lo statuto (art. 12) la destina a loro, a finalità sociali o a entrambe: qui va tutta a loro.',
+  );
+  assert.equal(
+    testoEccedentaria({ quotaEccedentaria: 0.1, eccedentaria: 300, fondoSociale: 300 }),
+    'La quota eccedentaria della tariffa, 300 € l\'anno, va a finalità sociali. Lo statuto (art. 12) la destina ai consumatori che non sono imprese, a finalità sociali o a entrambe: qui non ci sono consumatori che non siano imprese.',
+  );
+});
+
+test('la frase sull\'eccedentaria dice che lo statuto ammette i consumatori non imprese, le finalità sociali o entrambe come l\'«e/o» del decreto, e che la scelta di darla ai primi è del simulatore (esclude la scelta presentata come regola dello statuto e un «o» che escluderebbe l\'una o l\'altra)', () => {
+  for (const fondoSociale of [0, 300]) {
+    const t = testoEccedentaria({ quotaEccedentaria: 0.1, eccedentaria: 300, fondoSociale });
+    assert.doesNotMatch(t, /\(statuto, art\. 12\)\./, t);
+    assert.match(t, /Lo statuto \(art\. 12\) la destina (a loro|ai consumatori che non sono imprese), a finalità sociali o a entrambe/, t);
+    assert.doesNotMatch(t, /(a loro|imprese) o a finalità sociali/, t);
+  }
+  // con consumatori non imprese e senza: le due frasi non si contraddicono
+  assert.doesNotMatch(testoEccedentaria({ quotaEccedentaria: 0.1, eccedentaria: 300, fondoSociale: 300 }), /va ai consumatori/);
+});
+
+test('le emissioni in italiani: «circa come», mai «0 italiani» né «1 italiani» ai due lati dell\'arrotondamento (0,49 e 1,4), e senza CO₂ evitata la frase non c\'è', () => {
+  const coda = 'in un anno (5,1 t a persona nel 2024, contando solo ciò che si emette sul territorio).';
+  assert.equal(testoItaliani(12.4, 5.1), `Circa come le emissioni di 12 italiani ${coda}`);
+  assert.equal(testoItaliani(12345.4, 5.1), `Circa come le emissioni di 12.345 italiani ${coda}`);
+  assert.equal(testoItaliani(0.3, 5.1), `Meno delle emissioni di un italiano ${coda}`);
+  assert.equal(testoItaliani(0.49, 5.1), `Meno delle emissioni di un italiano ${coda}`, 'arrotondato fa 0: non «0 italiani»');
+  assert.equal(testoItaliani(0.5, 5.1), `Circa come le emissioni di un italiano ${coda}`, 'arrotondato fa 1: non «1 italiani»');
+  assert.equal(testoItaliani(1.4, 5.1), `Circa come le emissioni di un italiano ${coda}`, 'arrotondato fa 1: non «1 italiani»');
+  assert.equal(testoItaliani(1.5, 5.1), `Circa come le emissioni di 2 italiani ${coda}`);
+  assert.equal(testoItaliani(0, 5.1), '');
+});
+
+test('la riga sotto la CO₂ evitata dice l\'ipotesi e quanto darebbe l\'altra, senza «fino a» (esclude due convenzioni presentate come intervallo)', () => {
+  const f = testoStimaCo2('fossili', 11.0, costanti);
+  assert.equal(f, 'Stima con il metodo ISPRA delle emissioni evitate: ogni kWh dei pannelli sostituisce un kWh delle centrali fossili italiane (413,3 g/kWh, 2025 preliminare). Con la CO₂ media di un kWh consumato in Italia (199,6 g/kWh) sarebbero circa 11 t. Non è un intervallo di certezza: il valore vero dipende dall\'ora, dalla zona e da quali centrali i pannelli fermano davvero.');
+  const m = testoStimaCo2('media', 22.8, costanti);
+  assert.ok(m.startsWith('Stima con la CO₂ media di un kWh consumato in Italia (199,6 g/kWh, 2025 preliminare). Con il metodo ISPRA delle emissioni evitate, che conta le centrali fossili italiane (413,3 g/kWh), sarebbero circa 23 t.'));
+  assert.equal(testoStimaCo2('fossili', 0, costanti), '');
+  assert.ok(!f.includes('fino a') && !m.includes('fino a'));
+});
+
+test('i 20 anni della CO₂: «se il fattore restasse quello di oggi» con il metodo ISPRA, il calo del 2,9% solo con la media (esclude il calo dei consumi applicato al metodo ISPRA)', () => {
+  assert.equal(testoVentiAnniCo2('fossili', 434.6, costanti), 'In 20 anni, se il fattore restasse quello di oggi: circa 430 t.');
+  assert.equal(testoVentiAnniCo2('media', 161.8, costanti), 'In 20 anni, se il fattore medio continuasse a scendere del 2,9% l\'anno come in media dal 1990: circa 160 t.');
+  assert.equal(testoVentiAnniCo2('fossili', 0, costanti), '');
+});
+
+test('il testo sugli impianti già in esercizio: vuoto per un impianto nuovo, la frase del 30% solo per gli esistenti fino al 15/12/2021 (esclude il limite detto agli impianti successivi)', () => {
+  assert.equal(testoGiaInEsercizio('nuovo'), '');
+  const p = testoGiaInEsercizio('precedente'), e = testoGiaInEsercizio('esistente');
+  assert.ok(p.startsWith('Un impianto entrato in esercizio prima della costituzione della CER, con le regole di oggi, non riceve la tariffa premio'));
+  assert.ok(p.includes('Se hai lo scambio sul posto, per entrare va chiuso.'));
+  assert.ok(p.includes('riduce i kWh incentivati di quelli nuovi'));
+  assert.ok(!p.includes('30%'));
+  assert.ok(e.endsWith('Un impianto entrato in esercizio fino al 15/12/2021 è un impianto «esistente»: la comunità può averne al massimo il 30% della potenza.'));
+});
+
+test('il testo sugli impianti già in esercizio dice che il contributo ARERA lo riceve la comunità e che nel riparto d\'esempio va ai consumatori (esclude un contributo attribuito all\'impianto o al suo titolare)', () => {
+  for (const stato of ['precedente', 'esistente']) {
+    const t = testoGiaInEsercizio(stato);
+    assert.ok(t.includes('Resta nella comunità: la sua energia conta per la condivisa, e su di essa la comunità riceve il contributo ARERA, che nel riparto d\'esempio va ai consumatori; l\'energia che immette resta del titolare, che la vende con il ritiro dedicato del GSE o a un venditore.'), t);
+    assert.ok(!t.includes('e riceve il contributo ARERA'), 'l\'impianto non riceve il contributo ARERA: lo riceve la comunità');
+  }
+});
+
+test('la scadenza in «Tu e i fondatori» è la frase dell\'utente dell\'08/11/2026, la stessa della nota di «Per te», con i 5 GW (esclude i mesi che mancano, «gli impianti devono», la domanda al GSE e una seconda copia della frase che possa divergere)', () => {
+  const t = testoScadenza(new Date(2026, 10, 8), costanti);
+  assert.equal(t, 'Per avere la tariffa premio l\'impianto deve entrare in esercizio dopo la costituzione della CER ed entro il 31/12/2027. Se entra in esercizio dopo, con le regole di oggi la tariffa non c\'è: la sua energia conta lo stesso per la comunità, ma su di essa la comunità riceve solo il contributo ARERA, molto più piccolo. La data può arrivare prima, se in Italia si raggiungono 5 GW di impianti incentivati, e cambierebbe solo con una proroga, che a oggi non c\'è.');
+  assert.equal(t, notaScadenza(true, new Date(2026, 10, 8), costanti));
+  assert.doesNotMatch(t, /mancano|manca|domanda|gli impianti devono/);
+});
+
+test('la nota sotto «Per te» c\'è solo con un impianto nuovo e non parla di chi entra dopo la scadenza (esclude la nota al consumatore e a chi ha l\'impianto già in esercizio, la frase sulla domanda al GSE e quella su chi entra, tolte l\'08/11/2026); a finestra chiusa il contributo ARERA lo riceve la comunità (esclude il contributo attribuito all\'impianto)', () => {
+  const oggi = new Date(2026, 10, 8);
+  const impianto = 'Per avere la tariffa premio l\'impianto deve entrare in esercizio dopo la costituzione della CER ed entro il 31/12/2027. Se entra in esercizio dopo, con le regole di oggi la tariffa non c\'è: la sua energia conta lo stesso per la comunità, ma su di essa la comunità riceve solo il contributo ARERA, molto più piccolo. La data può arrivare prima, se in Italia si raggiungono 5 GW di impianti incentivati, e cambierebbe solo con una proroga, che a oggi non c\'è.';
+  assert.equal(notaScadenza(true, oggi, costanti), impianto);
+  assert.equal(notaScadenza(false, oggi, costanti), '');
+  for (const t of [notaScadenza(true, oggi, costanti), notaScadenza(true, new Date(2028, 1, 1), costanti)]) {
+    assert.doesNotMatch(t, /domanda al GSE|chi consuma|Se entri/);
+  }
+  const chiusa = 'La finestra della tariffa premio si è chiusa il 31/12/2027, salvo proroghe: su un impianto nuovo la comunità riceve solo il contributo ARERA.';
+  assert.equal(notaScadenza(true, new Date(2028, 1, 1), costanti), chiusa);
+  assert.equal(notaScadenza(false, new Date(2028, 1, 1), costanti), '');
+  assert.ok(!notaScadenza(true, new Date(2028, 1, 1), costanti).includes('un impianto nuovo riceve solo il contributo ARERA'), 'a finestra chiusa il contributo ARERA lo riceve la comunità, non l\'impianto');
+});
+
+test('le ipotesi seguono gli impianti: la riga dei nuovi solo con impianti nuovi, quella dei già in esercizio solo con loro (esclude un\'ipotesi in conflitto con il modulo)', () => {
+  const base = {
+    parametri: { prezzo_zonale: 115.94, quota_produttore: 0.4, quota_consumatori: 0.4, gestione_eur_anno: 500, costo_evitato: {} },
+    emissioni: { fattore: 413.3, fattoreAltro: 199.6, principale: 'fossili' },
+  };
+  const loc = { nome: 'La Spezia', sigla: 'SP', regione: 'Liguria' }, pv = { inclinazione: 33, anno_meteo: 2023, valori: [1000, 2000] };
+  const nuovi = 'Gli impianti nuovi entrano in esercizio dopo la costituzione della CER ed entro il 31/12/2027.';
+  const gia = 'Gli impianti già in esercizio sono entrati in esercizio prima della costituzione della CER: niente tariffa premio, solo il contributo ARERA sulla loro condivisa.';
+  const t1 = ipotesi({ ...base, impianti: [{ incentivato: true, tip: 130, giaInEsercizio: false }] }, loc, pv, costanti);
+  assert.ok(t1.includes(nuovi) && !t1.includes(gia));
+  const t2 = ipotesi({ ...base, impianti: [{ incentivato: false, tip: 0, giaInEsercizio: true }] }, loc, pv, costanti);
+  assert.ok(!t2.includes(nuovi) && t2.includes(gia));
+  const t3 = ipotesi({ ...base, impianti: [{ incentivato: false, tip: 0, giaInEsercizio: true }, { incentivato: true, tip: 130, giaInEsercizio: false }] }, loc, pv, costanti);
+  assert.ok(t3.includes(nuovi) && t3.includes(gia));
+});
+
+test('l\'etichetta dei fondatori dice l\'importo che dividono, o solo «la costituzione» se manca (esclude un campo che divide una cifra invisibile)', () => {
+  assert.equal(testoFondatori(360), 'Fondatori, che dividono i 360 € della costituzione');
+  assert.equal(testoFondatori(null), 'Fondatori, che dividono la costituzione');
+});
+
+// Una simulazione minima per leggere le righe delle ipotesi: `prezzo` è il prezzo dell'energia, `tip` la tariffa premio (assente senza impianti incentivati).
+const ipotesiCon = (prezzo, tip = 130) => ipotesi({
+  parametri: { prezzo_zonale: prezzo, quota_produttore: 0.4, quota_consumatori: 0.4, gestione_eur_anno: 500, costo_evitato: {} },
+  impianti: [tip == null ? { incentivato: false, tip: 0, giaInEsercizio: true } : { incentivato: true, tip, giaInEsercizio: false }],
+  emissioni: { fattore: 413.3, fattoreAltro: 199.6, principale: 'fossili' },
+}, { nome: 'La Spezia', sigla: 'SP', regione: 'Liguria' }, { inclinazione: 33, anno_meteo: 2023, valori: [1000, 2000] }, costanti);
+
+test('la riga del prezzo dice che è la media nazionale del 2025 e che nella zona di mercato può essere diverso, e con un prezzo scelto in avanzato dice che è scelto (esclude un prezzo scelto presentato come la media nazionale e un prezzo nazionale presentato come quello della zona)', () => {
+  const riga = (t) => t.find((l) => l.startsWith('Prezzo dell\'energia:'));
+  assert.equal(riga(ipotesiCon(115.94)), 'Prezzo dell\'energia: 115,94 €/MWh, la media nazionale del 2025 (PUN Index), uguale tutto l\'anno: nella tua zona di mercato il prezzo può essere diverso; tariffa premio 130 €/MWh.');
+  assert.equal(riga(ipotesiCon(90)), 'Prezzo dell\'energia: 90,00 €/MWh, scelto in modalità Avanzato, uguale tutto l\'anno; tariffa premio 130 €/MWh.');
+  assert.equal(riga(ipotesiCon(115.94, null)), 'Prezzo dell\'energia: 115,94 €/MWh, la media nazionale del 2025 (PUN Index), uguale tutto l\'anno: nella tua zona di mercato il prezzo può essere diverso.');
+  assert.equal(riga(ipotesiCon(90, null)), 'Prezzo dell\'energia: 90,00 €/MWh, scelto in modalità Avanzato, uguale tutto l\'anno.');
+});
+
+test('«Fuori dal calcolo» elenca le imposte sui redditi, non «imposte» in generale, e anche la sostituzione dell\'inverter e l\'assicurazione (esclude un «imposte» che contraddice IVA e accise contate e costi dell\'impianto taciuti)', () => {
+  const riga = ipotesiCon(115.94).find((l) => l.startsWith('Fuori dal calcolo:'));
+  assert.equal(riga, 'Fuori dal calcolo: imposte sui redditi, agevolazioni (PNRR, detrazioni), accumuli, prezzo ora per ora, quarto d\'ora, sostituzione dell\'inverter, assicurazione.');
+});
+
+test('la riga dei costi della CER dice che l\'eccedentaria non li copre e resta a chi la riceve, consumatori non imprese o, senza di loro, finalità sociali (esclude «resta intera ai consumatori che non sono imprese», che contraddice l\'eccedentaria alle finalità sociali)', () => {
+  const riga = ipotesiCon(115.94).find((l) => l.startsWith('Costi della CER:'));
+  assert.equal(riga, 'Costi della CER: 500 € l\'anno di gestione più i corrispettivi del GSE, tolti dagli incentivi prima del riparto. La quota eccedentaria non copre i costi della CER: resta intera a chi la riceve (i consumatori che non sono imprese o, senza di loro, le finalità sociali). È la lettura prudente, perché le regole non dicono se possa coprirli.');
+  assert.ok(!riga.includes('resta intera ai consumatori che non sono imprese'), riga);
+});
+
+test('la frase sulla parte della CER dice che cosa si toglie prima del 20%: la parte dei costi che tocca alla tariffa e, quando c\'è, la quota eccedentaria (esclude «il 20% della tariffa» accanto a un importo già senza costi, trovato l\'08/11/2026, e «tolti i costi», che farebbe togliere tutti i costi dalla tariffa)', () => {
+  assert.equal(testoTolti({ quotaEccedentaria: 0 }), 'tolta la sua parte dei costi della CER');
+  assert.equal(testoTolti({ quotaEccedentaria: 0.12 }), 'tolte la quota eccedentaria e la sua parte dei costi della CER');
+});
+
+test('la nota sull\'eccedentaria di «Per te» dice quanto della cifra è eccedentaria e che la sua destinazione la decide il regolamento; senza eccedentaria è vuota (esclude una cifra fatta di eccedentaria senza dirlo, decisione dell\'utente dell\'08/11/2026)', () => {
+  assert.equal(testoEccedentariaTe(1299.4), 'Di questi, 1299 € sono la quota eccedentaria della tariffa. Il simulatore la dà tutta ai consumatori che non sono imprese, in proporzione all\'energia condivisa: quanta ne va a loro e quanta a finalità sociali lo decide il regolamento della CER.');
+  assert.equal(testoEccedentariaTe(0), '');
+  assert.equal(testoEccedentariaTe(undefined), '');
+});

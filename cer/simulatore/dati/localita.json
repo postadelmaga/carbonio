@@ -1,0 +1,986 @@
+{
+ "fonte": "ISTAT, elenco dei comuni (CC BY 4.0); coordinate Wikidata (CC0)",
+ "localita": [
+  {
+   "codice": "001272",
+   "nome": "Torino",
+   "sigla": "TO",
+   "regione": "Piemonte",
+   "lat": 45.0792,
+   "lon": 7.6761,
+   "area": "nord"
+  },
+  {
+   "codice": "002158",
+   "nome": "Vercelli",
+   "sigla": "VC",
+   "regione": "Piemonte",
+   "lat": 45.3261,
+   "lon": 8.4234,
+   "area": "nord"
+  },
+  {
+   "codice": "003106",
+   "nome": "Novara",
+   "sigla": "NO",
+   "regione": "Piemonte",
+   "lat": 45.45,
+   "lon": 8.62,
+   "area": "nord"
+  },
+  {
+   "codice": "004078",
+   "nome": "Cuneo",
+   "sigla": "CN",
+   "regione": "Piemonte",
+   "lat": 44.3833,
+   "lon": 7.55,
+   "area": "nord"
+  },
+  {
+   "codice": "005005",
+   "nome": "Asti",
+   "sigla": "AT",
+   "regione": "Piemonte",
+   "lat": 44.9,
+   "lon": 8.2069,
+   "area": "nord"
+  },
+  {
+   "codice": "006003",
+   "nome": "Alessandria",
+   "sigla": "AL",
+   "regione": "Piemonte",
+   "lat": 44.9133,
+   "lon": 8.62,
+   "area": "nord"
+  },
+  {
+   "codice": "007003",
+   "nome": "Aosta",
+   "sigla": "AO",
+   "regione": "Valle d'Aosta",
+   "lat": 45.7372,
+   "lon": 7.3206,
+   "area": "nord"
+  },
+  {
+   "codice": "008031",
+   "nome": "Imperia",
+   "sigla": "IM",
+   "regione": "Liguria",
+   "lat": 43.8865,
+   "lon": 8.0297,
+   "area": "nord"
+  },
+  {
+   "codice": "009056",
+   "nome": "Savona",
+   "sigla": "SV",
+   "regione": "Liguria",
+   "lat": 44.3081,
+   "lon": 8.4811,
+   "area": "nord"
+  },
+  {
+   "codice": "010025",
+   "nome": "Genova",
+   "sigla": "GE",
+   "regione": "Liguria",
+   "lat": 44.4072,
+   "lon": 8.9339,
+   "area": "nord"
+  },
+  {
+   "codice": "011015",
+   "nome": "La Spezia",
+   "sigla": "SP",
+   "regione": "Liguria",
+   "lat": 44.108,
+   "lon": 9.8289,
+   "area": "nord"
+  },
+  {
+   "codice": "012133",
+   "nome": "Varese",
+   "sigla": "VA",
+   "regione": "Lombardia",
+   "lat": 45.8167,
+   "lon": 8.8333,
+   "area": "nord"
+  },
+  {
+   "codice": "013075",
+   "nome": "Como",
+   "sigla": "CO",
+   "regione": "Lombardia",
+   "lat": 45.8103,
+   "lon": 9.0861,
+   "area": "nord"
+  },
+  {
+   "codice": "014061",
+   "nome": "Sondrio",
+   "sigla": "SO",
+   "regione": "Lombardia",
+   "lat": 46.1697,
+   "lon": 9.87,
+   "area": "nord"
+  },
+  {
+   "codice": "015146",
+   "nome": "Milano",
+   "sigla": "MI",
+   "regione": "Lombardia",
+   "lat": 45.4669,
+   "lon": 9.19,
+   "area": "nord"
+  },
+  {
+   "codice": "016024",
+   "nome": "Bergamo",
+   "sigla": "BG",
+   "regione": "Lombardia",
+   "lat": 45.695,
+   "lon": 9.67,
+   "area": "nord"
+  },
+  {
+   "codice": "017029",
+   "nome": "Brescia",
+   "sigla": "BS",
+   "regione": "Lombardia",
+   "lat": 45.5389,
+   "lon": 10.2203,
+   "area": "nord"
+  },
+  {
+   "codice": "018110",
+   "nome": "Pavia",
+   "sigla": "PV",
+   "regione": "Lombardia",
+   "lat": 45.1853,
+   "lon": 9.155,
+   "area": "nord"
+  },
+  {
+   "codice": "019036",
+   "nome": "Cremona",
+   "sigla": "CR",
+   "regione": "Lombardia",
+   "lat": 45.1333,
+   "lon": 10.0247,
+   "area": "nord"
+  },
+  {
+   "codice": "020030",
+   "nome": "Mantova",
+   "sigla": "MN",
+   "regione": "Lombardia",
+   "lat": 45.1564,
+   "lon": 10.7911,
+   "area": "nord"
+  },
+  {
+   "codice": "021008",
+   "nome": "Bolzano",
+   "sigla": "BZ",
+   "regione": "Trentino-Alto Adige",
+   "lat": 46.4981,
+   "lon": 11.3548,
+   "area": "nord"
+  },
+  {
+   "codice": "022205",
+   "nome": "Trento",
+   "sigla": "TN",
+   "regione": "Trentino-Alto Adige",
+   "lat": 46.0667,
+   "lon": 11.1167,
+   "area": "nord"
+  },
+  {
+   "codice": "023091",
+   "nome": "Verona",
+   "sigla": "VR",
+   "regione": "Veneto",
+   "lat": 45.4386,
+   "lon": 10.9928,
+   "area": "nord"
+  },
+  {
+   "codice": "024116",
+   "nome": "Vicenza",
+   "sigla": "VI",
+   "regione": "Veneto",
+   "lat": 45.55,
+   "lon": 11.55,
+   "area": "nord"
+  },
+  {
+   "codice": "025006",
+   "nome": "Belluno",
+   "sigla": "BL",
+   "regione": "Veneto",
+   "lat": 46.1408,
+   "lon": 12.2156,
+   "area": "nord"
+  },
+  {
+   "codice": "026086",
+   "nome": "Treviso",
+   "sigla": "TV",
+   "regione": "Veneto",
+   "lat": 45.6658,
+   "lon": 12.2456,
+   "area": "nord"
+  },
+  {
+   "codice": "027042",
+   "nome": "Venezia",
+   "sigla": "VE",
+   "regione": "Veneto",
+   "lat": 45.4397,
+   "lon": 12.3319,
+   "area": "nord"
+  },
+  {
+   "codice": "028060",
+   "nome": "Padova",
+   "sigla": "PD",
+   "regione": "Veneto",
+   "lat": 45.4078,
+   "lon": 11.8733,
+   "area": "nord"
+  },
+  {
+   "codice": "029041",
+   "nome": "Rovigo",
+   "sigla": "RO",
+   "regione": "Veneto",
+   "lat": 45.0809,
+   "lon": 11.794,
+   "area": "nord"
+  },
+  {
+   "codice": "030129",
+   "nome": "Udine",
+   "sigla": "UD",
+   "regione": "Friuli-Venezia Giulia",
+   "lat": 46.0667,
+   "lon": 13.2333,
+   "area": "nord"
+  },
+  {
+   "codice": "031007",
+   "nome": "Gorizia",
+   "sigla": "GO",
+   "regione": "Friuli-Venezia Giulia",
+   "lat": 45.9352,
+   "lon": 13.6193,
+   "area": "nord"
+  },
+  {
+   "codice": "032006",
+   "nome": "Trieste",
+   "sigla": "TS",
+   "regione": "Friuli-Venezia Giulia",
+   "lat": 45.6503,
+   "lon": 13.7703,
+   "area": "nord"
+  },
+  {
+   "codice": "033032",
+   "nome": "Piacenza",
+   "sigla": "PC",
+   "regione": "Emilia-Romagna",
+   "lat": 45.05,
+   "lon": 9.7,
+   "area": "nord"
+  },
+  {
+   "codice": "034027",
+   "nome": "Parma",
+   "sigla": "PR",
+   "regione": "Emilia-Romagna",
+   "lat": 44.8015,
+   "lon": 10.328,
+   "area": "nord"
+  },
+  {
+   "codice": "035033",
+   "nome": "Reggio nell'Emilia",
+   "sigla": "RE",
+   "regione": "Emilia-Romagna",
+   "lat": 44.7,
+   "lon": 10.6333,
+   "area": "nord"
+  },
+  {
+   "codice": "036023",
+   "nome": "Modena",
+   "sigla": "MO",
+   "regione": "Emilia-Romagna",
+   "lat": 44.6458,
+   "lon": 10.9257,
+   "area": "nord"
+  },
+  {
+   "codice": "037006",
+   "nome": "Bologna",
+   "sigla": "BO",
+   "regione": "Emilia-Romagna",
+   "lat": 44.4939,
+   "lon": 11.3428,
+   "area": "nord"
+  },
+  {
+   "codice": "038008",
+   "nome": "Ferrara",
+   "sigla": "FE",
+   "regione": "Emilia-Romagna",
+   "lat": 44.8392,
+   "lon": 11.6175,
+   "area": "nord"
+  },
+  {
+   "codice": "039014",
+   "nome": "Ravenna",
+   "sigla": "RA",
+   "regione": "Emilia-Romagna",
+   "lat": 44.4161,
+   "lon": 12.2017,
+   "area": "nord"
+  },
+  {
+   "codice": "040012",
+   "nome": "Forlì",
+   "sigla": "FC",
+   "regione": "Emilia-Romagna",
+   "lat": 44.2228,
+   "lon": 12.0414,
+   "area": "nord"
+  },
+  {
+   "codice": "041044",
+   "nome": "Pesaro",
+   "sigla": "PU",
+   "regione": "Marche",
+   "lat": 43.9102,
+   "lon": 12.9133,
+   "area": "centro"
+  },
+  {
+   "codice": "042002",
+   "nome": "Ancona",
+   "sigla": "AN",
+   "regione": "Marche",
+   "lat": 43.6167,
+   "lon": 13.5167,
+   "area": "centro"
+  },
+  {
+   "codice": "043023",
+   "nome": "Macerata",
+   "sigla": "MC",
+   "regione": "Marche",
+   "lat": 43.3003,
+   "lon": 13.4533,
+   "area": "centro"
+  },
+  {
+   "codice": "044007",
+   "nome": "Ascoli Piceno",
+   "sigla": "AP",
+   "regione": "Marche",
+   "lat": 42.8547,
+   "lon": 13.5753,
+   "area": "centro"
+  },
+  {
+   "codice": "045010",
+   "nome": "Massa",
+   "sigla": "MS",
+   "regione": "Toscana",
+   "lat": 44.0333,
+   "lon": 10.1333,
+   "area": "centro"
+  },
+  {
+   "codice": "046017",
+   "nome": "Lucca",
+   "sigla": "LU",
+   "regione": "Toscana",
+   "lat": 43.85,
+   "lon": 10.5167,
+   "area": "centro"
+  },
+  {
+   "codice": "047014",
+   "nome": "Pistoia",
+   "sigla": "PT",
+   "regione": "Toscana",
+   "lat": 43.9333,
+   "lon": 10.9167,
+   "area": "centro"
+  },
+  {
+   "codice": "048017",
+   "nome": "Firenze",
+   "sigla": "FI",
+   "regione": "Toscana",
+   "lat": 43.7714,
+   "lon": 11.2542,
+   "area": "centro"
+  },
+  {
+   "codice": "049009",
+   "nome": "Livorno",
+   "sigla": "LI",
+   "regione": "Toscana",
+   "lat": 43.55,
+   "lon": 10.3167,
+   "area": "centro"
+  },
+  {
+   "codice": "050026",
+   "nome": "Pisa",
+   "sigla": "PI",
+   "regione": "Toscana",
+   "lat": 43.7167,
+   "lon": 10.4,
+   "area": "centro"
+  },
+  {
+   "codice": "051002",
+   "nome": "Arezzo",
+   "sigla": "AR",
+   "regione": "Toscana",
+   "lat": 43.4631,
+   "lon": 11.8781,
+   "area": "centro"
+  },
+  {
+   "codice": "052032",
+   "nome": "Siena",
+   "sigla": "SI",
+   "regione": "Toscana",
+   "lat": 43.3183,
+   "lon": 11.3314,
+   "area": "centro"
+  },
+  {
+   "codice": "053011",
+   "nome": "Grosseto",
+   "sigla": "GR",
+   "regione": "Toscana",
+   "lat": 42.7722,
+   "lon": 11.1089,
+   "area": "centro"
+  },
+  {
+   "codice": "054039",
+   "nome": "Perugia",
+   "sigla": "PG",
+   "regione": "Umbria",
+   "lat": 43.1119,
+   "lon": 12.3885,
+   "area": "centro"
+  },
+  {
+   "codice": "055032",
+   "nome": "Terni",
+   "sigla": "TR",
+   "regione": "Umbria",
+   "lat": 42.5608,
+   "lon": 12.6468,
+   "area": "centro"
+  },
+  {
+   "codice": "056059",
+   "nome": "Viterbo",
+   "sigla": "VT",
+   "regione": "Lazio",
+   "lat": 42.4186,
+   "lon": 12.1042,
+   "area": "centro"
+  },
+  {
+   "codice": "057059",
+   "nome": "Rieti",
+   "sigla": "RI",
+   "regione": "Lazio",
+   "lat": 42.4044,
+   "lon": 12.8567,
+   "area": "centro"
+  },
+  {
+   "codice": "058091",
+   "nome": "Roma",
+   "sigla": "RM",
+   "regione": "Lazio",
+   "lat": 41.8931,
+   "lon": 12.4828,
+   "area": "centro"
+  },
+  {
+   "codice": "059011",
+   "nome": "Latina",
+   "sigla": "LT",
+   "regione": "Lazio",
+   "lat": 41.4672,
+   "lon": 12.9036,
+   "area": "centro"
+  },
+  {
+   "codice": "060038",
+   "nome": "Frosinone",
+   "sigla": "FR",
+   "regione": "Lazio",
+   "lat": 41.6333,
+   "lon": 13.35,
+   "area": "centro"
+  },
+  {
+   "codice": "061022",
+   "nome": "Caserta",
+   "sigla": "CE",
+   "regione": "Campania",
+   "lat": 41.0667,
+   "lon": 14.3333,
+   "area": "sud"
+  },
+  {
+   "codice": "062008",
+   "nome": "Benevento",
+   "sigla": "BN",
+   "regione": "Campania",
+   "lat": 41.1333,
+   "lon": 14.7833,
+   "area": "sud"
+  },
+  {
+   "codice": "063049",
+   "nome": "Napoli",
+   "sigla": "NA",
+   "regione": "Campania",
+   "lat": 40.8358,
+   "lon": 14.2486,
+   "area": "sud"
+  },
+  {
+   "codice": "064008",
+   "nome": "Avellino",
+   "sigla": "AV",
+   "regione": "Campania",
+   "lat": 40.9153,
+   "lon": 14.7897,
+   "area": "sud"
+  },
+  {
+   "codice": "065116",
+   "nome": "Salerno",
+   "sigla": "SA",
+   "regione": "Campania",
+   "lat": 40.6806,
+   "lon": 14.7594,
+   "area": "sud"
+  },
+  {
+   "codice": "066049",
+   "nome": "L'Aquila",
+   "sigla": "AQ",
+   "regione": "Abruzzo",
+   "lat": 42.354,
+   "lon": 13.392,
+   "area": "centro"
+  },
+  {
+   "codice": "067041",
+   "nome": "Teramo",
+   "sigla": "TE",
+   "regione": "Abruzzo",
+   "lat": 42.6589,
+   "lon": 13.7039,
+   "area": "centro"
+  },
+  {
+   "codice": "068028",
+   "nome": "Pescara",
+   "sigla": "PE",
+   "regione": "Abruzzo",
+   "lat": 42.4643,
+   "lon": 14.2142,
+   "area": "centro"
+  },
+  {
+   "codice": "069022",
+   "nome": "Chieti",
+   "sigla": "CH",
+   "regione": "Abruzzo",
+   "lat": 42.3511,
+   "lon": 14.1674,
+   "area": "centro"
+  },
+  {
+   "codice": "070006",
+   "nome": "Campobasso",
+   "sigla": "CB",
+   "regione": "Molise",
+   "lat": 41.561,
+   "lon": 14.6684,
+   "area": "sud"
+  },
+  {
+   "codice": "071024",
+   "nome": "Foggia",
+   "sigla": "FG",
+   "regione": "Puglia",
+   "lat": 41.4584,
+   "lon": 15.5519,
+   "area": "sud"
+  },
+  {
+   "codice": "072006",
+   "nome": "Bari",
+   "sigla": "BA",
+   "regione": "Puglia",
+   "lat": 41.1253,
+   "lon": 16.8667,
+   "area": "sud"
+  },
+  {
+   "codice": "073027",
+   "nome": "Taranto",
+   "sigla": "TA",
+   "regione": "Puglia",
+   "lat": 40.4711,
+   "lon": 17.2431,
+   "area": "sud"
+  },
+  {
+   "codice": "074001",
+   "nome": "Brindisi",
+   "sigla": "BR",
+   "regione": "Puglia",
+   "lat": 40.6383,
+   "lon": 17.9458,
+   "area": "sud"
+  },
+  {
+   "codice": "075035",
+   "nome": "Lecce",
+   "sigla": "LE",
+   "regione": "Puglia",
+   "lat": 40.352,
+   "lon": 18.1691,
+   "area": "sud"
+  },
+  {
+   "codice": "076063",
+   "nome": "Potenza",
+   "sigla": "PZ",
+   "regione": "Basilicata",
+   "lat": 40.6333,
+   "lon": 15.8,
+   "area": "sud"
+  },
+  {
+   "codice": "077014",
+   "nome": "Matera",
+   "sigla": "MT",
+   "regione": "Basilicata",
+   "lat": 40.6667,
+   "lon": 16.6,
+   "area": "sud"
+  },
+  {
+   "codice": "078045",
+   "nome": "Cosenza",
+   "sigla": "CS",
+   "regione": "Calabria",
+   "lat": 39.3,
+   "lon": 16.25,
+   "area": "sud"
+  },
+  {
+   "codice": "079023",
+   "nome": "Catanzaro",
+   "sigla": "CZ",
+   "regione": "Calabria",
+   "lat": 38.91,
+   "lon": 16.5875,
+   "area": "sud"
+  },
+  {
+   "codice": "080063",
+   "nome": "Reggio di Calabria",
+   "sigla": "RC",
+   "regione": "Calabria",
+   "lat": 38.1144,
+   "lon": 15.65,
+   "area": "sud"
+  },
+  {
+   "codice": "081021",
+   "nome": "Trapani",
+   "sigla": "TP",
+   "regione": "Sicilia",
+   "lat": 38.0175,
+   "lon": 12.515,
+   "area": "sud"
+  },
+  {
+   "codice": "082053",
+   "nome": "Palermo",
+   "sigla": "PA",
+   "regione": "Sicilia",
+   "lat": 38.1157,
+   "lon": 13.3613,
+   "area": "sud"
+  },
+  {
+   "codice": "083048",
+   "nome": "Messina",
+   "sigla": "ME",
+   "regione": "Sicilia",
+   "lat": 38.1936,
+   "lon": 15.5542,
+   "area": "sud"
+  },
+  {
+   "codice": "084001",
+   "nome": "Agrigento",
+   "sigla": "AG",
+   "regione": "Sicilia",
+   "lat": 37.3107,
+   "lon": 13.5766,
+   "area": "sud"
+  },
+  {
+   "codice": "085004",
+   "nome": "Caltanissetta",
+   "sigla": "CL",
+   "regione": "Sicilia",
+   "lat": 37.4915,
+   "lon": 14.0624,
+   "area": "sud"
+  },
+  {
+   "codice": "086009",
+   "nome": "Enna",
+   "sigla": "EN",
+   "regione": "Sicilia",
+   "lat": 37.5667,
+   "lon": 14.2667,
+   "area": "sud"
+  },
+  {
+   "codice": "087015",
+   "nome": "Catania",
+   "sigla": "CT",
+   "regione": "Sicilia",
+   "lat": 37.5027,
+   "lon": 15.0873,
+   "area": "sud"
+  },
+  {
+   "codice": "088009",
+   "nome": "Ragusa",
+   "sigla": "RG",
+   "regione": "Sicilia",
+   "lat": 36.925,
+   "lon": 14.7306,
+   "area": "sud"
+  },
+  {
+   "codice": "089017",
+   "nome": "Siracusa",
+   "sigla": "SR",
+   "regione": "Sicilia",
+   "lat": 37.0692,
+   "lon": 15.2875,
+   "area": "sud"
+  },
+  {
+   "codice": "090064",
+   "nome": "Sassari",
+   "sigla": "SS",
+   "regione": "Sardegna",
+   "lat": 40.7267,
+   "lon": 8.5592,
+   "area": "sud"
+  },
+  {
+   "codice": "091051",
+   "nome": "Nuoro",
+   "sigla": "NU",
+   "regione": "Sardegna",
+   "lat": 40.3201,
+   "lon": 9.3281,
+   "area": "sud"
+  },
+  {
+   "codice": "092009",
+   "nome": "Cagliari",
+   "sigla": "CA",
+   "regione": "Sardegna",
+   "lat": 39.2149,
+   "lon": 9.1095,
+   "area": "sud"
+  },
+  {
+   "codice": "093033",
+   "nome": "Pordenone",
+   "sigla": "PN",
+   "regione": "Friuli-Venezia Giulia",
+   "lat": 45.9626,
+   "lon": 12.6563,
+   "area": "nord"
+  },
+  {
+   "codice": "094023",
+   "nome": "Isernia",
+   "sigla": "IS",
+   "regione": "Molise",
+   "lat": 41.6028,
+   "lon": 14.2397,
+   "area": "sud"
+  },
+  {
+   "codice": "095038",
+   "nome": "Oristano",
+   "sigla": "OR",
+   "regione": "Sardegna",
+   "lat": 39.9058,
+   "lon": 8.5916,
+   "area": "sud"
+  },
+  {
+   "codice": "096004",
+   "nome": "Biella",
+   "sigla": "BI",
+   "regione": "Piemonte",
+   "lat": 45.5664,
+   "lon": 8.0533,
+   "area": "nord"
+  },
+  {
+   "codice": "097042",
+   "nome": "Lecco",
+   "sigla": "LC",
+   "regione": "Lombardia",
+   "lat": 45.8533,
+   "lon": 9.3905,
+   "area": "nord"
+  },
+  {
+   "codice": "098031",
+   "nome": "Lodi",
+   "sigla": "LO",
+   "regione": "Lombardia",
+   "lat": 45.3167,
+   "lon": 9.5,
+   "area": "nord"
+  },
+  {
+   "codice": "099014",
+   "nome": "Rimini",
+   "sigla": "RN",
+   "regione": "Emilia-Romagna",
+   "lat": 44.0594,
+   "lon": 12.5683,
+   "area": "nord"
+  },
+  {
+   "codice": "100005",
+   "nome": "Prato",
+   "sigla": "PO",
+   "regione": "Toscana",
+   "lat": 43.8808,
+   "lon": 11.0966,
+   "area": "centro"
+  },
+  {
+   "codice": "101010",
+   "nome": "Crotone",
+   "sigla": "KR",
+   "regione": "Calabria",
+   "lat": 39.0833,
+   "lon": 17.1167,
+   "area": "sud"
+  },
+  {
+   "codice": "102047",
+   "nome": "Vibo Valentia",
+   "sigla": "VV",
+   "regione": "Calabria",
+   "lat": 38.6753,
+   "lon": 16.0959,
+   "area": "sud"
+  },
+  {
+   "codice": "103072",
+   "nome": "Verbania",
+   "sigla": "VB",
+   "regione": "Piemonte",
+   "lat": 45.9228,
+   "lon": 8.5519,
+   "area": "nord"
+  },
+  {
+   "codice": "108033",
+   "nome": "Monza",
+   "sigla": "MB",
+   "regione": "Lombardia",
+   "lat": 45.5836,
+   "lon": 9.2736,
+   "area": "nord"
+  },
+  {
+   "codice": "109006",
+   "nome": "Fermo",
+   "sigla": "FM",
+   "regione": "Marche",
+   "lat": 43.1613,
+   "lon": 13.7184,
+   "area": "centro"
+  },
+  {
+   "codice": "110001",
+   "nome": "Andria",
+   "sigla": "BT",
+   "regione": "Puglia",
+   "lat": 41.2317,
+   "lon": 16.3083,
+   "area": "sud"
+  },
+  {
+   "codice": "110002",
+   "nome": "Barletta",
+   "sigla": "BT",
+   "regione": "Puglia",
+   "lat": 41.3167,
+   "lon": 16.2833,
+   "area": "sud"
+  },
+  {
+   "codice": "110009",
+   "nome": "Trani",
+   "sigla": "BT",
+   "regione": "Puglia",
+   "lat": 41.2667,
+   "lon": 16.4167,
+   "area": "sud"
+  },
+  {
+   "codice": "111009",
+   "nome": "Carbonia",
+   "sigla": "SU",
+   "regione": "Sardegna",
+   "lat": 39.1668,
+   "lon": 8.522,
+   "area": "sud"
+  }
+ ]
+}

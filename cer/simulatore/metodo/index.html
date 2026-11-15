@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Come calcoliamo · Simulatore della CER</title>
+<meta name="description" content="Il metodo del simulatore della Comunità Energetica Rinnovabile: i passi del calcolo, le fonti di ogni valore, le ipotesi, i limiti e le licenze dei dati.">
+<link rel="canonical" href="https://co2-info.duckdns.org/cer/simulatore/metodo/">
+<meta property="og:title" content="Come calcoliamo · Simulatore della CER">
+<meta property="og:description" content="I passi del calcolo, le fonti di ogni valore, le ipotesi, i limiti e le licenze dei dati del simulatore.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://co2-info.duckdns.org/cer/simulatore/metodo/">
+<meta property="og:image" content="https://co2-info.duckdns.org/cer/img/social.png">
+<meta name="theme-color" content="#F4F2EC">
+<link rel="icon" href="/cer/img/logo.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..900&family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400..600&display=swap">
+<link rel="stylesheet" href="/cer/cer.css">
+<link rel="stylesheet" href="/cer/simulatore/simulatore.css">
+<script src="/cer/cer.js"></script>
+<script defer src="https://cloud.umami.is/script.js" data-website-id="2cf64696-ed71-405e-9e22-b2b3e7b8bb6f"></script>
+</head>
+<body>
+<header class="bar">
+  <div class="wrap">
+    <a class="logo" href="/cer/">
+      <svg width="34" height="34" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#14211C"/><circle cx="32" cy="26" r="11" fill="#E8A317"/><path d="M10 50 L32 37 L54 50" fill="none" stroke="#2DBA85" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="10" cy="50" r="5" fill="#F4F2EC"/><circle cx="54" cy="50" r="5" fill="#F4F2EC"/><circle cx="32" cy="37" r="4" fill="#2DBA85"/></svg>
+      <span>CER<small>Comunità Energetica Rinnovabile</small></span>
+    </a>
+    <nav aria-label="Sezioni">
+      <a href="/cer/">La comunità</a>
+      <a href="/cer/#progetti">Progetti</a>
+      <a href="/cer/simulatore/">Simulatore</a>
+      <a href="/cer/statuto/">Statuto</a>
+    </nav>
+    <button id="theme" class="theme" type="button" aria-label="Tema">
+      <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9Z" fill="currentColor"/></svg>
+    </button>
+  </div>
+</header>
+<main class="wrap metodo">
+  <p class="kicker">Simulatore · metodo</p>
+  <h1>Come calcoliamo</h1>
+  <p class="lead">Il simulatore fa una stima indicativa: non è un'offerta né un preventivo. Per ogni numero indichiamo la fonte o diciamo che è un'ipotesi nostra. Qui ci sono i passi del calcolo, le fonti e le ipotesi dichiarate, i limiti. Il codice è aperto, nel repository del sito.</p>
+
+  <h2>I passi</h2>
+  <ol>
+    <li><b>Un anno, ora per ora.</b> Il calcolo usa le 8.760 ore del 2023 in ora italiana, con l'ora legale, i sabati, le domeniche e le festività nazionali.</li>
+    <li><b>La produzione.</b> Per il capoluogo scelto usiamo la serie oraria di PVGIS, il servizio del Centro comune di ricerca della Commissione europea, per l'anno meteorologico 2023: un impianto da 1 kWp rivolto a sud, con l'inclinazione migliore per quel luogo e perdite del 14%. La moltiplichiamo per i kWp di ogni impianto.</li>
+    <li><b>I consumi.</b> Per le famiglie usiamo le forme medie di consumo ora per ora che ARERA pubblica per i clienti domestici residenti, per regione e potenza del contatore, scalate sul consumo annuo. Per le attività e gli enti, che non hanno curve pubbliche, usiamo profili illustrativi con l'orario di apertura.</li>
+    <li><b>Spostare i consumi.</b> Il cursore delle abitudini toglie ogni giorno una parte dei consumi dalle ore senza sole e la rimette nelle ore di produzione. L'energia del giorno resta la stessa. Il 30% massimo è una nostra ipotesi.</li>
+    <li><b>Autoconsumo.</b> Chi ha i pannelli sul proprio tetto usa per primo la sua energia; il resto va in rete.</li>
+    <li><b>Energia condivisa.</b> In ogni ora è il minimo fra l'energia immessa dagli impianti della comunità e quella prelevata dai soci. Il GSE la attribuisce agli impianti per anzianità: gli impianti più vecchi la prendono per primi.</li>
+    <li><b>Gli incentivi.</b> La tariffa premio spetta agli impianti nuovi, non oltre 1 MW di potenza, per 20 anni, e la calcoliamo con un prezzo dell'energia uguale tutto l'anno. Il contributo ARERA vale su tutta l'energia condivisa. Quando l'energia condivisa attribuita agli impianti incentivati supera il 55% di quella che immettono, la parte in più della tariffa va, per il DM 414/2023 e per lo statuto, ai soli consumatori che non sono imprese, a finalità sociali o a entrambe: qui va ai consumatori che non sono imprese; se non ce ne sono, va a finalità sociali.</li>
+    <li><b>I costi della CER</b> (gestione e corrispettivi del GSE) si tolgono dagli incentivi prima di dividerli, come dice lo statuto all'art. 12. Se i costi superano gli incentivi, il simulatore lo segnala: vanno coperti in altro modo, per esempio con una quota associativa.</li>
+    <li><b>Il riparto.</b> È un esempio: il 40% della tariffa va al titolare dell'impianto, il 40% ai consumatori secondo quanto consumano nelle ore di produzione, il 20% resta alla CER, che ne decide l'uso. Il contributo ARERA va ai consumatori. Le quote vengono stabilite dal regolamento della CER; in modalità Avanzato si possono cambiare.</li>
+    <li><b>Fuori dalla CER.</b> L'energia immessa si vende al prezzo dell'energia; quella autoconsumata fa risparmiare in bolletta, e la stimiamo con l'ipotesi più bassa: energia, rete, oneri, accisa e IVA dove si paga, senza il margine del venditore.</li>
+    <li><b>Venti anni.</b> Prezzi costanti, nessuna inflazione; i pannelli perdono lo 0,5% di produzione l'anno. Calcoliamo esattamente il primo e il ventesimo anno e interpoliamo gli altri.</li>
+    <li><b>La CO₂.</b> La CO₂ la evitano gli impianti nuovi. La stimiamo con il metodo con cui ISPRA calcola le emissioni evitate dalle rinnovabili: ogni kWh dei pannelli sostituisce un kWh prodotto dalle centrali fossili italiane. In modalità Avanzato si può usare invece la CO₂ media di un kWh consumato in Italia, che dà una stima circa dimezzata. Quale centrale si ferma ora per ora nessuna fonte ufficiale lo pubblica: è un'ipotesi. La condivisa di un consumatore è energia di quegli stessi impianti: per non contarla due volte la chiamiamo «copertura», non CO₂ evitata. L'impronta dei prelievi usa la CO₂ media di un kWh consumato. Sui 20 anni il fattore delle centrali fossili resta quello di oggi; con la media dei consumi scende come ha fatto in media dal 1990 al 2024.</li>
+  </ol>
+
+  <h2>Tre scelte prudenti</h2>
+  <p>Su tre punti le regole non sono chiare, e scegliamo la lettura prudente:</p>
+  <ul>
+    <li>la quota eccedentaria della tariffa non copre i costi della CER: resta intera a chi la riceve, i consumatori che non sono imprese o, senza di loro, le finalità sociali;</li>
+    <li>la simulazione assume che gli impianti nuovi entrino in esercizio dopo la costituzione ed entro il 31/12/2027, con la domanda al GSE entro la stessa data, e che tu entri prima di quella data; per chi entra dopo la condivisa dovrebbe contare ancora, ma le regole non lo scrivono;</li>
+    <li>il corrispettivo del GSE si conta per ogni impianto della comunità, anche per quelli senza tariffa: il DM 106/2024 lo chiede a chi è ammesso alle tariffe incentivanti, ma non dice se valga anche per gli altri.</li>
+  </ul>
+
+  <h2>Che cosa resta fuori</h2>
+  <ul>
+    <li>Imposte sui redditi e agevolazioni (contributi PNRR, detrazioni, conto termico) e gli accumuli.</li>
+    <li>Il prezzo dell'energia ora per ora e il quarto d'ora: la tariffa può scendere nelle ore in cui il prezzo supera i 140 €/MWh.</li>
+    <li>La variabilità fra anni meteorologici: un altro anno sposta la produzione di qualche punto percentuale.</li>
+    <li>Pannelli orientati diversamente dal sud, che producono meno.</li>
+    <li>Costi dell'impianto che non contiamo: la sostituzione dell'inverter, l'assicurazione, la manutenzione straordinaria e il corrispettivo del ritiro dedicato.</li>
+    <li>Il gruppo di autoconsumatori in condominio e l'autoconsumo a distanza.</li>
+    <li>La cabina primaria: il calcolo assume che soci e impianti siano tutti sotto la stessa, come chiedono le regole per la tariffa premio e per il contributo ARERA. Una CER con soci sotto più cabine forma una configurazione per ciascuna, e la condivisa si conta dentro ognuna.</li>
+    <li>I tagli dell'inverter e i limiti di immissione. La produzione è calcolata sui kWp dei pannelli, con un inverter della stessa potenza e una connessione che permette di immettere tutto: non contiamo tagli dell'inverter né limiti di immissione, e il costo della connessione è escluso.</li>
+    <li>Un impianto entrato in esercizio dopo la costituzione della CER ma prima che il suo titolare entri: ha la tariffa ma è già pagato, e il simulatore non lo distingue.</li>
+    <li>In modalità Semplice gli impianti sono tutti da costruire; in modalità Avanzato ogni riga di famiglie, attività o enti può avere un impianto già in esercizio.</li>
+    <li>Il socio produttore della comunità tipo e di «Voglio fondarne una» è un'impresa che non consuma sul posto e detrae l'IVA: il suo impianto si conta senza IVA.</li>
+    <li>Le imprese possono essere socie di una CER solo se sono piccole o medie imprese (PMI; DM 414/2023, art. 3 c. 2 lett. c): il simulatore non lo verifica.</li>
+    <li>L'effetto ora per ora sulla CO₂: usiamo fattori annui.</li>
+  </ul>
+
+  <h2>Le fonti di ogni valore</h2>
+  <p>La tabella si legge dallo stesso file che usa il calcolo.</p>
+  <p id="data-dati" class="aiuto">Leggo la data dei dati…</p>
+  <div id="fonti"><p class="aiuto">Carico le fonti…</p></div>
+
+  <h2>Licenze dei dati</h2>
+  <ul>
+    <li>Produzione: PVGIS © European Union, d'uso libero.</li>
+    <li>Consumi delle famiglie: dati ARERA, licenza CC BY-SA 4.0. I file derivati in <code>dati/consumi/domestici/</code> hanno la stessa licenza.</li>
+    <li>Elenco dei capoluoghi: ISTAT, CC BY 4.0; coordinate da Wikidata, CC0.</li>
+    <li>Prezzo dell'energia: si cita solo la media annua. Fonte: Gestore dei Mercati Energetici S.p.A.</li>
+    <li>Fattori di emissione: ISPRA, Rapporto 430/2026, riproduzione autorizzata citando la fonte.</li>
+    <li>Codice MIT, testi CC BY 4.0, come il resto del sito.</li>
+  </ul>
+  <p><a class="btn" href="/cer/simulatore/">← Torna al simulatore</a></p>
+</main>
+<footer>
+  <div class="wrap">
+    <span>Comunità Energetica Rinnovabile · associazione senza scopo di lucro, in costituzione</span>
+    <span><a href="/atlante/">Atlante del clima</a> · <a href="/it/">Il carbonio che resta</a> · <a href="https://github.com/postadelmaga/carbonio" rel="noopener">Codice su GitHub</a></span>
+  </div>
+</footer>
+<script type="module">
+  import { tabella } from '/cer/simulatore/js/grafici.js';
+  const f = new Intl.NumberFormat('it-IT', { maximumFractionDigits: 6 });
+  const val = (v) => (Array.isArray(v) ? v.join(', ') : typeof v === 'number' ? f.format(v) : v);
+  function valore(v, unita) {
+    if (v == null) return 'da verificare';
+    if (unita === 'data') return String(v).split('-').reverse().join('/');
+    const u = unita && unita !== '—' ? ` ${unita}` : '';
+    if (Array.isArray(v)) return v.map((x) => Object.entries(x).map(([k, y]) => `${k.replace(/_/g, ' ')} ${val(y)}`).join(', ')).join('; ') + u;
+    if (typeof v === 'object') return Object.entries(v).map(([k, y]) => `${k.replace(/_/g, ' ')} ${val(y)}`).join(', ') + u;
+    return `${val(v)}${u}`;
+  }
+  const dataDati = document.querySelector('#data-dati');
+  try {
+    // la data dello scarico viene dal file delle serie PVGIS, non è scritta a mano (tutte le serie sono scaricate lo stesso giorno)
+    const pv = await (await fetch('/cer/simulatore/dati/pv/011015.json')).json();
+    dataDati.textContent = `I dati del simulatore sono stati preparati il ${pv.scaricato_il.split('-').reverse().join('/')}, data dello scarico delle serie di produzione di PVGIS.`;
+  } catch (e) {
+    console.error(e);
+    dataDati.textContent = 'Non riesco a leggere la data dei dati: ricarica la pagina.';
+  }
+  const div = document.querySelector('#fonti');
+  try {
+    const r = await fetch('/cer/simulatore/dati/costanti.json');
+    const { voci } = await r.json();
+    tabella(div, ['Voce', 'Valore', 'Fonte', 'Consultata', 'Note'], Object.values(voci).map((v) => [
+      v.descrizione, valore(v.valore, v.unita), v.fonte, v.consultato.split('-').reverse().join('/'), v.note ?? '',
+    ]));
+    // la colonna della fonte diventa un collegamento dove c'è l'URL
+    const righe = div.querySelectorAll('tbody tr');
+    Object.values(voci).forEach((v, i) => {
+      if (!v.url) return;
+      const cella = righe[i].cells[2], a = document.createElement('a');
+      a.href = v.url; a.rel = 'noopener'; a.textContent = cella.textContent;
+      cella.replaceChildren(a);
+    });
+  } catch (e) {
+    console.error(e);
+    div.textContent = 'Non riesco a caricare le fonti: ricarica la pagina.';
+  }
+</script>
+</body>
+</html>

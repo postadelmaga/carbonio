@@ -1,0 +1,453 @@
+// Prova statica dei nomi fra la pagina e lo script: index.html, interfaccia.js e simulatore.css si leggono come testo,
+// senza DOM. Un nome rinominato da una parte sola fa fallire la prova, ed è quello che il browser mostrerebbe solo
+// come un campo che non risponde o un numero che resta vuoto.
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { CONTATORI, TIPI } from '../../cer/simulatore/js/scenari.js';
+
+const leggi = (p) => readFileSync(new URL(`../../cer/simulatore/${p}`, import.meta.url), 'utf8');
+const HTML = leggi('index.html'), JS = leggi('js/interfaccia.js'), CSS = leggi('simulatore.css');
+
+const tutti = (testo, re) => [...testo.matchAll(re)].map((m) => m.slice(1).find((x) => x !== undefined));
+const unici = (v) => [...new Set(v)];
+
+// Il testo di un oggetto letterale al suo primo livello: ciò che sta fra parentesi annidate si scarta.
+function primoLivello(js, inizio) {
+  const da = js.indexOf(inizio);
+  assert.ok(da >= 0, `«${inizio}» non c'è in interfaccia.js`);
+  let livello = 0, fuori = '';
+  for (let i = js.indexOf('{', da); i < js.length; i++) {
+    const c = js[i];
+    if ('{(['.includes(c)) { livello++; continue; }
+    if ('})]'.includes(c)) { if (--livello === 0) break; continue; }
+    if (livello === 1) fuori += c;
+  }
+  return fuori;
+}
+const chiaviVista = (js, inizio = 'const vista = {') => tutti(primoLivello(js, inizio), /(?:^|,)\s*([A-Za-z_]\w*)\s*(?=:|,|$)/g);
+const chiaviConDuePunti = (js, inizio) => tutti(primoLivello(js, inizio), /(?:^|,)\s*(?:'([^']+)'|([A-Za-z_]\w*))\s*:/g);
+
+function nomiMancanti(html, js) {
+  const nomi = new Set(tutti(html, /\bname="([^"]+)"/g));
+  const usati = [
+    ...tutti(js, /\b(?:campo|scelto|numeroDi|quota)\('([^']+)'/g),
+    ...tutti(js, /input\[name="([a-z][a-z0-9-]*)"\]/g),
+    // le coppie [cursore, uscita] di aggiornaUscite: `tutti` prende un solo gruppo per volta, quindi una espressione per elemento
+    ...tutti(js, /\['([a-z-]+)', '[a-z-]+-valore'\]/g),
+    ...tutti(js, /\['[a-z-]+', '([a-z-]+-valore)'\]/g),
+    ...chiaviConDuePunti(js, 'const valori = {'),
+  ];
+  return unici(usati).filter((n) => !nomi.has(n));
+}
+function idMancanti(html, js) {
+  const id = new Set(tutti(html, /\bid="([^"]+)"/g));
+  return unici(tutti(js, /\$\('#([A-Za-z0-9_-]+)'\)/g)).filter((n) => !id.has(n));
+}
+function rilegatureMancanti(html, js) {
+  const prime = new Set(chiaviVista(js)), costanti = new Set(chiaviVista(js, 'cost: {'));
+  return unici(tutti(html, /\bdata-r="([^"]+)"/g)).filter((r) => {
+    const [primo, secondo] = r.split('.');
+    return !prime.has(primo) || (primo === 'cost' && !costanti.has(secondo));
+  });
+}
+
+test('ogni nome cercato dallo script esiste come name nella pagina', () => {
+  assert.deepEqual(nomiMancanti(HTML, JS), []);
+});
+test('ogni id cercato dallo script esiste nella pagina', () => {
+  assert.deepEqual(idMancanti(HTML, JS), []);
+});
+test('ogni data-r della pagina comincia con una chiave di vista, e le chiavi sono quelle del vincolo «Nomi»', () => {
+  assert.deepEqual(rilegatureMancanti(HTML, JS), []);
+  assert.deepEqual(chiaviVista(JS).sort(), ['com', 'cost', 'emissioni', 'te']);
+});
+test('un nome rinominato da una parte sola non passa: la prova se ne accorge', () => {
+  assert.deepEqual(nomiMancanti(HTML.replaceAll('name="kwp"', 'name="potenza"'), JS), ['kwp']);
+  assert.deepEqual(idMancanti(HTML.replaceAll('id="mese"', 'id="mesi"'), JS), ['mese']);
+  assert.ok(rilegatureMancanti(HTML, JS.replace('    te: { ...te,', '    tuo: { ...te,')).includes('te.cerAggiunge'));
+  assert.ok(rilegatureMancanti(HTML, JS.replace('anni: voce(', 'durata: voce(')).includes('cost.anni'));
+});
+test('ogni cursore ha un id uguale al name e una label che lo indica con for', () => {
+  const cursori = tutti(HTML, /<input\b([^>]*\btype="range"[^>]*)>/g);
+  assert.equal(cursori.length, 7);
+  for (const a of cursori) {
+    const nome = a.match(/\bname="([^"]+)"/)[1];
+    assert.equal(a.match(/\bid="([^"]+)"/)?.[1], nome, `il cursore ${nome} non ha id="${nome}"`);
+    assert.match(HTML, new RegExp(`<label\\b[^>]*\\bfor="${nome}"`), `nessuna label for="${nome}"`);
+  }
+});
+test('negli identificatori (classi, id, name, data-*, selettori, codice) non compare «clima»', () => {
+  assert.deepEqual(tutti(HTML, /\s(?:class|id|name|for|data-[a-z-]+)="([^"]*clima[^"]*)"/g), []);
+  assert.deepEqual(tutti(CSS, /([.#][\w-]*clima[\w-]*)/g), []);
+  assert.doesNotMatch(JS, /clima/i);
+});
+
+test('aggiorna valida gli ingressi prima di calcolare: gli errori di validazione non arrivano a calcola né alla console', () => {
+  const da = JS.indexOf('function aggiorna()'), a = JS.indexOf('function preimposta()');
+  assert.ok(da >= 0 && a > da, 'aggiorna non si trova in interfaccia.js');
+  const corpo = JS.slice(da, a);
+  const valida = corpo.indexOf('valida(ingressi'), calcola = corpo.indexOf('calcola(ingressi');
+  assert.ok(valida >= 0, 'aggiorna non chiama valida');
+  assert.ok(calcola > valida, 'calcola viene prima di valida');
+  const fra = corpo.slice(valida, calcola);
+  assert.match(fra, /\breturn;/, 'fra valida e calcola manca l\'uscita');
+  assert.doesNotMatch(fra, /console\.error/, 'un errore di validazione non va in console');
+  assert.equal((corpo.match(/console\.error/g) ?? []).length, 1, 'console.error resta solo per le eccezioni vere');
+  assert.match(corpo.slice(calcola), /catch \(e\) \{\s*console\.error\(e\);/);
+});
+
+const camel = (a) => a.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
+
+test('ogni attributo del body che la CSS usa per mostrare o nascondere è impostato dallo script', () => {
+  const attributi = unici(tutti(CSS, /body(?::not\()?\[data-([a-z-]+)/g));
+  assert.ok(attributi.includes('impianto-cer'), 'la CSS non nasconde il riquadro dell\'impianto della CER');
+  const mancanti = attributi.filter((a) => !new RegExp(`(?:dataset|\\bb)\\.${camel(a)}\\b`).test(JS));
+  assert.deepEqual(mancanti, [], 'attributi del body che lo script non imposta');
+});
+
+test('«Per la comunità» dice che il 20% resta alla CER, senza il fondo contro la povertà energetica (scelta di Eliodora) né gli articoli dello statuto', () => {
+  assert.doesNotMatch(HTML, /povertà energetica/);
+  assert.doesNotMatch(HTML, /artt\. 2 e 12/);
+  assert.doesNotMatch(HTML, /[Ff]ondo sociale/);
+  assert.match(HTML, /della tariffa, <span data-r="com\.toltiTesto"><\/span>, resta alla CER: in questa simulazione <b data-r="com\.quotaCer" data-f="euro"><\/b> l'anno\. L'assemblea decide come usarlo\./);
+  assert.match(HTML, /<span data-r="com\.frazioneCer" data-f="perc"><\/span> della tariffa/);
+  assert.match(HTML, /<dt>Alla CER<\/dt><dd data-r="com\.quotaCer"/);
+  assert.match(HTML, /<p class="testo-emissioni" data-r="com\.eccedentariaTesto"><\/p>/);
+  assert.match(JS, /eccedentariaTesto: testoEccedentaria\(com\)/);
+  assert.match(HTML, /Alla CER: <output name="p-fondo-valore">/);
+});
+
+test('l\'impianto della CER ha il suo riquadro, che compare con ogni impianto della CER, nuovo o già in esercizio, e dice «già pagato» al posto dell\'investimento da finanziare quando non c\'è (esclude un riquadro che sparisce con l\'impianto già in esercizio e una richiesta di finanziamento per un impianto già pagato)', () => {
+  const da = HTML.indexOf('data-solo-impianto-cer');
+  assert.ok(da >= 0, 'manca il riquadro con data-solo-impianto-cer');
+  const riquadro = HTML.slice(HTML.lastIndexOf('<section', da), HTML.indexOf('</section>', da));
+  assert.match(riquadro, /L'impianto della CER/);
+  for (const r of ['com.titolareCer', 'com.venditaCer', 'com.manutenzioneCer', 'com.investimentoCer']) {
+    assert.ok(riquadro.includes(`data-r="${r}"`), `il riquadro non mostra ${r}`);
+  }
+  assert.match(riquadro, /<div data-solo-investimento-cer><dt>Investimento da finanziare<\/dt><dd data-r="com\.investimentoCer" data-f="euro"><\/dd><\/div>/);
+  assert.match(riquadro, /<div data-solo-pagato-cer><dt>Investimento<\/dt><dd>già pagato<\/dd><\/div>/);
+  assert.match(riquadro, /<p class="testo-emissioni" data-solo-investimento-cer>L'impianto va pagato dalla CER: con contributi, quote dei soci o un prestito\.<\/p>/);
+  assert.match(JS, /if \(com\.haImpiantoCer\) b\.impiantoCer = ''; else delete b\.impiantoCer;/);
+  assert.match(JS, /if \(com\.investimentoCer > 0\) b\.investimentoCer = ''; else delete b\.investimentoCer;/);
+  const impiantoCer = attributoDelCorpo('impiantoCer'), investimentoCer = attributoDelCorpo('investimentoCer');
+  assert.equal(impiantoCer({ com: { haImpiantoCer: true, investimentoCer: 0 } }), true, 'impianto della CER già in esercizio: il riquadro c\'è');
+  assert.equal(impiantoCer({ com: { haImpiantoCer: false, investimentoCer: 0 } }), false);
+  assert.equal(investimentoCer({ com: { haImpiantoCer: true, investimentoCer: 51200 } }), true);
+  assert.equal(investimentoCer({ com: { haImpiantoCer: true, investimentoCer: 0 } }), false, 'già in esercizio: niente investimento da finanziare');
+  assert.match(CSS, /body:not\(\[data-impianto-cer\]\) \[data-solo-impianto-cer\]/);
+  assert.ok(CSS.includes('body:not([data-investimento-cer]) [data-solo-investimento-cer]{display:none!important}'));
+  assert.ok(CSS.includes('body[data-investimento-cer] [data-solo-pagato-cer], body:not([data-impianto-cer]) [data-solo-pagato-cer]{display:none!important}'));
+});
+
+test('«Per te»: il numero grande è ciò che porta la CER, l\'impianto ha le sue righe, rientro e 20 anni con l\'impianto solo per un impianto nuovo (esclude un numero grande che sommi ciò che l\'impianto dà comunque)', () => {
+  assert.match(HTML, /<p class="grande" aria-live="polite"><b data-r="te\.cerAggiunge" data-f="euro"><\/b><small>all'anno dalla CER, il primo anno<\/small><\/p>/);
+  assert.doesNotMatch(HTML, /<dt>La CER aggiunge<\/dt>/);
+  assert.match(HTML, /<dt>In <span data-r="cost\.anni"><\/span> anni, dalla CER<\/dt><dd data-r="te\.cerVentiAnniNetto" data-f="euro"><\/dd>/);
+  assert.match(HTML, /<div data-solo-fondatore><dt>Costituzione, la tua parte, già tolta dai <span data-r="cost\.anni"><\/span> anni<\/dt>/);
+  const da = HTML.indexOf('<div class="impianto-te" data-solo-impianto>');
+  assert.ok(da >= 0, 'manca il gruppo «Il tuo impianto»');
+  const gruppo = HTML.slice(da, HTML.indexOf('</dl>', da));
+  assert.match(gruppo, /<p class="kicker">Il tuo impianto<\/p>/);
+  assert.match(gruppo, /<div><dt>Da solo, all'anno<\/dt><dd data-r="te\.impiantoDaSolo" data-f="euro"><\/dd><\/div>/);
+  const riga = (titolo) => gruppo.match(new RegExp(`<div([^>]*)><dt>${titolo}`))?.[1] ?? null;
+  for (const t of ['Investimento</dt><dd data-r', 'Rientro con la CER', 'Rientro senza CER', 'In <span data-r="cost\\.anni"></span> anni, impianto e CER']) assert.equal(riga(t)?.trim(), 'data-solo-investimento', t);
+  assert.match(gruppo, /<div data-solo-pagato><dt>Investimento<\/dt><dd>già pagato<\/dd><\/div>/);
+  assert.match(HTML, /<p data-solo-investimento>Il tuo impianto: /, 'la CO₂ del tuo impianto c\'è solo con un impianto nuovo');
+  assert.match(HTML, /<div class="barra-riassunto" aria-hidden="true"><b data-r="te\.cerAggiunge" data-f="euro"><\/b> l'anno dalla CER · /);
+  assert.match(JS, /if \(te\.haImpianto\) b\.impianto = ''; else delete b\.impianto;/);
+  assert.match(JS, /if \(te\.investimento > 0\) b\.investimento = ''; else delete b\.investimento;/);
+  assert.match(JS, /if \(te\.soloGiaInEsercizio\) b\.pagato = ''; else delete b\.pagato;/);
+  for (const a of ['impianto', 'investimento', 'pagato']) assert.ok(CSS.includes(`body:not([data-${a}]) [data-solo-${a}]`), `la CSS non nasconde [data-solo-${a}]`);
+});
+
+test('lo stato dell\'impianto è un campo a tre scelte in «Voglio entrare», e in «fondare» la riga dei pannelli già in esercizio e lo stato del comune stanno in avanzato, con l\'etichetta «L\'impianto è» e le stesse opzioni di «entrare» (esclude la spunta unica e un «in esercizio: nuovo» che non dice di che cosa si parla)', () => {
+  assert.doesNotMatch(HTML, /name="esistente"|name="f-pannelli-esistenti"|name="f-comune-esistente"/);
+  assert.match(HTML, /<select name="stato-impianto">\s*<option value="nuovo" selected>da costruire<\/option>\s*<option value="precedente">già in esercizio, dopo il 15\/12\/2021<\/option>\s*<option value="esistente">già in esercizio, fino al 15\/12\/2021<\/option>/);
+  assert.match(HTML, /<label data-solo-modo="esperto">L'impianto è <select name="f-comune-stato"><option value="nuovo" selected>da costruire<\/option><option value="precedente">già in esercizio, dopo il 15\/12\/2021<\/option><option value="esistente">già in esercizio, fino al 15\/12\/2021<\/option><\/select><\/label>/);
+  assert.doesNotMatch(HTML, /<label data-solo-modo="esperto">in esercizio <select name="f-comune-stato">|>già, (dopo|fino al) 15\/12\/2021</);
+  assert.match(JS, /testoGiaInEsercizio\(esperto \? campo\('stato-impianto'\)\.value : 'nuovo'\)/);
+});
+
+test('i numeri della regione viva si riscrivono solo se il testo cambia, e gli avvisi sono una regione di stato', () => {
+  const da = JS.indexOf('function mostra('), a = JS.indexOf('function aggiorna()');
+  const corpo = JS.slice(da, a);
+  assert.match(corpo, /if \(e\.textContent !== t\) e\.textContent = t;/);
+  assert.doesNotMatch(corpo, /e\.textContent = e\.dataset\.f/, 'il ciclo dei data-r non scrive più senza confrontare');
+  assert.match(HTML, /<div id="avvisi" class="avvisi" role="status"><\/div>/);
+  assert.match(HTML, /<p class="grande" aria-live="polite"><b data-r="te\.cerAggiunge"/, 'ciò che porta la CER resta nella regione viva');
+});
+
+test('gli avvisi si riscrivono solo se cambiano: una regione di stato non ripete lo stesso avviso a ogni movimento di cursore', () => {
+  const da = JS.indexOf('function mostraAvvisi('), a = JS.indexOf('// I grafici e la scena');
+  const corpo = JS.slice(da, a);
+  assert.match(corpo, /if \(chiave === avvisiMostrati\) return;/);
+});
+
+test('testi della CO₂: niente «fino a», stima dichiarata, italiani e 20 anni generati, abitudini corrette, «Io sono» senza gruppi assenti', () => {
+  assert.doesNotMatch(HTML, /finoA|fino a \d/);
+  assert.match(HTML, /<p class="grande"><b data-r="emissioni\.evitata" data-f="circa"><\/b><small>di CO₂ in meno ogni anno, una stima, dagli impianti nuovi della comunità<\/small><\/p>/);
+  assert.match(HTML, /<p class="testo-emissioni" data-r="emissioni\.stimaTesto"><\/p>/);
+  assert.match(HTML, /<p class="testo-emissioni" data-r="emissioni\.paragrafoCo2"><\/p>/);
+  assert.match(JS, /stimaTesto: testoStimaCo2\(r\.emissioni\.principale, em\.evitataAltra, dati\.costanti\)/);
+  assert.match(JS, /paragrafoCo2: \[testoItaliani\(em\.italiani, voce\(dati\.costanti, 'co2_pro_capite'\)\), testoVentiAnniCo2\(r\.emissioni\.principale, em\.ventiAnni, dati\.costanti\)\]\.filter\(Boolean\)\.join\(' '\)/);
+  assert.match(HTML, /La comunità può aiutare a realizzarli, perché l'energia condivisa porta un incentivo; ma non sappiamo quanti impianti nascerebbero comunque senza di essa/);
+  assert.doesNotMatch(HTML, /La comunità serve a farli nascere/);
+  assert.match(HTML, /con un fattore annuo, come in questo calcolo, non è CO₂ in meno per il sistema/);
+  assert.doesNotMatch(HTML, /In questo calcolo la CO₂ non cambia/);
+  assert.match(HTML, /La CO₂ evitata non cambia: dipende da quanto producono i pannelli, non da quando consumi\./);
+  assert.match(HTML, /Per avere il 50% di probabilità di restare sotto 1,5 °C restano circa <span data-r="cost\.budget" data-f="int"><\/span> miliardi di tonnellate di CO₂ dall'inizio del 2026, circa quattro anni alle emissioni attuali \(Global Carbon Budget 2025\)/);
+  assert.match(HTML, /<legend>Fattore di emissione per la CO₂ evitata<\/legend>/);
+  assert.match(HTML, /<input type="radio" name="p-fattore" value="fossili" checked>/);
+  assert.match(HTML, /· <b data-r="emissioni\.evitata" data-f="circa"><\/b> di CO₂ in meno \(stima\)<\/div>/);
+  assert.match(HTML, /<fieldset class="passo" data-solo-percorso="entrare" data-solo-tipo="famiglia" data-solo-con-consumi>\s*<legend><span class="n">6<\/span>Le tue abitudini<\/legend>/);
+  assert.match(JS, /const selezione = campo\('f-io'\), voci = opzioniIo\(ingressi, etichette\);/);
+  assert.match(JS, /if \(percorso === 'fondare'\) sincronizzaIo\(ingressi, etichette\);/);
+});
+
+test('la nota sulla scadenza sotto «Per te» c\'è solo in «entrare» e dipende da un impianto tuo nuovo, non dal ruolo; in «fondare» la frase sta solo in «Tu e i fondatori»; vuota non occupa spazio (esclude la frase due volte in «fondare», decisione dell\'utente dell\'08/11/2026, e il testo vecchio rimasto a mano)', () => {
+  assert.match(HTML, /<p class="nota-r" data-r="te\.notaScadenza"><\/p>/);
+  assert.doesNotMatch(HTML, /la tua parte di tariffa potrebbe non esserci/);
+  assert.match(JS, /notaScadenza: notaScadenza\(percorso === 'entrare' && te\.haImpianto && !te\.soloGiaInEsercizio, new Date\(\), dati\.costanti\)/);
+  const da = HTML.indexOf('<legend><span class="n">4</span>Tu e i fondatori</legend>');
+  assert.ok(da > 0 && HTML.indexOf('<p class="scadenza" id="scadenza"></p>', da) > da && HTML.indexOf('<p class="scadenza" id="scadenza"></p>', da) < HTML.indexOf('</fieldset>', da));
+  assert.match(JS, /\$\('#scadenza'\)\.textContent = testoScadenza\(new Date\(\), dati\.costanti\);/);
+  assert.doesNotMatch(JS, /notaScadenza\(s\.utente\.ruolo/);
+  assert.match(CSS, /\.nota-r:empty[^{]*\{display:none\}/);
+});
+
+test('ogni icona «i» è un pulsante con aria-expanded, aria-controls verso un testo nascosto della pagina e aria-label, fuori dalle label (esclude testi raggiungibili solo con il mouse, pulsanti dentro una label e icone staccate dall\'etichetta)', () => {
+  const pulsanti = [...HTML.matchAll(/<button type="button" class="info" aria-expanded="false" aria-controls="([^"]+)" aria-label="Spiegazione: [^"]+">i<\/button>/g)].map((m) => m[1]);
+  assert.ok(pulsanti.length >= 4, `icone trovate: ${pulsanti.length}`);
+  assert.equal((HTML.match(/class="info"/g) ?? []).length, pulsanti.length, 'ogni icona ha tutti gli attributi');
+  for (const id of pulsanti) assert.match(HTML, new RegExp(`<span class="info-testo" id="${id}" hidden>`), id);
+  for (const l of HTML.matchAll(/<label[^>]*>([\s\S]*?)<\/label>/g)) assert.ok(!l[1].includes('class="info"'), 'un\'icona dentro una label');
+  for (const id of ['info-fossili', 'info-media', 'info-fondatori', 'info-esercizio']) assert.ok(pulsanti.includes(id), id);
+  // l'icona sta nello stesso contenitore della sua label, subito dopo (non dentro: un pulsante in una label non è ammesso)
+  for (const [id, segno] of [['info-fossili', 'value="fossili"'], ['info-media', 'value="media"'], ['info-fondatori', 'name="f-fondatori"']]) {
+    const m = HTML.match(new RegExp(`<div class="con-info">\\s*(<label[^>]*>(?:(?!</label>)[\\s\\S])*</label>)\\s*<span class="info-gruppo"><button type="button" class="info" aria-expanded="false" aria-controls="${id}"`));
+    assert.ok(m, `${id}: l'icona non sta accanto alla sua label in un <div class="con-info">`);
+    assert.ok(m[1].includes(segno), `${id}: la label accanto all'icona non è la sua (${segno})`);
+  }
+  assert.match(CSS, /\.con-info\{display:flex;/);
+  assert.match(CSS, /\.info-testo::before\{content:'';position:absolute;left:0;right:0;top:-7px;height:7px\}/, 'manca il ponte fra l\'icona e il riquadro');
+  assert.match(JS, /import \{ attivaInfo \} from '\.\/info\.js';/);
+  assert.match(JS, /attivaInfo\(document\)/);
+  assert.match(HTML, /Il contatore non limita i pannelli: serve a stimare i consumi\./);
+});
+
+test('menu del simulatore come quello dello statuto, «Avanzato», cursore delle abitudini di «fondare» nella sezione 3, quote del riparto legate (esclude il menu vecchio e il cursore nella sezione dei fondatori)', () => {
+  assert.match(HTML, /<nav aria-label="Sezioni">\s*<a href="\/cer\/">La comunità<\/a>\s*<a href="\/cer\/#progetti">Progetti<\/a>\s*<a href="\/cer\/simulatore\/" aria-current="page">Simulatore<\/a>\s*<a href="\/cer\/statuto\/">Statuto<\/a>\s*<\/nav>/);
+  assert.doesNotMatch(HTML, /Come funziona<\/a>/);
+  assert.match(HTML, /<label><input type="radio" name="modo" value="esperto"> Avanzato<\/label>/);
+  assert.doesNotMatch(HTML.replace(/(name|value|data-solo-modo)="esperto"/g, ''), /[Ee]spert/);
+  const sez3 = HTML.slice(HTML.indexOf('Chi entra nella comunità'), HTML.indexOf('Tu e i fondatori'));
+  assert.match(sez3, /<label class="campo" for="f-abitudini">Consumi spostati nelle ore di sole, per tutte le famiglie <output name="f-abitudini-valore"><\/output>/);
+  const inizio4 = HTML.indexOf('Tu e i fondatori'), sez4 = HTML.slice(inizio4, HTML.indexOf('</fieldset>', inizio4));
+  assert.ok(inizio4 >= 0 && sez4.length > 0, 'manca la sezione «Tu e i fondatori»');
+  assert.doesNotMatch(sez4, /name="f-abitudini"/, 'il cursore delle abitudini è rimasto nella sezione dei fondatori');
+  assert.match(JS, /limitaQuote\(/);
+});
+
+test('il campo del prezzo dell\'impianto dice che è IVA esclusa, come lo usa il calcolo, che aggiunge l\'IVA per famiglie ed enti (esclude un prezzo con l\'IVA inserito e poi tassato due volte)', () => {
+  assert.match(HTML, /<label class="campo">Prezzo dell'impianto, €\/W, IVA esclusa <input name="p-eurw"/);
+});
+
+// Un'istruzione di `mostra` che imposta o toglie un attributo del body, eseguita su uno stato finto (interfaccia.js tocca il DOM
+// al caricamento e non si importa): la condizione è quella scritta nello script, non una copia.
+function attributoDelCorpo(attributo) {
+  const riga = JS.match(new RegExp(`^\\s*(if \\(.*\\) b\\.${attributo} = ''; else delete b\\.${attributo};)\\s*$`, 'm'))?.[1];
+  assert.ok(riga, `in mostra manca l'istruzione che imposta b.${attributo}`);
+  const esegui = new Function('te', 's', 'percorso', 'com', 'b', riga);
+  return ({ te = {}, s = { utente: { ruolo: 'consumatore' } }, percorso = 'entrare', com = {} }) => {
+    const b = {};
+    esegui(te, s, percorso, com, b);
+    return attributo in b;
+  };
+}
+
+test('i prelievi si nascondono senza consumi, e la riga «Sulla spesa variabile della bolletta» non c\'è più, con la sua icona e il suo attributo (esclude uno «0 kWh» in pagina e la percentuale tolta dall\'utente l\'08/11/2026)', () => {
+  const consumo = attributoDelCorpo('consumo');
+  assert.equal(consumo({ te: { consumo: 3000 } }), true);
+  assert.equal(consumo({ te: { consumo: 0 } }), false, 'il socio produttore non consuma sul posto: niente riga dei prelievi');
+  assert.equal(consumo({ te: {} }), false, 'senza un «io» nel risultato non c\'è nulla da mostrare');
+  assert.match(CSS, /body:not\(\[data-consumo\]\) \[data-solo-consumo\]\{display:none!important\}/);
+  assert.match(HTML, /<p data-solo-consumo>I tuoi prelievi dalla rete pesano /);
+  assert.doesNotMatch(HTML, /Sulla spesa variabile|info-spesa|data-solo-spesa|te\.quotaSpesa|te\.costoEvitatoKwh/);
+  assert.doesNotMatch(CSS, /data-spesa|data-solo-spesa/);
+  assert.doesNotMatch(JS, /b\.spesa/);
+});
+
+test('il paragrafo della CO₂ in italiani e sui 20 anni è uno solo e sparisce se è vuoto (esclude una riga vuota nel riquadro «Per il clima» quando non ci sono impianti nuovi)', () => {
+  assert.doesNotMatch(HTML, /emissioni\.italianiTesto|emissioni\.ventiAnniTesto/, 'la pagina lega ancora i due testi in due span');
+  assert.doesNotMatch(JS, /\bitalianiTesto\b|\bventiAnniTesto\b/, 'lo script genera ancora i due testi separati');
+  assert.equal((HTML.match(/data-r="emissioni\.paragrafoCo2"/g) ?? []).length, 1);
+  assert.match(HTML, /<p class="testo-emissioni" data-r="emissioni\.paragrafoCo2"><\/p>/, 'il paragrafo non è vuoto nella sorgente o non ha la classe che lo nasconde da vuoto');
+  assert.match(CSS, /\.testo-emissioni:empty\{display:none\}/, 'un paragrafo vuoto resterebbe una riga bianca');
+});
+
+test('l\'og:description del simulatore ha il punto dopo «Stima indicativa», come la spec §9.4 (esclude i due punti che legavano la frase sulle fonti)', () => {
+  const og = HTML.match(/<meta property="og:description" content="([^"]+)">/)?.[1];
+  assert.equal(og, 'Per te, per la comunità, per il clima. Stima indicativa. Per ogni numero indichiamo la fonte o diciamo che è un\'ipotesi nostra.');
+});
+
+test('«Chi sei» dice che l\'attività è una piccola o media impresa (PMI), non «un\'impresa» qualunque (esclude una grande impresa che si crede socia)', () => {
+  assert.match(HTML, /<input type="radio" name="tipo" value="attivita"><b>Attività<\/b><span>È una piccola o media impresa \(PMI\)\.<\/span>/);
+  assert.doesNotMatch(HTML, /È un'impresa\./);
+});
+
+test('il passo «Dove» dice che per gli incentivi soci e impianti stanno sotto la stessa cabina primaria, che una CER con più cabine forma una configurazione per ciascuna e che la mappa del GSE indica l\'area, subito dopo la riga della località (esclude un vincolo attribuito alla CER invece che alla configurazione e una mappa presentata come quella delle cabine)', () => {
+  const dove = HTML.slice(HTML.indexOf('<legend><span class="n">1</span>Dove</legend>'), HTML.indexOf('</fieldset>'));
+  assert.match(dove, /<p class="aiuto" id="info-localita"><\/p>\s*<p class="aiuto">Per gli incentivi soci e impianti devono stare sotto la stessa cabina primaria: una CER che ne copre più d'una forma una configurazione per ciascuna\. La mappa delle comunità energetiche del GSE indica l'area di ogni indirizzo o POD\.<\/p>/);
+  assert.doesNotMatch(HTML, /di una CER devono stare sotto la stessa cabina primaria/, 'il vincolo è attribuito alla CER');
+  assert.doesNotMatch(HTML, /il GSE la indica sulla sua mappa/, 'la mappa del GSE indicherebbe la cabina, mentre mostra l\'area convenzionale');
+});
+
+test('la descrizione della comunità dice «famiglia» e «ente» al singolare con una famiglia o un ente, anche senza impianto comune (esclude «1 famiglie» e «1 enti»)', () => {
+  const corpo = JS.slice(JS.indexOf('function disegnaScena('), JS.indexOf('function tabellaRuoli('));
+  assert.doesNotMatch(corpo, /\$\{n\('enti'\)\} enti/, 'un plurale fisso dopo il numero degli enti');
+  assert.doesNotMatch(corpo, /\$\{n\('famiglie'\)\} famiglie/, 'un plurale fisso dopo il numero delle famiglie');
+  assert.equal((corpo.match(/\$\{n\('enti'\)\} \$\{n\('enti'\) === 1 \? 'ente' : 'enti'\}/g) ?? []).length, 2, 'i due rami della descrizione scelgono singolare o plurale');
+  assert.equal((corpo.match(/\$\{n\('famiglie'\)\} \$\{n\('famiglie'\) === 1 \? 'famiglia' : 'famiglie'\}/g) ?? []).length, 2, 'i due rami della descrizione scelgono singolare o plurale per le famiglie');
+});
+
+test('le etichette del costo evitato dicono se l\'IVA è compresa (famiglie ed enti) o esclusa (attività), e il contatore non dice «il più comune» senza una fonte (esclude un costo evitato di cui non si sa se è tassato e un «più comune» senza fonte)', () => {
+  assert.match(HTML, /<label class="campo">Costo evitato, famiglie, €\/kWh, IVA compresa <input name="p-ce-famiglia"/);
+  assert.match(HTML, /<label class="campo">Costo evitato, attività, €\/kWh, IVA esclusa <input name="p-ce-attivita"/);
+  assert.match(HTML, /<label class="campo">Costo evitato, enti, €\/kWh, IVA compresa <input name="p-ce-ente"/);
+  assert.match(HTML, /<select name="classe">\s*<option value="1,5-3" selected>3 kW<\/option>/);
+  assert.match(HTML, /<option value="1,5-3">non so \(usiamo 3 kW\)<\/option>/);
+  assert.doesNotMatch(HTML, /il più comune/);
+});
+
+test('le schede dei risultati vanno in quest\'ordine: «Per te», «Per la comunità», «L\'impianto della CER», «Per il clima» (esclude «Per il clima» prima della comunità, com\'era fino all\'08/11/2026, e l\'impianto della CER staccato dalla comunità)', () => {
+  const schede = tutti(HTML, /<section class="ris (ris-[a-z-]+)"/g);
+  assert.deepEqual(schede, ['ris-te', 'ris-comunita', 'ris-impianto-cer', 'ris-emissioni']);
+});
+
+test('la frase sulla parte della CER ha il pezzo su che cosa si toglie, generato da testoTolti (esclude la frase di prima, «Il 20% della tariffa resta alla CER», senza i costi)', () => {
+  assert.ok(HTML.includes('<p class="testo-emissioni">Il <span data-r="com.frazioneCer" data-f="perc"></span> della tariffa, <span data-r="com.toltiTesto"></span>, resta alla CER: in questa simulazione <b data-r="com.quotaCer" data-f="euro"></b> l\'anno. L\'assemblea decide come usarlo.</p>'));
+  assert.match(JS, /toltiTesto: testoTolti\(com\)/);
+});
+
+test('sotto il numero grande di «Per te» c\'è la nota sull\'eccedentaria, generata da testoEccedentariaTe con la quota del socio (esclude una cifra fatta quasi tutta di eccedentaria senza dirlo)', () => {
+  assert.match(HTML, /<small>all'anno dalla CER, il primo anno<\/small><\/p>\s*<p class="nota-r" data-r="te\.eccedentariaTesto"><\/p>/);
+  assert.match(JS, /eccedentariaTesto: testoEccedentariaTe\(te\.voci\?\.quotaEccedentaria\)/);
+});
+
+test('il produttore non ha consumi: spariscono consumo, contatore, tipo di attività e «Le tue abitudini», resta il tipo con la sua spiegazione, e senza consumo non scatta l\'avviso del consumo mancante (esclude il produttore con i consumi di casa, decisione dell\'utente dell\'08/11/2026, e un\'attività produttrice ferma sull\'avviso)', () => {
+  assert.match(HTML, /<b>Produttore<\/b><span>Metto un impianto a disposizione dove non consumo\.<\/span>/);
+  assert.doesNotMatch(HTML, /lì consumo poco/);
+  const da = HTML.indexOf('<legend><span class="n">4</span>Chi sei</legend>'), a = HTML.indexOf('</fieldset>', da);
+  const passo = HTML.slice(da, a);
+  for (const r of [/<label class="campo" data-solo-tipo="famiglia" data-solo-con-consumi>Potenza del contatore/, /<p class="aiuto" data-solo-tipo="famiglia" data-solo-con-consumi>Il contatore non limita/, /<label class="campo" data-solo-tipo="altri" data-solo-con-consumi>Che attività/, /<label class="campo" data-solo-con-consumi>Consumo annuo dalla bolletta, kWh/, /<p class="aiuto" id="aiuto-consumo" data-solo-con-consumi><\/p>/]) assert.match(passo, r);
+  assert.match(passo, /<input type="radio" name="tipo" value="famiglia" checked>/, 'il tipo resta anche per il produttore');
+  assert.match(passo, /<p class="aiuto" data-solo-produttore>Per il produttore non contiamo consumi: l'impianto sta in un punto dove non si consuma, e dalla CER ricevi solo la quota di titolare\. Famiglia, attività o ente cambia solo l'IVA sul prezzo dell'impianto\.<\/p>/);
+  assert.ok(CSS.includes('body[data-ruolo="produttore"] [data-solo-con-consumi], body:not([data-ruolo="produttore"]) [data-solo-produttore]{display:none!important}'));
+  assert.match(JS, /if \(percorso === 'entrare' && s\.utente\.ruolo !== 'produttore' && s\.utente\.tipo !== 'famiglia' && s\.utente\.consumo == null\)/);
+});
+
+test('l\'aiuto di «Le tue abitudini» è il testo breve dell\'utente del 10/11/2026, con la condivisa, i pannelli e la CO₂ evitata; impronta e CO₂ ora per ora stanno in un\'icona (esclude il paragrafo lungo di prima e la parte sull\'impronta persa)', () => {
+  const da = HTML.indexOf('<legend><span class="n">6</span>Le tue abitudini</legend>'), a = HTML.indexOf('</fieldset>', da);
+  const passo = HTML.slice(da, a);
+  const testo = "<p class=\"aiuto\">Usare lavatrice, lavastoviglie, scaldabagno o la ricarica dell'auto nelle ore di sole fa crescere l'energia condivisa, e con lei gli incentivi della comunità. Se hai i pannelli, invece, ciò che sposti lo prendi soprattutto da loro: risparmi di più in bolletta, ma immetti meno, e la cifra dalla CER può scendere un po'. La CO₂ evitata non cambia: dipende da quanto producono i pannelli, non da quando consumi.<span class=\"info-gruppo\"><button type=\"button\" class=\"info\" aria-expanded=\"false\" aria-controls=\"info-impronta\" aria-label=\"Spiegazione: la tua impronta di CO₂\">i</button><span class=\"info-testo\" id=\"info-impronta\" hidden>Con i pannelli, la tua impronta scende perché prelevi meno dalla rete, ma quel kWh l'avresti immesso per gli altri: con un fattore annuo, come in questo calcolo, non è CO₂ in meno per il sistema. Ora per ora probabilmente lo è, perché nelle ore di sole la rete emette meno, ma non lo stimiamo: ISPRA pubblica solo fattori annui, e i dati orari di Terna ed ENTSO-E dicono quanto produce ogni fonte, non quale centrale si ferma.</span></span></p>";
+  assert.ok(passo.includes(testo));
+  assert.doesNotMatch(passo, /Lavatrice, lavastoviglie, scaldabagno, ricarica dell'auto: usarli|Se hai pannelli sul tetto/);
+});
+
+test('le regole che nascondono per modo, percorso, ruolo, tipo e risultato vincono su ogni regola di impaginazione, e in «fondare» semplice i contatori nascosti valgono 3 kW (esclude i campi avanzati delle righe di «fondare» visibili in semplice e ignorati dal calcolo, trovati il 10/11/2026: «.righe .riga label» aveva lo stesso peso e veniva dopo)', () => {
+  const regole = [...CSS.replace(/\/\*[\s\S]*?\*\//g, '').matchAll(/([^{}]+)\{([^{}]*)\}/g)].map((m) => ({ selettore: m[1].trim(), corpo: m[2] }));
+  const nascondono = regole.filter((r) => r.selettore.includes('[data-solo-') && /display:\s*none/.test(r.corpo));
+  assert.ok(nascondono.length >= 9, `regole trovate: ${nascondono.length}`);
+  for (const r of nascondono) assert.match(r.corpo, /display:none!important/, r.selettore);
+  assert.ok(CSS.includes('body[data-modo="semplice"] [data-solo-modo="esperto"], body[data-modo="esperto"] [data-solo-modo="semplice"]{display:none!important}'));
+  assert.match(JS, /classe: esperto \? e\('classe'\)\.value : tipo\.classe, consumo: esperto \? n\('consumo'\) : null/);
+});
+
+test('in «entrare» lo stato del tuo impianto sta in avanzato, e in semplice l\'impianto è da costruire; un\'icona su «Il tuo impianto», solo in semplice, dice di passare all\'avanzato per un impianto già in esercizio (esclude in semplice uno stato scelto in avanzato e rimasto nascosto, decisione dell\'utente del 10/11/2026)', () => {
+  const da = HTML.indexOf('<span class="n">5</span>Il tuo impianto'), a = HTML.indexOf('</fieldset>', da);
+  const passo = HTML.slice(da, a);
+  assert.match(passo, /^<span class="n">5<\/span>Il tuo impianto<span class="info-gruppo" data-solo-modo="semplice"><button type="button" class="info" aria-expanded="false" aria-controls="info-tuo-impianto" aria-label="Spiegazione: impianto già in esercizio">i<\/button><span class="info-testo" id="info-tuo-impianto" hidden>Il simulatore conta un impianto da costruire, che entra in esercizio dopo la costituzione della CER\. Se il tuo è già in esercizio, passa alla modalità Avanzato e indicalo in «L'impianto è»: vedrai che cosa cambia per te e per la comunità\.<\/span><\/span><\/legend>/);
+  assert.match(passo, /<label class="campo" data-solo-modo="esperto">L'impianto è\s*<select name="stato-impianto">/);
+  assert.match(passo, /<p class="aiuto" id="aiuto-esercizio" data-solo-modo="esperto" hidden><\/p>/);
+  assert.match(JS, /kwp: numeroDi\('kwp', pred\.kwp_prosumer\), stato: esperto \? campo\('stato-impianto'\)\.value : 'nuovo',/);
+});
+
+test('«fondare», sezione 3: tre blocchi a righe con il loro nome, il pulsante per aggiungere e il limite, righe da un modello per profilo con i campi di semplice e di avanzato, niente righe fisse dei pannelli, «Io sono» vuoto da riempire (spec della composizione §2, §5; esclude le righe fisse e un campo avanzato senza data-solo-modo)', () => {
+  const da = HTML.indexOf('<legend><span class="n">3</span>Chi entra nella comunità</legend>'), a = HTML.indexOf('</fieldset>', da);
+  const sez = HTML.slice(da, a);
+  const modello = (p) => { const m = sez.indexOf(`<template id="modello-${p}">`); assert.ok(m > 0, `manca il modello di ${p}`); return sez.slice(m, sez.indexOf('</template>', m)); };
+  for (const [p, titolo, piu] of [['famiglie', 'Famiglie', 'famiglie'], ['attivita', 'Attività', 'attività'], ['enti', 'Enti e associazioni', 'enti']]) {
+    assert.ok(sez.includes(`<div class="blocco" data-profilo="${p}" role="group" aria-labelledby="blocco-${p}"><b id="blocco-${p}">${titolo}</b>`), p);
+    assert.ok(sez.includes(`<button type="button" class="btn aggiungi" data-aggiungi="${p}">+ aggiungi ${piu}</button> <small class="limite" hidden>al massimo 5 righe</small>`), p);
+    const m = modello(p);
+    assert.match(m, /^<template id="modello-[a-z]+"><div class="riga" role="group">/);
+    assert.match(m, /<label>(quante|quanti) <input data-campo="numero" type="number" min="0" max="500" step="1"><\/label>/);
+    assert.match(m, /<label data-solo-modo="esperto">L'impianto è <select data-campo="stato"><option value="nuovo" selected>da costruire<\/option><option value="precedente">già in esercizio, dopo il 15\/12\/2021<\/option><option value="esistente">già in esercizio, fino al 15\/12\/2021<\/option><\/select><\/label>/);
+    assert.match(m, /<button type="button" class="togli" aria-label="Togli questa riga">×<\/button>\s*<p class="uguale" hidden><span><\/span> <button type="button" class="btn unisci" data-unisci><\/button><\/p><\/div>$/);
+  }
+  assert.match(modello('famiglie'), /<label>kWp ciascuna <input data-campo="kwp" type="number" min="0" max="50" step="0.5"><\/label>\s*<label data-solo-modo="esperto">contatore <select data-campo="classe"><option value="1,5-3">3 kW<\/option><option value="3-4,5">4,5 kW<\/option><option value="4,5-6">6 kW<\/option><option value="oltre_6">oltre 6 kW<\/option><\/select><\/label>/);
+  assert.match(modello('famiglie'), /<label data-solo-modo="esperto">kWh l'anno <input data-campo="consumo" type="number" min="0" max="2000000" step="1" placeholder="media ARERA"><\/label>/);
+  assert.match(modello('attivita'), /<label>kWh l'anno ciascuna <input data-campo="consumo" type="number" min="0" max="2000000" step="1"><\/label>\s*<label>kWp ciascuna <input data-campo="kwp" type="number" min="0" max="1000" step="0\.5"><\/label>\s*<label data-solo-modo="esperto">tipo <select data-campo="archetipo"><option value="com_orario_apertura">con orario<\/option><option value="com_carico_base">carico continuo<\/option><\/select><\/label>/);
+  assert.match(modello('enti'), /<label>kWh l'anno ciascuno <input data-campo="consumo" type="number" min="0" max="2000000" step="1"><\/label>\s*<label>kWp ciascuno <input data-campo="kwp" type="number" min="0" max="1000" step="0\.5"><\/label>\s*<label data-solo-modo="esperto">tipo <select data-campo="archetipo"><option value="com_orario_apertura">con orario<\/option><option value="com_carico_base">carico continuo<\/option><\/select><\/label>/);
+  assert.match(sez, /<div class="riga" role="group" aria-labelledby="riga-comune"><b id="riga-comune">Impianto comune<\/b>/);
+  assert.doesNotMatch(HTML, /f-pannelli|f-famiglie|f-attivita|f-enti|pannelli_esistenti|riga-pannelli|riga-famiglie|riga-attivita|riga-enti/);
+  assert.match(HTML, /<select name="f-io"><\/select>/);
+  assert.match(CSS, /\.righe \.blocco\{padding:10px 0;border-top:1px solid var\(--rule\)\}/);
+});
+
+test('le righe di «fondare» nel codice della pagina: id che non tornano indietro, al massimo 5, la riga nuova di famiglie con 4,5 kWp, in semplice stato nuovo e campi avanzati predefiniti, «Io sono» e la tabella dalle etichette, stato disabilitato senza kWp (esclude NOMI e sceltaIo, e un campo avanzato nascosto che conta in semplice)', () => {
+  assert.match(JS, /import \{ ingressiEntrare, ingressiFondare, etichetteRighe, opzioniIo, righeUguali, PROFILI, limitaQuote \} from '\.\/scenari\.js';/);
+  assert.match(JS, /const MAX_RIGHE = 5;/);
+  assert.match(JS, /riga\.dataset\.riga = `\$\{profilo\}-\$\{\+\+contatori\[profilo\]\}`;/);
+  assert.match(JS, /numero: prima \? tipo\.famiglie : 1, kwp: prima \? 0 : pred\.kwp_prosumer/);
+  assert.match(JS, /stato: esperto \? e\('stato'\)\.value : 'nuovo'/);
+  assert.match(JS, /archetipo: esperto \? e\('archetipo'\)\.value : tipo\[archetipo\]/);
+  assert.match(JS, /famiglie: righeDi\('famiglie', esperto\), attivita: righeDi\('attivita', esperto\), enti: righeDi\('enti', esperto\),/);
+  assert.match(JS, /const etichette = percorso === 'fondare' \? etichetteRighe\(s\.fondare\) : null;/);
+  assert.match(JS, /else tabellaRuoli\(r, etichette\);/);
+  assert.match(JS, /\[etichette\[id\]\?\.socio \?\? 'Socio produttore', numero\(m\.numero\)/);
+  assert.match(JS, /function aggiornaRighe\(fondare\) \{/);
+  assert.match(JS, /r\.querySelector\('\[data-campo="stato"\]'\)\.disabled = !conImpianto\.has\(r\.dataset\.riga\);/);
+  assert.match(JS, /const s = stato\(\), percorso = scelto\('percorso'\);\n  aggiornaRighe\(s\.fondare\);/);
+  assert.doesNotMatch(JS, /Number\(r\.querySelector\('\[data-campo="kwp"\]'\)\.value\)/, 'il kWp grezzo del campo, non quello del calcolo (esclude il select spento su un impianto che conta, revisione finale del 10/11/2026)');
+  assert.doesNotMatch(JS, /\bNOMI\b|sceltaIo|'f-famiglie|'f-pannelli|'f-attivita|'f-enti/);
+});
+
+test('i testi che si leggono nominano le modalità con i nomi dei pulsanti, «modalità Semplice» e «modalità Avanzato» (esclude «modalità avanzata», «in avanzato» e «in semplice» nelle frasi della pagina, di «Come calcoliamo», delle ipotesi e delle fonti; decisione dell\'utente dell\'11/11/2026)', () => {
+  const testi = { 'index.html': HTML, 'metodo/index.html': leggi('metodo/index.html'), 'js/testi.js': leggi('js/testi.js'), 'dati/costanti.json': leggi('dati/costanti.json') };
+  for (const [nome, testo] of Object.entries(testi)) {
+    const visibile = nome.endsWith('.js') ? testo.split('\n').filter((r) => !r.trim().startsWith('//')).join('\n') : testo;
+    assert.deepEqual(tutti(visibile, /(modalità (?!Semplice|Avanzato)\p{L}+|\b[Ii]n (?:semplice|avanzato)\b)/gu), [], nome);
+  }
+  assert.match(HTML, /<label><input type="radio" name="modo" value="semplice" checked> Semplice<\/label>/);
+  assert.match(HTML, /<label><input type="radio" name="modo" value="esperto"> Avanzato<\/label>/);
+});
+
+test('righe uguali, riga nuova e valori predefiniti nel codice della pagina: avviso con i campi visibili nella modalità, «Unisci» che somma e sposta «Io sono», oltre il massimo la spiegazione al posto di «Unisci», gli avvisi annunciati da una regione viva che c\'è dall\'apertura, la riga nuova di attività ed enti con 20 kWp, «Torna ai valori predefiniti» che resta sul percorso, le voci delle etichette come quelle dei select (spec della composizione §11; esclude un avviso che nomina campi nascosti, un «Unisci» che perde membri, un pulsante spento senza motivo, un avviso che i lettori di schermo non leggono e il ritorno a «Voglio entrare»)', () => {
+  assert.match(JS, /famiglie: \{ semplice: 'i kWp', esperto: 'contatore, kWp o kWh l\\'anno' \},/);
+  assert.match(JS, /altri: \{ semplice: 'kWp o kWh l\\'anno', esperto: 'tipo, kWp o kWh l\\'anno' \},/);
+  assert.match(JS, /\? `Questa riga è uguale alla riga \$\{n\}: cambia \$\{campi\}\. Unite supererebbero il massimo di \$\{massimo\} per riga\.`\n\s*: `Questa riga è uguale alla riga \$\{n\}: cambia \$\{campi\}, oppure`;/);
+  assert.match(JS, /troppi = membri\[r\.dataset\.riga\] \+ membri\[verso\] > massimo;/);
+  assert.match(JS, /pulsante\.hidden = troppi;/);
+  assert.doesNotMatch(JS, /pulsante\.disabled/);
+  assert.match(JS, /`Unisci alla riga \$\{n\}`/);
+  assert.match(JS, /if \(nuovi\.length\) \$\('#annuncio-righe'\)\.textContent = nuovi\.join\(' '\);\n\s*else if \(sparito\) \$\('#annuncio-righe'\)\.textContent = '';/);
+  assert.match(HTML, /<form id="moduli" class="sim-moduli" novalidate>\n<p class="solo-lettori" id="annuncio-righe" aria-live="polite"><\/p>/, 'fuori dalla sezione 3, che in «Voglio entrare» è nascosta: la regione c\'è sempre');
+  assert.equal(HTML.match(/id="annuncio-righe"/g).length, 1);
+  assert.match(JS, /if \(scelto\('percorso'\) !== 'fondare'\) return;\n\s*\/\/ un avviso sparito/, 'in «Voglio entrare» gli avvisi non si annunciano e restano da annunciare al ritorno in «fondare» (revisione dell\'11/11/2026)');
+  assert.doesNotMatch(HTML, /class="uguale" aria-live/, 'l\'avviso nella riga non è una regione viva: nasce nascosto o in una riga nuova');
+  assert.match(JS, /quante\.value = String\(membri\[verso\.dataset\.riga\] \+ membri\[riga\.dataset\.riga\]\);/);
+  assert.match(JS, /if \(campo\('f-io'\)\.value === riga\.dataset\.riga\) campo\('f-io'\)\.value = verso\.dataset\.riga;/);
+  assert.match(JS, /numero: prima \? tipo\.attivita : 1, consumo: tipo\.consumo_attivita, kwp: prima \? 0 : pred\.kwp_produttore,/);
+  assert.match(JS, /numero: prima \? tipo\.enti : 1, consumo: tipo\.consumo_ente, kwp: prima \? 0 : pred\.kwp_produttore,/);
+  assert.match(JS, /const percorso = scelto\('percorso'\);\n    form\.reset\(\);\n    campo\('percorso'\)\.value = percorso;/);
+  assert.match(CSS, /\.righe \.riga \.uguale\{flex-basis:100%;/);
+  assert.doesNotMatch(CSS, /\.uguale\{[^}]*display:/, 'senza display, così l\'attributo hidden nasconde l\'avviso');
+  assert.match(CSS, /\.righe \.riga \.uguale \.unisci\[hidden\]\{display:none\}/, '.btn ha display:inline-flex, che vincerebbe su hidden');
+  assert.doesNotMatch(CSS, /\.unisci:disabled/);
+  assert.match(CSS, /\.solo-lettori\{position:absolute;width:1px;height:1px;margin:-1px;padding:0;border:0;overflow:hidden;clip-path:inset\(50%\);white-space:nowrap\}/);
+  for (const [v, t] of Object.entries(CONTATORI)) assert.ok(HTML.includes(`<option value="${v}">${t}</option>`), `contatore ${v}`);
+  for (const [v, t] of Object.entries(TIPI)) assert.ok(HTML.includes(`<option value="${v}">${t}</option>`), `tipo ${v}`);
+});

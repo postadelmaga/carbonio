@@ -1,0 +1,24 @@
+{
+  "provenienza": "Archetipi illustrativi del progetto (cersim/config/archetipi.yaml @ 10dd415), non calibrati su misure: forme relative per ora locale 0-23, fattori stagionali da gennaio a dicembre.",
+  "licenza": "CC BY 4.0, come i testi del sito",
+  "archetipi": {
+    "com_orario_apertura": {
+      "descrizione": "Negozio o ufficio con orario di apertura, chiuso nei festivi",
+      "forme": {
+        "feriale": [0.08, 0.08, 0.08, 0.08, 0.08, 0.08, 0.08, 0.40, 0.90, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 0.70, 0.30, 0.10, 0.08, 0.08],
+        "sabato": [0.08, 0.08, 0.08, 0.08, 0.08, 0.08, 0.08, 0.35, 0.80, 0.90, 0.90, 0.90, 0.90, 0.90, 0.90, 0.90, 0.90, 0.90, 0.90, 0.60, 0.25, 0.10, 0.08, 0.08],
+        "festivo": [0.08, 0.08, 0.08, 0.08, 0.08, 0.08, 0.08, 0.08, 0.08, 0.08, 0.08, 0.08, 0.08, 0.08, 0.08, 0.08, 0.08, 0.08, 0.08, 0.08, 0.08, 0.08, 0.08, 0.08]
+      },
+      "stagionalita": [1.05, 1.00, 0.95, 0.90, 0.95, 1.10, 1.20, 1.10, 1.00, 0.95, 0.95, 1.05]
+    },
+    "com_carico_base": {
+      "descrizione": "Attività con carico continuo fuori orario (frigoriferi, apparecchi sempre accesi)",
+      "forme": {
+        "feriale": [0.45, 0.45, 0.45, 0.45, 0.45, 0.45, 0.45, 0.60, 0.90, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 0.80, 0.60, 0.50, 0.45, 0.45],
+        "sabato": [0.45, 0.45, 0.45, 0.45, 0.45, 0.45, 0.45, 0.50, 0.70, 0.80, 0.80, 0.80, 0.80, 0.80, 0.80, 0.80, 0.80, 0.80, 0.80, 0.60, 0.50, 0.45, 0.45, 0.45],
+        "festivo": [0.45, 0.45, 0.45, 0.45, 0.45, 0.45, 0.45, 0.45, 0.45, 0.45, 0.45, 0.45, 0.45, 0.45, 0.45, 0.45, 0.45, 0.45, 0.45, 0.45, 0.45, 0.45, 0.45, 0.45]
+      },
+      "stagionalita": [1.08, 1.04, 0.98, 0.92, 0.95, 1.05, 1.12, 1.05, 0.98, 0.95, 0.98, 1.08]
+    }
+  }
+}

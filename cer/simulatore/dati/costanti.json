@@ -1,0 +1,286 @@
+{
+  "versione": "2026-11-02",
+  "nota": "Valori del simulatore della CER, ciascuno con la sua fonte. Tariffe e prezzi dell'energia in €/MWh, voci della bolletta in €/kWh.",
+  "voci": {
+    "tariffa_fasce": {
+      "descrizione": "Tariffa premio: parte fissa e tetto per fascia di potenza dell'impianto",
+      "valore": [{ "fino_kw": 200, "base": 80, "tetto": 120 }, { "fino_kw": 600, "base": 70, "tetto": 110 }, { "fino_kw": 1000, "base": 60, "tetto": 100 }],
+      "unita": "€/MWh",
+      "fonte": "DM MASE 7 dicembre 2023, n. 414, Allegato 1 §1; Regole operative GSE del 16/07/2025, §2.2.2.1.2",
+      "url": "https://www.gse.it/documenti_site/Documenti%20GSE/Servizi%20per%20te/AUTOCONSUMO/Altri%20contenuti/Decreto%20CER.pdf",
+      "consultato": "2026-10-18",
+      "note": "Oltre 1 MW la tariffa non spetta."
+    },
+    "tariffa_prezzo_riferimento": {
+      "descrizione": "Prezzo di riferimento della parte variabile della tariffa: base + max(0; 180 − prezzo zonale)",
+      "valore": 180, "unita": "€/MWh",
+      "fonte": "DM MASE 414/2023, Allegato 1 §1",
+      "url": "https://www.gse.it/documenti_site/Documenti%20GSE/Servizi%20per%20te/AUTOCONSUMO/Altri%20contenuti/Decreto%20CER.pdf",
+      "consultato": "2026-10-18", "note": ""
+    },
+    "correttivo_fv": {
+      "descrizione": "Correttivo della tariffa per il fotovoltaico, per area, sommato dopo il tetto",
+      "valore": { "nord": 10, "centro": 4, "sud": 0 }, "unita": "€/MWh",
+      "fonte": "DM MASE 414/2023, Allegato 1 §2; pagina GSE sulla tariffa massima (120, 124 e 130 €/MWh)",
+      "url": "https://www.gse.it/documenti_site/Documenti%20GSE/Servizi%20per%20te/AUTOCONSUMO/Altri%20contenuti/Decreto%20CER.pdf",
+      "consultato": "2026-10-18",
+      "note": "Le regioni di ciascuna area sono nella riga seguente."
+    },
+    "aree_correttivo_fv": {
+      "descrizione": "Regioni del Nord e del Centro per il correttivo della tariffa per il fotovoltaico; le altre sono Sud",
+      "valore": {
+        "nord": ["Emilia-Romagna", "Friuli-Venezia Giulia", "Liguria", "Lombardia", "Piemonte", "Trentino-Alto Adige", "Valle d'Aosta", "Veneto"],
+        "centro": ["Lazio", "Marche", "Toscana", "Umbria", "Abruzzo"]
+      },
+      "unita": "regioni",
+      "fonte": "DM MASE 414/2023, Allegato 1 §2",
+      "url": "https://www.gse.it/documenti_site/Documenti%20GSE/Servizi%20per%20te/AUTOCONSUMO/Altri%20contenuti/Decreto%20CER.pdf",
+      "consultato": "2026-10-18",
+      "note": "I nomi sono quelli delle regioni nell'elenco ISTAT dei comuni."
+    },
+    "durata_tariffa_anni": {
+      "descrizione": "Durata della tariffa premio dall'entrata in esercizio dell'impianto",
+      "valore": 20, "unita": "anni",
+      "fonte": "DM MASE 414/2023, art. 4",
+      "url": "https://www.gse.it/documenti_site/Documenti%20GSE/Servizi%20per%20te/AUTOCONSUMO/Altri%20contenuti/Decreto%20CER.pdf",
+      "consultato": "2026-10-18", "note": ""
+    },
+    "scadenza_esercizio": {
+      "descrizione": "Ultima data per l'entrata in esercizio e, per prudenza, per la domanda della tariffa premio",
+      "valore": "2027-12-31", "unita": "data",
+      "fonte": "DM MASE 414/2023, art. 1 c. 2; GSE, pagina CACER («può essere richiesta» non oltre il 31 dicembre 2027)",
+      "url": "https://www.gse.it/documenti_site/Documenti%20GSE/Servizi%20per%20te/AUTOCONSUMO/Altri%20contenuti/Decreto%20CER.pdf",
+      "consultato": "2026-11-04",
+      "note": "O prima, se si raggiunge il contingente di 5 GW, lontano secondo i dati pubblicati. Nessuna proroga al 04/11/2026."
+    },
+    "soglia_eccedentaria": {
+      "descrizione": "Soglia oltre la quale una parte della tariffa, la quota eccedentaria, va solo ai consumatori non imprese, a finalità sociali o a entrambe (rapporto fra condivisa e immessa degli impianti incentivati)",
+      "valore": 0.55, "unita": "frazione",
+      "fonte": "DM MASE 414/2023, art. 3 c. 2 lett. g) e Allegato 1 §4; Regole operative GSE del 16/07/2025, §2.2.2.1.3",
+      "url": "https://www.gse.it/documenti_site/Documenti%20GSE/Servizi%20per%20te/AUTOCONSUMO/Gruppi%20di%20autoconsumatori%20e%20comunita%20di%20energia%20rinnovabile/Regole%20e%20procedure/Allegato%201%20Regole%20Operative%20CACER.pdf",
+      "consultato": "2026-10-25",
+      "note": "Formula applicata alla lettera: punti percentuali oltre la soglia moltiplicati per tutta la tariffa. Il 45% con contributi in conto capitale non serve: il simulatore non li modella."
+    },
+    "limite_potenza_esistenti": {
+      "descrizione": "Quota massima della potenza della configurazione per gli impianti esistenti, entrati in esercizio fino al 15/12/2021",
+      "valore": 0.30, "unita": "frazione",
+      "fonte": "D.Lgs. 199/2021, art. 31 c. 2 lett. d) (richiamato dal DM MASE 414/2023, art. 3 c. 2 lett. b); TIAD, art. 3.4 lett. f; Regole operative GSE del 16/07/2025, p. 11",
+      "url": "https://www.normattiva.it/uri-res/N2Ls?urn:nir:stato:decreto.legislativo:2021-11-08;199~art31",
+      "consultato": "2026-11-04", "note": "Oltre il limite la pagina avverte."
+    },
+    "limiti_monofase": {
+      "descrizione": "Potenza di un impianto su una connessione monofase in bassa tensione: senza consenso, con il consenso del distributore, con un sistema di limitazione dell'immissione",
+      "valore": { "monofase_kw": 6, "con_consenso_kw": 10, "con_sli_kw": 11.08 }, "unita": "kW",
+      "fonte": "Norma CEI 0-21, §8.3 e Allegato L (versione consolidata di lavoro del CEI)",
+      "url": "",
+      "consultato": "2026-11-04",
+      "note": "Letta nella versione consolidata che il CEI pubblica gratuitamente, che non sostituisce la norma. Lo SLI vale dal 01/03/2026 con una potenza in immissione fino a 6 kW."
+    },
+    "contributo_arera": {
+      "descrizione": "Contributo di valorizzazione ARERA per una CER: TRAS_E in bassa tensione sull'energia condivisa",
+      "valore": 11.90, "unita": "€/MWh",
+      "fonte": "ARERA, TIAD art. 6.4; tariffa di trasmissione TIT 2024-2027, valore 2026 (delib. 573/2025/R/eel)",
+      "url": "https://www.arera.it/area-operatori/prezzi-e-tariffe/tariffa-per-il-servizio-di-trasmissione",
+      "consultato": "2026-10-18", "note": "Per gli anni dopo il 2026 si usa l'ultimo valore noto."
+    },
+    "prezzo_zonale": {
+      "descrizione": "Prezzo dell'energia (media annua), usato per la tariffa, la vendita e il costo evitato",
+      "valore": 115.94, "unita": "€/MWh",
+      "fonte": "GME, Relazione annuale 2025: PUN Index medio 2025. Fonte: Gestore dei Mercati Energetici S.p.A.",
+      "url": "https://www.mercatoelettrico.org/Portals/0/Documents/it-IT/Gme_RelazioneAnnualeWeb_2025.pdf",
+      "consultato": "2026-10-18",
+      "note": "Piatto tutto l'anno; si cita solo la media annua, le serie orarie del GME non si ridistribuiscono."
+    },
+    "perdite_rete": {
+      "descrizione": "Perdite di rete convenzionali sui prelievi in bassa tensione",
+      "valore": 0.10, "unita": "frazione",
+      "fonte": "ARERA, TIS (Allegato A ARG/elt 107/09), Tabella 4",
+      "url": "https://www.arera.it/fileadmin/allegati/docs/09/107-09alla_ti.pdf",
+      "consultato": "2026-10-21", "note": ""
+    },
+    "rete_oneri_domestico": {
+      "descrizione": "Rete e oneri per kWh, clienti domestici, IV trimestre 2026",
+      "valore": 0.047883, "unita": "€/kWh",
+      "fonte": "ARERA, tariffe di distribuzione, trasmissione, misura e oneri generali (somma delle componenti in €/kWh)",
+      "url": "https://www.arera.it/area-operatori/prezzi-e-tariffe/oneri-generali-di-sistema-e-ulteriori-componenti",
+      "consultato": "2026-10-21", "note": "Calcolo derivato dalle tabelle ARERA."
+    },
+    "rete_oneri_altri": {
+      "descrizione": "Rete e oneri per kWh, altri usi in bassa tensione fino a 16,5 kW, IV trimestre 2026",
+      "valore": 0.048907, "unita": "€/kWh",
+      "fonte": "ARERA, tariffe di distribuzione, trasmissione, misura e oneri generali (somma delle componenti in €/kWh)",
+      "url": "https://www.arera.it/area-operatori/prezzi-e-tariffe/oneri-generali-di-sistema-e-ulteriori-componenti",
+      "consultato": "2026-10-21", "note": "Calcolo derivato dalle tabelle ARERA."
+    },
+    "accisa_domestico": {
+      "descrizione": "Accisa per kWh nelle abitazioni, al valore marginale intermedio",
+      "valore": 0.0227, "unita": "€/kWh",
+      "fonte": "D.Lgs. 504/1995 (TUA), art. 52 e Allegato I",
+      "url": "https://www.normattiva.it/uri-res/N2Ls?urn:nir:stato:decreto.legislativo:1995-10-26;504~art52",
+      "consultato": "2026-10-21",
+      "note": "Il kWh marginale vale 0, 2,27 o 4,54 c€ secondo il prelievo del mese e la residenza."
+    },
+    "accisa_altri": {
+      "descrizione": "Accisa per kWh negli altri usi, primi 200.000 kWh del mese",
+      "valore": 0.0125, "unita": "€/kWh",
+      "fonte": "D.Lgs. 504/1995 (TUA), art. 52 e Allegato I",
+      "url": "https://www.normattiva.it/uri-res/N2Ls?urn:nir:stato:decreto.legislativo:1995-10-26;504~art52",
+      "consultato": "2026-10-21", "note": ""
+    },
+    "iva_domestico": {
+      "descrizione": "IVA sull'energia elettrica per uso domestico",
+      "valore": 0.10, "unita": "frazione",
+      "fonte": "DPR 633/1972, art. 16 e Tabella A parte III n. 103",
+      "url": "https://www.normattiva.it/uri-res/N2Ls?urn:nir:presidente.repubblica:decreto:1972-10-26;633~art16!vig=2026-10-21",
+      "consultato": "2026-10-21", "note": ""
+    },
+    "iva_altri": {
+      "descrizione": "IVA sull'energia elettrica per gli altri usi",
+      "valore": 0.22, "unita": "frazione",
+      "fonte": "DPR 633/1972, art. 16",
+      "url": "https://www.normattiva.it/uri-res/N2Ls?urn:nir:presidente.repubblica:decreto:1972-10-26;633~art16!vig=2026-10-21",
+      "consultato": "2026-10-21",
+      "note": "Un'attività la detrae e il simulatore la esclude; un ente la paga e il simulatore la include."
+    },
+    "prezzo_impianto": {
+      "descrizione": "Prezzo chiavi in mano di un impianto fotovoltaico, IVA esclusa, per taglia",
+      "valore": [{ "fino_kw": 10, "eur_w": 1.39 }, { "fino_kw": 100, "eur_w": 1.28 }, { "fino_kw": 250, "eur_w": 1.15 }, { "fino_kw": 1000, "eur_w": 0.85 }],
+      "unita": "€/W",
+      "fonte": "IEA PVPS, National Survey Report Italy 2024, tab. 9-10 (indagine GSE); oltre 250 kW ARERA, DCO 239/2025/R/efr, allegato A, §3.2 (su copertura)",
+      "url": "https://iea-pvps.org/wp-content/uploads/2025/10/NSR-of-PV-Power-Applications-in-Italy-2024.pdf",
+      "consultato": "2026-11-02", "note": "Medie del 2024."
+    },
+    "iva_impianto": {
+      "descrizione": "IVA sull'impianto fotovoltaico di una famiglia",
+      "valore": 0.10, "unita": "frazione",
+      "fonte": "DPR 633/1972, Tabella A, parte III, nn. 127-quinquies, 127-sexies e 127-septies; Agenzia delle Entrate, Risposta n. 181/2026; IEA PVPS, National Survey Report Italy 2024, tab. 9 (1,53 €/W con l'IVA al 10% sotto 10 kW)",
+      "url": "https://www.agenziaentrate.gov.it/portale/documents/20143/10360383/Risposta+n.+181_2026/34a8157d-69bb-0a63-c35e-cf8aa3d7b4ea",
+      "consultato": "2026-11-02", "note": ""
+    },
+    "iva_impianto_ente": {
+      "descrizione": "IVA sull'impianto fotovoltaico di un ente che non la detrae",
+      "valore": 0.10, "unita": "frazione",
+      "fonte": "DPR 633/1972, Tabella A, parte III, nn. 127-quinquies, 127-sexies e 127-septies; Agenzia delle Entrate, Risposta n. 181/2026",
+      "url": "https://www.agenziaentrate.gov.it/portale/documents/20143/10360383/Risposta+n.+181_2026/34a8157d-69bb-0a63-c35e-cf8aa3d7b4ea",
+      "consultato": "2026-11-02",
+      "note": "L'aliquota dipende dal bene, non da chi lo compra: vale anche per un ente. Restano al 22% la progettazione fatturata a parte e l'accumulo aggiunto a un impianto già in esercizio. Dal 1° gennaio 2027 le voci passano al Testo unico IVA (D.Lgs. 10/2026), Tabella A, parte IV, nn. 109-111, con la stessa aliquota."
+    },
+    "manutenzione": {
+      "descrizione": "Manutenzione ordinaria dell'impianto",
+      "valore": 20, "unita": "€/kW l'anno",
+      "fonte": "ARERA, DCO 239/2025/R/efr, allegato A, §3.2",
+      "url": "https://www.arera.it/fileadmin/allegati/docs/25/239-2025-R-efr-ALLEGATO_A.pdf",
+      "consultato": "2026-11-02", "note": "La fonte non dice che cosa comprenda."
+    },
+    "corrispettivo_gse": {
+      "descrizione": "Corrispettivo annuo al GSE per impianto",
+      "valore": { "esente_fino_kw": 3, "fisso": 15, "oltre_kw": 20, "per_kw": 1 }, "unita": "€ l'anno",
+      "fonte": "DM MASE 15 marzo 2024, n. 106, Allegato 1 lett. a) e Allegato 2 lett. a)",
+      "url": "https://www.mase.gov.it/portale/documents/d/guest/m_amte-mase-registro-ufficiale-e-0050960-18-03-2024-pdf",
+      "consultato": "2026-10-18",
+      "note": "Nulla fino a 3 kW; 15 € oltre, più 1 €/kW oltre i primi 20 kW, IVA esclusa: il GSE li fattura «maggiorati dell'aliquota IVA» e il simulatore non la aggiunge. La verifica preliminare da 100 € è facoltativa e non si conta."
+    },
+    "gestione": {
+      "descrizione": "Costi annui di gestione della CER, tolti prima del riparto",
+      "valore": 500, "unita": "€ l'anno",
+      "fonte": "Ipotesi vicina al canone minimo di Maps CER Manager (499 €/anno), l'unico listino italiano pubblico trovato",
+      "url": "https://energy.mapsgroup.it/cer-manager-acquista/",
+      "consultato": "2026-10-20",
+      "note": "Altre ipotesi pubbliche: 0, 5 € per socio (RSE), 36 € per socio (Next2050), 1.000 € (Unioncamere)."
+    },
+    "costituzione": {
+      "descrizione": "Costo di costituzione della CER come associazione (registrazione dell'atto e dello statuto)",
+      "valore": 360, "unita": "€",
+      "fonte": "D.Lgs. 123/2025 (testo unico dell'imposta di registro e degli altri tributi indiretti, dal 1° gennaio 2026): registro, Tariffa, parte II, art. 5 per la scrittura privata non autenticata (parte I, art. 12, se l'atto è autenticato); bollo, allegato 3, Tariffa, parte I, art. 2, e art. 143 (foglio di quattro facciate); Agenzia delle Entrate, istruzioni del modello RAP (al massimo 100 righe per foglio)",
+      "url": "https://www.gazzettaufficiale.it/eli/gu/2025/08/12/186/so/29/sg/pdf",
+      "consultato": "2026-11-03",
+      "note": "Registro in misura fissa 200 € più bollo di 16 € per foglio (4 facciate, al massimo 100 righe) su due esemplari: con atto e statuto di 12 facciate da circa 40 righe sono 5 fogli per esemplare, 160 €. Da 10 a 15 facciate il totale va da 328 a 392 €. Non comprende il notaio (facoltativo), le consulenze né eventuali conferimenti di beni. Un ente del Terzo settore già iscritto al RUNTS paga 200 € (un'ODV nulla), art. 82 del D.Lgs. 117/2017; per chi non è ancora iscritto la prassi non è chiara e si tiene il valore pieno."
+    },
+    "quota_associativa": {
+      "descrizione": "Quota associativa annua per socio",
+      "valore": 0, "unita": "€ l'anno",
+      "fonte": "Statuto della CER, art. 5 («se prevista»)",
+      "url": "https://co2-info.duckdns.org/cer/statuto/",
+      "consultato": "2026-11-02", "note": ""
+    },
+    "quote_riparto": {
+      "descrizione": "Riparto della tariffa non eccedentaria: al titolare dell'impianto, ai consumatori; il resto alla CER",
+      "valore": { "produttore": 0.40, "consumatori": 0.40 }, "unita": "frazione",
+      "fonte": "Regolamento di CERS Eliodora, art. 3, preso come esempio",
+      "url": "https://eliodoracers.it/wp-content/uploads/2025/09/Regolamento-CER-Eliodora.pdf",
+      "consultato": "2026-10-19",
+      "note": "Contributo ARERA tutto ai consumatori; eccedentaria ai consumatori non imprese."
+    },
+    "fattore_co2": {
+      "descrizione": "CO₂ per kWh: media dei consumi elettrici (perdite e importazioni comprese)",
+      "valore": 199.6, "unita": "g/kWh",
+      "fonte": "ISPRA, Rapporto 430/2026, Tabella 1.7, 2025 preliminare",
+      "url": "https://www.isprambiente.gov.it/files2026/pubblicazioni/rapporti/r430-2026-2.pdf",
+      "consultato": "2026-11-04",
+      "note": "La CO₂ di un kWh consumato (ISPRA, p. 91: «CO2 evitata per kWh non consumato»): per l'impronta dei prelievi e, in modalità Avanzato, come alternativa per la CO₂ evitata."
+    },
+    "fattore_co2_fossili": {
+      "descrizione": "CO₂ per kWh: produzione termoelettrica lorda da sole fonti fossili",
+      "valore": 413.3, "unita": "g/kWh",
+      "fonte": "ISPRA, Rapporto 430/2026, Tabella 1.7, 2025 preliminare; metodo delle emissioni evitate a p. 38",
+      "url": "https://www.isprambiente.gov.it/files2026/pubblicazioni/rapporti/r430-2026-2.pdf",
+      "consultato": "2026-11-04",
+      "note": "Il fattore principale della CO₂ evitata: ISPRA calcola le emissioni evitate dalle rinnovabili come se la stessa energia fosse prodotta con il mix fossile dell'anno."
+    },
+    "fattore_co2_1990": {
+      "descrizione": "CO₂ per kWh dei consumi elettrici nel 1990 e nel 2024",
+      "valore": { "1990": 523.0, "2024": 192.6 }, "unita": "g/kWh",
+      "fonte": "ISPRA, Rapporto 430/2026, Tabella 1.7",
+      "url": "https://www.isprambiente.gov.it/files2026/pubblicazioni/rapporti/r430-2026-2.pdf",
+      "consultato": "2026-11-02", "note": "Per il testo «la rete si pulisce»."
+    },
+    "calo_fattore_co2": {
+      "descrizione": "Calo medio annuo del fattore dei consumi, 1990-2024, usato per i 20 anni",
+      "valore": 0.029, "unita": "frazione l'anno",
+      "fonte": "ISPRA, Rapporto 430/2026, §1.3",
+      "url": "https://www.isprambiente.gov.it/files2026/pubblicazioni/rapporti/r430-2026-2.pdf",
+      "consultato": "2026-11-02", "note": "Solo per i 20 anni con la media dei consumi. Proiettarlo nel futuro è un'estrapolazione."
+    },
+    "co2_pro_capite": {
+      "descrizione": "CO₂ fossile per abitante in Italia nel 2024",
+      "valore": 5.1, "unita": "t l'anno",
+      "fonte": "Global Carbon Budget 2025 via Our World in Data, come nella pagina «Il carbonio che resta»",
+      "url": "https://co2-info.duckdns.org/it/",
+      "consultato": "2026-11-02", "note": "Solo le emissioni sul territorio, senza quelle dei beni importati (Our World in Data)."
+    },
+    "budget_1_5": {
+      "descrizione": "CO₂ che il mondo può ancora emettere dall'inizio del 2026 per il 50% di probabilità di restare sotto 1,5 °C",
+      "valore": 170, "unita": "GtCO₂",
+      "fonte": "Global Carbon Budget 2025, comunicato «Fossil fuel CO2 emissions hit record high in 2025» e FAQ",
+      "url": "https://globalcarbonbudget.org/fossil-fuel-co2-emissions-hit-record-high-in-2025/",
+      "consultato": "2026-11-04",
+      "note": "Con il 50% di probabilità; «equivalent to four years at the 2025 emissions levels»."
+    },
+    "degrado": {
+      "descrizione": "Perdita di produzione dei pannelli per anno",
+      "valore": 0.005, "unita": "frazione l'anno",
+      "fonte": "Jordan e Kurtz, NREL, mediana di quasi 2.000 misure",
+      "url": "https://www.osti.gov/biblio/1045052",
+      "consultato": "2026-11-02", "note": ""
+    },
+    "spostamento_massimo": {
+      "descrizione": "Quota massima dei consumi del giorno che il cursore sposta nelle ore di sole",
+      "valore": 0.30, "unita": "frazione",
+      "fonte": "Ipotesi dichiarata del simulatore, senza fonte",
+      "url": "", "consultato": "2026-11-02", "note": ""
+    },
+    "comunita_tipo": {
+      "descrizione": "La comunità tipo intorno a chi entra",
+      "valore": { "famiglie": 30, "classe": "1,5-3", "abitudini_altri": 0, "attivita": 2, "archetipo_attivita": "com_orario_apertura", "consumo_attivita": 10000, "enti": 1, "archetipo_ente": "com_orario_apertura", "consumo_ente": 5000, "kwp_comune": 40 },
+      "unita": "—",
+      "fonte": "Ipotesi del simulatore; consumi delle famiglie dalle medie ARERA della regione",
+      "url": "", "consultato": "2026-11-02",
+      "note": "I consumi di attività ed ente sono illustrativi. Il numero di famiglie è tarato sulla Spezia."
+    },
+    "predefiniti": {
+      "descrizione": "Valori proposti dai moduli",
+      "valore": { "kwp_prosumer": 4.5, "kwp_produttore": 20, "fondatori": 3 },
+      "unita": "—", "fonte": "Ipotesi del simulatore", "url": "", "consultato": "2026-11-02", "note": "4,5 kWp: l'impianto di chi ha i pannelli in «Voglio entrare» e la riga nuova di famiglie in «Voglio fondarne una». 20 kWp: l'impianto del produttore in «Voglio entrare» e la riga nuova di attività ed enti in «Voglio fondarne una»."
+    }
+  }
+}
