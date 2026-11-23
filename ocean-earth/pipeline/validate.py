@@ -14,6 +14,7 @@
 """
 import datetime as dt
 import json
+import os
 import pathlib
 import random
 import sys
@@ -169,6 +170,71 @@ SST_PHYS = (-2.2, 37.5)
 SPEED_PHYS = 3.0
 
 
+# I numeri del controllo 2 si calcolano un fotogramma alla volta, e un
+# fotogramma gia' controllato non cambia: si tengono in index/ (che non si
+# pubblica) con la taglia e la data del file, e si ricalcolano solo per i file
+# nuovi o riscritti. Prima si decodificavano ogni giorno tutti i ~4300
+# fotogrammi (2 min 40 s su arm_php, il passo piu' lungo della validazione).
+# OE_VALIDATE_FULL=1 ignora quanto tenuto e rilegge tutto.
+STATS = DATA / 'index' / 'validate-stats.json'
+STATS_KEY = [1, list(SST_PHYS), SPEED_PHYS, encode.VECTOR_STEP]    # cambia → si rifa' tutto
+_stats_old = None
+_stats_new = {}
+
+
+def _where(mask, limit):
+    w = {}
+    for r, c in np.argwhere(mask)[:limit]:
+        key = f'{round(grid.LATS[r])},{round(grid.LONS[c])}'
+        w[key] = w.get(key, 0) + 1
+    return w
+
+
+def sst_stats(f, var):
+    bad = (f < SST_PHYS[0]) | (f > SST_PHYS[1])
+    # 'med' ha la sua griglia: le righe non sono quelle di grid.LATS
+    return {'lo': float(np.nanmin(f)), 'hi': float(np.nanmax(f)), 'out': int(bad.sum()),
+            'tot': int(np.isfinite(f).sum()), 'where': _where(bad, 400) if var != 'med' else {}}
+
+
+def cur_stats(uv, var):
+    u, v = uv
+    sp = np.hypot(u, v)
+    fast = sp > SPEED_PHYS
+    lim = 2047 * encode.VECTOR_STEP - 1e-9
+    return {'top': float(np.nanmax(sp)), 'fast': int(fast.sum()),
+            'clipped': int(((np.abs(u) >= lim) | (np.abs(v) >= lim)).sum()),
+            'tot': int(np.isfinite(sp).sum()), 'where': _where(fast, 20)}
+
+
+def frame_stats(tier, var, compute):
+    """compute(campo, var) per ogni fotogramma pubblicato di (tier, var), in
+    ordine di tempo; per un file che non e' cambiato, il risultato di prima."""
+    global _stats_old
+    if _stats_old is None:
+        _stats_old = {}
+        if STATS.exists() and not os.environ.get('OE_VALIDATE_FULL'):
+            saved = json.loads(STATS.read_text())
+            if saved.get('key') == STATS_KEY:
+                _stats_old = saved['frames']
+    old = _stats_old.get(f'{tier}/{var}', {})
+    new = _stats_new[f'{tier}/{var}'] = {}
+    for s in sorted(frames.load_index(tier, var)):
+        st = frames.frame_path(tier, var, s).stat()
+        sig = [st.st_size, st.st_mtime_ns]
+        hit = old.get(s)
+        if not hit or hit['sig'] != sig:
+            hit = {'sig': sig, 'stats': compute(published(tier, var, s), var)}
+        new[s] = hit
+        yield hit['stats']
+
+
+def save_frame_stats():
+    tmp = STATS.with_suffix('.tmp.json')
+    tmp.write_text(json.dumps({'key': STATS_KEY, 'frames': _stats_new}))
+    tmp.replace(STATS)
+
+
 def check_ranges():
     log('## 2. Intervalli fisici\n')
     log(f'Fuori dai limiti fisici si contano le celle e si dice dove stanno: i valori sono quelli '
@@ -176,16 +242,13 @@ def check_ranges():
         f'corrente fino a {SPEED_PHYS} m/s; la codifica taglia ogni componente a ±{2047 * encode.VECTOR_STEP:.2f} m/s.\n')
     for tier, var in [('monthly', 'sst'), ('daily', 'sst'), ('daily', 'ostia'), ('daily', 'med'), ('hourly', 'sst')]:
         lo, hi, n, out_n, tot, where = np.inf, -np.inf, 0, 0, 0, {}
-        for s, f in scan(tier, var):
-            lo = min(lo, np.nanmin(f))
-            hi = max(hi, np.nanmax(f))
-            bad = (f < SST_PHYS[0]) | (f > SST_PHYS[1])
-            out_n += int(bad.sum())
-            tot += int(np.isfinite(f).sum())
-            if var != 'med':
-                for r, c in np.argwhere(bad)[:400]:
-                    key = f'{round(grid.LATS[r])},{round(grid.LONS[c])}'
-                    where[key] = where.get(key, 0) + 1
+        for st in frame_stats(tier, var, sst_stats):
+            lo = min(lo, st['lo'])
+            hi = max(hi, st['hi'])
+            out_n += st['out']
+            tot += st['tot']
+            for key, k in st['where'].items():
+                where[key] = where.get(key, 0) + k
             n += 1
         if not n:
             continue
@@ -203,17 +266,13 @@ def check_ranges():
         summary[f'intervallo {tier}/{var}'] = ok
     for tier in ['monthly', 'daily', 'hourly']:
         top, n, fast, clipped, tot, where = 0, 0, 0, 0, 0, {}
-        lim = 2047 * encode.VECTOR_STEP - 1e-9
-        for s, (u, v) in scan(tier, 'cur'):
-            sp = np.hypot(u, v)
-            top = max(top, np.nanmax(sp))
-            b = sp > SPEED_PHYS
-            fast += int(b.sum())
-            clipped += int(((np.abs(u) >= lim) | (np.abs(v) >= lim)).sum())
-            tot += int(np.isfinite(sp).sum())
-            for r, c in np.argwhere(b)[:20]:
-                key = f'{round(grid.LATS[r])},{round(grid.LONS[c])}'
-                where[key] = where.get(key, 0) + 1
+        for st in frame_stats(tier, 'cur', cur_stats):
+            top = max(top, st['top'])
+            fast += st['fast']
+            clipped += st['clipped']
+            tot += st['tot']
+            for key, k in st['where'].items():
+                where[key] = where.get(key, 0) + k
             n += 1
         if n:
             frac = fast / max(tot, 1)
@@ -222,6 +281,7 @@ def check_ranges():
             log(f"- {tier}/correnti: {n} fotogrammi, massimo {top:.2f} m/s; oltre {SPEED_PHYS} m/s {fast} celle su {tot} "
                 f"({frac:.2e}), di cui {clipped} tagliate dalla codifica; dove: {w or 'nessuna'} → **{'OK' if ok else 'FALLITO'}**")
             summary[f'velocita {tier}'] = ok
+    save_frame_stats()
     log('')
 
 

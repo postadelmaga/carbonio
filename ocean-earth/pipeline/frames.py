@@ -34,6 +34,16 @@ TIER_DIR = {'monthly': 'm', 'daily': 'd', 'hourly': 'h'}
 CHUNK = {('monthly', 'sst'): 6, ('monthly', 'cur'): 24, ('daily', 'sst'): 8, ('daily', 'cur'): 31,
          ('monthly', 'ice'): 12, ('monthly', 'sla'): 6,
          ('daily', 'ostia'): 2, ('daily', 'med'): 31, ('hourly', 'sst'): 12, ('hourly', 'cur'): 48}
+# OE_CHUNKS="hourly/sst=3,hourly/cur=12" li cambia senza toccare il codice. La
+# memoria di un download cresce col numero di passi (misurato su arm_php il
+# 23 nov 2026: 12 ore di temperatura a 1/12° = 1,5 GB, 48 ore di correnti =
+# 2,7 GB): su una macchina da 1 GB vanno abbassati, al prezzo di piu' richieste.
+for _kv in filter(None, (x.strip() for x in os.environ.get('OE_CHUNKS', '').split(','))):
+    _name, _, _n = _kv.partition('=')
+    _key = tuple(_name.strip().split('/'))
+    if _key not in CHUNK or not _n.strip().isdigit() or int(_n) < 1:
+        raise SystemExit(f'OE_CHUNKS: "{_kv}" non valido (atteso livello/variabile=passi, es. hourly/sst=3)')
+    CHUNK[_key] = int(_n)
 
 
 def stamp(tier, t):
@@ -279,7 +289,7 @@ def run(tier, var, start, end, refresh=False):
                                 idx[s] = ds_id
                                 continue
                             revised += 1
-                            print(f'  {s}: rivisto dalla fonte, lo riscrivo', flush=True)
+                            print(f'  {tier}/{var} {s}: rivisto dalla fonte, lo riscrivo', flush=True)
                         encode.save_png(rgb, path)
                         idx[s] = ds_id
                         save_index(tier, var, idx)   # subito: file e fonte restano allineati

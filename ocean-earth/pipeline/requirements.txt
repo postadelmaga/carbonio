@@ -4,3 +4,4 @@ netcdf4
 numpy
 pillow
 pytest
+cdsapi

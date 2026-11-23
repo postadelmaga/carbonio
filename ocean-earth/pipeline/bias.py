@@ -113,26 +113,29 @@ def main():
           f'({frames.stamp("monthly", months[0])} → {frames.stamp("monthly", months[-1])})', flush=True)
     fetch(months)
     w = np.cos(np.radians(grid.LATS))[:, None] * np.ones((1, grid.NLON))
-    diffs_all = {}
     index = frames.load_index('monthly', 'sst')
     stamps = [frames.stamp('monthly', t) for t in months]
     usable = from_glorys(stamps, index)
     for s in stamps:
         if s not in usable and s in index:
             print(f'  saltato {s}: il fotogramma pubblicato viene da {index[s]}, non da GLORYS', flush=True)
-    for s in usable:
-        g = frames.frame_path('monthly', 'sst', s)
-        if g.exists():
-            diffs_all[s] = (encode.decode_scalar(encode.load_png(CACHE / f'{s}.png'))
-                            - encode.decode_scalar(encode.load_png(g)))
-    if not diffs_all:
+    used = [s for s in usable if frames.frame_path('monthly', 'sst', s).exists()]
+    if not used:
         raise SystemExit('nessun mese in comune con il fotogramma pubblicato da GLORYS')
+
+    def diff(s):
+        return (encode.decode_scalar(encode.load_png(CACHE / f'{s}.png'))
+                - encode.decode_scalar(encode.load_png(frames.frame_path('monthly', 'sst', s))))
+
+    # Due passate, un campo in memoria alla volta: tenere tutte le differenze
+    # insieme (una cinquantina di campi da 8 MB) portava il processo a 0,8 GB.
     # Un mese anfc difettoso si riconosce dalla media globale: agosto 2023 e'
     # 0,79 °C piu' freddo di GLORYS (e 0,6 °C piu' freddo di luglio e settembre
     # dello stesso anfc), mentre gli altri mesi stanno fra -0,06 e -0,18 °C.
     # Si escludono i mesi lontani piu' di OUTLIER dalla mediana.
     gmean = {}
-    for s, d in diffs_all.items():
+    for s in used:
+        d = diff(s)
         ok = np.isfinite(d)
         gmean[s] = float((d[ok] * w[ok]).sum() / w[ok].sum())
     med = float(np.median(list(gmean.values())))
@@ -140,17 +143,18 @@ def main():
     for s in excluded:
         print(f'  escluso {s}: differenza globale {gmean[s]:+.3f} °C (mediana {med:+.3f})', flush=True)
     by_month = {m: [] for m in range(1, 13)}
-    for s, d in diffs_all.items():
+    for s in used:
         if s not in excluded:
-            by_month[int(s[5:7])].append(d)
+            by_month[int(s[5:7])].append(s)
     OUT.mkdir(parents=True, exist_ok=True)
     # da/a: i mesi davvero usati, non la sovrapposizione dei due cataloghi
-    stats = {'from': min(diffs_all), 'to': max(diffs_all),
+    stats = {'from': min(used), 'to': max(used),
              'smooth_deg': SMOOTH * grid.STEP, 'excluded': excluded,
              'global_by_month': {k: round(v, 3) for k, v in sorted(gmean.items())}, 'months': {}}
-    for m, diffs in by_month.items():
-        if len(diffs) < MIN_YEARS:
-            raise SystemExit(f'mese {m}: solo {len(diffs)} anni in comune, troppo pochi')
+    for m, names in by_month.items():
+        if len(names) < MIN_YEARS:
+            raise SystemExit(f'mese {m}: solo {len(names)} anni in comune, troppo pochi')
+        diffs = [diff(s) for s in names]
         with np.errstate(all='ignore'):
             d = np.nanmean(np.stack(diffs), axis=0)
             # stesso segno ogni anno: e' un'abitudine del sistema, non un caso

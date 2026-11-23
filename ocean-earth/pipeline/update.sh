@@ -27,17 +27,41 @@ f() { $PY pipeline/frames.py "$@" 2>&1 | grep -v -E '^(INFO|WARNING)' ; }
 # (analisi operativa, riletta nei giorni dopo: 8 nov 2026, fino a 0,06 °C)
 # cambiano anche dopo giorni; --refresh riscarica la finestra e riscrive solo
 # le ore cambiate, altrimenti validate.py blocca la pubblicazione
-( f monthly sst; f monthly ice; f daily sst --start "$DAILY_START" ) > "$LOG/temperatura.log" & q1=$!
-( f monthly cur; f daily cur --start "$DAILY_START"; f hourly cur --days "$HOURLY_DAYS" --refresh; f hourly sst --days "$HOURLY_DAYS" --refresh ) > "$LOG/correnti.log" & q2=$!
-( f daily ostia --days "$OSTIA_DAYS"; f daily med --days "$OSTIA_DAYS"; f monthly sla ) > "$LOG/ostia.log" & q3=$!
+q_temperatura() { f monthly sst && f monthly ice && f daily sst --start "$DAILY_START"; }
+q_correnti() { f monthly cur && f daily cur --start "$DAILY_START" && f hourly cur --days "$HOURLY_DAYS" --refresh && f hourly sst --days "$HOURLY_DAYS" --refresh; }
+q_ostia() { f daily ostia --days "$OSTIA_DAYS" && f daily med --days "$OSTIA_DAYS" && f monthly sla; }
+# Su una macchina piccola le code vanno una dopo l'altra: in parallelo la
+# memoria dei tre processi si somma. OE_SERIAL=1 o 0 lo forza; senza, decide la
+# RAM (sotto 4 GB: in serie).
+if [ -z "${OE_SERIAL:-}" ]; then
+  mem_kb=$(awk '/^MemTotal/{print $2}' /proc/meminfo 2>/dev/null || echo 0)
+  if [ "${mem_kb:-0}" -gt 0 ] && [ "$mem_kb" -lt 4000000 ]; then OE_SERIAL=1; else OE_SERIAL=0; fi
+fi
 # un 'wait' senza argomenti rende sempre 0: una coda fallita passava inosservata
 # e si pubblicavano climatologia e manifest su dati incompleti
 fail=0
-for q in $q1 $q2 $q3; do wait "$q" || fail=1; done
+if [ "$OE_SERIAL" = 1 ]; then
+  q_temperatura > "$LOG/temperatura.log" || fail=1
+  q_correnti > "$LOG/correnti.log" || fail=1
+  q_ostia > "$LOG/ostia.log" || fail=1
+else
+  q_temperatura > "$LOG/temperatura.log" & q1=$!
+  q_correnti > "$LOG/correnti.log" & q2=$!
+  q_ostia > "$LOG/ostia.log" & q3=$!
+  for q in $q1 $q2 $q3; do wait "$q" || fail=1; done
+fi
 if [ "$fail" -ne 0 ]; then
   echo "una coda di download e' fallita: vedi $LOG/*.log; niente derivati ne' manifest" >&2
   exit 1
 fi
+# Storico delle revisioni: quali ore la fonte ha riscritto, e in che giorno ce
+# ne siamo accorti. I log delle code si riscrivono a ogni corsa, questo no. Il
+# ricontrollo orario e' il passo piu' pesante (14 giorni di campi globali, ogni
+# giorno): se dopo qualche settimana qui si vede che le revisioni toccano solo
+# gli ultimi giorni, HOURLY_DAYS del ricontrollo si puo' accorciare con i numeri
+# in mano.
+{ grep -h 'rivisto dalla fonte' "$LOG"/temperatura.log "$LOG"/correnti.log "$LOG"/ostia.log || true; } \
+  | sed "s/^ */$(date -u +%F) /" >> "$LOG/revisioni.log"
 
 # terraferma (ERA5 dal Climate Data Store, ~/.cdsapirc): se il CDS non risponde
 # o il token manca si pubblica lo stesso il mare, la terraferma resta com'era

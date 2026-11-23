@@ -184,6 +184,28 @@ def test_bias_smooth_keeps_mask_and_wraps():
     assert abs(s[5, 5] - 1.0) < 1e-12
 
 
+def test_derived_fingerprint_follows_the_monthly_frames(tmp_path, monkeypatch):
+    # i derivati si rifanno solo se cambia un fotogramma mensile: l'impronta
+    # deve restare ferma finche' nulla cambia e muoversi per un file riscritto,
+    # una fonte diversa nell'indice o un mese in piu'
+    import os
+    import derived
+    monkeypatch.setattr(frames, 'DATA', tmp_path)
+    for s in ('2020-01', '2020-02'):
+        p = frames.frame_path('monthly', 'sst', s)
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_bytes(b'x' * 10)
+    idx = {'2020-01': 'A', '2020-02': 'A'}
+    f0 = derived.fingerprint(['2020-01', '2020-02'], idx)
+    assert derived.fingerprint(['2020-01', '2020-02'], idx) == f0
+    assert derived.fingerprint(['2020-01'], idx) != f0                        # un mese in meno
+    assert derived.fingerprint(['2020-01', '2020-02'], {**idx, '2020-02': 'B'}) != f0   # altra fonte
+    os.utime(frames.frame_path('monthly', 'sst', '2020-02'), ns=(2_000, 2_000))
+    assert derived.fingerprint(['2020-01', '2020-02'], idx) == f0             # solo la data: niente
+    frames.frame_path('monthly', 'sst', '2020-02').write_bytes(b'y' * 10)
+    assert derived.fingerprint(['2020-01', '2020-02'], idx) != f0             # file riscritto, stessa taglia
+
+
 def test_bias_uses_only_months_published_from_glorys():
     # GLORYS si e' allungato a 2026-09, ma il fotogramma pubblicato di quel
     # mese e' ancora anfc: confrontarlo col campo anfc darebbe zero
@@ -191,3 +213,40 @@ def test_bias_uses_only_months_published_from_glorys():
     index = {'2026-08': bias.GLORYS, '2026-09': bias.ANFC}
     assert bias.from_glorys(['2026-07', '2026-08', '2026-09'], index) == ['2026-08']
     assert bias.from_glorys(['2026-09'], index) == []
+
+
+def test_validate_reuses_the_numbers_of_unchanged_frames(tmp_path, monkeypatch):
+    # il controllo degli intervalli non rilegge un fotogramma gia' controllato;
+    # rilegge quello riscritto, e solo quello
+    import json
+    import validate
+    monkeypatch.setattr(frames, 'DATA', tmp_path)
+    monkeypatch.setattr(validate, 'STATS', tmp_path / 'index' / 'validate-stats.json')
+    monkeypatch.delenv('OE_VALIDATE_FULL', raising=False)
+    f = np.full((720, 1440), 10.0)
+    for s in ('2026-01', '2026-02'):
+        encode.save_png(encode.encode_scalar(f), frames.frame_path('monthly', 'sst', s))
+    frames.save_index('monthly', 'sst', {'2026-01': 'A', '2026-02': 'A'})
+    seen = []
+
+    def compute(field, var):
+        seen.append(1)
+        return validate.sst_stats(field, var)
+
+    def run():
+        monkeypatch.setattr(validate, '_stats_old', None)
+        monkeypatch.setattr(validate, '_stats_new', {})
+        seen.clear()
+        got = list(validate.frame_stats('monthly', 'sst', compute))
+        validate.save_frame_stats()
+        return got
+
+    first = run()
+    assert len(seen) == 2 and first[0]['lo'] == pytest.approx(10.0, abs=0.01) and first[0]['out'] == 0
+    assert run() == first and seen == []                       # niente e' cambiato: niente si rilegge
+    encode.save_png(encode.encode_scalar(f + 40), frames.frame_path('monthly', 'sst', '2026-02'))
+    again = run()
+    assert len(seen) == 1 and again[0] == first[0] and again[1]['out'] > 0     # 50 °C: fuori limite
+    monkeypatch.setenv('OE_VALIDATE_FULL', '1')
+    assert run() == again and len(seen) == 2                   # a richiesta rilegge tutto
+    assert json.loads(validate.STATS.read_text())['key'] == validate.STATS_KEY

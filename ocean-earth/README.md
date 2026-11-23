@@ -333,8 +333,9 @@ node --test tests/                     # app tests
 cd .. && ./publish.sh && ./publish.sh --apply
 ```
 
-`update.sh` runs three download queues in parallel (temperature, currents,
-OSTIA), then `derived.py` (land, coasts, climatology, 90th percentile, time
+`update.sh` runs three download queues (temperature, currents, OSTIA) — in
+parallel, or one after the other on a machine with less than 4 GB of RAM
+(`OE_SERIAL=0/1` forces either) — then `derived.py` (land, coasts, climatology, 90th percentile, time
 series tiles), `bias.py` (anfc − GLORYS baseline shift), `preview.py` and
 `manifest.py`; if any download queue fails it stops before publishing derived
 files. Downloads go in blocks of consecutive missing instants only. Frame
@@ -343,14 +344,40 @@ interrupted run resumes where it stopped. The daily
 and hourly windows are set with `DAILY_START`, `HOURLY_DAYS`, `OSTIA_DAYS`.
 
 Throughput: about 6–7 s per global 1/12° frame on a 4-core desktop on a
-home line, about 1.7 s on the ARM server `arm_php` (Oracle, 12 GB RAM,
+home line, about 1.7 s on the ARM server `arm_php` (Oracle, 4 cores, 24 GB,
 datacenter bandwidth). For long back-fills run the pipeline there
 (`~/ocean-earth`, its own venv via `uv`, credentials in
 `~/.copernicusmarine`), then pull the frames with
 `rsync -a --ignore-existing arm_php:ocean-earth/data/<tier>/<var>/ data/<tier>/<var>/`
 and run `frames.py` once locally for the same range: it finds every frame,
 downloads nothing and fills the index. The web server `arch_php` (1 GB RAM)
-only serves files; never run the pipeline there.
+only serves files; never run the pipeline there. Its twin `arch_db` was tried
+on 23 Nov 2026: with the changes below the pipeline does fit in 1 GB, but a
+micro instance gives a busy thread half a vCPU and 50 Mbit/s, so the hourly
+re-check alone takes about 77 minutes (13 s per frame) and a day about two
+hours, with 34 MB of memory to spare. It stays on arm_php.
+
+**What a daily run costs, and what it no longer does** (measured 23 Nov 2026).
+Nothing is recomputed whose inputs did not change:
+
+- `derived.py` keeps a fingerprint of the monthly frames (source in the index
+  + file content) in `data/index/derived.json`: the 1993–2020 climatology is
+  redone only if a base-year frame changes, the series tiles only when a month
+  is added or rewritten. A normal day: 1.5 s instead of 10 min. It no longer
+  builds a 1.7 GB stack on disk either: peak memory 300 MB instead of 2.1 GB.
+- `validate.py` section 2 keeps each frame's numbers (`data/index/
+  validate-stats.json`, keyed on file size and date) and decodes only new or
+  rewritten frames: 3 min 20 s instead of 6 min. `OE_VALIDATE_FULL=1` rereads
+  everything; the two reports are identical line by line.
+- The hourly re-check is what is left, and it is the whole cost of a day: the
+  source revises its analyses for days, so 14 days of hourly global fields
+  (5.7 GB) are downloaded again every day. `data/logs/revisioni.log` records
+  which hours were actually revised and when — after a few weeks it says
+  whether the window can be shorter.
+- Memory is set by how many time steps one download holds (12 hours of
+  temperature 1.5 GB, 48 of currents 2.7 GB). `OE_CHUNKS=hourly/sst=6,hourly/cur=8`
+  keeps every step under ~550 MB, at the price of more requests; nothing sets
+  it on arm_php.
 
 Sizes on 30 Oct 2026 (3.5 GB of exact frames plus 0.7 GB of playback previews): monthly SST 228 MB, monthly currents
 417 MB, daily SST 664 MB, daily currents 1.1 GB, OSTIA 231 MB, Mediterranean

@@ -45,16 +45,30 @@ def _block_sum(a, axis, factor, edge_weights):
 
 def regrid_sum(field, factor, edge_weights, wrap_lon):
     """Restituisce (somma dei valori di mare, somma dei pesi di mare, peso totale)."""
-    field = np.asarray(field, dtype=np.float64)
+    field = np.asarray(field)
+    rows, cols = field.shape
     ok = np.isfinite(field)
-    vals = np.where(ok, field, 0.0)
-    wts = ok.astype(np.float64)
-    if wrap_lon:
-        # la colonna a +180 e' la stessa di -180: serve per chiudere l'ultima cella
-        vals = np.concatenate([vals, vals[:, :1]], axis=1)
-        wts = np.concatenate([wts, wts[:, :1]], axis=1)
-    sv = _block_sum(_block_sum(vals, 1, factor, edge_weights), 0, factor, edge_weights)
-    sw = _block_sum(_block_sum(wts, 1, factor, edge_weights), 0, factor, edge_weights)
+
+    def blocks(fill):
+        # Una copia sola in float64, con gia' in coda la colonna che chiude il
+        # giro (a +180 e' la stessa di -180). Prima valori e pesi stavano in
+        # memoria insieme, ognuno in due copie: cinque campi da 70 MB per un
+        # globale a 1/12°, e il processo non entrava in una macchina da 1 GB.
+        a = np.empty((rows, cols + (1 if wrap_lon else 0)), dtype=np.float64)
+        fill(a[:, :cols])
+        if wrap_lon:
+            a[:, cols] = a[:, 0]
+        return _block_sum(_block_sum(a, 1, factor, edge_weights), 0, factor, edge_weights)
+
+    def values(dst):
+        dst[...] = field
+        dst[~ok] = 0.0
+
+    def weights(dst):
+        dst[...] = ok
+
+    sv = blocks(values)
+    sw = blocks(weights)
     return sv, sw, float(factor * factor)
 
 
