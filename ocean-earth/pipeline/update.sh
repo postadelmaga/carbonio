@@ -25,8 +25,9 @@ f() { $PY pipeline/frames.py "$@" 2>&1 | grep -v -E '^(INFO|WARNING)' ; }
 # memoria (un campo 1/12° globale alla volta per processo) no
 # orario: le correnti (osservazioni quasi in tempo reale) e la temperatura
 # (analisi operativa, riletta nei giorni dopo: 8 nov 2026, fino a 0,06 °C)
-# cambiano anche dopo giorni; --refresh riscarica la finestra e riscrive solo
-# le ore cambiate, altrimenti validate.py blocca la pubblicazione
+# cambiano anche dopo giorni; --refresh riscarica i giorni i cui file d'origine
+# sono cambiati (origin.py) e riscrive solo le ore diverse, altrimenti
+# validate.py blocca la pubblicazione
 q_temperatura() { f monthly sst && f monthly ice && f daily sst --start "$DAILY_START"; }
 q_correnti() { f monthly cur && f daily cur --start "$DAILY_START" && f hourly cur --days "$HOURLY_DAYS" --refresh && f hourly sst --days "$HOURLY_DAYS" --refresh; }
 q_ostia() { f daily ostia --days "$OSTIA_DAYS" && f daily med --days "$OSTIA_DAYS" && f monthly sla; }
@@ -55,11 +56,12 @@ if [ "$fail" -ne 0 ]; then
   exit 1
 fi
 # Storico delle revisioni: quali ore la fonte ha riscritto, e in che giorno ce
-# ne siamo accorti. I log delle code si riscrivono a ogni corsa, questo no. Il
-# ricontrollo orario e' il passo piu' pesante (14 giorni di campi globali, ogni
-# giorno): se dopo qualche settimana qui si vede che le revisioni toccano solo
-# gli ultimi giorni, HOURLY_DAYS del ricontrollo si puo' accorciare con i numeri
-# in mano.
+# ne siamo accorti. I log delle code si riscrivono a ogni corsa, questo no.
+# Serve a giudicare origin.py: una riga con INATTESO e' un'ora rivista in un
+# giorno i cui file d'origine non risultavano cambiati, trovata solo dal
+# ricontrollo completo settimanale. Finche' non ne compare nessuna quel
+# ricontrollo (6 GB) e' una rete che non ha mai preso niente, e
+# OE_FULL_REFRESH_DAYS=0 lo toglie.
 { grep -h 'rivisto dalla fonte' "$LOG"/temperatura.log "$LOG"/correnti.log "$LOG"/ostia.log || true; } \
   | sed "s/^ */$(date -u +%F) /" >> "$LOG/revisioni.log"
 

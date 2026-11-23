@@ -24,6 +24,7 @@ HERE = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 import encode  # noqa: E402
 import grid  # noqa: E402
+import origin  # noqa: E402
 import sources  # noqa: E402
 
 DATA = HERE.parent / 'data'
@@ -227,10 +228,17 @@ def contiguous_blocks(missing, wanted, n):
     return blocks
 
 
+def day_stamp(t):
+    return t.strftime('%Y-%m-%d')
+
+
 def run(tier, var, start, end, refresh=False):
-    """refresh: riscarica tutta la finestra e riscrive solo i fotogrammi che la
-    fonte ha cambiato (le osservazioni quasi in tempo reale vengono riviste
-    anche dopo giorni: senza, validate.py le trova diverse e blocca tutto)."""
+    """refresh: tiene la finestra allineata alla fonte, che rivede le sue
+    analisi anche dopo giorni (senza, validate.py le trova diverse e blocca
+    tutto). Si riscaricano i giorni i cui file d'origine sono cambiati
+    dall'ultima volta (origin.py) e si riscrivono solo i fotogrammi diversi; se
+    l'elenco dei file non riesce, o ogni origin.FULL_EVERY giorni, si riscarica
+    tutta la finestra come si faceva sempre fino al 23 nov 2026."""
     idx = load_index(tier, var)
     todo_total = 0
     revised = 0
@@ -252,8 +260,18 @@ def run(tier, var, start, end, refresh=False):
                           f'(i browser hanno salvato la versione di prima)', flush=True)
                 else:
                     idx[s] = ds_id
+        plan = None
+        state_path = DATA / 'index' / f'{tier}-{var}-origin.json'
+        days = sorted({day_stamp(t) for t in wanted})
+        done = {}                    # giorno → istanti scaricati e trovati al loro posto
         if refresh:
-            missing = list(wanted)
+            try:
+                plan = origin.plan(ds_id, days, state_path)
+                missing = sorted({*missing, *(t for t in wanted if day_stamp(t) in plan.redo)})
+                print(f'{tier}/{var}: {plan.note}', flush=True)
+            except Exception as e:   # un'ottimizzazione che non riesce non deve far perdere una revisione
+                print(f"{tier}/{var}: elenco dei file d'origine non riuscito ({e!r}); ricontrollo tutta la finestra", flush=True)
+                missing = list(wanted)
         missing.sort()
         print(f'{tier}/{var}: {ds_id} {lo:%Y-%m-%d %H} → {hi:%Y-%m-%d %H}: '
               f'{len(wanted)} attesi, {len(missing)} da fare', flush=True)
@@ -284,12 +302,17 @@ def run(tier, var, start, end, refresh=False):
                             print(f'  {s}: campo vuoto alla fonte, riprovo la prossima volta', flush=True)
                             continue
                         path = frame_path(tier, var, s)
+                        done.setdefault(day_stamp(t), set()).add(s)
                         if refresh and path.exists():
                             if np.array_equal(encode.load_png(path), rgb):
                                 idx[s] = ds_id
                                 continue
                             revised += 1
-                            print(f'  {tier}/{var} {s}: rivisto dalla fonte, lo riscrivo', flush=True)
+                            # un fotogramma rivisto in un giorno i cui file non
+                            # risultavano cambiati smentisce la regola di origin.py
+                            odd = plan is not None and day_stamp(t) not in plan.changed
+                            print(f'  {tier}/{var} {s}: rivisto dalla fonte, lo riscrivo'
+                                  + (" (INATTESO: i file d'origine del giorno non erano cambiati)" if odd else ''), flush=True)
                         encode.save_png(rgb, path)
                         idx[s] = ds_id
                         save_index(tier, var, idx)   # subito: file e fonte restano allineati
@@ -297,6 +320,13 @@ def run(tier, var, start, end, refresh=False):
                 nc.unlink(missing_ok=True)
             save_index(tier, var, idx)
             print(f'  {stamp(tier, block[0])} … {stamp(tier, block[-1])}  ({time.time() - t0:.0f} s)', flush=True)
+        if plan is not None:
+            # un giorno e' a posto solo se tutti i suoi istanti sono stati riscaricati
+            per_day = {}
+            for t in wanted:
+                per_day.setdefault(day_stamp(t), set()).add(stamp(tier, t))
+            done_days = {d for d in plan.redo if done.get(d) == per_day.get(d)}
+            origin.save(state_path, origin.finish(plan, days, done_days, dt.datetime.now(dt.timezone.utc).date()))
     save_index(tier, var, idx)
     if refresh:
         print(f'{tier}/{var}: fatto ({revised} fotogrammi rivisti dalla fonte su {todo_total} ricontrollati)', flush=True)

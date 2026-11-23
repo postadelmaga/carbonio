@@ -369,11 +369,26 @@ Nothing is recomputed whose inputs did not change:
   validate-stats.json`, keyed on file size and date) and decodes only new or
   rewritten frames: 3 min 20 s instead of 6 min. `OE_VALIDATE_FULL=1` rereads
   everything; the two reports are identical line by line.
-- The hourly re-check is what is left, and it is the whole cost of a day: the
-  source revises its analyses for days, so 14 days of hourly global fields
-  (5.7 GB) are downloaded again every day. `data/logs/revisioni.log` records
-  which hours were actually revised and when — after a few weeks it says
-  whether the window can be shorter.
+- The hourly re-check used to be the whole cost of a day: the source revises
+  its analyses for days, so 14 days of hourly global fields were downloaded
+  again every day — 6.6 of the 6.9 GB a run received, to find, as a rule, no
+  frame changed. `origin.py` now asks the source which days changed instead:
+  every dataset's ORIGINAL files sit in an S3 bucket that lists without a
+  login, one file per day, named after the day and the run that produced it
+  (temperature: `…_20261121-20261121_2D_fcst_R20261122.nc`, then `nwct` the
+  next Wednesday and `hcst` the one after; currents: regenerated 1, 3 and 6
+  days later). A day's signature is its files and their ETags, kept in
+  `data/index/<tier>-<var>-origin.json`; only a day whose signature changed is
+  downloaded again. Measured: a run with nothing revised receives 0.5 MB for
+  the currents instead of 493, and one tampered signature re-downloads that
+  day alone. Three safeguards, because an optimization must not lose a
+  revision: a signature is saved only once the catalogue says the archive the
+  frames come from was rebuilt after those files; if the listing fails the
+  whole window is re-checked as before; and every 7 days the whole window is
+  re-checked anyway (`OE_FULL_REFRESH_DAYS`, 0 = never; `OE_FULL_REFRESH=1`
+  forces one). A frame found revised on a day whose files had NOT changed is
+  logged as `INATTESO` and kept in `data/logs/revisioni.log`: as long as that
+  file holds none, the weekly re-check has caught nothing the listing missed.
 - Memory is set by how many time steps one download holds (12 hours of
   temperature 1.5 GB, 48 of currents 2.7 GB). `OE_CHUNKS=hourly/sst=6,hourly/cur=8`
   keeps every step under ~550 MB, at the price of more requests; nothing sets

@@ -250,3 +250,65 @@ def test_validate_reuses_the_numbers_of_unchanged_frames(tmp_path, monkeypatch):
     monkeypatch.setenv('OE_VALIDATE_FULL', '1')
     assert run() == again and len(seen) == 2                   # a richiesta rilegge tutto
     assert json.loads(validate.STATS.read_text())['key'] == validate.STATS_KEY
+
+
+# ── file d'origine: sapere se un giorno e' stato rivisto senza riscaricarlo ──
+LISTING = '''<?xml version="1.0" encoding="UTF-8"?><ListBucketResult xmlns="http://s3.amazonaws.com/doc/2006-03-01/">
+<Name>b</Name><IsTruncated>true</IsTruncated><NextContinuationToken>abc==</NextContinuationToken>
+<Contents><Key>native/P/D_202406/2026/11/glo12_rg_1h-m_20261121-20261121_2D_fcst_R20261122.nc</Key><LastModified>2026-11-22T02:36:10.000Z</LastModified><ETag>&quot;aa-303&quot;</ETag><Size>1</Size></Contents>
+<Contents><Key>native/P/D_202406/2026/11/dataset-uv-nrt-hourly_20261120T0000Z_P20261121T0000.nc</Key><LastModified>2026-11-21T15:09:00.000Z</LastModified><ETag>&quot;bb&quot;</ETag><Size>1</Size></Contents>
+<Contents><Key>native/P/D_202406/2026/11/readme.txt</Key><LastModified>2026-11-01T00:00:00.000Z</LastModified><ETag>&quot;cc&quot;</ETag><Size>1</Size></Contents>
+</ListBucketResult>'''
+
+
+def test_origin_reads_the_day_and_the_signature_from_a_listing():
+    import origin
+    rows, token = origin.parse_listing(LISTING)
+    assert token == 'abc==' and len(rows) == 3
+    assert origin.day_of(rows[0][0]) == '2026-11-21'          # la prima data del nome, non quella della corsa
+    assert origin.day_of(rows[1][0]) == '2026-11-20'
+    assert origin.day_of(rows[2][0]) is None and origin.day_of('x/1h-m_20261341.nc') is None
+    sigs = origin.signatures(rows)
+    assert set(sigs) == {'2026-11-21', '2026-11-20'}
+    assert sigs['2026-11-21'] == ('glo12_rg_1h-m_20261121-20261121_2D_fcst_R20261122.nc|aa-303',
+                                  dt.datetime(2026, 11, 22, 2, 36, 10))
+
+
+def test_origin_redoes_only_what_changed_and_never_trusts_what_it_cannot_see():
+    import origin
+    t = dt.datetime(2026, 11, 22, 3)
+    days = ['2026-11-19', '2026-11-20', '2026-11-21']
+    sigs = {'2026-11-19': ('a', t), '2026-11-20': ('b2', t), '2026-11-21': ('c', t)}
+    saved = {'days': {'2026-11-19': 'a', '2026-11-20': 'b'}, 'full': '2026-11-20'}
+    today = dt.date(2026, 11, 22)
+    p = origin.choose(days, saved, sigs, t + dt.timedelta(hours=1), today, full_every=7)
+    assert p.redo == {'2026-11-20', '2026-11-21'} and not p.full          # il giorno rivisto e quello nuovo
+    assert p.storable == {'2026-11-20': 'b2', '2026-11-21': 'c'}
+    # ARCO non ancora aggiornato dopo i file: si riscarica lo stesso, ma la firma non si salva
+    p = origin.choose(days, saved, sigs, t - dt.timedelta(hours=1), today, full_every=7)
+    assert p.redo == {'2026-11-20', '2026-11-21'} and p.storable == {}
+    assert origin.choose(days, saved, sigs, None, today, full_every=7).storable == {}
+    # un giorno che l'elenco non mostra si rifa' sempre
+    p = origin.choose(days, saved, {k: v for k, v in sigs.items() if k != '2026-11-19'}, t, today, full_every=7)
+    assert '2026-11-19' in p.redo and '2026-11-19' not in p.storable
+    # il ricontrollo completo: la prima volta, dopo full_every giorni, a richiesta; mai con 0
+    assert origin.choose(days, {}, sigs, t, today).full
+    assert origin.choose(days, {**saved, 'full': '2026-11-15'}, sigs, t, today, full_every=7).redo == set(days)
+    assert not origin.choose(days, {**saved, 'full': '2026-11-15'}, sigs, t, today, full_every=0).full
+    assert origin.choose(days, saved, sigs, t, today, full_every=7, force_full=True).full
+
+
+def test_origin_saves_a_day_only_when_all_of_it_was_checked():
+    import origin
+    t = dt.datetime(2026, 11, 22, 3)
+    days = ['2026-11-19', '2026-11-20', '2026-11-21']
+    sigs = {d: (d + '-new', t) for d in days}
+    saved = {'days': {'2026-11-18': 'vecchio', '2026-11-19': '2026-11-19-new', '2026-11-20': 'x'}, 'full': '2026-11-20'}
+    today = dt.date(2026, 11, 22)
+    p = origin.choose(days, saved, sigs, t, today, full_every=7)
+    state = origin.finish(p, days, {'2026-11-20'}, today)                 # il 21 non e' andato a buon fine
+    assert state == {'days': {'2026-11-19': '2026-11-19-new', '2026-11-20': '2026-11-20-new'}, 'full': '2026-11-20'}
+    # un ricontrollo completo conta solo se ha ricontrollato tutto
+    p = origin.choose(days, saved, sigs, t, today, full_every=7, force_full=True)
+    assert origin.finish(p, days, {'2026-11-19', '2026-11-20'}, today)['full'] == '2026-11-20'
+    assert origin.finish(p, days, set(days), today)['full'] == '2026-11-22'
