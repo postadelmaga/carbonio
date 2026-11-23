@@ -182,3 +182,12 @@ def test_bias_smooth_keeps_mask_and_wraps():
     assert abs(s[5, 0] - (1 * 8 + 4) / 9) < 1e-12
     assert abs(s[5, 11] - (1 * 8 + 4) / 9) < 1e-12           # la colonna 0 e' vicina della 11
     assert abs(s[5, 5] - 1.0) < 1e-12
+
+
+def test_bias_uses_only_months_published_from_glorys():
+    # GLORYS si e' allungato a 2026-09, ma il fotogramma pubblicato di quel
+    # mese e' ancora anfc: confrontarlo col campo anfc darebbe zero
+    import bias
+    index = {'2026-08': bias.GLORYS, '2026-09': bias.ANFC}
+    assert bias.from_glorys(['2026-07', '2026-08', '2026-09'], index) == ['2026-08']
+    assert bias.from_glorys(['2026-09'], index) == []

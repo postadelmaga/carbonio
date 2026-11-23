@@ -548,7 +548,10 @@ def check_bias(idx, clim):
         log('- correzione anfc − GLORYS: non calcolata (pipeline/bias.py)')
         return
     excluded = set(json.loads((DATA / 'bias' / 'stats.json').read_text()).get('excluded', []))
-    common = sorted(f.stem for f in bias.CACHE.glob('*.png') if f.stem in idx and f.stem not in excluded)
+    # solo i mesi il cui fotogramma pubblicato e' GLORYS: per l'ultimo mese che
+    # la rianalisi ha raggiunto puo' essere ancora quello anfc, e il confronto
+    # sarebbe anfc con se stesso (bias.from_glorys)
+    common = bias.from_glorys(sorted(f.stem for f in bias.CACHE.glob('*.png') if f.stem in idx and f.stem not in excluded))
     if not common:
         return
     s = common[-1]

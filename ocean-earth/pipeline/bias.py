@@ -16,7 +16,8 @@ viene da anfc: e' come misurare anche anfc col metro di GLORYS.
                         scrive data/bias/sst-MM.png e data/bias/stats.json
 
 I campi anfc mensili restano in ~/.cache/ocean-earth/anfc-monthly/ (non si
-pubblicano: il fotogramma pubblicato di quei mesi e' quello GLORYS).
+pubblicano: il fotogramma pubblicato di quei mesi e' quello GLORYS). L'ultimo
+mese fa eccezione finche' frames.py non lo rifa': vedi from_glorys().
 """
 import datetime as dt
 import json
@@ -53,6 +54,19 @@ def overlap():
     g0, g1 = sources.coverage(GLORYS)
     lo, hi = max(a0, g0), min(a1, g1)
     return frames.steps('monthly', lo, hi)
+
+
+def from_glorys(stamps, index=None):
+    """Dei mesi dati, quelli il cui fotogramma PUBBLICATO viene da GLORYS.
+
+    Quando la rianalisi si allunga di un mese, quel mese entra fra i «comuni»
+    ma il suo fotogramma resta quello anfc pubblicato a suo tempo (frames.py
+    rifa' solo i file che mancano, e l'indice lo dice). Sottrarlo al campo anfc
+    in cache e' sottrarre anfc a se stesso: uno zero che annacqua la media del
+    mese e che validate.py non puo' far passare (novembre 2026: sette giorni
+    senza pubblicare)."""
+    index = frames.load_index('monthly', 'sst') if index is None else index
+    return [s for s in stamps if index.get(s) == GLORYS]
 
 
 def fetch(months):
@@ -100,12 +114,19 @@ def main():
     fetch(months)
     w = np.cos(np.radians(grid.LATS))[:, None] * np.ones((1, grid.NLON))
     diffs_all = {}
-    for t in months:
-        s = frames.stamp('monthly', t)
+    index = frames.load_index('monthly', 'sst')
+    stamps = [frames.stamp('monthly', t) for t in months]
+    usable = from_glorys(stamps, index)
+    for s in stamps:
+        if s not in usable and s in index:
+            print(f'  saltato {s}: il fotogramma pubblicato viene da {index[s]}, non da GLORYS', flush=True)
+    for s in usable:
         g = frames.frame_path('monthly', 'sst', s)
         if g.exists():
             diffs_all[s] = (encode.decode_scalar(encode.load_png(CACHE / f'{s}.png'))
                             - encode.decode_scalar(encode.load_png(g)))
+    if not diffs_all:
+        raise SystemExit('nessun mese in comune con il fotogramma pubblicato da GLORYS')
     # Un mese anfc difettoso si riconosce dalla media globale: agosto 2023 e'
     # 0,79 °C piu' freddo di GLORYS (e 0,6 °C piu' freddo di luglio e settembre
     # dello stesso anfc), mentre gli altri mesi stanno fra -0,06 e -0,18 °C.
@@ -123,7 +144,8 @@ def main():
         if s not in excluded:
             by_month[int(s[5:7])].append(d)
     OUT.mkdir(parents=True, exist_ok=True)
-    stats = {'from': frames.stamp('monthly', months[0]), 'to': frames.stamp('monthly', months[-1]),
+    # da/a: i mesi davvero usati, non la sovrapposizione dei due cataloghi
+    stats = {'from': min(diffs_all), 'to': max(diffs_all),
              'smooth_deg': SMOOTH * grid.STEP, 'excluded': excluded,
              'global_by_month': {k: round(v, 3) for k, v in sorted(gmean.items())}, 'months': {}}
     for m, diffs in by_month.items():

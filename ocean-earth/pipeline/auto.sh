@@ -39,8 +39,12 @@ fi
 
 # --delete toglie dal server i fotogrammi usciti dalle finestre mobili (ore,
 # ultimi 365 giorni); --max-delete ferma tutto se per un errore dovessero
-# sparire molti file in una volta (un giorno normale ne toglie qualche decina)
-OPTS=(-a --omit-dir-times --no-perms --delete --max-delete=400 -e "$SSH"
+# sparire molti file in una volta. Un giorno normale ne toglie un centinaio
+# (le ore uscite dalla finestra), quindi 400 copre circa quattro giorni senza
+# pubblicare: dopo un fermo piu' lungo la prima corsa va lanciata a mano con
+# OE_MAX_DELETE piu' alto, altrimenti rsync si ferma a meta' e il manifest
+# non parte.
+OPTS=(-a --omit-dir-times --no-perms --delete --max-delete="${OE_MAX_DELETE:-400}" -e "$SSH"
       --exclude '/index/' --exclude '/logs/' --exclude '*.tmp.*')
 rsync "${OPTS[@]}" --exclude '/manifest.json' data/ "$DEST"
 rsync "${OPTS[@]}" data/manifest.json "${DEST}manifest.json"
